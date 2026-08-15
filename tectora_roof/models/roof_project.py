@@ -2,14 +2,17 @@
 import base64
 import io
 import json
+import logging
 import math
 import re
 
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 GOOGLE_GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 GOOGLE_STATIC_URL = "https://maps.googleapis.com/maps/api/staticmap"
@@ -129,6 +132,12 @@ class TectoraRoofProject(models.Model):
         string="Tekening (JSON)",
         default='{"shapes": []}',
         help="Shapes drawn on the canvas, in image-pixel coordinates.",
+    )
+    canvas_snapshot = fields.Binary(
+        string="Tekening (snapshot)",
+        attachment=True,
+        help="PNG snapshot of the drawing, stored by the canvas widget on "
+        "every change and used on the measurement sheet PDF.",
     )
 
     section_ids = fields.One2many(
@@ -463,6 +472,103 @@ class TectoraRoofProject(models.Model):
         )
         return True
 
+    # ----------------------------------------------------- measurement sheet
+    def _project_type_label(self):
+        self.ensure_one()
+        return dict(self._fields["project_type"].selection).get(self.project_type, "")
+
+    def _get_drawing_b64(self):
+        """Base64 PNG of the drawing for the measurement sheet: the snapshot
+        stored by the canvas widget, or a server-side render as fallback."""
+        self.ensure_one()
+        if self.canvas_snapshot:
+            snapshot = self.canvas_snapshot
+            return snapshot.decode() if isinstance(snapshot, bytes) else snapshot
+        return self._render_drawing_fallback_b64()
+
+    def _render_drawing_fallback_b64(self):
+        self.ensure_one()
+        try:
+            shapes = self._parse_canvas_shapes()
+        except UserError:
+            shapes = []
+        if self.background_image:
+            base = Image.open(
+                io.BytesIO(base64.b64decode(self.background_image))
+            ).convert("RGBA")
+        else:
+            xs = [p[0] for s in shapes for p in s["points"]] or [0.0, 1400.0]
+            ys = [p[1] for s in shapes for p in s["points"]] or [0.0, 900.0]
+            width = max(int(max(xs)) + 60, 200)
+            height = max(int(max(ys)) + 60, 150)
+            base = Image.new("RGBA", (width, height), (246, 248, 249, 255))
+        overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+        fills = {
+            "section": (10, 116, 131, 80),
+            "chimney": (217, 119, 6, 90),
+            "skylight": (37, 99, 235, 80),
+        }
+        strokes = {
+            "section": (10, 116, 131, 255),
+            "chimney": (180, 83, 9, 255),
+            "skylight": (29, 78, 216, 255),
+        }
+        try:
+            font = ImageFont.load_default(size=max(14, base.size[0] // 80))
+        except TypeError:  # Pillow < 10.1 has no size parameter
+            font = ImageFont.load_default()
+        for shape in shapes:
+            points = [tuple(p) for p in shape["points"]]
+            kind = shape["kind"] if shape["kind"] in fills else "section"
+            draw.polygon(points, fill=fills[kind])
+            draw.line(points + [points[0]], fill=strokes[kind], width=3)
+            measures = self._shape_measurements(shape["points"])
+            cx = sum(p[0] for p in points) / len(points)
+            cy = sum(p[1] for p in points) / len(points)
+            label = "%s\n%.1f × %.1f m — %.1f m²" % (
+                shape["name"] or "",
+                measures["width"],
+                measures["length"],
+                measures["area"],
+            )
+            draw.multiline_text(
+                (cx, cy), label.strip(), fill=(11, 31, 36, 255),
+                font=font, anchor="mm", align="center",
+            )
+        image = Image.alpha_composite(base, overlay).convert("RGB")
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode()
+
+    def _attach_measurement_sheet(self, order):
+        """Render the one-page measurement sheet PDF and attach it to the
+        quotation. Never blocks quotation creation."""
+        self.ensure_one()
+        try:
+            pdf_content = self.env["ir.actions.report"]._render_qweb_pdf(
+                "tectora_roof.action_report_roof_project", res_ids=self.ids
+            )[0]
+        except Exception:
+            _logger.exception(
+                "Could not render the measurement sheet PDF for %s", self.code
+            )
+            return
+        attachment = self.env["ir.attachment"].create(
+            {
+                "name": _("Meetblad %s.pdf") % self.code,
+                "type": "binary",
+                "raw": pdf_content,
+                "res_model": "sale.order",
+                "res_id": order.id,
+                "mimetype": "application/pdf",
+            }
+        )
+        order.message_post(
+            body=_("Meetblad van de dakmeting toegevoegd."),
+            attachment_ids=[attachment.id],
+        )
+
     # ------------------------------------------------------------- quotation
     def action_create_sale_order(self):
         """Generate a native quotation from the measured sections."""
@@ -564,6 +670,7 @@ class TectoraRoofProject(models.Model):
             if pricelist:
                 order_vals["pricelist_id"] = pricelist.id
         order = self.env["sale.order"].create(order_vals)
+        self._attach_measurement_sheet(order)
         self.state = "quoted"
         self.message_post(
             body=_(

@@ -50,6 +50,7 @@
                         <page string="Tekening" name="drawing">
                             <field name="scale_m_per_px" invisible="1"/>
                             <field name="has_background_image" invisible="1"/>
+                            <field name="canvas_snapshot" invisible="1"/>
                             <field name="canvas_data" widget="roof_canvas" nolabel="1"/>
                         </page>
                         <page string="Daksecties" name="sections">
