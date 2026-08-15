@@ -88,6 +88,18 @@ class TectoraRoofProject(models.Model):
         default="draft",
         tracking=True,
     )
+    project_type = fields.Selection(
+        [
+            ("renovatie", "Renovatie"),
+            ("nieuwbouw", "Nieuwbouw"),
+            ("industrie", "Industrie"),
+        ],
+        string="Projecttype",
+        default="renovatie",
+        tracking=True,
+        help="Bepaalt de prijslijst op de gegenereerde offerte: er wordt "
+        "gezocht naar een prijslijst met dezelfde naam als het projecttype.",
+    )
     company_id = fields.Many2one(
         "res.company", string="Bedrijf", default=lambda self: self.env.company
     )
@@ -493,15 +505,23 @@ class TectoraRoofProject(models.Model):
                 order_line_values(line) for line in roof_object.product_line_ids
             )
 
-        order = self.env["sale.order"].create(
-            {
-                "partner_id": self.partner_id.id,
-                "opportunity_id": self.opportunity_id.id or False,
-                "origin": self.code,
-                "roof_project_id": self.id,
-                "order_line": order_lines,
-            }
-        )
+        order_vals = {
+            "partner_id": self.partner_id.id,
+            "opportunity_id": self.opportunity_id.id or False,
+            "origin": self.code,
+            "roof_project_id": self.id,
+            "order_line": order_lines,
+        }
+        if self.project_type:
+            type_label = dict(self._fields["project_type"].selection)[
+                self.project_type
+            ]
+            pricelist = self.env["product.pricelist"].search(
+                [("name", "=ilike", type_label)], limit=1
+            )
+            if pricelist:
+                order_vals["pricelist_id"] = pricelist.id
+        order = self.env["sale.order"].create(order_vals)
         self.state = "quoted"
         self.message_post(
             body=_(
