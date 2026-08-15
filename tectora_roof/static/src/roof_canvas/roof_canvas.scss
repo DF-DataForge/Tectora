@@ -10,6 +10,17 @@
         z-index: 100;
     }
 
+    .o_roof_canvas_panel {
+        position: absolute;
+        top: 52px;
+        right: 10px;
+        width: 320px;
+        max-height: 75%;
+        overflow-y: auto;
+        z-index: 50;
+        background: #fff;
+    }
+
     .o_roof_canvas_toolbar {
         border-bottom: 1px solid var(--border-color, #d8dadd);
         background: #f8f9fa;
