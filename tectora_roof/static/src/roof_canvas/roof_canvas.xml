@@ -86,7 +86,21 @@
                     t-on-pointerdown="onPointerDown"
                     t-on-pointermove="onPointerMove"
                     t-on-pointerup="onPointerUp"
-                    t-on-dblclick="onDblClick"/>
+                    t-on-dblclick="onDblClick"
+                    t-on-contextmenu="onContextMenu"/>
+            <div t-if="state.contextMenu"
+                 class="o_roof_canvas_ctxmenu dropdown-menu show"
+                 t-attf-style="left: {{ state.contextMenu.x }}px; top: {{ state.contextMenu.y }}px;">
+                <h6 class="dropdown-header">Dakobject toevoegen</h6>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('chimney')">
+                    <i class="fa fa-industry me-1"/> Schoorsteen
+                </button>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('skylight')">
+                    <i class="fa fa-dot-circle-o me-1"/> Koepel
+                </button>
+            </div>
             <div class="o_roof_canvas_status text-muted small px-2 py-1">
                 <t t-out="state.status"/>
             </div>

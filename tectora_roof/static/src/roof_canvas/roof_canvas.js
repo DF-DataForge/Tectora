@@ -25,6 +25,9 @@ const GRID_MIN_SCREEN_PX = 30;
 const GRID_MAJOR_EVERY = 5;
 // Edges shorter than this on screen don't get a length box (unreadable).
 const EDGE_LABEL_MIN_SCREEN_PX = 34;
+// Default real-world size (meters) of roof objects added via right-click.
+const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
+const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel" };
 
 const KIND_STYLES = {
     section: { fill: "rgba(10, 116, 131, 0.28)", stroke: "#0a7483", label: "" },
@@ -103,6 +106,7 @@ export class RoofCanvasField extends Component {
             gridStep: 1,
             selectedId: null,
             status: "",
+            contextMenu: null, // {x, y (px in wrapper), worldPoint}
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -111,7 +115,7 @@ export class RoofCanvasField extends Component {
         this.draftPolygon = null; // [[x, y], ...]
         this._rawCache = undefined;
         this._shapes = [];
-        this.edgeHits = []; // clickable edge-length boxes, in world coordinates
+        this.labelHits = []; // clickable measurement boxes, in world coordinates
 
         this.onWindowResize = () => this.resizeCanvas();
 
@@ -288,6 +292,9 @@ export class RoofCanvasField extends Component {
 
     // --------------------------------------------------------------- events
     onPointerDown(ev) {
+        if (this.state.contextMenu) {
+            this.state.contextMenu = null;
+        }
         if (ev.button === 1 || this.state.tool === "pan") {
             this.drag = {
                 mode: "pan",
@@ -307,9 +314,9 @@ export class RoofCanvasField extends Component {
         } else if (this.state.tool === "polygon") {
             this.addPolygonPoint(point);
         } else if (this.state.tool === "select") {
-            const edgeHit = this.edgeHitTest(point);
-            if (edgeHit) {
-                this.openEdgeProducts(edgeHit);
+            const labelHit = this.labelHitTest(point);
+            if (labelHit) {
+                this.openProducts(labelHit);
                 return;
             }
             const hit = this.hitTest(point);
@@ -331,7 +338,7 @@ export class RoofCanvasField extends Component {
     onPointerMove(ev) {
         if (!this.drag) {
             if (this.state.tool === "select" && this.canvasRef.el) {
-                const hover = this.edgeHitTest(this.toWorld(ev));
+                const hover = this.labelHitTest(this.toWorld(ev));
                 this.canvasRef.el.style.cursor = hover ? "pointer" : "";
             }
             return;
@@ -411,12 +418,47 @@ export class RoofCanvasField extends Component {
             }
         } else if (ev.key === "Escape") {
             this.draftPolygon = null;
+            this.state.contextMenu = null;
             this.updateStatus();
             this.draw();
         } else if (ev.key === "Enter" && this.draftPolygon) {
             ev.preventDefault();
             this.closePolygon();
         }
+    }
+
+    onContextMenu(ev) {
+        ev.preventDefault();
+        const wrapper = this.wrapperRef.el;
+        if (!wrapper) {
+            return;
+        }
+        const rect = wrapper.getBoundingClientRect();
+        this.state.contextMenu = {
+            x: ev.clientX - rect.left,
+            y: ev.clientY - rect.top,
+            worldPoint: this.toWorld(ev),
+        };
+    }
+
+    addRoofObject(kind) {
+        const menu = this.state.contextMenu;
+        this.state.contextMenu = null;
+        if (!menu) {
+            return;
+        }
+        const sizePx = (OBJECT_DEFAULT_SIZE_M[kind] || 1) / this.scaleMPerPx;
+        const [cx, cy] = menu.worldPoint;
+        const half = sizePx / 2;
+        this.addShape(
+            [
+                [cx - half, cy - half],
+                [cx + half, cy - half],
+                [cx + half, cy + half],
+                [cx - half, cy + half],
+            ],
+            kind
+        );
     }
 
     // --------------------------------------------------------------- shapes
@@ -447,15 +489,15 @@ export class RoofCanvasField extends Component {
         this.updateStatus();
     }
 
-    addShape(points) {
-        const sectionCount =
-            this.shapes.filter((s) => (s.kind || "section") === "section").length + 1;
+    addShape(points, kind = "section") {
+        const kindCount =
+            this.shapes.filter((s) => (s.kind || "section") === kind).length + 1;
         this._shapes = [
             ...this.shapes,
             {
                 id: makeId(),
-                kind: "section",
-                name: `Sectie ${sectionCount}`,
+                kind,
+                name: `${KIND_NAMES[kind] || KIND_NAMES.section} ${kindCount}`,
                 points: points.map(([x, y]) => [
                     Math.round(x * 100) / 100,
                     Math.round(y * 100) / 100,
@@ -478,9 +520,9 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
-    edgeHitTest([px, py]) {
-        for (let i = this.edgeHits.length - 1; i >= 0; i--) {
-            const hit = this.edgeHits[i];
+    labelHitTest([px, py]) {
+        for (let i = this.labelHits.length - 1; i >= 0; i--) {
+            const hit = this.labelHits[i];
             if (
                 px >= hit.x && px <= hit.x + hit.w &&
                 py >= hit.y && py <= hit.y + hit.h
@@ -491,9 +533,9 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
-    // ------------------------------------------------------- edge products
-    async openEdgeProducts(edge) {
-        if ((edge.kind || "section") !== "section") {
+    // ---------------------------------------------------- products via labels
+    async openProducts(hit) {
+        if ((hit.kind || "section") !== "section") {
             this.notification.add(
                 _t("Producten kunnen alleen aan daksecties worden gekoppeld."),
                 { type: "warning" }
@@ -510,7 +552,7 @@ export class RoofCanvasField extends Component {
             "tectora.roof.section",
             [
                 ["project_id", "=", record.resId],
-                ["canvas_ref", "=", edge.shapeId],
+                ["canvas_ref", "=", hit.shapeId],
             ],
             { limit: 1 }
         );
@@ -524,13 +566,21 @@ export class RoofCanvasField extends Component {
             );
             return;
         }
-        const quantity = Math.round(edge.lengthM * 100) / 100;
+        const isSurface = hit.type === "surface";
+        const quantity =
+            Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
+        const title = isSurface
+            ? _t("Producten voor oppervlak van %(section)s — %(qty)s m²", {
+                  section: hit.name || _t("sectie"),
+                  qty: quantity.toFixed(2),
+              })
+            : _t("Producten voor rand van %(section)s — %(qty)s m", {
+                  section: hit.name || _t("sectie"),
+                  qty: quantity.toFixed(2),
+              });
         this.dialog.add(SelectCreateDialog, {
             resModel: "product.product",
-            title: _t("Producten voor rand van %(section)s — %(length)s m", {
-                section: edge.name || _t("sectie"),
-                length: quantity.toFixed(2),
-            }),
+            title,
             domain: [["sale_ok", "=", true]],
             multiSelect: true,
             onSelected: async (productIds) => {
@@ -539,13 +589,13 @@ export class RoofCanvasField extends Component {
                     productIds.map((productId) => ({
                         section_id: sectionIds[0],
                         product_id: productId,
-                        coverage: "edges",
+                        coverage: isSurface ? "surface" : "edges",
                         quantity,
                     }))
                 );
                 await record.load();
                 this.notification.add(
-                    _t("Product(en) toegevoegd aan sectie '%s'.", edge.name),
+                    _t("Product(en) toegevoegd aan sectie '%s'.", hit.name),
                     { type: "success" }
                 );
                 this.draw();
@@ -580,8 +630,8 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool. Klik daarna op " +
                 "'Meting bijwerken uit tekening' om de secties aan te maken. " +
-                "Klik op een lengtelabel op een rand om producten aan die rand " +
-                "toe te voegen.";
+                "Klik op een lengte- of oppervlaktelabel om producten toe te " +
+                "voegen; rechtsklik om een dakobject toe te voegen.";
         }
     }
 
@@ -618,9 +668,9 @@ export class RoofCanvasField extends Component {
         for (const shape of this.shapes) {
             this.drawShape(ctx, shape, shape.id === this.state.selectedId);
         }
-        this.edgeHits = [];
+        this.labelHits = [];
         for (const shape of this.shapes) {
-            this.drawEdgeLabels(ctx, shape);
+            this.drawShapeLabels(ctx, shape);
         }
         if (this.drag && this.drag.mode === "rect") {
             this.drawDraftRect(ctx);
@@ -685,7 +735,7 @@ export class RoofCanvasField extends Component {
         ctx.restore();
     }
 
-    drawEdgeLabels(ctx, shape) {
+    drawShapeLabels(ctx, shape) {
         const zoom = this.view.zoom;
         const scale = this.scaleMPerPx;
         const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
@@ -697,6 +747,34 @@ export class RoofCanvasField extends Component {
         ctx.font = `600 ${fontSize}px sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+
+        // Surface (area) box at the shape's center.
+        const m = this.measurements(points);
+        const bbox = boundingBox(points);
+        {
+            const label =
+                `${m.width.toFixed(1)} × ${m.length.toFixed(1)} m — ` +
+                `${m.area.toFixed(1)} m²`;
+            const width = ctx.measureText(label).width + padX * 2;
+            const cx = bbox.x + bbox.w / 2;
+            const cy = bbox.y + bbox.h / 2 + boxHeight * 0.75;
+            const x = cx - width / 2;
+            const y = cy - boxHeight / 2;
+            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.labelHits.push({
+                type: "surface",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                name: shape.name || "",
+                x,
+                y,
+                w: width,
+                h: boxHeight,
+                areaM2: m.area,
+            });
+        }
+
+        // Length box on every edge.
         for (let i = 0; i < n; i++) {
             const [x1, y1] = points[i];
             const [x2, y2] = points[(i + 1) % n];
@@ -711,20 +789,9 @@ export class RoofCanvasField extends Component {
             const cy = (y1 + y2) / 2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(x, y, width, boxHeight, 3 / zoom);
-            } else {
-                ctx.rect(x, y, width, boxHeight);
-            }
-            ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-            ctx.fill();
-            ctx.strokeStyle = style.stroke;
-            ctx.lineWidth = 1 / zoom;
-            ctx.stroke();
-            ctx.fillStyle = "#0b1f24";
-            ctx.fillText(label, cx, cy);
-            this.edgeHits.push({
+            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.labelHits.push({
+                type: "edge",
                 shapeId: shape.id,
                 kind: shape.kind || "section",
                 name: shape.name || "",
@@ -737,6 +804,23 @@ export class RoofCanvasField extends Component {
             });
         }
         ctx.textBaseline = "alphabetic";
+    }
+
+    drawLabelBox(ctx, label, x, y, width, height, strokeColor) {
+        const zoom = this.view.zoom;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(x, y, width, height, 3 / zoom);
+        } else {
+            ctx.rect(x, y, width, height);
+        }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+        ctx.fill();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1 / zoom;
+        ctx.stroke();
+        ctx.fillStyle = "#0b1f24";
+        ctx.fillText(label, x + width / 2, y + height / 2);
     }
 
     drawShape(ctx, shape, selected) {
@@ -765,8 +849,8 @@ export class RoofCanvasField extends Component {
             }
         }
 
-        // Label with real-world measurements
-        const m = this.measurements(points);
+        // Shape title; the measurements are drawn as a clickable box in
+        // drawShapeLabels so they stay on top of neighbouring shapes.
         const box = boundingBox(points);
         const cx = box.x + box.w / 2;
         const cy = box.y + box.h / 2;
@@ -778,14 +862,8 @@ export class RoofCanvasField extends Component {
             ? `${style.label}: ${shape.name || ""}`.trim()
             : shape.name || "";
         if (title) {
-            ctx.fillText(title, cx, cy - fontSize * 0.4);
+            ctx.fillText(title, cx, cy - fontSize * 0.6);
         }
-        ctx.font = `${fontSize}px sans-serif`;
-        ctx.fillText(
-            `${m.width.toFixed(1)} × ${m.length.toFixed(1)} m — ${m.area.toFixed(1)} m²`,
-            cx,
-            cy + fontSize * 0.9
-        );
     }
 
     drawDraftRect(ctx) {
