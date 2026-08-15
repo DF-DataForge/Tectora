@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="crm_lead_view_form_inherit_tectora" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.tectora.roof</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_create_roof_project" type="object"
+                        string="Dakproject maken" class="btn-secondary"
+                        help="Maak een dakmetingsproject aan met de klant en het adres van deze opportuniteit."/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_roof_projects" type="object"
+                        class="oe_stat_button" icon="fa-home"
+                        invisible="roof_project_count == 0">
+                    <field name="roof_project_count" widget="statinfo" string="Dakprojecten"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
