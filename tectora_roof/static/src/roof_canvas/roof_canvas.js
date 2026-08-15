@@ -131,6 +131,7 @@ export class RoofCanvasField extends Component {
     setup() {
         this.canvasRef = useRef("canvas");
         this.wrapperRef = useRef("wrapper");
+        this.mainRef = useRef("main");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -275,7 +276,7 @@ export class RoofCanvasField extends Component {
     // ---------------------------------------------------------------- canvas
     resizeCanvas() {
         const canvas = this.canvasRef.el;
-        const wrapper = this.wrapperRef.el;
+        const wrapper = this.mainRef.el || this.wrapperRef.el;
         if (!canvas || !wrapper) {
             return;
         }
