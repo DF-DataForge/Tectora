@@ -487,9 +487,13 @@ class TectoraRoofProject(models.Model):
                     line.coverage, line.coverage
                 )
                 if line.edge_index:
+                    position_label = (
+                        _("hoek") if line.coverage == "corners" else _("zijde")
+                    )
                     coverage_label = _(
-                        "%(coverage)s, zijde %(side)s",
+                        "%(coverage)s, %(position)s %(side)s",
                         coverage=coverage_label,
+                        position=position_label,
                         side=line.edge_index,
                     )
                 name = "%s (%s)" % (name, coverage_label)

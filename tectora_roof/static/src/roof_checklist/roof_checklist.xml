@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.RoofChecklistField">
+        <div class="o_roof_checklist">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <input type="text" class="form-control form-control-sm w-auto flex-grow-1"
+                       placeholder="Zoeken…"
+                       t-att-value="state.search"
+                       t-on-input="(ev) => { state.search = ev.target.value; }"/>
+                <span class="text-muted small text-nowrap">
+                    <t t-out="checkedCount"/> geselecteerd —
+                    totaal <t t-out="total.toFixed(2)"/>
+                </span>
+            </div>
+            <t t-if="state.loading">
+                <div class="text-muted p-2">Laden…</div>
+            </t>
+            <t t-else="">
+                <table class="table table-sm table-hover o_roof_checklist_table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 2rem;"/>
+                            <th style="width: 7rem;">Interne ref.</th>
+                            <th>Naam</th>
+                            <th class="text-end" style="width: 7rem;">Prijs</th>
+                            <th style="width: 7rem;">Aantal</th>
+                            <th style="width: 6rem;">Eenheid</th>
+                            <th class="text-end" style="width: 8rem;">Subtotaal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="visibleProducts" t-as="product" t-key="product.id">
+                            <t t-set="line" t-value="state.lines[product.id]"/>
+                            <tr t-att-class="line ? 'table-primary' : ''">
+                                <td class="text-center" t-on-click="() => this.toggle(product)"
+                                    style="cursor: pointer;">
+                                    <input type="checkbox" t-att-checked="line ? true : undefined"/>
+                                </td>
+                                <td t-on-click="() => this.toggle(product)" style="cursor: pointer;"
+                                    t-out="product.default_code || ''"/>
+                                <td t-on-click="() => this.toggle(product)" style="cursor: pointer;"
+                                    t-out="product.name"/>
+                                <td class="text-end" t-out="product.list_price.toFixed(2)"/>
+                                <td>
+                                    <input type="number" step="any" min="0"
+                                           class="form-control form-control-sm text-end"
+                                           t-att-value="line ? line.quantity : ''"
+                                           t-att-disabled="line ? undefined : true"
+                                           t-on-change="(ev) => this.setQuantity(product, ev)"/>
+                                </td>
+                                <td t-out="product.uom_id ? product.uom_id[1] : ''"/>
+                                <td class="text-end"
+                                    t-out="line ? line.price_subtotal.toFixed(2) : ''"/>
+                            </tr>
+                        </t>
+                        <tr t-if="!visibleProducts.length">
+                            <td colspan="7" class="text-muted text-center py-3">
+                                Geen producten gevonden in deze categorie.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </t>
+        </div>
+    </t>
+
+</templates>

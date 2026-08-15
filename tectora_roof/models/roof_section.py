@@ -180,12 +180,15 @@ class TectoraRoofSectionProduct(models.Model):
                 or line.project_direct_id
             )
 
-    @api.depends("edge_index")
+    @api.depends("edge_index", "coverage")
     def _compute_side_display(self):
         for line in self:
-            line.side_display = (
-                _("Zijde %s") % line.edge_index if line.edge_index else ""
-            )
+            if not line.edge_index:
+                line.side_display = ""
+            elif line.coverage == "corners":
+                line.side_display = _("Hoek %s") % line.edge_index
+            else:
+                line.side_display = _("Zijde %s") % line.edge_index
 
     @api.constrains("section_id", "object_id", "project_direct_id")
     def _check_target(self):
