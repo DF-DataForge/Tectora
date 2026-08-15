@@ -177,7 +177,7 @@
                 <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
                 <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
-                <group expand="0" string="Groeperen op">
+                <group>
                     <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                 </group>
