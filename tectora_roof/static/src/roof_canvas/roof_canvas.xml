@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.RoofCanvasField">
+        <div class="o_roof_canvas" t-ref="wrapper" tabindex="0" t-on-keydown="onKeyDown">
+            <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.tool === 'select' }"
+                            t-on-click="() => this.setTool('select')"
+                            title="Selecteren / verplaatsen">
+                        <i class="fa fa-mouse-pointer"/> Selecteer
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.tool === 'rect' }"
+                            t-on-click="() => this.setTool('rect')"
+                            title="Rechthoekige sectie tekenen">
+                        <i class="fa fa-square-o"/> Rechthoek
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.tool === 'polygon' }"
+                            t-on-click="() => this.setTool('polygon')"
+                            title="Polygoon tekenen (klik punten, dubbelklik om te sluiten)">
+                        <i class="fa fa-star-o"/> Polygoon
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.tool === 'pan' }"
+                            t-on-click="() => this.setTool('pan')"
+                            title="Verschuiven">
+                        <i class="fa fa-hand-paper-o"/> Pan
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.zoomBy(1.25)" title="Inzoomen">
+                        <i class="fa fa-search-plus"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.zoomBy(0.8)" title="Uitzoomen">
+                        <i class="fa fa-search-minus"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
+                        <i class="fa fa-expand"/>
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-disabled="!state.selectedId"
+                            t-on-click="renameSelected" title="Geselecteerde sectie hernoemen">
+                        <i class="fa fa-pencil"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger"
+                            t-att-disabled="!state.selectedId"
+                            t-on-click="deleteSelected" title="Geselecteerde vorm verwijderen (Del)">
+                        <i class="fa fa-trash-o"/>
+                    </button>
+                </div>
+                <t t-if="backgroundUrl">
+                    <div class="d-flex align-items-center ms-3 gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                t-att-class="{ active: state.showBackground }"
+                                t-on-click="toggleBackground" title="Satellietbeeld tonen/verbergen">
+                            <i class="fa fa-globe"/> Satelliet
+                        </button>
+                        <input type="range" min="0.1" max="1" step="0.05"
+                               style="width: 90px;"
+                               t-att-value="state.backgroundOpacity"
+                               t-on-input="onOpacityInput"
+                               title="Transparantie achtergrond"/>
+                    </div>
+                </t>
+                <span class="ms-auto text-muted small pe-2">
+                    Schaal: <t t-out="scaleLabel"/>
+                </span>
+            </div>
+            <canvas t-ref="canvas"
+                    t-on-pointerdown="onPointerDown"
+                    t-on-pointermove="onPointerMove"
+                    t-on-pointerup="onPointerUp"
+                    t-on-dblclick="onDblClick"/>
+            <div class="o_roof_canvas_status text-muted small px-2 py-1">
+                <t t-out="state.status"/>
+            </div>
+        </div>
+    </t>
+
+</templates>

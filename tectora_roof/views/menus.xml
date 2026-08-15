@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_tectora_products" model="ir.actions.act_window">
+        <field name="name">Producten</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('sale_ok', '=', True)]</field>
+        <field name="context">{'default_sale_ok': True, 'default_type': 'consu', 'default_is_storable': True}</field>
+    </record>
+
+    <menuitem id="menu_tectora_root"
+              name="Dakmeting"
+              web_icon="tectora_roof,static/description/icon.png"
+              sequence="45"/>
+
+    <menuitem id="menu_tectora_projects"
+              name="Dakprojecten"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_project"
+              sequence="10"/>
+
+    <menuitem id="menu_tectora_roof_objects"
+              name="Dakobjecten"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_object"
+              sequence="20"/>
+
+    <menuitem id="menu_tectora_products"
+              name="Producten"
+              parent="menu_tectora_root"
+              action="action_tectora_products"
+              sequence="30"/>
+
+    <menuitem id="menu_tectora_config"
+              name="Instellingen"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_config"
+              groups="base.group_system"
+              sequence="90"/>
+
+</odoo>

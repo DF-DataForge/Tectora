@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_tectora" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.tectora.roof</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Tectora Dakmeting" name="tectora_roof">
+                    <block title="Kaartdiensten" help="Providers voor geocoding en satellietbeelden.">
+                        <setting string="Google Maps API key"
+                                 help="Geocoding API + Static Maps API. Heeft voorrang op Mapbox.">
+                            <field name="tectora_google_maps_api_key"/>
+                        </setting>
+                        <setting string="Mapbox access token"
+                                 help="Wordt gebruikt als er geen Google Maps sleutel is ingesteld.">
+                            <field name="tectora_mapbox_token"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_config" model="ir.actions.act_window">
+        <field name="name">Instellingen</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'tectora_roof'}</field>
+    </record>
+
+</odoo>
