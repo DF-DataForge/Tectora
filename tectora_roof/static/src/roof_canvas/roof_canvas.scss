@@ -1,8 +1,14 @@
 .o_roof_canvas {
+    position: relative;
     border: 1px solid var(--border-color, #d8dadd);
     border-radius: 6px;
     background: #fff;
     outline: none;
+
+    .o_roof_canvas_ctxmenu {
+        position: absolute;
+        z-index: 100;
+    }
 
     .o_roof_canvas_toolbar {
         border-bottom: 1px solid var(--border-color, #d8dadd);
