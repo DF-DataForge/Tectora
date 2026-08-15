@@ -3,6 +3,7 @@ import base64
 import io
 import json
 import math
+import re
 
 import requests
 from PIL import Image
@@ -133,6 +134,20 @@ class TectoraRoofProject(models.Model):
     section_ids = fields.One2many(
         "tectora.roof.section", "project_id", string="Daksecties"
     )
+    direct_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Projectlijnen",
+    )
+    general_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Algemene werken",
+        domain=[("product_id.categ_id.name", "ilike", "algemene werken")],
+    )
+    safety_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Veiligheid",
+        domain=[("product_id.categ_id.name", "ilike", "veiligheid")],
+    )
     roof_object_ids = fields.One2many(
         "tectora.roof.object", "project_id", string="Dakobjecten"
     )
@@ -182,6 +197,7 @@ class TectoraRoofProject(models.Model):
         "section_ids.perimeter",
         "section_ids.product_line_ids.price_subtotal",
         "roof_object_ids.product_line_ids.price_subtotal",
+        "direct_line_ids.price_subtotal",
     )
     def _compute_totals(self):
         for project in self:
@@ -192,7 +208,7 @@ class TectoraRoofProject(models.Model):
                 sections.product_line_ids.mapped("price_subtotal")
             ) + sum(
                 project.roof_object_ids.product_line_ids.mapped("price_subtotal")
-            )
+            ) + sum(project.direct_line_ids.mapped("price_subtotal"))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -455,31 +471,53 @@ class TectoraRoofProject(models.Model):
             raise UserError(_("Set a customer on the project first."))
         sections = self.section_ids.filtered("product_line_ids")
         roof_objects = self.roof_object_ids.filtered("product_line_ids")
-        if not sections and not roof_objects:
+        direct_lines = self.direct_line_ids
+        if not sections and not roof_objects and not direct_lines:
             raise UserError(
                 _(
-                    "No products are assigned to any roof section or roof "
-                    "object yet. Add product lines first."
+                    "No products are assigned to any roof section, roof "
+                    "object or project tab yet. Add product lines first."
                 )
             )
 
         def order_line_values(line):
-            coverage_label = dict(line._fields["coverage"].selection).get(
-                line.coverage, line.coverage
-            )
-            if line.edge_index:
-                coverage_label = _(
-                    "%(coverage)s, zijde %(side)s",
-                    coverage=coverage_label,
-                    side=line.edge_index,
+            name = line.product_id.display_name
+            if line.coverage != "general":
+                coverage_label = dict(line._fields["coverage"].selection).get(
+                    line.coverage, line.coverage
                 )
+                if line.edge_index:
+                    coverage_label = _(
+                        "%(coverage)s, zijde %(side)s",
+                        coverage=coverage_label,
+                        side=line.edge_index,
+                    )
+                name = "%s (%s)" % (name, coverage_label)
             return (0, 0, {
                 "product_id": line.product_id.id,
                 "product_uom_qty": line.quantity,
-                "name": "%s (%s)" % (line.product_id.display_name, coverage_label),
+                "name": name,
             })
 
         order_lines = []
+        # Project-wide chapters (Algemene werken, Veiligheid, ...) first,
+        # grouped per product category like the price book.
+        direct_categories = sorted(
+            set(direct_lines.mapped("product_id.categ_id")),
+            key=lambda category: category.name,
+        )
+        for category in direct_categories:
+            order_lines.append(
+                (0, 0, {
+                    "display_type": "line_section",
+                    "name": re.sub(r"^\d+\.\s*", "", category.name),
+                })
+            )
+            order_lines.extend(
+                order_line_values(line)
+                for line in direct_lines
+                if line.product_id.categ_id == category
+            )
         for section in sections:
             order_lines.append(
                 (0, 0, {

@@ -123,6 +123,38 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Algemene werken" name="general_works">
+                            <field name="general_line_ids"
+                                   context="{'default_coverage': 'general'}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.name', 'ilike', 'algemene werken')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="coverage" column_invisible="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Veiligheid" name="safety">
+                            <field name="safety_line_ids"
+                                   context="{'default_coverage': 'general'}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.name', 'ilike', 'veiligheid')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="coverage" column_invisible="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Achtergrond &amp; schaal" name="background">
                             <group>
                                 <group>
