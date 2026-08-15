@@ -1,7 +1,10 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog";
 import {
     Component,
     onMounted,
@@ -15,6 +18,13 @@ const DEFAULT_SCALE_M_PER_PX = 0.02;
 const DEFAULT_WORLD = { w: 1400, h: 900 };
 const CLOSE_SNAP_PX = 12;
 const MIN_RECT_PX = 6;
+// Candidate grid spacings in meters; the smallest one that renders at a
+// readable on-screen distance is used, minor lines every step, major every 5.
+const GRID_STEPS_M = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500];
+const GRID_MIN_SCREEN_PX = 30;
+const GRID_MAJOR_EVERY = 5;
+// Edges shorter than this on screen don't get a length box (unreadable).
+const EDGE_LABEL_MIN_SCREEN_PX = 34;
 
 const KIND_STYLES = {
     section: { fill: "rgba(10, 116, 131, 0.28)", stroke: "#0a7483", label: "" },
@@ -82,10 +92,15 @@ export class RoofCanvasField extends Component {
     setup() {
         this.canvasRef = useRef("canvas");
         this.wrapperRef = useRef("wrapper");
+        this.orm = useService("orm");
+        this.dialog = useService("dialog");
+        this.notification = useService("notification");
         this.state = useState({
             tool: "select",
             showBackground: true,
             backgroundOpacity: 0.9,
+            showGrid: true,
+            gridStep: 1,
             selectedId: null,
             status: "",
         });
@@ -96,6 +111,7 @@ export class RoofCanvasField extends Component {
         this.draftPolygon = null; // [[x, y], ...]
         this._rawCache = undefined;
         this._shapes = [];
+        this.edgeHits = []; // clickable edge-length boxes, in world coordinates
 
         this.onWindowResize = () => this.resizeCanvas();
 
@@ -227,6 +243,11 @@ export class RoofCanvasField extends Component {
         this.draw();
     }
 
+    toggleGrid() {
+        this.state.showGrid = !this.state.showGrid;
+        this.draw();
+    }
+
     onOpacityInput(ev) {
         this.state.backgroundOpacity = parseFloat(ev.target.value);
         this.draw();
@@ -286,6 +307,11 @@ export class RoofCanvasField extends Component {
         } else if (this.state.tool === "polygon") {
             this.addPolygonPoint(point);
         } else if (this.state.tool === "select") {
+            const edgeHit = this.edgeHitTest(point);
+            if (edgeHit) {
+                this.openEdgeProducts(edgeHit);
+                return;
+            }
             const hit = this.hitTest(point);
             this.state.selectedId = hit ? hit.id : null;
             if (hit) {
@@ -304,6 +330,10 @@ export class RoofCanvasField extends Component {
 
     onPointerMove(ev) {
         if (!this.drag) {
+            if (this.state.tool === "select" && this.canvasRef.el) {
+                const hover = this.edgeHitTest(this.toWorld(ev));
+                this.canvasRef.el.style.cursor = hover ? "pointer" : "";
+            }
             return;
         }
         if (this.drag.mode === "pan") {
@@ -448,6 +478,81 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
+    edgeHitTest([px, py]) {
+        for (let i = this.edgeHits.length - 1; i >= 0; i--) {
+            const hit = this.edgeHits[i];
+            if (
+                px >= hit.x && px <= hit.x + hit.w &&
+                py >= hit.y && py <= hit.y + hit.h
+            ) {
+                return hit;
+            }
+        }
+        return null;
+    }
+
+    // ------------------------------------------------------- edge products
+    async openEdgeProducts(edge) {
+        if ((edge.kind || "section") !== "section") {
+            this.notification.add(
+                _t("Producten kunnen alleen aan daksecties worden gekoppeld."),
+                { type: "warning" }
+            );
+            return;
+        }
+        const record = this.props.record;
+        // The section records are created server-side from the drawing, so the
+        // project must be saved (and synced) before lines can be attached.
+        if (!(await record.save())) {
+            return;
+        }
+        const sectionIds = await this.orm.search(
+            "tectora.roof.section",
+            [
+                ["project_id", "=", record.resId],
+                ["canvas_ref", "=", edge.shapeId],
+            ],
+            { limit: 1 }
+        );
+        if (!sectionIds.length) {
+            this.notification.add(
+                _t(
+                    "Er bestaat nog geen sectie voor deze vorm. Klik eerst op " +
+                    "'Meting bijwerken uit tekening'."
+                ),
+                { type: "warning" }
+            );
+            return;
+        }
+        const quantity = Math.round(edge.lengthM * 100) / 100;
+        this.dialog.add(SelectCreateDialog, {
+            resModel: "product.product",
+            title: _t("Producten voor rand van %(section)s — %(length)s m", {
+                section: edge.name || _t("sectie"),
+                length: quantity.toFixed(2),
+            }),
+            domain: [["sale_ok", "=", true]],
+            multiSelect: true,
+            onSelected: async (productIds) => {
+                await this.orm.create(
+                    "tectora.roof.section.product",
+                    productIds.map((productId) => ({
+                        section_id: sectionIds[0],
+                        product_id: productId,
+                        coverage: "edges",
+                        quantity,
+                    }))
+                );
+                await record.load();
+                this.notification.add(
+                    _t("Product(en) toegevoegd aan sectie '%s'.", edge.name),
+                    { type: "success" }
+                );
+                this.draw();
+            },
+        });
+    }
+
     measurements(points) {
         const scale = this.scaleMPerPx;
         const box = boundingBox(points);
@@ -474,7 +579,9 @@ export class RoofCanvasField extends Component {
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool. Klik daarna op " +
-                "'Meting bijwerken uit tekening' om de secties aan te maken.";
+                "'Meting bijwerken uit tekening' om de secties aan te maken. " +
+                "Klik op een lengtelabel op een rand om producten aan die rand " +
+                "toe te voegen.";
         }
     }
 
@@ -504,8 +611,16 @@ export class RoofCanvasField extends Component {
         ctx.lineWidth = 1 / this.view.zoom;
         ctx.strokeRect(0, 0, this.world.w, this.world.h);
 
+        if (this.state.showGrid) {
+            this.drawGrid(ctx);
+        }
+
         for (const shape of this.shapes) {
             this.drawShape(ctx, shape, shape.id === this.state.selectedId);
+        }
+        this.edgeHits = [];
+        for (const shape of this.shapes) {
+            this.drawEdgeLabels(ctx, shape);
         }
         if (this.drag && this.drag.mode === "rect") {
             this.drawDraftRect(ctx);
@@ -513,6 +628,115 @@ export class RoofCanvasField extends Component {
         if (this.draftPolygon) {
             this.drawDraftPolygon(ctx);
         }
+    }
+
+    drawGrid(ctx) {
+        const zoom = this.view.zoom;
+        const scale = this.scaleMPerPx;
+        const screenPxPerMeter = zoom / scale;
+        const step =
+            GRID_STEPS_M.find((s) => s * screenPxPerMeter >= GRID_MIN_SCREEN_PX) ||
+            GRID_STEPS_M[GRID_STEPS_M.length - 1];
+        if (this.state.gridStep !== step) {
+            this.state.gridStep = step;
+        }
+        const stepPx = step / scale;
+        const cols = Math.floor(this.world.w / stepPx);
+        const rows = Math.floor(this.world.h / stepPx);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, this.world.w, this.world.h);
+        ctx.clip();
+        ctx.lineWidth = 1 / zoom;
+        for (let i = 1; i <= cols; i++) {
+            const x = i * stepPx;
+            ctx.strokeStyle = i % GRID_MAJOR_EVERY === 0
+                ? "rgba(11, 78, 91, 0.30)"
+                : "rgba(11, 78, 91, 0.12)";
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, this.world.h);
+            ctx.stroke();
+        }
+        for (let j = 1; j <= rows; j++) {
+            const y = j * stepPx;
+            ctx.strokeStyle = j % GRID_MAJOR_EVERY === 0
+                ? "rgba(11, 78, 91, 0.30)"
+                : "rgba(11, 78, 91, 0.12)";
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(this.world.w, y);
+            ctx.stroke();
+        }
+
+        // Meter labels along the top and left edges, on the major lines.
+        const fontSize = 10 / zoom;
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.fillStyle = "rgba(11, 78, 91, 0.75)";
+        ctx.textAlign = "left";
+        const formatMeters = (m) => (step < 1 ? m.toFixed(1) : String(m)) + " m";
+        for (let i = GRID_MAJOR_EVERY; i <= cols; i += GRID_MAJOR_EVERY) {
+            ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, fontSize * 1.2);
+        }
+        for (let j = GRID_MAJOR_EVERY; j <= rows; j += GRID_MAJOR_EVERY) {
+            ctx.fillText(formatMeters(j * step), 3 / zoom, j * stepPx - 3 / zoom);
+        }
+        ctx.restore();
+    }
+
+    drawEdgeLabels(ctx, shape) {
+        const zoom = this.view.zoom;
+        const scale = this.scaleMPerPx;
+        const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
+        const points = shape.points;
+        const n = points.length;
+        const fontSize = 11 / zoom;
+        const boxHeight = 16 / zoom;
+        const padX = 5 / zoom;
+        ctx.font = `600 ${fontSize}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (let i = 0; i < n; i++) {
+            const [x1, y1] = points[i];
+            const [x2, y2] = points[(i + 1) % n];
+            const lengthPx = Math.hypot(x2 - x1, y2 - y1);
+            if (lengthPx * zoom < EDGE_LABEL_MIN_SCREEN_PX) {
+                continue;
+            }
+            const lengthM = lengthPx * scale;
+            const label = `${lengthM.toFixed(2)} m`;
+            const width = ctx.measureText(label).width + padX * 2;
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2;
+            const x = cx - width / 2;
+            const y = cy - boxHeight / 2;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, width, boxHeight, 3 / zoom);
+            } else {
+                ctx.rect(x, y, width, boxHeight);
+            }
+            ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+            ctx.fill();
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = 1 / zoom;
+            ctx.stroke();
+            ctx.fillStyle = "#0b1f24";
+            ctx.fillText(label, cx, cy);
+            this.edgeHits.push({
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                name: shape.name || "",
+                edgeIndex: i,
+                x,
+                y,
+                w: width,
+                h: boxHeight,
+                lengthM,
+            });
+        }
+        ctx.textBaseline = "alphabetic";
     }
 
     drawShape(ctx, shape, selected) {

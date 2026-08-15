@@ -46,6 +46,13 @@
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.showGrid }"
+                            t-on-click="toggleGrid" title="Meetraster tonen/verbergen">
+                        <i class="fa fa-th"/> Raster
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
                             t-att-disabled="!state.selectedId"
                             t-on-click="renameSelected" title="Geselecteerde sectie hernoemen">
                         <i class="fa fa-pencil"/>
@@ -72,6 +79,7 @@
                 </t>
                 <span class="ms-auto text-muted small pe-2">
                     Schaal: <t t-out="scaleLabel"/>
+                    <t t-if="state.showGrid"> · raster <t t-out="state.gridStep"/> m</t>
                 </span>
             </div>
             <canvas t-ref="canvas"
