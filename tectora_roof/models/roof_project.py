@@ -462,14 +462,17 @@ class TectoraRoofProject(models.Model):
 
         if self.state == "draft" and (section_count or object_count):
             self.state = "measured"
-        self.message_post(
-            body=_(
-                "Measurement synced: %(sections)s section(s), %(objects)s roof "
-                "object(s).",
-                sections=section_count,
-                objects=object_count,
+        # Automatic syncs from the canvas widget run on every drawing change;
+        # they pass this flag so the chatter is not flooded.
+        if not self.env.context.get("tectora_quiet_sync"):
+            self.message_post(
+                body=_(
+                    "Measurement synced: %(sections)s section(s), %(objects)s "
+                    "roof object(s).",
+                    sections=section_count,
+                    objects=object_count,
+                )
             )
-        )
         return True
 
     # ----------------------------------------------------- measurement sheet

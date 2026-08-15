@@ -187,6 +187,42 @@ export class RoofCanvasField extends Component {
         }
         this.props.record.update(values);
         this.draw();
+        this.autoSyncFromCanvas();
+    }
+
+    async autoSyncFromCanvas() {
+        // Keep the sections/objects in sync with the drawing without a manual
+        // 'Meting bijwerken uit tekening' click. Only for already-saved
+        // projects: on a brand-new record the drawing stays local until the
+        // user saves it for the first time.
+        const record = this.props.record;
+        if (!record.resId) {
+            return;
+        }
+        if (this._syncing) {
+            this._syncPending = true;
+            return;
+        }
+        this._syncing = true;
+        try {
+            if (!(await record.save())) {
+                return;
+            }
+            await this.orm.call(
+                "tectora.roof.project", "action_sync_from_canvas",
+                [record.resId], { context: { tectora_quiet_sync: true } }
+            );
+            await record.load();
+            this.draw();
+        } catch (error) {
+            console.warn("Roof canvas auto-sync failed", error);
+        } finally {
+            this._syncing = false;
+            if (this._syncPending) {
+                this._syncPending = false;
+                this.autoSyncFromCanvas();
+            }
+        }
     }
 
     exportSnapshot() {
@@ -691,7 +727,8 @@ export class RoofCanvasField extends Component {
             // The shape was drawn but never synced: run the sync for the user
             // (same as the 'Meting bijwerken uit tekening' button) and retry.
             await this.orm.call(
-                "tectora.roof.project", "action_sync_from_canvas", [record.resId]
+                "tectora.roof.project", "action_sync_from_canvas",
+                [record.resId], { context: { tectora_quiet_sync: true } }
             );
             await record.load();
             this.draw();
@@ -812,11 +849,12 @@ export class RoofCanvasField extends Component {
                 `${m.perimeter.toFixed(2)} m`;
         } else {
             this.state.status =
-                "Teken secties met de rechthoek- of polygoontool. Klik daarna op " +
-                "'Meting bijwerken uit tekening' om de secties aan te maken. " +
-                "Klik op een lengte- of oppervlaktelabel of op een hoekpunt " +
-                "om producten toe te voegen (wit = buitenhoek, oranje = " +
-                "binnenhoek); rechtsklik om een dakobject toe te voegen.";
+                "Teken secties met de rechthoek- of polygoontool; de meting " +
+                "wordt automatisch bijgewerkt (bij een nieuw project: eerst " +
+                "opslaan). Klik op een lengte- of oppervlaktelabel of op een " +
+                "hoekpunt om producten toe te voegen (wit = buitenhoek, " +
+                "oranje = binnenhoek); rechtsklik om een dakobject toe te " +
+                "voegen.";
         }
     }
 
