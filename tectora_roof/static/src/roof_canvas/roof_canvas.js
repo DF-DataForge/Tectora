@@ -180,8 +180,35 @@ export class RoofCanvasField extends Component {
     commit() {
         const raw = JSON.stringify({ shapes: this._shapes });
         this._rawCache = raw;
-        this.props.record.update({ [this.props.name]: raw });
+        const values = { [this.props.name]: raw };
+        const snapshot = this.exportSnapshot();
+        if (snapshot && "canvas_snapshot" in this.props.record.data) {
+            values.canvas_snapshot = snapshot;
+        }
+        this.props.record.update(values);
         this.draw();
+    }
+
+    exportSnapshot() {
+        // Fitted PNG of the whole drawing, stored on the record and used on
+        // the measurement sheet PDF attached to quotations.
+        const canvas = this.canvasRef.el;
+        if (!canvas) {
+            return null;
+        }
+        const saved = { ...this.view };
+        try {
+            this.fitView();
+            this.draw();
+            return canvas.toDataURL("image/png").split(",")[1] || null;
+        } catch {
+            return null;
+        } finally {
+            this.view.zoom = saved.zoom;
+            this.view.x = saved.x;
+            this.view.y = saved.y;
+            this.draw();
+        }
     }
 
     get scaleMPerPx() {

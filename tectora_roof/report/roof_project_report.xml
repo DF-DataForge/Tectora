@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_roof_project" model="ir.actions.report">
+        <field name="name">Meetblad dakmeting</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_roof.report_roof_project</field>
+        <field name="report_file">tectora_roof.report_roof_project</field>
+        <field name="print_report_name">'Meetblad %s' % (object.code)</field>
+        <field name="binding_model_id" ref="model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_roof_project">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h3 class="mb-1">
+                            Meetblad <t t-out="doc.code"/> — <t t-out="doc.name"/>
+                        </h3>
+                        <div class="row small mb-2">
+                            <div class="col-7">
+                                <strong>Klant:</strong>
+                                <t t-out="doc.partner_id.display_name or '-'"/><br/>
+                                <strong>Werfadres:</strong>
+                                <t t-out="doc.address or '-'"/>
+                            </div>
+                            <div class="col-5">
+                                <strong>Projecttype:</strong>
+                                <t t-out="doc._project_type_label()"/><br/>
+                                <strong>Schaal:</strong>
+                                <t t-out="'%.4f m/pixel' % doc.scale_m_per_px"/>
+                            </div>
+                        </div>
+                        <div class="text-center mb-2">
+                            <img t-att-src="image_data_uri(doc._get_drawing_b64())"
+                                 style="max-width: 100%; max-height: 115mm;"
+                                 alt="Dakmeting"/>
+                        </div>
+                        <table class="table table-sm small mb-2">
+                            <thead>
+                                <tr>
+                                    <th>Onderdeel</th>
+                                    <th class="text-end">Breedte (m)</th>
+                                    <th class="text-end">Lengte (m)</th>
+                                    <th class="text-end">Oppervlakte (m²)</th>
+                                    <th class="text-end">Omtrek (m)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.section_ids" t-as="section">
+                                    <td t-out="section.name"/>
+                                    <td class="text-end" t-out="'%.2f' % section.width"/>
+                                    <td class="text-end" t-out="'%.2f' % section.length"/>
+                                    <td class="text-end" t-out="'%.2f' % section.area"/>
+                                    <td class="text-end" t-out="'%.2f' % section.perimeter"/>
+                                </tr>
+                                <tr t-foreach="doc.roof_object_ids" t-as="roof_object">
+                                    <td>
+                                        <t t-out="roof_object.name"/>
+                                        <span class="text-muted"> (dakobject)</span>
+                                    </td>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.width"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.length"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.area"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Totaal daksecties</th>
+                                    <th/>
+                                    <th/>
+                                    <th class="text-end" t-out="'%.2f' % doc.total_area"/>
+                                    <th class="text-end" t-out="'%.2f' % doc.total_perimeter"/>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div class="text-end">
+                            <strong>Geschat totaal (excl. btw):</strong>
+                            <span t-out="doc.estimated_total"
+                                  t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
