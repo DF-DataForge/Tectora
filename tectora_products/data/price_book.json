@@ -1,0 +1,3671 @@
+{
+ "categories": [
+  {
+   "key": "algemene_werken",
+   "name": "01. Algemene werken"
+  },
+  {
+   "key": "veiligheid",
+   "name": "02. Verplichte veiligheidsvoorzieningen"
+  },
+  {
+   "key": "afbraak",
+   "name": "03. Afbraakwerken plat dak"
+  },
+  {
+   "key": "opbouw",
+   "name": "04. Opbouwwerken plat dak"
+  },
+  {
+   "key": "koepels",
+   "name": "05. Koepels"
+  },
+  {
+   "key": "dakramen",
+   "name": "06. Dakramen"
+  },
+  {
+   "key": "oversteken",
+   "name": "07. Oversteken"
+  },
+  {
+   "key": "terrasvloer",
+   "name": "08. Terrasvloer"
+  },
+  {
+   "key": "worst_case",
+   "name": "09. Worst case scenario"
+  },
+  {
+   "key": "notas",
+   "name": "10. Algemene nota's"
+  },
+  {
+   "key": "garantie",
+   "name": "11. Garantiepakket EPDM Solutions"
+  },
+  {
+   "key": "andere",
+   "name": "12. Andere werken"
+  },
+  {
+   "key": "upsale",
+   "name": "13. Upsale"
+  }
+ ],
+ "uoms": {
+  "unit": "Stuk",
+  "m2": "m²",
+  "m": "m",
+  "forfait": "Forfait",
+  "day": "Dag",
+  "hour": "Uur",
+  "week": "Week"
+ },
+ "pricelists": {
+  "renovatie": "Renovatie",
+  "nieuwbouw": "Nieuwbouw",
+  "industrie": "Industrie"
+ },
+ "products": [
+  {
+   "code": "DAK-0001",
+   "name": "Werfinrichting en algemene vaste kosten",
+   "description": "Werfinrichting en algemene vaste kosten",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 85.0,
+   "prices": {
+    "nieuwbouw": 70.0,
+    "industrie": 70.0
+   },
+   "note": "€ 1,50 per m² (minimum: € 85) -> 100m² = € 150,00",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0002",
+   "name": "Klein materiaal forfait (lijmborstels, lijmrollen, scrubber, ...)",
+   "description": "Klein materiaal forfait (lijmborstels, lijmrollen, scrubber, ...)",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 62.81,
+   "prices": {
+    "nieuwbouw": 59.82
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0003",
+   "name": "Verticaal transport van de materialen manueel",
+   "description": "Verticaal transport van de materialen manueel",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 148.38,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0004",
+   "name": "Verticaal transport van de materialen camionkraan",
+   "description": "Verticaal transport van de materialen camionkraan",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 285.26,
+   "prices": {
+    "nieuwbouw": 271.68,
+    "industrie": 271.68
+   },
+   "note": "Opgepast bij hoger dan 15m veel duurder!!",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0005",
+   "name": "Verticaal transport met mobiele torenkraan (overheen de woning)",
+   "description": "Verticaal transport met mobiele torenkraan (overheen de woning)\n(nota: hiervoor doen wij beroep op Noordzeekranen of alternatief)",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 650.0,
+   "prices": {},
+   "note": "Nooit goedkoper en wordt nadien verrekend",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0006",
+   "name": "levering materialen tot aan het gebouw met camionkraan",
+   "description": "levering materialen tot aan het gebouw met camionkraan",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 285.26,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0007",
+   "name": "Transport van de materialen met camion tot aan de woning + daarna",
+   "description": "Transport van de materialen met camion tot aan de woning + daarna\nmanueel tot op het dak (doorheen de woning)",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 397.65,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0008",
+   "name": "Parkeervergunning forfait 50€ per werkdag",
+   "description": "Parkeervergunning forfait 50€ per werkdag",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 50.0,
+   "prices": {},
+   "note": "forfait per werkdag",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0009",
+   "name": "Veiligheidsankerogen conform EN-norm",
+   "description": "Veiligheidsankerogen conform EN-norm",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 52.38,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0010",
+   "name": "Afvalverwerking",
+   "description": "Afvalverwerking\n(nota: dit is een geschatte prijs: dit wordt nadien correct verrekend\nvolgens de factuur van het afvalverwerkend bedrijf, het is onmogelijk\nom hier op voorhand een specifieke en juiste prijs op te zetten dus\nproberen wij al een benaderende inschatting te maken op uw offerte)",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "ALTIJD GESCHATTE PRIJS BIJ PLAATSING CONTAINERS | -> opletten bij forfaitaire offerte",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0011",
+   "name": "Toilet wordt voorzien door de klant",
+   "description": "Toilet wordt voorzien door de klant",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0012",
+   "name": "Voorrijdkost < 15 km",
+   "description": "Voorrijdkost < 15 km",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 65.0,
+   "prices": {},
+   "note": "Vanaf tweede werkdag: € 15 bijtellen per werkdag",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0013",
+   "name": "Voorrijdkost < 30 km",
+   "description": "Voorrijdkost < 30 km",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 80.0,
+   "prices": {},
+   "note": "Vanaf tweede werkdag: € 30 bijtellen per werkdag",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0014",
+   "name": "Voorrijdkost < 50 km",
+   "description": "Voorrijdkost < 50 km",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 107.0,
+   "prices": {},
+   "note": "Vanaf tweede werkdag: € 50 bijtellen per werkdag",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0015",
+   "name": "Noordzeekranen (forfait: wordt nadien verrekend volgens effectieve prestaties)",
+   "description": "Noordzeekranen (forfait: wordt nadien verrekend volgens effectieve prestaties)",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 650.0,
+   "prices": {
+    "industrie": 600.0
+   },
+   "note": "per dag",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0016",
+   "name": "Voorrijdkost < 100 km",
+   "description": "Voorrijdkost < 100 km",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 150.0,
+   "prices": {},
+   "note": "Vanaf tweede werkdag: € 100 bijtellen per werkdag",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0017",
+   "name": "Voorrijdkost > 100 km",
+   "description": "Voorrijdkost > 100 km",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 165.0,
+   "prices": {},
+   "note": "Vanaf tweede werkdag: € 115 bijtellen per werkdag",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0018",
+   "name": "Plaatsen van stelling (prijs per m²)",
+   "description": "Plaatsen van stelling (prijs per m²)",
+   "category": "algemene_werken",
+   "uom": "m2",
+   "list_price": 18.69,
+   "prices": {
+    "industrie": 18.57
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0019",
+   "name": "Keuren van de stelling (vaste prijs)",
+   "description": "Keuren van de stelling (vaste prijs)",
+   "category": "algemene_werken",
+   "uom": "forfait",
+   "list_price": 127.4,
+   "prices": {
+    "industrie": 123.27
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0020",
+   "name": "Hoogwerker (geschat op xxx dagen, prijs per dag opgegeven)",
+   "description": "Hoogwerker (geschat op xxx dagen, prijs per dag opgegeven)",
+   "category": "algemene_werken",
+   "uom": "day",
+   "list_price": 375.0,
+   "prices": {},
+   "note": "Zie prijzen in One Drive bij technische fiches! + verzekering en verplaatsingskost",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0021",
+   "name": "Hoogwerker om aan de tapbuis te kunnen werken (!!)",
+   "description": "Hoogwerker om aan de tapbuis te kunnen werken (!!)",
+   "category": "algemene_werken",
+   "uom": "day",
+   "list_price": 375.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0022",
+   "name": "Leveren en plaatsen van het werftoilet",
+   "description": "Leveren en plaatsen van het werftoilet",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Steeds prijs opvragen",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0023",
+   "name": "Toilet wordt voorzien door de klant (er wordt geen werftoilet geplaatst)",
+   "description": "Toilet wordt voorzien door de klant (er wordt geen werftoilet geplaatst)",
+   "category": "algemene_werken",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0024",
+   "name": "Gebruik van de valbeveiliging type: Weight Angels (2 stuks ifv lijn ertussen)",
+   "description": "Gebruik van de valbeveiliging type: Weight Angels (2 stuks ifv lijn ertussen)",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 150.0,
+   "prices": {},
+   "note": "Verhuurprijs per stuk per week",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0025",
+   "name": "Leveren en plaatsen van het permanent ankerpunt type: Wallfix EN-795: 2012 type A (conform EN-norm)",
+   "description": "Leveren en plaatsen van het permanent ankerpunt type:\nWallfix EN-795: 2012 type A (conform EN-norm)\nVoor stenen muren en betonnen wanden voor max. 2 pers.\nMet betonanker 16mm en 3x bout 11mm",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 150.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0026",
+   "name": "Leveren en plaatsen van het permanent ankerpunt type: ABS-Lock X-SR-B (conform EN-norm)",
+   "description": "Leveren en plaatsen van het permanent ankerpunt type:\nABS-Lock X-SR-B (conform EN-norm)\nVoor montage op beton voor max. 3 pers.",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 215.0,
+   "prices": {},
+   "note": "maximum afstand tussen 2 ankerpunten = 7 meter",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0027",
+   "name": "Leveren en plaatsen van het permanent ankerpunt type: ABS-Lock X-H-16 (conform EN-norm)",
+   "description": "Leveren en plaatsen van het permanent ankerpunt type:\nABS-Lock X-H-16 (conform EN-norm)\nVoor montage op houten dakvloer voor max. 3 pers.",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 230.0,
+   "prices": {},
+   "note": "maximum afstand tussen 2 ankerpunten = 7 meter",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0028",
+   "name": "Leveren en plaatsen van het permanent ankerpunt type: ABS-Lock X-T-21 (conform EN-norm)",
+   "description": "Leveren en plaatsen van het permanent ankerpunt type:\nABS-Lock X-T-21 (conform EN-norm)\nVoor montage op steeldeck voor max. 3 pers.",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 230.0,
+   "prices": {},
+   "note": "maximum afstand tussen 2 ankerpunten = 7 meter",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0029",
+   "name": "Gebruik van de valbeveiliging bestaande uit mobiele leeflijn,",
+   "description": "Gebruik van de valbeveiliging bestaande uit mobiele leeflijn,\nlijnverkorter en harnas. 1 set per dakwerker nodig",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 14.5,
+   "prices": {},
+   "note": "steeds prijs 1 set per persoon",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0030",
+   "name": "Leveren en plaatsen van de tijdelijke balustrades type: verticale spijlen met houten balkstructuur",
+   "description": "Leveren en plaatsen van de tijdelijke balustrades type:\nverticale spijlen met houten balkstructuur",
+   "category": "veiligheid",
+   "uom": "unit",
+   "list_price": 13.95,
+   "prices": {},
+   "note": "Nota: dit zijn onze eigen balustrades (dus niet van | Cofapro) OPGELET: bij minder dan 15lm: 19,95€/lm",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0031",
+   "name": "Leveren en plaatsen van de tijdelijke balustrades per lm type: Securilisse EVO cfr norm EN ISO 13374A & EN ISO 14122-3",
+   "description": "Leveren en plaatsen van de tijdelijke balustrades per lm type:\nSecurilisse EVO cfr norm EN ISO 13374A & EN ISO 14122-3\nAluminium balustrade vrij opgelegd met contragewichten",
+   "category": "veiligheid",
+   "uom": "m",
+   "list_price": 44.75,
+   "prices": {},
+   "note": "Prijs per lopende meter met maximum 4 weken huur!! | Meer dan 4 weken nodig = prijs opvragen bij Cofapro",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0032",
+   "name": "Gebruik van de valbeveiliging type: Weight Angel (per week)",
+   "description": "Gebruik van de valbeveiliging type: Weight Angel (per week)",
+   "category": "veiligheid",
+   "uom": "week",
+   "list_price": 150.0,
+   "prices": {},
+   "note": "Verhuurprijs per stuk per week",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0033",
+   "name": "Gebruik van de valbeveiliging type: Safety Bull (per week)",
+   "description": "Gebruik van de valbeveiliging type: Safety Bull (per week)",
+   "category": "veiligheid",
+   "uom": "week",
+   "list_price": 350.0,
+   "prices": {},
+   "note": "Verhuurprijs per stuk per week",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0034",
+   "name": "Verwijderen van de huidige ballastlaag (keien/rolgrind) (m²)",
+   "description": "Verwijderen van de huidige ballastlaag (keien/rolgrind) (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 14.9,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0035",
+   "name": "Verwijderen van de huidige terrasvloer type: tegels/dallen (m²)",
+   "description": "Verwijderen van de huidige terrasvloer type: tegels/dallen (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 36.56,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0036",
+   "name": "Verwijderen van de huidige terrasvloer type: bankirai (m²)",
+   "description": "Verwijderen van de huidige terrasvloer type: bankirai (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 28.21,
+   "prices": {},
+   "note": "OPGELET: nooit terugplaatsen!!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0037",
+   "name": "Verwijderen van de huidige dakbedekking type: roofing/asfalt 1 laag (m²)",
+   "description": "Verwijderen van de huidige dakbedekking type: roofing/asfalt 1 laag (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 20.87,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0038",
+   "name": "Verwijderen van de huidige dakbedekking type: roofing/asfalt 2 lagen (m²)",
+   "description": "Verwijderen van de huidige dakbedekking type: roofing/asfalt 2 lagen (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 26.12,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0039",
+   "name": "Verwijderen van de huidige dakbedekking type: EPDM/PVC (m²)",
+   "description": "Verwijderen van de huidige dakbedekking type: EPDM/PVC (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 10.88,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0040",
+   "name": "Verwijderen van de huidige dakbedekking type: zink/koper (m²)",
+   "description": "Verwijderen van de huidige dakbedekking type: zink/koper (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 13.08,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0041",
+   "name": "Verwijderen van de huidige dakbedekking type: sandwichpanelen (m²)",
+   "description": "Verwijderen van de huidige dakbedekking type: sandwichpanelen (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 13.08,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0042",
+   "name": "Verwijderen van het huidige isolatiepakket type: xxxxxx (m²)",
+   "description": "Verwijderen van het huidige isolatiepakket type: xxxxxx (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 14.2,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0043",
+   "name": "Verwijderen van de huidige dakvloer type: houtvezelplaten (m²)",
+   "description": "Verwijderen van de huidige dakvloer type: houtvezelplaten (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 15.58,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0044",
+   "name": "Verwijderen van de huidige houten constructie (balken) (m²)",
+   "description": "Verwijderen van de huidige houten constructie (balken) (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 15.34,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0045",
+   "name": "Verwijderen van de huidige hellingschappe (m²)",
+   "description": "Verwijderen van de huidige hellingschappe (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 37.12,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0046",
+   "name": "Verwijderen van de dekstenen/dekpannen (lm)",
+   "description": "Verwijderen van de dekstenen/dekpannen (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 21.91,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0047",
+   "name": "Verwijderen van de dakrandprofielen (lm)",
+   "description": "Verwijderen van de dakrandprofielen (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 7.69,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0048",
+   "name": "Verwijderen en terugplaatsen van de nokpannen ( lm)",
+   "description": "Verwijderen en terugplaatsen van de nokpannen ( lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 57.14,
+   "prices": {},
+   "note": "OPGELET: hier ook multiplex/cls rekenen in opbouwfase!!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0049",
+   "name": "Verwijderen en herplaatsen van de onderste rij pannen (lm)",
+   "description": "Verwijderen en herplaatsen van de onderste rij pannen (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 27.39,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0050",
+   "name": "Verwijderen en herplaatsen van de onderste rij leien (lm)",
+   "description": "Verwijderen en herplaatsen van de onderste rij leien (lm)\n(nota: hou hierbij rekening op de kans dat er enkele breken en\ndat dit nadien verrekend wordt, mocht dit zich voordoen)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 59.15,
+   "prices": {},
+   "note": "Vragen of klant er extra liggen heeft, mochten er breken | Indien niet: zeker type omschrijven in SF + foto met maten",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0051",
+   "name": "Verwijderen en herplaatsen van de onderste rij sidings (lm)",
+   "description": "Verwijderen en herplaatsen van de onderste rij sidings (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 59.15,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0052",
+   "name": "Inkorten van de sidings (horizontaal afschijven) ifv plaatsen solins (lm)",
+   "description": "Inkorten van de sidings (horizontaal afschijven) ifv plaatsen solins (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 29.6,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0053",
+   "name": "Verwijderen solins/wandaansluitprofielen (lm)",
+   "description": "Verwijderen solins/wandaansluitprofielen (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 7.89,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0054",
+   "name": "Verwijderen van de koepelschaal inclusief koepelopstand",
+   "description": "Verwijderen van de koepelschaal inclusief koepelopstand",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 65.25,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0055",
+   "name": "Verwijderen van de koepelschaal exclusief koepelopstand",
+   "description": "Verwijderen van de koepelschaal exclusief koepelopstand",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 36.03,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0056",
+   "name": "Verwijderen van het houten dakluik (daktoegangkoepel komt in",
+   "description": "Verwijderen van het houten dakluik (daktoegangkoepel komt in\nde plaats hiervan: zie opbouwwerken)",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 53.72,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0057",
+   "name": "Verwijderen dakdoorvoer",
+   "description": "Verwijderen dakdoorvoer",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 17.5,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0058",
+   "name": "Verwijderen en terugplaatsen zonnepanelen (prijs per paneel excl. transport)",
+   "description": "Verwijderen en terugplaatsen zonnepanelen (prijs per paneel excl. transport)",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 100.0,
+   "prices": {},
+   "note": "Prijs opvragen bij Glenn! + minimum 10% extra",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0059",
+   "name": "leveren en plaatsen van de rubbertegels 50x50x2,50cm (dikte)",
+   "description": "leveren en plaatsen van de rubbertegels 50x50x2,50cm (dikte)",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 11.43,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0060",
+   "name": "Verwijderen van de afvoerbuis (lm)",
+   "description": "Verwijderen van de afvoerbuis (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 5.8,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0061",
+   "name": "Verwijderen van zinken bekleding uit de bakgoot (binnenzijde) (lm)",
+   "description": "Verwijderen van zinken bekleding uit de bakgoot (binnenzijde) (lm)",
+   "category": "afbraak",
+   "uom": "m",
+   "list_price": 27.38,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0062",
+   "name": "Afbraak van de tapbuis/spuwer",
+   "description": "Afbraak van de tapbuis/spuwer",
+   "category": "afbraak",
+   "uom": "unit",
+   "list_price": 24.23,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0063",
+   "name": "Voorbereiding van de huidige dakbedekking om als dampscherm te voldoen (m²)",
+   "description": "Voorbereiding van de huidige dakbedekking om als dampscherm te voldoen (m²)",
+   "category": "afbraak",
+   "uom": "m2",
+   "list_price": 2.9,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0064",
+   "name": "Leveren en plaatsen van de multiplex in de bakgoot (lm)",
+   "description": "Leveren en plaatsen van de multiplex in de bakgoot (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 19.86,
+   "prices": {
+    "industrie": 19.56
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0065",
+   "name": "Leveren en plaatsen van de spouwplank (m²) type: multiplex 15mm voor",
+   "description": "Leveren en plaatsen van de spouwplank (m²) type: multiplex 15mm voor\nde overbrugging van het muurpakket en voor montage van de dakranden\nBreedte: x - Lengte: x",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 52.05,
+   "prices": {
+    "industrie": 56.05
+   },
+   "note": "bij renovatie tenzij upsale naar Solid John | ENKEL BIJ BREEDTE VANAF 25CM",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0066",
+   "name": "Leveren en plaatsen van de spouwplank (m²) type: garantiemultiplex type: Solid John 15mm dik voor de overbrugging van he",
+   "description": "Leveren en plaatsen van de spouwplank (m²) type: garantiemultiplex type:\nSolid John 15mm dik voor de overbrugging van het muurpakket en voor\nmontage van de dakranden (beste spouwplank op de markt)\nBreedte: x - Lengte: x",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 74.8,
+   "prices": {
+    "industrie": 87.93
+   },
+   "note": "ALTIJD bij nieuwbouw en upsale bij renovatie | ENKEL BIJ BREEDTE VANAF 25CM",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0067",
+   "name": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen",
+   "description": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen\ntype: Bendec in kleur: RAL naar keuze (ook structuurlak) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 41.45,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0068",
+   "name": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen",
+   "description": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen\ntype: Bendec in kleur: geanodiseerd",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 31.67,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0069",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande muurkappen",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande muurkappen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 74.19,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0070",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande muurkappen",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande muurkappen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 74.19,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0071",
+   "name": "Leveren en plaatsen van de eindstukken voor bovenstaande muurkappen",
+   "description": "Leveren en plaatsen van de eindstukken voor bovenstaande muurkappen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 74.19,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0072",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen\nen druiplijsten",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 43.39,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0073",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen\nen druiplijsten",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 43.39,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0074",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande alu-kralen",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande alu-kralen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 67.2,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0075",
+   "name": "Leveren en plaatsen van de draagstructuur van het dak",
+   "description": "Leveren en plaatsen van de draagstructuur van het dak\nin baddens type oregon 6,5 x 17 incl. balkdragers (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 31.33,
+   "prices": {
+    "nieuwbouw": 29.84,
+    "industrie": 29.84
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0076",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande alu-kralen",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande alu-kralen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 67.2,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0077",
+   "name": "Leveren en plaatsen van de draagstructuur van het dak",
+   "description": "Leveren en plaatsen van de draagstructuur van het dak\nin baddens type oregon 7,5 x 23 incl. balkdragers (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 35.42,
+   "prices": {
+    "nieuwbouw": 33.73,
+    "industrie": 33.73
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0078",
+   "name": "Leveren en plaatsen van de hellingslatten - verval van 1cm / m (lm)",
+   "description": "Leveren en plaatsen van de hellingslatten - verval van 1cm / m (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 14.3,
+   "prices": {
+    "nieuwbouw": 13.62,
+    "industrie": 13.62
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0079",
+   "name": "Leveren en plaatsen van de dakvloer type OSB 18mm incl. tand en groef (m²)",
+   "description": "Leveren en plaatsen van de dakvloer type OSB 18mm incl. tand en groef (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 34.57,
+   "prices": {
+    "nieuwbouw": 30.89,
+    "industrie": 33.89
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0080",
+   "name": "Leveren en plaatsen van de dakvloer type OSB 22mm incl. tand en groef (m²)",
+   "description": "Leveren en plaatsen van de dakvloer type OSB 22mm incl. tand en groef (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 39.89,
+   "prices": {
+    "nieuwbouw": 36.11,
+    "industrie": 39.11
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0081",
+   "name": "Leveren en plaatsen van de dakvloer type: Unilin Durelis TG-Topfinish",
+   "description": "Leveren en plaatsen van de dakvloer type: Unilin Durelis TG-Topfinish\n18mm dik (vochtwerende spaanplaat) (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 37.28,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0082",
+   "name": "Leveren en plaatsen van de gootvloer in multiplex in de bakgoot (lm)",
+   "description": "Leveren en plaatsen van de gootvloer in multiplex in de bakgoot (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 21.89,
+   "prices": {},
+   "note": "max 30cm breed",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0083",
+   "name": "Leveren en plaatsen van CLS-latten om 10/12 cm ophoging van de dakrand",
+   "description": "Leveren en plaatsen van CLS-latten om 10/12 cm ophoging van de dakrand\nte voorzien om te kunnen isoleren (momenteel gebrek aan hoogte) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 18.61,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0084",
+   "name": "Leveren en plaatsen van CLS-latten om 14/16 cm ophoging van de dakrand",
+   "description": "Leveren en plaatsen van CLS-latten om 14/16 cm ophoging van de dakrand\nte voorzien om te kunnen isoleren (momenteel gebrek aan hoogte) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 25.4,
+   "prices": {},
+   "note": "OPGELET: hier overstappen naar Bendec DRBS 200",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0085",
+   "name": "Leveren en plaatsen van de spouwplank (m²) type: multiplex 15mm voor",
+   "description": "Leveren en plaatsen van de spouwplank (m²) type: multiplex 15mm voor\nde overbrugging van het muurpakket en voor montage van de dakranden\nOntvouwing: x - Lengte: x",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 57.05,
+   "prices": {},
+   "note": "bij renovatie tenzij upsale naar Solid John | ENKEL BIJ BREEDTE VANAF 25CM",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0086",
+   "name": "Leveren en plaatsen van de spouwplank (lm) type: multiplex 15mm voor",
+   "description": "Leveren en plaatsen van de spouwplank (lm) type: multiplex 15mm voor\nde overbrugging van het muurpakket en voor montage van de dakranden",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 17.15,
+   "prices": {
+    "nieuwbouw": 16.15,
+    "industrie": 15.15
+   },
+   "note": "BIJ BREEDTE MINDER DAN 25CM",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0087",
+   "name": "Randaansluiting type: aansluiting met zinken profiel op het onderdak",
+   "description": "Randaansluiting type: aansluiting met zinken profiel op het onderdak\nvan het hellend dak (onder de pannen) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 27.52,
+   "prices": {
+    "industrie": 26.47
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0088",
+   "name": "Leveren en plaatsen van de spouwplank (m²) type: garantiemultiplex type: Solid John 15mm dik voor de overbrugging van he",
+   "description": "Leveren en plaatsen van de spouwplank (m²) type: garantiemultiplex type:\nSolid John 15mm dik voor de overbrugging van het muurpakket en voor\nmontage van de dakranden (beste spouwplank op de markt)\nOntvouwing: x - Lengte: x",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 91.72,
+   "prices": {},
+   "note": "ALTIJD bij nieuwbouw en upsale bij renovatie | ENKEL BIJ BREEDTE VANAF 25CM",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0089",
+   "name": "Leveren en plaatsen van de spouwplank (lm) type: garantiemultiplex type: Solid John 15mm dik voor de overbrugging van he",
+   "description": "Leveren en plaatsen van de spouwplank (lm) type: garantiemultiplex type:\nSolid John 15mm dik voor de overbrugging van het muurpakket en voor\nmontage van de dakranden (beste spouwplank op de markt)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 20.89,
+   "prices": {
+    "nieuwbouw": 18.45,
+    "industrie": 18.51
+   },
+   "note": "BIJ BREEDTE MINDER DAN 25CM",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0090",
+   "name": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)",
+   "description": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)\ntype: Bendec in kleur: RAL 9005 structuur / 9006 satijn",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 40.43,
+   "prices": {
+    "nieuwbouw": 36.4,
+    "industrie": 35.35
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0091",
+   "name": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)",
+   "description": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)\ntype: Bendec in kleur: geanodiseerd",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 41.76,
+   "prices": {},
+   "note": "indien l-profielen mag nog geanodiseerd verkocht | worden, anders zo weinig mogelijk!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0092",
+   "name": "Leveren en plaatsen van dampscherm type: V3",
+   "description": "Leveren en plaatsen van dampscherm type: V3\nincl. ontvouwing tot voorbij de isolatieopstanden (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 13.98,
+   "prices": {},
+   "note": "op Beton/Chappe",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0093",
+   "name": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)",
+   "description": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen (lm)\ntype: Bendec in kleur: RAL naar keuze (ook structuurlak)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 46.83,
+   "prices": {
+    "nieuwbouw": 42.5
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0094",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande dakranden",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande dakranden",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 24.01,
+   "prices": {
+    "nieuwbouw": 22.87,
+    "industrie": 22.87
+   },
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0095",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande dakranden",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande dakranden",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 24.01,
+   "prices": {
+    "nieuwbouw": 22.87,
+    "industrie": 22.87
+   },
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0096",
+   "name": "Leveren en plaatsen van L-profiel om ophoging van de dakopbouw",
+   "description": "Leveren en plaatsen van L-profiel om ophoging van de dakopbouw\nweg te werken hoogte 150 mm kleur: idem dakrand = geanodiseerd (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 27.62,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0097",
+   "name": "Leveren en plaatsen van L-profiel om ophoging van de dakopbouw",
+   "description": "Leveren en plaatsen van L-profiel om ophoging van de dakopbouw\nweg te werken hoogte 150 mm kleur: idem dakrand = RAL xxx (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 36.73,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0098",
+   "name": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec",
+   "description": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec\nDRBS 150mm met nuttige hoogte onder oplegvlak: 127mm\nKleur: RAL xxxxx (nota: om ophoging mooi af te werken) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 47.4,
+   "prices": {},
+   "note": "opgelet: dekt maximum 12cm ophoging",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0099",
+   "name": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec",
+   "description": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec\nDRBS 175mm met nuttige hoogte onder oplegvlak: 152mm\nKleur: RAL xxxxx (nota: om ophoging mooi af te werken) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 49.8,
+   "prices": {},
+   "note": "opgelet: dekt maximum 14cm ophoging",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0100",
+   "name": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec",
+   "description": "Leveren en plaatsen van de hoge dakrandprofielen type: Bendec\nDRBS 200mm met nuttige hoogte onder oplegvlak: 177mm\nKleur: RAL xxxxx (nota: om ophoging mooi af te werken) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 55.59,
+   "prices": {},
+   "note": "opgelet: dekt maximum 16cm ophoging",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0101",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande dakranden (st)",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande dakranden (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 43.95,
+   "prices": {},
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0102",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande dakranden (st)",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande dakranden (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 43.95,
+   "prices": {},
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0103",
+   "name": "Leveren en plaatsen van de muurkappen in aluminium type: Bendec met totale ontvouwing:  550-599 (dikte 2mm) in RAL (lm)",
+   "description": "Leveren en plaatsen van de muurkappen in aluminium type:\nBendec met totale ontvouwing:  550-599 (dikte 2mm) in RAL (lm)\n(Deze post wordt nadien opgemeten en aangepast volgens de\neffectieve hoeveelheden)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 104.01,
+   "prices": {
+    "nieuwbouw": 96.96,
+    "industrie": 95.91
+   },
+   "note": "Prijs opvragen bij leverancier door Sales!!! | Open prijszetting en nadien te verrekenen | Rekening houden met opmetingskost Bendec: +/- € 250",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0104",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 2x8cm met lambdawaarde 0,022W/mK en R-waarde: 7,25m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 62.61,
+   "prices": {
+    "industrie": 61.31
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0105",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L\nDikte: 18cm met lambdawaarde 0,022W/mK en R-waarde: 8,10m²K/W",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 51.14,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0106",
+   "name": "Leveren en plaatsen van de zettingsstrip thv de verticale opstanden type: Isover Multimax 30 met dikte: 45mm (gemiddelde",
+   "description": "Leveren en plaatsen van de zettingsstrip thv de verticale opstanden type:\nIsover Multimax 30 met dikte: 45mm (gemiddelde hoogte 25 à 30cm) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 7.34,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0107",
+   "name": "Meerprijs RAL Speciaal per lm",
+   "description": "Meerprijs RAL Speciaal per lm",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 3.15,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0108",
+   "name": "Leveren en plaatsen van de muurkappen in aluminium type: Bendec met totale ontvouwing:  650-699 (dikte 3mm) in RAL (lm)",
+   "description": "Leveren en plaatsen van de muurkappen in aluminium type:\nBendec met totale ontvouwing:  650-699 (dikte 3mm) in RAL (lm)\n(Deze post wordt nadien opgemeten en aangepast volgens de\neffectieve hoeveelheden)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 138.18,
+   "prices": {
+    "nieuwbouw": 128.45,
+    "industrie": 127.4
+   },
+   "note": "Prijs opvragen bij leverancier door Sales!!! | Open prijszetting en nadien te verrekenen | Rekening houden met opmetingskost Bendec: +/- € 250",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0109",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L\nDikte: 20cm met lambdawaarde 0,022W/mK en R-waarde: 9,00m²K/W",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 56.71,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0110",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande muurkappen (st)",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande muurkappen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 79.1,
+   "prices": {},
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0111",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande muurkappen (st)",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande muurkappen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 79.1,
+   "prices": {},
+   "note": "altijd in offerte op te nemen",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0112",
+   "name": "Leveren en plaatsen van de zettingsstrip thv de verticale opstanden type:",
+   "description": "Leveren en plaatsen van de zettingsstrip thv de verticale opstanden type:",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 7.34,
+   "prices": {},
+   "note": "VERPLICHT TOE TE VOEGEN BIJ ELKE OFFERTE NIEUWBOUW",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0113",
+   "name": "Leveren en plaatsen van de eindstukken voor bovenstaande muurkappen (st)",
+   "description": "Leveren en plaatsen van de eindstukken voor bovenstaande muurkappen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 79.1,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0114",
+   "name": "Leveren en plaatsen van de dakranden type: zinken kraal kleur: naturel zink met zichthoogte van 22mm incl. verdichting",
+   "description": "Leveren en plaatsen van de dakranden type: zinken kraal kleur:\nnaturel zink met zichthoogte van 22mm incl. verdichting\nen onderliggende druiplijst om de spouwplank af te dekken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 50.28,
+   "prices": {
+    "nieuwbouw": 45.79,
+    "industrie": 44.74
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0115",
+   "name": "Leveren en plaatsen van de gootsysteem breedte 25cm tbv optimale",
+   "description": "Leveren en plaatsen van de gootsysteem breedte 25cm tbv optimale\nafwatering naar tapbuis & het behoud van een verlaagde dakrand (m²)\nDikte: 3cm met lambdawaarde 0,022W/mK en R-waarde: 1,35m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 38.04,
+   "prices": {
+    "industrie": 36.99
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0116",
+   "name": "Leveren en plaatsen van de dakranden type: zinken kraal kleur: anthraciet zink met zichthoogte van 22mm incl. verdichtin",
+   "description": "Leveren en plaatsen van de dakranden type: zinken kraal kleur:\nanthraciet zink met zichthoogte van 22mm incl. verdichting\nen onderliggende druiplijst om de spouwplank af te dekken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 54.89,
+   "prices": {
+    "nieuwbouw": 50.18,
+    "industrie": 49.13
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0117",
+   "name": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,20mm",
+   "description": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,20mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nGeplaatst in  of zo groot mogelijke naadloze doeken (m²)\nNOTA: er wordt KIMFIXATIE voorzien thv alle zijdes",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 44.6,
+   "prices": {
+    "industrie": 42.26
+   },
+   "note": "minimum | (extra korting: altijd toestemming vragen Mathias!)",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0118",
+   "name": "Leveren en plaatsen van de dakranden type: zinken kraal kleur: quartz zink met zichthoogte van 22mm incl. verdichting",
+   "description": "Leveren en plaatsen van de dakranden type: zinken kraal kleur:\nquartz zink met zichthoogte van 22mm incl. verdichting\nen onderliggende druiplijst om de spouwplank af te dekken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 54.22,
+   "prices": {
+    "nieuwbouw": 49.54,
+    "industrie": 48.49
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0119",
+   "name": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,50mm",
+   "description": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,50mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nGeplaatst in  of zo groot mogelijke naadloze doeken (m²)\nNOTA: er wordt KIMFIXATIE voorzien thv alle zijdes",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 46.99,
+   "prices": {
+    "industrie": 44.51
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0120",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen\nen druiplijsten (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 45.56,
+   "prices": {
+    "nieuwbouw": 43.39
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0121",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen\nen druiplijsten (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 45.56,
+   "prices": {
+    "nieuwbouw": 43.39
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0122",
+   "name": "Leveren en plaatsen van de EPDM type: ELEVATE rubbergard 1,14mm",
+   "description": "Leveren en plaatsen van de EPDM type: ELEVATE rubbergard 1,14mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nGeplaatst in  of zo groot mogelijke naadloze doeken (m²)\nNOTA: er wordt KIMFIXATIE voorzien thv alle zijdes",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 46.95,
+   "prices": {
+    "industrie": 44.6
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0123",
+   "name": "Leveren en plaatsen van de 2-delige aluminium kralen type: ICONIK",
+   "description": "Leveren en plaatsen van de 2-delige aluminium kralen type: ICONIK\nClaerhout Aluminium - in RAL-kleur naar keuze (ook structuurlak) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 52.85,
+   "prices": {
+    "industrie": 58.24
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0124",
+   "name": "Leveren en plaatsen van de binnenhoeken voor bovenstaande alu-kralen (st)",
+   "description": "Leveren en plaatsen van de binnenhoeken voor bovenstaande alu-kralen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 61.66,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0125",
+   "name": "Leveren en plaatsen van de EPDM type: ELEVATE rubbergard 1,50mm",
+   "description": "Leveren en plaatsen van de EPDM type: ELEVATE rubbergard 1,50mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nGeplaatst in  of zo groot mogelijke naadloze doeken (m²)\nNOTA: er wordt KIMFIXATIE voorzien thv alle zijdes",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 49.46,
+   "prices": {
+    "industrie": 48.97
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0126",
+   "name": "Leveren en plaatsen van de buitenhoeken voor bovenstaande alu-kralen (st)",
+   "description": "Leveren en plaatsen van de buitenhoeken voor bovenstaande alu-kralen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 61.66,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0127",
+   "name": "Randaansluiting type: solins in anthrazink (inslijpen in de muur",
+   "description": "Randaansluiting type: solins in anthrazink (inslijpen in de muur\nincl. plastische elastische voeg) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 27.94,
+   "prices": {
+    "nieuwbouw": 25.56,
+    "industrie": 24.51
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0128",
+   "name": "Randaansluiting type: aansluiting van de EPDM op de slabben die",
+   "description": "Randaansluiting type: aansluiting van de EPDM op de slabben die\ngeplaatst werden door de metser (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 15.93,
+   "prices": {
+    "nieuwbouw": 15.17,
+    "industrie": 15.17
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0129",
+   "name": "Leveren en plaatsen van de ballastlaag type: keien 16/32 (m²)",
+   "description": "Leveren en plaatsen van de ballastlaag type: keien 16/32 (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Prijs altijd opvragen!!!! (Minimum € 10 / m²)",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0130",
+   "name": "Randaansluiting type: aansluiting van de EPDM onder bestaand lood (lm)",
+   "description": "Randaansluiting type: aansluiting van de EPDM onder bestaand lood (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 15.93,
+   "prices": {
+    "nieuwbouw": 15.17,
+    "industrie": 15.17
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0131",
+   "name": "Randaansluiting type: C-profiel incl. plastische elastische voeg (lm)",
+   "description": "Randaansluiting type: C-profiel incl. plastische elastische voeg (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 27.94,
+   "prices": {
+    "nieuwbouw": 25.56,
+    "industrie": 24.41
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0132",
+   "name": "Randaansluiting type: aansluiting op het dak van de buren met resitrix (lm)",
+   "description": "Randaansluiting type: aansluiting op het dak van de buren met resitrix (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 27.38,
+   "prices": {
+    "nieuwbouw": 26.08,
+    "industrie": 25.03
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0133",
+   "name": "Randaansluiting type: aansluiting op het dak van de buren met naadtape (lm)",
+   "description": "Randaansluiting type: aansluiting op het dak van de buren met naadtape (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 20.52,
+   "prices": {
+    "nieuwbouw": 18.49,
+    "industrie": 17.44
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0134",
+   "name": "Randaansluiting type: aansluiting van de EPDM in de zinken/PVC goot (lm)",
+   "description": "Randaansluiting type: aansluiting van de EPDM in de zinken/PVC goot (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 25.81,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0135",
+   "name": "Randaansluiting type: aansluiting van de EPDM op de dekpannen",
+   "description": "Randaansluiting type: aansluiting van de EPDM op de dekpannen\ndie behouden worden met plaklood en naadtape (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 41.62,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0136",
+   "name": "Randaansluiting type: aansluiting van de EPDM op de verandaplaten (lm)",
+   "description": "Randaansluiting type: aansluiting van de EPDM op de verandaplaten (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 25.81,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0137",
+   "name": "Randaansluiting type: aansluiting van de EPDM thv de gevelbekleding",
+   "description": "Randaansluiting type: aansluiting van de EPDM thv de gevelbekleding\nof sidings: optrekken EPDM en inslijpen solin (incl. plastische voeg) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 33.43,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0138",
+   "name": "Randaansluiting type: onderkapping van de opgaande gevel (=aansluiting",
+   "description": "Randaansluiting type: onderkapping van de opgaande gevel (=aansluiting\ntot op binnenspouwblad en voorzien van stootvoegen) met lood (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 160.44,
+   "prices": {
+    "nieuwbouw": 152.8,
+    "industrie": 152.8
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0139",
+   "name": "Randaansluiting type: aansluiting met zinken profiel op het onderdak",
+   "description": "Randaansluiting type: aansluiting met zinken profiel op het onderdak\nvan het hellend dak (onder de pannen/leien) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 30.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0140",
+   "name": "Betonboring voor dakdoorvoer door externe firma (per stuk)",
+   "description": "Betonboring voor dakdoorvoer door externe firma (per stuk)\n(dit wordt nadien verrekend op de factuur volgens effectief aantal)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 157.5,
+   "prices": {
+    "industrie": 150.0
+   },
+   "note": "Op alle offertes nieuwbouw vermelden",
+   "tags": [],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0141",
+   "name": "Randaansluiting type: aansluiting van de EPDM thv de lichstraat (lm)",
+   "description": "Randaansluiting type: aansluiting van de EPDM thv de lichstraat (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 35.34,
+   "prices": {
+    "nieuwbouw": 32.61,
+    "industrie": 31.46
+   },
+   "note": "prijs per lopende meter aansluiting op lichtstraat",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0142",
+   "name": "Randaansluiting type: aansluiting van de EPDM thv de dorpel aan het",
+   "description": "Randaansluiting type: aansluiting van de EPDM thv de dorpel aan het\nraam/de deur. Nota: inpakken dorpel is hierbij noodzakelijk (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 53.93,
+   "prices": {},
+   "note": "nooit goedkoper zetten en bij zeer weinig meters | duurder zetten en gewoon 1 x .........€",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0143",
+   "name": "Leveren en plaatsen van dampscherm type: PE-folie dampklasse E2",
+   "description": "Leveren en plaatsen van dampscherm type: PE-folie dampklasse E2\nincl. de ontvouwing tot voorbij de isolatieopstanden (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 6.53,
+   "prices": {
+    "nieuwbouw": 5.22,
+    "industrie": 5.22
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0144",
+   "name": "Leveren en plaatsen van dampscherm type: BauderTec dampklasse E4 KSD",
+   "description": "Leveren en plaatsen van dampscherm type: BauderTec dampklasse E4 KSD\nincl. hechtingsprimer om bitumenlaag te activeren en incl. de ontvouwing\ntot voorbij de isolatieopstanden (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 15.94,
+   "prices": {
+    "nieuwbouw": 14.94,
+    "industrie": 15.06
+   },
+   "note": "op Beton/Chappe",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0145",
+   "name": "Leveren en plaatsen van dampscherm type: BauderTec dampklasse E4 DBR",
+   "description": "Leveren en plaatsen van dampscherm type: BauderTec dampklasse E4 DBR\nincl. hechtingsprimer om bitumenlaag te activeren en incl. de ontvouwing\ntot voorbij de isolatieopstanden (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 13.89,
+   "prices": {
+    "nieuwbouw": 12.23,
+    "industrie": 11.8
+   },
+   "note": "op OSB",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0146",
+   "name": "Uittimmeren van de dakopening voor de koepel / het dakraem.",
+   "description": "Uittimmeren van de dakopening voor de koepel / het dakraem.\nDe maat van de dakopening: breedte xxx - lengte xxx",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Prijs afhankelijk van de grootte en complexiteit",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0147",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 3cm met lambdawaarde 0,022W/mK en R-waarde: 1,35m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 26.93,
+   "prices": {
+    "nieuwbouw": 19.4,
+    "industrie": 19.0
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0148",
+   "name": "Leveren en plaatsen van de koepelschaal acrylaat type 3- 4- 5-wandig",
+   "description": "Leveren en plaatsen van de koepelschaal acrylaat type 3- 4- 5-wandig\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: xxx Opaal / Helder",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0149",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 4cm met lambdawaarde 0,022W/mK en R-waarde: 1,80m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 29.6,
+   "prices": {
+    "nieuwbouw": 21.61,
+    "industrie": 21.16
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0150",
+   "name": "Leveren en plaatsen van de vaste koepelopstand type recht / schuin",
+   "description": "Leveren en plaatsen van de vaste koepelopstand type recht / schuin\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: xxx",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0151",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 6cm met lambdawaarde 0,022W/mK en R-waarde: 2,70m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 35.5,
+   "prices": {
+    "nieuwbouw": 26.28,
+    "industrie": 25.74
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0152",
+   "name": "Leveren en plaatsen van de opengaande koepelopstand type recht / schuin",
+   "description": "Leveren en plaatsen van de opengaande koepelopstand type recht / schuin\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: xxx",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0153",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 8cm met lambdawaarde 0,022W/mK en R-waarde: 3,60m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 41.48,
+   "prices": {
+    "nieuwbouw": 30.98,
+    "industrie": 30.33
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0154",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 10cm met lambdawaarde 0,022W/mK en R-waarde: 4,50m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 47.99,
+   "prices": {
+    "nieuwbouw": 36.44,
+    "industrie": 35.68
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0155",
+   "name": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions",
+   "description": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions\nmet dubbele 'All Seasons' beglazing (U-waarde: 1,00) hoog rendement\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0156",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 12cm met lambdawaarde 0,022W/mK en R-waarde: 5,45m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 54.49,
+   "prices": {
+    "nieuwbouw": 41.47,
+    "industrie": 40.61
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0157",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 14cm met lambdawaarde 0,022W/mK en R-waarde: 6,35m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 61.78,
+   "prices": {
+    "nieuwbouw": 44.64,
+    "industrie": 43.71
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0158",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 16cm met lambdawaarde 0,022W/mK en R-waarde: 7,25m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 63.91,
+   "prices": {
+    "nieuwbouw": 49.08,
+    "industrie": 48.06
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0159",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 10+8cm met lambdawaarde 0,022W/mK en R-waarde: 8,10m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 78.97,
+   "prices": {
+    "nieuwbouw": 64.73,
+    "industrie": 63.38
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0160",
+   "name": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)",
+   "description": "Leveren en plaatsen van de isolatie type: Unilin Utherm Roof PIR L (m²)\nDikte: 10+10cm met lambdawaarde 0,022W/mK en R-waarde: 9,00m²K/W",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 79.94,
+   "prices": {
+    "nieuwbouw": 66.88,
+    "industrie": 65.49
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0161",
+   "name": "Leveren en plaatsen van de gootsysteem breedte 25cm tbv optimale",
+   "description": "Leveren en plaatsen van de gootsysteem breedte 25cm tbv optimale\nafwatering naar tapbuis & het behoud van een verlaagde dakrand (lm)\nDikte: 3cm met lambdawaarde 0,022W/mK en R-waarde: 1,35m²K/W",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 39.94,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0162",
+   "name": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,20mm",
+   "description": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,20mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nRolbreedte tot 6m dus zeer beperkt aantal naden. (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 48.15,
+   "prices": {},
+   "note": "maximum rolbreedte 6m !!!!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0163",
+   "name": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,50mm",
+   "description": "Leveren en plaatsen van de EPDM type: TRC (FRP Europe) 1,50mm\nverkleefd systeem. Géén verkleuring van het regenwater,\nlevensduur > 50 jaar, alle ontvouwing thv de opstanden inclusief.\nRolbreedte tot 6m dus zeer beperkt aantal naden. (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 51.38,
+   "prices": {},
+   "note": "maximum rolbreedte 6m !!!!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0164",
+   "name": "Leveren en plaatsen van de KIMFIXATIE thv de omranding",
+   "description": "Leveren en plaatsen van de KIMFIXATIE thv de omranding\nvan het plat dak. Conform voorschriften van Buildwise (bouwnormen!) (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 24.12,
+   "prices": {},
+   "note": "e binnenomtrek = LM's!!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0165",
+   "name": "Leveren en plaatsen van de ballastlaag type: keien 16/32",
+   "description": "Leveren en plaatsen van de ballastlaag type: keien 16/32\ninclusief geotextiel en grindvangers (m²)",
+   "category": "opbouw",
+   "uom": "m2",
+   "list_price": 14.86,
+   "prices": {},
+   "note": "Prijs altijd opvragen!!!! (Minimum € 14,86 / m²)",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0166",
+   "name": "Inpakken van de schouw met EPDM incl. verdichting onder de deksteen",
+   "description": "Inpakken van de schouw met EPDM incl. verdichting onder de deksteen\nafmetingen schouw: hoogte xxx - omtrek xxx incl. afdichtingsfolies",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Hoogte (in m) x omtrek (in m) x 69€",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0167",
+   "name": "leveren en plaatsen c-profiel onder de deksteen van de schouw",
+   "description": "leveren en plaatsen c-profiel onder de deksteen van de schouw",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 27.94,
+   "prices": {},
+   "note": "Indien 3cm niet mogelijk: multiplex!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0168",
+   "name": "Inpakken van de schouw met isolatie 3cm dik & EPDM incl. verdichting",
+   "description": "Inpakken van de schouw met isolatie 3cm dik & EPDM incl. verdichting\nonder de deksteen met afmetingen schouw: hoogte xxx - omtrek xxx",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Hoogte (in m) x omtrek (in m) x 94€ | Nota: opgelet met hoever de deksteen oversteekt!!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0169",
+   "name": "Inpakken van de schouw met multiplex 15mm dik & EPDM incl. verdichting",
+   "description": "Inpakken van de schouw met multiplex 15mm dik & EPDM incl. verdichting\nonder de deksteen met afmetingen schouw: hoogte xxx - omtrek xxx",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Hoogte (in m) x omtrek (in m) x 106€",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0170",
+   "name": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab dia 75",
+   "description": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab dia 75",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 114.79,
+   "prices": {
+    "nieuwbouw": 99.95,
+    "industrie": 106.17
+   },
+   "note": "prijs dia 90 = 126,59€ / prijs dia 110 = 139,62€",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0171",
+   "name": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "description": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 8.82,
+   "prices": {
+    "nieuwbouw": 6.43,
+    "industrie": 6.43
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0172",
+   "name": "Leveren en plaatsen van de noodspuwer in PE dia 40/50",
+   "description": "Leveren en plaatsen van de noodspuwer in PE dia 40/50",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 94.3,
+   "prices": {
+    "nieuwbouw": 86.35,
+    "industrie": 86.35
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0173",
+   "name": "Dichtmetsen van de opening rond de tapbuis (met cement)",
+   "description": "Dichtmetsen van de opening rond de tapbuis (met cement)\n(nota: de nieuwe tapbuis is een ronde buis dus errond af te werken)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 55.12,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0174",
+   "name": "Boring voor noodspuwer in ytong/facade",
+   "description": "Boring voor noodspuwer in ytong/facade",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 121.28,
+   "prices": {
+    "nieuwbouw": 115.5,
+    "industrie": 115.5
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0175",
+   "name": "Leveren en plaatsen van de afvoerbuis type: Koper/ALU RAL dikte 0,7mm",
+   "description": "Leveren en plaatsen van de afvoerbuis type: Koper/ALU RAL dikte 0,7mm\nuitvoering rond/vierkant dia 80 inclusief bijhorende scharnierhaken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 68.06,
+   "prices": {
+    "nieuwbouw": 72.17,
+    "industrie": 71.12
+   },
+   "note": "prijs dia 100 = €84,59",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0176",
+   "name": "Leveren en plaatsen van de afvoerbuis type: naturel zink dikte 0,7mm",
+   "description": "Leveren en plaatsen van de afvoerbuis type: naturel zink dikte 0,7mm\nuitvoering rond/vierkant dia 80 inclusief bijhorende scharnierhaken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 43.16,
+   "prices": {
+    "nieuwbouw": 37.22,
+    "industrie": 36.9
+   },
+   "note": "prijs dia 100 = € 47,74",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0177",
+   "name": "Leveren en plaatsen van de afvoerbuis type: anthrazink dikte 0,7mm",
+   "description": "Leveren en plaatsen van de afvoerbuis type: anthrazink dikte 0,7mm\nuitvoering rond/vierkant dia 80 inclusief bijhorende scharnierhaken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 52.07,
+   "prices": {
+    "nieuwbouw": 45.56,
+    "industrie": 45.39
+   },
+   "note": "prijs dia 100 = € 57,92",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0178",
+   "name": "Leveren en plaatsen van de afvoerbuis type: quartz zink dikte 0,7mm",
+   "description": "Leveren en plaatsen van de afvoerbuis type: quartz zink dikte 0,7mm\nuitvoering rond/vierkant dia 80 inclusief bijhorende scharnierhaken (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 51.17,
+   "prices": {
+    "nieuwbouw": 44.71,
+    "industrie": 44.53
+   },
+   "note": "prijs dia 100 = € 61,25",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0179",
+   "name": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis",
+   "description": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis\nuitvoering rond/vierkant dia 80 (naturel/anthra/quartz) (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 40.58,
+   "prices": {},
+   "note": "prijs dia 100 = € 44,48",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0180",
+   "name": "Inkorten van de afvoerbuis die uitmondt op het plat dak gezien het",
+   "description": "Inkorten van de afvoerbuis die uitmondt op het plat dak gezien het\ndakoppervlak door de isolatie hoger komt te liggen (st)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 40.58,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0181",
+   "name": "Leveren en plaatsen van de afvoerbuis in PE dia 75 inclusief",
+   "description": "Leveren en plaatsen van de afvoerbuis in PE dia 75 inclusief\nachterliggende strook isolatie + EPDM slabbe rond de buis (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 54.9,
+   "prices": {
+    "nieuwbouw": 50.77,
+    "industrie": 49.72
+   },
+   "note": "prijs dia 90 = € 58,45 / dia 110 = € 62,85 / dia 125 = € 68,29",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0182",
+   "name": "Leveren en plaatsen van de U-profielen in naturel zink om overheen",
+   "description": "Leveren en plaatsen van de U-profielen in naturel zink om overheen\nde ingewerkte PE-afvoerbuis te plaatsen (= verzonken in de\nfacade/gevel) Nota: op te meten ter plaatsen (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 36.88,
+   "prices": {},
+   "note": "prijs dia 100 = € 41,44",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0183",
+   "name": "Leveren en plaatsen van de U-profielen in anthraciet zink om overheen",
+   "description": "Leveren en plaatsen van de U-profielen in anthraciet zink om overheen\nde ingewerkte PE-afvoerbuis te plaatsen (= verzonken in de\nfacade/gevel) Nota: op te meten ter plaatsen (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 45.34,
+   "prices": {},
+   "note": "prijs dia 100 = € 51,42",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0184",
+   "name": "Leveren en plaatsen van de U-profielen in quartz zink om overheen",
+   "description": "Leveren en plaatsen van de U-profielen in quartz zink om overheen\nde ingewerkte PE-afvoerbuis te plaatsen (= verzonken in de\nfacade/gevel) Nota: op te meten ter plaatsen (lm)",
+   "category": "opbouw",
+   "uom": "m",
+   "list_price": 44.13,
+   "prices": {},
+   "note": "prijs dia 100 = € 53,58",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0185",
+   "name": "Betonboring voor de dakdoorvoer met diameter xxx (eerste boring)",
+   "description": "Betonboring voor de dakdoorvoer met diameter xxx (eerste boring)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 157.5,
+   "prices": {},
+   "note": "dit is louter een richtprijs!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0186",
+   "name": "Betonboring voor de dakdoorvoer met diameter xxx (volgende boringen)",
+   "description": "Betonboring voor de dakdoorvoer met diameter xxx (volgende boringen)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 68.25,
+   "prices": {},
+   "note": "dit is louter een richtprijs!",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0187",
+   "name": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 75",
+   "description": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 75\nincl. plakplaat met zelfklevende EPDM",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 137.94,
+   "prices": {
+    "nieuwbouw": 125.07,
+    "industrie": 124.02
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0188",
+   "name": "Leveren en plaatsen van de dakdoorvoer type: snorkel dia 75",
+   "description": "Leveren en plaatsen van de dakdoorvoer type: snorkel dia 75\nom bekabeling van de zonnepanelen op het dak te loodsen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 141.41,
+   "prices": {
+    "nieuwbouw": 130.48,
+    "industrie": 129.43
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0189",
+   "name": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 110",
+   "description": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 110\nincl. plakplaat met zelfklevende EPDM",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 148.03,
+   "prices": {
+    "nieuwbouw": 133.63,
+    "industrie": 132.58
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0190",
+   "name": "Leveren en plaatsen van de dakdoorvoer type: snorkel dia 110",
+   "description": "Leveren en plaatsen van de dakdoorvoer type: snorkel dia 110\nom bekabeling/leidingen van de airco op het dak te loodsen",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 152.81,
+   "prices": {
+    "nieuwbouw": 140.28,
+    "industrie": 139.23
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0191",
+   "name": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 125",
+   "description": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 125\nincl. plakplaat met zelfklevende EPDM",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 152.81,
+   "prices": {
+    "nieuwbouw": 140.28,
+    "industrie": 139.23
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0192",
+   "name": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 160",
+   "description": "Leveren en plaatsen van de geïsoleerde dakdoorvoer dia 160\nincl. plakplaat met zelfklevende EPDM",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 169.24,
+   "prices": {
+    "nieuwbouw": 154.88,
+    "industrie": 153.83
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0193",
+   "name": "Leveren en plaatsen van de geïsoleerde dampkapdoorvoer dia 160",
+   "description": "Leveren en plaatsen van de geïsoleerde dampkapdoorvoer dia 160\nincl. plakplaat met zelfklevende EPDM (voorzien van terugslagklep)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 176.17,
+   "prices": {
+    "nieuwbouw": 161.48,
+    "industrie": 160.43
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0194",
+   "name": "Afdichten van de bestaande dakdoorvoer die behouden kan worden",
+   "description": "Afdichten van de bestaande dakdoorvoer die behouden kan worden\ntype: xxxxxx incl. afdichtingsfolies",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 71.66,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0195",
+   "name": "Leveren en plaatsen van de nieuwe dakdoorvoer voor de CV",
+   "description": "Leveren en plaatsen van de nieuwe dakdoorvoer voor de CV\ntype: rookgasdoorvoer incl. afdichtingsfolies + verlengen van de\nbuis van de doorvoer en voorzien van nieuwe plakplaat",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 156.05,
+   "prices": {},
+   "note": "altijd foto cv ketel + type + type verbinding | ook meegeven aan klant dat er mogelijk nadien een | chauffagist zal moeten langskomen",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0196",
+   "name": "Afdichten van de dakdoorvoer geleverd door derden",
+   "description": "Afdichten van de dakdoorvoer geleverd door derden\n(eindstuk en plakplaat moeten aanwezig zijn op de werf)",
+   "category": "opbouw",
+   "uom": "unit",
+   "list_price": 71.66,
+   "prices": {
+    "nieuwbouw": 67.2,
+    "industrie": 66.15
+   },
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0197",
+   "name": "Uittimmeren van de dakopening voor de nieuwe koepel",
+   "description": "Uittimmeren van de dakopening voor de nieuwe koepel\nDe maat van de te creëren dakopening .......mm x ........mm\nHierbij rekening houden met 50mm extra rondom ifv afwerking.",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Omtrek dakopening x 52,46€ (TS 26/04/24: duurder zetten of in regie) | Nota: klant moet voor de werken plafond openbreken",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0198",
+   "name": "Leveren en plaatsen van CLS-latten om de ophoging van de koepelopstand",
+   "description": "Leveren en plaatsen van CLS-latten om de ophoging van de koepelopstand\nte voorzien wegens gebrek aan hoogte om te kunnen isoleren (lm)",
+   "category": "koepels",
+   "uom": "m",
+   "list_price": 29.38,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0199",
+   "name": "Afnemen, herverdichten en terugplaatsen van de bestaande koepelschaal",
+   "description": "Afnemen, herverdichten en terugplaatsen van de bestaande koepelschaal\nincl. vervangen zwelmousse. Daglichtmaat koepel = breedte xxx - lengte xxx\n(nota: bij eventuele breuk van de schaal zijn wij niet verantwoordelijk)",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0200",
+   "name": "Leveren en plaatsen van de koepelschaal acrylaat type dubbelwandig",
+   "description": "Leveren en plaatsen van de koepelschaal acrylaat type dubbelwandig\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Skylux in kleur: Opaal / Helder (U-waarde = 2,90)",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0201",
+   "name": "Leveren en plaatsen van de koepelschaal acrylaat type 3-wandig",
+   "description": "Leveren en plaatsen van de koepelschaal acrylaat type 3-wandig\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Skylux in kleur: Opaal / Helder (U-waarde = 1,70)",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0202",
+   "name": "Leveren en plaatsen van de koepelschaal acrylaat type 4-wandig",
+   "description": "Leveren en plaatsen van de koepelschaal acrylaat type 4-wandig\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Skylux in kleur: Opaal / Helder (U-waarde = 1,28)",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0203",
+   "name": "Leveren en plaatsen van de koepelschaal acrylaat type 5-wandig",
+   "description": "Leveren en plaatsen van de koepelschaal acrylaat type 5-wandig\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Skylux in kleur: Opaal / Helder (U-waarde = 0,99)",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0204",
+   "name": "Leveren en plaatsen van de koepelschaal polycarbonaat type 3- 4- 5-wandig",
+   "description": "Leveren en plaatsen van de koepelschaal polycarbonaat type 3- 4- 5-wandig\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Decorit/Skylux in kleur: Opaal / Helder / Heatstop",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Opgelet: heatstop bij Skylux = altijd opaal | Opgelet: heatstop bij Decorit = helder OF opaal | U-waardes vermelden: zelfde als bij acrylaat!!",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0205",
+   "name": "Leveren en plaatsen van de vaste koepelopstand type recht / schuin",
+   "description": "Leveren en plaatsen van de vaste koepelopstand type recht / schuin\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Decorit/Skylux",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0206",
+   "name": "Leveren en plaatsen van de opengaande koepelopstand type recht / schuin",
+   "description": "Leveren en plaatsen van de opengaande koepelopstand type recht / schuin\nafmetingen daglichtmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: Decorit/Skylux",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0207",
+   "name": "Leveren van de draaistok om de koepel manueel open te draaien 1,50m",
+   "description": "Leveren van de draaistok om de koepel manueel open te draaien 1,50m",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 40.79,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0208",
+   "name": "Leveren en plaatsen van de RWA-koepel type: Skylux Skymax CE",
+   "description": "Leveren en plaatsen van de RWA-koepel type: Skylux Skymax CE\ninclusief rechte opstand 16/00 en 3-wandige acrylaat koepelschaal\ntransparant. Daglichtmaat = 110x110 (wettelijke verplichte doorgang)\nInclusief: centrale Skycom CE Skymax en prioritaire schakelaar",
+   "category": "koepels",
+   "uom": "unit",
+   "list_price": 3896.14,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0209",
+   "name": "Uittimmeren van de dakopening voor het nieuwe dakraem",
+   "description": "Uittimmeren van de dakopening voor het nieuwe dakraem\nDe maat van de te creëren dakopening .......mm x ........mm",
+   "category": "dakramen",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Omtrek dakopening x 52,46€ | Nota: klant moet voor de werken plafond openbreken",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0210",
+   "name": "Uittimmeren van de dakopstand (onder lichte helling) voor het",
+   "description": "Uittimmeren van de dakopstand (onder lichte helling) voor het\ndakraem met timmermaten .......mm x .........mm",
+   "category": "dakramen",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Omtrek timmermaten x 35,62€",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0211",
+   "name": "Uitisoleren van de dakopstand voor het dakraem met isolatie",
+   "description": "Uitisoleren van de dakopstand voor het dakraem met isolatie\nvan 3cm dik + verdichting van de opstand met EPDM\nTimmermaten opstand: ..........mm x ........mm",
+   "category": "dakramen",
+   "uom": "unit",
+   "list_price": 0.0,
+   "prices": {},
+   "note": "Omtrek timmermaten x 39,87€",
+   "tags": [
+    "Prijs op aanvraag"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0212",
+   "name": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions",
+   "description": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions\nmet dubbele 'All Seasons' beglazing (U-waarde: 1,00) hoog rendement\nafmetingen afgewerkte zichtmaat: breedte ....mm - lengte ...mm\nNota: dit dakraem heeft zonwerende 'All Seasons' beglazing",
+   "category": "dakramen",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Bij renovatie: steeds afgewerkte binnemaat meten | en hier dus opgeven",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0213",
+   "name": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions",
+   "description": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions\nmet dubbele 'All Seasons' beglazing (U-waarde: 1,00) hoog rendement\nafmetingen timmermaten: breedte ....mm - lengte ...mm\nafmetingen afgewerkte zichtmaat: breedte ....mm - lengte ...mm\nNota: dit dakraem heeft zonwerende 'All Seasons' beglazing",
+   "category": "dakramen",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "Bij nieuwbouw: steeds timmermaten doorgeven | (optioneel ook maat na afwerking erbij zetten) | Altijd dubbelcheck bij architect!! En bevestiging op mail.",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0214",
+   "name": "Leveren en plaatsen van de kunststof regelbare tegeldragers om",
+   "description": "Leveren en plaatsen van de kunststof regelbare tegeldragers om\nde terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de\nisolatie te verdelen) Ca. 8 stuks per m² nodig: ….....m² x 8st = …........",
+   "category": "terrasvloer",
+   "uom": "unit",
+   "list_price": 4.88,
+   "prices": {},
+   "note": "OPGELET: dit is de prijs voor tegeldragers van normale | hoogte tot ca. 10cm. Hogere dragers = prijs opvragen!!",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0215",
+   "name": "Leveren en plaatsen van de terrasbetegeling type: volkeramische",
+   "description": "Leveren en plaatsen van de terrasbetegeling type: volkeramische\nbuitentegels met maat 60cm x 60cm (2cm dik) Keuze uit lijst van\n36 tegels waaruit u kan kiezen adhv stalensets of bezoek showroom.\n(nota: de tegels hebben een particuliere handelswaarde van 50 à 60€)\nBerekening: .........m² + 12% snijafval = ........... m² nodig",
+   "category": "terrasvloer",
+   "uom": "m2",
+   "list_price": 143.27,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0216",
+   "name": "Verwijderen van bijkomende lagen roofing (prijs per laag) (m²)",
+   "description": "Verwijderen van bijkomende lagen roofing (prijs per laag) (m²)",
+   "category": "worst_case",
+   "uom": "m2",
+   "list_price": 5.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0217",
+   "name": "Extra transportkost: camion(kraan)",
+   "description": "Extra transportkost: camion(kraan)",
+   "category": "worst_case",
+   "uom": "unit",
+   "list_price": 271.68,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie"
+   ]
+  },
+  {
+   "code": "DAK-0218",
+   "name": "Werkuren in regie worden gerekend aan € 59,00/u",
+   "description": "Werkuren in regie worden gerekend aan € 59,00/u",
+   "category": "notas",
+   "uom": "hour",
+   "list_price": 59.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0219",
+   "name": "Werkuren in regie worden gerekend aan € 59/u",
+   "description": "Werkuren in regie worden gerekend aan € 59/u",
+   "category": "notas",
+   "uom": "hour",
+   "list_price": 59.0,
+   "prices": {},
+   "note": "",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw"
+   ]
+  },
+  {
+   "code": "DAK-0220",
+   "name": "Leveren en plaatsen van de isolatie met afschot type: hellingsisolatie",
+   "description": "Leveren en plaatsen van de isolatie met afschot type: hellingsisolatie\nmet minimumdikte van 10cm over  dakvlak en daarbovenop\neen afhellende isolatie met afwatering richting de tapbuizen\n(minimum R-waarde van 4,50m²K/W)",
+   "category": "andere",
+   "uom": "m2",
+   "list_price": 83.75,
+   "prices": {},
+   "note": "PRIJS HIERNAAST IS VOOR HELLING VAN 18CM NAAR 10CM | (altijd offerte opvragen!!!)",
+   "tags": [],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0221",
+   "name": "Leveren en plaatsen van het beloopbaar platdakraam type: dakraem EPDM",
+   "description": "Leveren en plaatsen van het beloopbaar platdakraam type: dakraem EPDM\nSolutions met dubbele 'All Seasons' beglazing (U-waarde: 1,00) hoog rendement\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0222",
+   "name": "Leveren van de rubbertegels met maat 50cm x 50cm x 3cm (dikte)",
+   "description": "Leveren van de rubbertegels met maat 50cm x 50cm x 3cm (dikte)\nDeze kunnen dan door de klant gehalveerd worden.",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 8.55,
+   "prices": {},
+   "note": "",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0223",
+   "name": "Leveren en plaatsen van de terrasbetegeling type: volkeramische",
+   "description": "Leveren en plaatsen van de terrasbetegeling type: volkeramische\nbuitentegels met maat 60cm x 60cm (2cm dik) Keuze uit lijst van\n18 tegels aangeboden bij onze leverancier waar u dan kan kiezen\nof adhv onze stalenpaneel (tegels kosten particulier tussen de 53€\nen 64€)",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 136.34,
+   "prices": {},
+   "note": "15% snijafval bijrekenen!",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0224",
+   "name": "Leveren en plaatsen van de vaste geïsoleerde koepelopstand type: recht / schuin",
+   "description": "Leveren en plaatsen van de vaste geïsoleerde koepelopstand type: recht / schuin\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: xxx\n(nota: de geïsoleerde opstand zorgt voor een nog beter rendement)",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0225",
+   "name": "Leveren en plaatsen van de opengaande geïsoleerde koepelopstand type: schuin",
+   "description": "Leveren en plaatsen van de opengaande geïsoleerde koepelopstand type: schuin\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies\nfabricagetype: xxx\n(nota: de geïsoleerde opstand zorgt voor een nog beter rendement)",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  },
+  {
+   "code": "DAK-0226",
+   "name": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions",
+   "description": "Leveren en plaatsen van het platdakraam type: dakraem EPDM Solutions\nmet drievoudige 'All Seasons' beglazing (U-waarde: 0,50) superieur rendement\nafmetingen binnenmaat: breedte xxx - lengte xxx incl. afdichtingsfolies",
+   "category": "upsale",
+   "uom": "unit",
+   "list_price": 1.0,
+   "prices": {},
+   "note": "",
+   "tags": [
+    "Upsale"
+   ],
+   "project_types": [
+    "renovatie",
+    "nieuwbouw",
+    "industrie"
+   ]
+  }
+ ]
+}

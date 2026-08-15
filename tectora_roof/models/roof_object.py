@@ -16,6 +16,7 @@ class TectoraRoofObject(models.Model):
         index=True,
     )
     company_id = fields.Many2one(related="project_id.company_id", store=True)
+    currency_id = fields.Many2one(related="project_id.currency_id")
     object_type = fields.Selection(
         [
             ("chimney", "Schoorsteen"),
@@ -40,8 +41,23 @@ class TectoraRoofObject(models.Model):
         digits=(16, 3),
     )
     description = fields.Text(string="Omschrijving")
+    product_line_ids = fields.One2many(
+        "tectora.roof.section.product", "object_id", string="Producten"
+    )
+    estimated_total = fields.Monetary(
+        string="Geschat totaal",
+        compute="_compute_estimated_total",
+        currency_field="currency_id",
+    )
 
     @api.depends("area", "height")
     def _compute_volume(self):
         for record in self:
             record.volume = record.area * record.height
+
+    @api.depends("product_line_ids.price_subtotal")
+    def _compute_estimated_total(self):
+        for record in self:
+            record.estimated_total = sum(
+                record.product_line_ids.mapped("price_subtotal")
+            )

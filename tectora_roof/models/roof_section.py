@@ -2,6 +2,7 @@
 import json
 
 from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 COVERAGE_SELECTION = [
     ("surface", "Oppervlak"),
@@ -115,12 +116,25 @@ class TectoraRoofSectionProduct(models.Model):
     section_id = fields.Many2one(
         "tectora.roof.section",
         string="Sectie",
-        required=True,
         ondelete="cascade",
         index=True,
     )
-    project_id = fields.Many2one(related="section_id.project_id", store=True)
-    currency_id = fields.Many2one(related="section_id.currency_id")
+    object_id = fields.Many2one(
+        "tectora.roof.object",
+        string="Dakobject",
+        ondelete="cascade",
+        index=True,
+    )
+    project_id = fields.Many2one(
+        "tectora.roof.project", compute="_compute_project_id", store=True
+    )
+    currency_id = fields.Many2one(related="project_id.currency_id")
+    edge_index = fields.Integer(
+        string="Zijde nr.",
+        help="1-based number of the side of the shape this product applies to; "
+        "0 means the product applies to the whole shape.",
+    )
+    side_display = fields.Char(string="Zijde", compute="_compute_side_display")
     product_id = fields.Many2one(
         "product.product",
         string="Product",
@@ -148,6 +162,29 @@ class TectoraRoofSectionProduct(models.Model):
         currency_field="currency_id",
     )
 
+    @api.depends("section_id.project_id", "object_id.project_id")
+    def _compute_project_id(self):
+        for line in self:
+            line.project_id = line.section_id.project_id or line.object_id.project_id
+
+    @api.depends("edge_index")
+    def _compute_side_display(self):
+        for line in self:
+            line.side_display = (
+                _("Zijde %s") % line.edge_index if line.edge_index else ""
+            )
+
+    @api.constrains("section_id", "object_id")
+    def _check_target(self):
+        for line in self:
+            if bool(line.section_id) == bool(line.object_id):
+                raise ValidationError(
+                    _(
+                        "A product line must be linked to either a roof section "
+                        "or a roof object (and not both)."
+                    )
+                )
+
     @api.depends("quantity", "product_id.lst_price")
     def _compute_price_subtotal(self):
         for line in self:
@@ -156,12 +193,13 @@ class TectoraRoofSectionProduct(models.Model):
     @api.onchange("coverage", "product_id")
     def _onchange_coverage(self):
         for line in self:
-            if not line.section_id:
+            target = line.section_id or line.object_id
+            if not target:
                 continue
             if line.coverage == "surface":
-                line.quantity = line.section_id.area
+                line.quantity = target.area
             elif line.coverage == "edges":
-                line.quantity = line.section_id.perimeter
+                line.quantity = target.perimeter
             elif line.coverage == "corners":
                 line.quantity = 4.0
             else:  # drainage
