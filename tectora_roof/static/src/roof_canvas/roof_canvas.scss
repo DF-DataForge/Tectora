@@ -10,14 +10,16 @@
         z-index: 100;
     }
 
-    .o_roof_canvas_panel {
-        position: absolute;
-        top: 52px;
-        right: 10px;
+    .o_roof_canvas_sidebar {
+        flex: 0 0 320px;
         width: 320px;
-        max-height: 75%;
+        border-left: 1px solid var(--border-color, #d8dadd);
+        background: #f8f9fa;
         overflow-y: auto;
-        z-index: 50;
+    }
+
+    .o_roof_canvas_panel {
+        margin: 0.5rem;
         background: #fff;
     }
 
@@ -46,5 +48,20 @@
     .o_roof_product_picker_list {
         max-height: 50vh;
         overflow-y: auto;
+    }
+}
+
+// Forms containing the roof canvas render the chatter below the sheet
+// instead of as a side column, so the canvas gets the full width.
+.o_form_view:has(.o_roof_canvas) {
+    flex-flow: column nowrap !important;
+
+    .o-mail-Form-chatter,
+    .o-mail-Form-chatter.o-aside {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 auto !important;
+        border-left: 0 !important;
+        border-top: 1px solid var(--border-color, #d8dadd);
     }
 }
