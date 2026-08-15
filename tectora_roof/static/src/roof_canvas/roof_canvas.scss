@@ -30,3 +30,10 @@
         min-height: 1.8em;
     }
 }
+
+.o_roof_product_picker {
+    .o_roof_product_picker_list {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+}

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.RoofProductPickerDialog">
+        <Dialog title="props.title" size="'xl'">
+            <div class="o_roof_product_picker">
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <button type="button" class="btn btn-sm"
+                            t-att-class="state.activeCategory === null ? 'btn-primary' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setCategory(null)">
+                        Alle (<t t-out="state.products.length"/>)
+                    </button>
+                    <t t-foreach="categories" t-as="category" t-key="category.id">
+                        <button type="button" class="btn btn-sm"
+                                t-att-class="state.activeCategory === category.id ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setCategory(category.id)">
+                            <t t-out="category.label"/> (<t t-out="category.count"/>)
+                        </button>
+                    </t>
+                </div>
+                <input type="text" class="form-control form-control-sm mb-2"
+                       placeholder="Zoeken op naam of interne referentie…"
+                       t-att-value="state.search"
+                       t-on-input="(ev) => { state.search = ev.target.value; }"/>
+                <div class="o_roof_product_picker_list">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 2rem;"/>
+                                <th>Interne ref.</th>
+                                <th>Naam</th>
+                                <th class="text-end">Verkoopprijs</th>
+                                <th>Eenheid</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="visibleProducts" t-as="product" t-key="product.id">
+                                <tr t-on-click="() => this.toggle(product)"
+                                    t-att-class="state.selected[product.id] ? 'table-primary' : ''"
+                                    style="cursor: pointer;">
+                                    <td>
+                                        <input type="checkbox"
+                                               t-att-checked="state.selected[product.id]"/>
+                                    </td>
+                                    <td t-out="product.default_code || ''"/>
+                                    <td t-out="product.name"/>
+                                    <td class="text-end" t-out="product.list_price.toFixed(2)"/>
+                                    <td t-out="product.uom_id ? product.uom_id[1] : ''"/>
+                                </tr>
+                            </t>
+                            <tr t-if="!visibleProducts.length">
+                                <td colspan="5" class="text-muted text-center py-3">
+                                    Geen producten gevonden.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-primary"
+                        t-att-disabled="!selectedIds.length"
+                        t-on-click="confirm">
+                    Toevoegen (<t t-out="selectedIds.length"/>)
+                </button>
+                <button type="button" class="btn btn-secondary"
+                        t-on-click="props.close">
+                    Annuleren
+                </button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

@@ -4,7 +4,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog";
+import { RoofProductPickerDialog } from "./product_picker_dialog";
 import {
     Component,
     onMounted,
@@ -539,20 +539,39 @@ export class RoofCanvasField extends Component {
         // The section/object records are created server-side from the drawing,
         // so the project must be saved (and synced) before lines can attach.
         if (!(await record.save())) {
+            this.notification.add(
+                _t(
+                    "Producten koppelen kan pas nadat het project is " +
+                    "opgeslagen. Vul de verplichte velden in (zoals de " +
+                    "projectnaam) en klik daarna opnieuw op het label."
+                ),
+                { type: "warning" }
+            );
             return;
         }
         const isObject = (hit.kind || "section") !== "section";
         const targetModel = isObject
             ? "tectora.roof.object"
             : "tectora.roof.section";
-        const targetIds = await this.orm.search(
-            targetModel,
-            [
-                ["project_id", "=", record.resId],
-                ["canvas_ref", "=", hit.shapeId],
-            ],
-            { limit: 1 }
-        );
+        const targetDomain = [
+            ["project_id", "=", record.resId],
+            ["canvas_ref", "=", hit.shapeId],
+        ];
+        let targetIds = await this.orm.search(targetModel, targetDomain, {
+            limit: 1,
+        });
+        if (!targetIds.length) {
+            // The shape was drawn but never synced: run the sync for the user
+            // (same as the 'Meting bijwerken uit tekening' button) and retry.
+            await this.orm.call(
+                "tectora.roof.project", "action_sync_from_canvas", [record.resId]
+            );
+            await record.load();
+            this.draw();
+            targetIds = await this.orm.search(targetModel, targetDomain, {
+                limit: 1,
+            });
+        }
         if (!targetIds.length) {
             this.notification.add(
                 _t(
@@ -578,12 +597,18 @@ export class RoofCanvasField extends Component {
                   side: sideNumber,
                   qty: quantity.toFixed(2),
               });
-        this.dialog.add(SelectCreateDialog, {
-            resModel: "product.product",
+        // Categories can restrict where their products may be used
+        // ('Kan gebruikt worden voor'); unrestricted categories always show.
+        const usage = isObject ? "object" : isSurface ? "surface" : "edge";
+        this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
-            domain: [["sale_ok", "=", true]],
-            multiSelect: true,
-            onSelected: async (productIds) => {
+            domain: [
+                ["sale_ok", "=", true],
+                "|",
+                ["categ_id.tectora_usage", "=", false],
+                ["categ_id.tectora_usage", "=", usage],
+            ],
+            onConfirm: async (productIds) => {
                 await this.orm.create(
                     "tectora.roof.section.product",
                     productIds.map((productId) => ({
