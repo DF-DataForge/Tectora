@@ -9,6 +9,7 @@ COVERAGE_SELECTION = [
     ("edges", "Randen"),
     ("corners", "Hoeken"),
     ("drainage", "Afvoer"),
+    ("general", "Algemeen"),
 ]
 
 
@@ -125,6 +126,14 @@ class TectoraRoofSectionProduct(models.Model):
         ondelete="cascade",
         index=True,
     )
+    project_direct_id = fields.Many2one(
+        "tectora.roof.project",
+        string="Project (rechtstreeks)",
+        ondelete="cascade",
+        index=True,
+        help="Set for product lines that belong to the project as a whole "
+        "(Algemene werken, Veiligheid) instead of to a section or object.",
+    )
     project_id = fields.Many2one(
         "tectora.roof.project", compute="_compute_project_id", store=True
     )
@@ -162,10 +171,14 @@ class TectoraRoofSectionProduct(models.Model):
         currency_field="currency_id",
     )
 
-    @api.depends("section_id.project_id", "object_id.project_id")
+    @api.depends("section_id.project_id", "object_id.project_id", "project_direct_id")
     def _compute_project_id(self):
         for line in self:
-            line.project_id = line.section_id.project_id or line.object_id.project_id
+            line.project_id = (
+                line.section_id.project_id
+                or line.object_id.project_id
+                or line.project_direct_id
+            )
 
     @api.depends("edge_index")
     def _compute_side_display(self):
@@ -174,14 +187,19 @@ class TectoraRoofSectionProduct(models.Model):
                 _("Zijde %s") % line.edge_index if line.edge_index else ""
             )
 
-    @api.constrains("section_id", "object_id")
+    @api.constrains("section_id", "object_id", "project_direct_id")
     def _check_target(self):
         for line in self:
-            if bool(line.section_id) == bool(line.object_id):
+            targets = [
+                bool(line.section_id),
+                bool(line.object_id),
+                bool(line.project_direct_id),
+            ]
+            if sum(targets) != 1:
                 raise ValidationError(
                     _(
-                        "A product line must be linked to either a roof section "
-                        "or a roof object (and not both)."
+                        "A product line must be linked to exactly one target: "
+                        "a roof section, a roof object or the project itself."
                     )
                 )
 
