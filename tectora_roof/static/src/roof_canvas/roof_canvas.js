@@ -18,6 +18,9 @@ const DEFAULT_SCALE_M_PER_PX = 0.02;
 const DEFAULT_WORLD = { w: 1400, h: 900 };
 const CLOSE_SNAP_PX = 12;
 const MIN_RECT_PX = 6;
+// Screen-pixel drag distance before a whole shape starts moving; guards
+// against accidentally displacing a section while clicking around.
+const MOVE_START_SCREEN_PX = 8;
 // Candidate grid spacings in meters; the smallest one that renders at a
 // readable on-screen distance is used, minor lines every step, major every 5.
 const GRID_STEPS_M = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500];
@@ -437,8 +440,11 @@ export class RoofCanvasField extends Component {
                 return;
             }
             const hit = this.hitTest(point);
+            const wasSelected = hit && this.state.selectedId === hit.id;
             this.state.selectedId = hit ? hit.id : null;
-            if (hit) {
+            // Moving a whole shape requires selecting it first: the first
+            // click only selects, dragging an already-selected shape moves.
+            if (hit && wasSelected) {
                 this.drag = {
                     mode: "move",
                     start: point,
@@ -500,7 +506,10 @@ export class RoofCanvasField extends Component {
         } else if (this.drag.mode === "move") {
             const dx = point[0] - this.drag.start[0];
             const dy = point[1] - this.drag.start[1];
-            if (Math.abs(dx) + Math.abs(dy) > 1) {
+            if (!this.drag.moved) {
+                if (Math.hypot(dx, dy) * this.view.zoom < MOVE_START_SCREEN_PX) {
+                    return;
+                }
                 this.drag.moved = true;
             }
             this.drag.shape.points = this.drag.original.map(([x, y]) => [
@@ -846,7 +855,8 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 `${shape.name || "Naamloos"} — ${m.width.toFixed(2)} × ` +
                 `${m.length.toFixed(2)} m, ${m.area.toFixed(2)} m², omtrek ` +
-                `${m.perimeter.toFixed(2)} m`;
+                `${m.perimeter.toFixed(2)} m · geselecteerd: sleep om te ` +
+                `verplaatsen, versleep een hoekpunt om de vorm aan te passen`;
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool; de meting " +
