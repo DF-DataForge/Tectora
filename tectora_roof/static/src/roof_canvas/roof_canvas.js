@@ -27,6 +27,21 @@ const GRID_MAJOR_EVERY = 5;
 const EDGE_LABEL_MIN_SCREEN_PX = 34;
 // Default real-world size (meters) of roof objects added via right-click.
 const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
+// Circles are stored as regular polygons so measurements and the server-side
+// sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
+const CIRCLE_POINTS = 48;
+
+function circlePoints(cx, cy, radius) {
+    const points = [];
+    for (let i = 0; i < CIRCLE_POINTS; i++) {
+        const angle = (i / CIRCLE_POINTS) * Math.PI * 2;
+        points.push([
+            Math.round((cx + radius * Math.cos(angle)) * 100) / 100,
+            Math.round((cy + radius * Math.sin(angle)) * 100) / 100,
+        ]);
+    }
+    return points;
+}
 const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel" };
 
 const KIND_STYLES = {
@@ -333,6 +348,27 @@ export class RoofCanvasField extends Component {
             this.addPolygonPoint(point);
         } else if (this.state.tool === "select") {
             const labelHit = this.labelHitTest(point);
+            if (labelHit && (labelHit.type === "corner" || labelHit.type === "radius")) {
+                // Corner/radius handles: drag reshapes; a plain click on a
+                // section corner opens the product picker (see onPointerUp).
+                const shape = this.shapes.find((s) => s.id === labelHit.shapeId);
+                if (shape) {
+                    this.state.selectedId = shape.id;
+                    const box = boundingBox(shape.points);
+                    this.drag = {
+                        mode: labelHit.type === "corner" ? "vertex" : "radius",
+                        shape,
+                        index: labelHit.edgeIndex,
+                        hit: labelHit,
+                        startPoint: point,
+                        center: [box.x + box.w / 2, box.y + box.h / 2],
+                        moved: false,
+                    };
+                    this.updateStatus();
+                    this.draw();
+                }
+                return;
+            }
             if (labelHit) {
                 this.openProducts(labelHit);
                 return;
@@ -357,7 +393,11 @@ export class RoofCanvasField extends Component {
         if (!this.drag) {
             if (this.state.tool === "select" && this.canvasRef.el) {
                 const hover = this.labelHitTest(this.toWorld(ev));
-                this.canvasRef.el.style.cursor = hover ? "pointer" : "";
+                this.canvasRef.el.style.cursor = !hover
+                    ? ""
+                    : hover.type === "corner" || hover.type === "radius"
+                    ? "move"
+                    : "pointer";
             }
             return;
         }
@@ -370,6 +410,29 @@ export class RoofCanvasField extends Component {
         const point = this.toWorld(ev);
         if (this.drag.mode === "rect") {
             this.drag.current = point;
+            this.draw();
+        } else if (this.drag.mode === "vertex" || this.drag.mode === "radius") {
+            if (!this.drag.moved) {
+                const [sx, sy] = this.drag.startPoint;
+                if (Math.hypot(point[0] - sx, point[1] - sy) < 3 / this.view.zoom) {
+                    return;
+                }
+                this.drag.moved = true;
+            }
+            if (this.drag.mode === "vertex") {
+                this.drag.shape.points[this.drag.index] = [
+                    Math.round(point[0] * 100) / 100,
+                    Math.round(point[1] * 100) / 100,
+                ];
+            } else {
+                const [cx, cy] = this.drag.center;
+                const radius = Math.max(
+                    Math.hypot(point[0] - cx, point[1] - cy),
+                    2 / this.view.zoom
+                );
+                this.drag.shape.points = circlePoints(cx, cy, radius);
+            }
+            this.updateStatus();
             this.draw();
         } else if (this.drag.mode === "move") {
             const dx = point[0] - this.drag.start[0];
@@ -413,6 +476,17 @@ export class RoofCanvasField extends Component {
             }
         } else if (drag.mode === "move" && drag.moved) {
             this.commit();
+        } else if (drag.mode === "vertex" || drag.mode === "radius") {
+            if (drag.moved) {
+                this.commit();
+            } else if (
+                drag.mode === "vertex" &&
+                (drag.hit.kind || "section") === "section"
+            ) {
+                // A plain click on a section corner assigns corner products;
+                // dakobject corners are drag-only.
+                this.openProducts(drag.hit);
+            }
         }
     }
 
@@ -459,7 +533,7 @@ export class RoofCanvasField extends Component {
         };
     }
 
-    addRoofObject(kind) {
+    addRoofObject(kind, form = "rect") {
         const menu = this.state.contextMenu;
         this.state.contextMenu = null;
         if (!menu) {
@@ -468,6 +542,10 @@ export class RoofCanvasField extends Component {
         const sizePx = (OBJECT_DEFAULT_SIZE_M[kind] || 1) / this.scaleMPerPx;
         const [cx, cy] = menu.worldPoint;
         const half = sizePx / 2;
+        if (form === "circle") {
+            this.addShape(circlePoints(cx, cy, half), kind, "circle");
+            return;
+        }
         this.addShape(
             [
                 [cx - half, cy - half],
@@ -507,7 +585,7 @@ export class RoofCanvasField extends Component {
         this.updateStatus();
     }
 
-    addShape(points, kind = "section") {
+    addShape(points, kind = "section", shapeType = null) {
         const kindCount =
             this.shapes.filter((s) => (s.kind || "section") === kind).length + 1;
         this._shapes = [
@@ -515,6 +593,7 @@ export class RoofCanvasField extends Component {
             {
                 id: makeId(),
                 kind,
+                ...(shapeType ? { shape: shapeType } : {}),
                 name: `${KIND_NAMES[kind] || KIND_NAMES.section} ${kindCount}`,
                 points: points.map(([x, y]) => [
                     Math.round(x * 100) / 100,
@@ -553,6 +632,9 @@ export class RoofCanvasField extends Component {
 
     // ---------------------------------------------------- products via labels
     async openProducts(hit) {
+        if (hit.type === "corner" && (hit.kind || "section") !== "section") {
+            return; // corner products only apply to roof sections
+        }
         const record = this.props.record;
         // The section/object records are created server-side from the drawing,
         // so the project must be saved (and synced) before lines can attach.
@@ -619,10 +701,16 @@ export class RoofCanvasField extends Component {
                 kind: hit.cornerType === "inner" ? _t("binnenhoek") : _t("buitenhoek"),
                 side: sideNumber,
             });
-        } else {
+        } else if (sideNumber) {
             target = _t("%(shape)s — zijde %(side)s (%(qty)s m)", {
                 shape: shapeName,
                 side: sideNumber,
+                qty: quantity.toFixed(2),
+            });
+        } else {
+            // Circles: one undivided outline instead of numbered sides.
+            target = _t("%(shape)s — omtrek (%(qty)s m)", {
+                shape: shapeName,
                 qty: quantity.toFixed(2),
             });
         }
@@ -844,6 +932,50 @@ export class RoofCanvasField extends Component {
             });
         }
 
+        if (shape.shape === "circle") {
+            // One circumference label at the top plus a radius drag handle;
+            // circles have no discrete edges or corners.
+            const label = `${m.perimeter.toFixed(2)} m`;
+            const width = ctx.measureText(label).width + padX * 2;
+            const cx = bbox.x + bbox.w / 2;
+            const x = cx - width / 2;
+            const y = bbox.y - boxHeight / 2;
+            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.labelHits.push({
+                type: "edge",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                name: shape.name || "",
+                edgeIndex: -1,
+                x,
+                y,
+                w: width,
+                h: boxHeight,
+                lengthM: m.perimeter,
+            });
+            const handleSize = 5 / zoom;
+            const hx = bbox.x + bbox.w;
+            const hy = bbox.y + bbox.h / 2;
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = 1.5 / zoom;
+            ctx.fillRect(hx - handleSize, hy - handleSize, handleSize * 2, handleSize * 2);
+            ctx.strokeRect(hx - handleSize, hy - handleSize, handleSize * 2, handleSize * 2);
+            this.labelHits.push({
+                type: "radius",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                name: shape.name || "",
+                edgeIndex: 0,
+                x: hx - handleSize * 1.5,
+                y: hy - handleSize * 1.5,
+                w: handleSize * 3,
+                h: handleSize * 3,
+            });
+            ctx.textBaseline = "alphabetic";
+            return;
+        }
+
         // Length box on every edge.
         for (let i = 0; i < n; i++) {
             const [x1, y1] = points[i];
@@ -924,19 +1056,31 @@ export class RoofCanvasField extends Component {
     drawShape(ctx, shape, selected) {
         const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
         const points = shape.points;
+        const isCircle = shape.shape === "circle";
         ctx.beginPath();
-        ctx.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1]);
+        if (isCircle) {
+            const box = boundingBox(points);
+            ctx.arc(
+                box.x + box.w / 2,
+                box.y + box.h / 2,
+                Math.max(box.w, box.h) / 2,
+                0,
+                Math.PI * 2
+            );
+        } else {
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i][0], points[i][1]);
+            }
+            ctx.closePath();
         }
-        ctx.closePath();
         ctx.fillStyle = style.fill;
         ctx.fill();
         ctx.strokeStyle = selected ? "#111827" : style.stroke;
         ctx.lineWidth = (selected ? 3 : 2) / this.view.zoom;
         ctx.stroke();
 
-        if (selected) {
+        if (selected && !isCircle) {
             const r = 4 / this.view.zoom;
             ctx.fillStyle = "#ffffff";
             for (const [x, y] of points) {
