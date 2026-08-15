@@ -971,19 +971,22 @@ export class RoofCanvasField extends Component {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        // Surface (area) box at the shape's center.
+        // Clickable name box at the shape's center (assigns surface
+        // products), with only the area as plain text underneath.
         const m = this.measurements(points);
         const bbox = boundingBox(points);
         {
-            const label =
-                `${m.width.toFixed(1)} × ${m.length.toFixed(1)} m — ` +
-                `${m.area.toFixed(1)} m²`;
-            const width = ctx.measureText(label).width + padX * 2;
+            const title =
+                (style.label
+                    ? `${style.label}: ${shape.name || ""}`
+                    : shape.name || ""
+                ).trim() || "Naamloos";
+            const width = ctx.measureText(title).width + padX * 2;
             const cx = bbox.x + bbox.w / 2;
-            const cy = bbox.y + bbox.h / 2 + boxHeight * 0.75;
+            const cy = bbox.y + bbox.h / 2 - boxHeight * 0.2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.drawLabelBox(ctx, title, x, y, width, boxHeight, style.stroke);
             this.labelHits.push({
                 type: "surface",
                 shapeId: shape.id,
@@ -995,6 +998,10 @@ export class RoofCanvasField extends Component {
                 h: boxHeight,
                 areaM2: m.area,
             });
+            ctx.font = `${fontSize}px sans-serif`;
+            ctx.fillStyle = "#0b1f24";
+            ctx.fillText(`${m.area.toFixed(1)} m²`, cx, cy + boxHeight * 1.1);
+            ctx.font = `600 ${fontSize}px sans-serif`;
         }
 
         if (shape.shape === "circle") {
@@ -1156,21 +1163,8 @@ export class RoofCanvasField extends Component {
             }
         }
 
-        // Shape title; the measurements are drawn as a clickable box in
-        // drawShapeLabels so they stay on top of neighbouring shapes.
-        const box = boundingBox(points);
-        const cx = box.x + box.w / 2;
-        const cy = box.y + box.h / 2;
-        const fontSize = 13 / this.view.zoom;
-        ctx.font = `600 ${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#0b1f24";
-        const title = style.label
-            ? `${style.label}: ${shape.name || ""}`.trim()
-            : shape.name || "";
-        if (title) {
-            ctx.fillText(title, cx, cy - fontSize * 0.6);
-        }
+        // The name and measurements are drawn in drawShapeLabels so they
+        // stay on top of neighbouring shapes.
     }
 
     drawDraftRect(ctx) {
