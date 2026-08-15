@@ -539,20 +539,39 @@ export class RoofCanvasField extends Component {
         // The section/object records are created server-side from the drawing,
         // so the project must be saved (and synced) before lines can attach.
         if (!(await record.save())) {
+            this.notification.add(
+                _t(
+                    "Producten koppelen kan pas nadat het project is " +
+                    "opgeslagen. Vul de verplichte velden in (zoals de " +
+                    "projectnaam) en klik daarna opnieuw op het label."
+                ),
+                { type: "warning" }
+            );
             return;
         }
         const isObject = (hit.kind || "section") !== "section";
         const targetModel = isObject
             ? "tectora.roof.object"
             : "tectora.roof.section";
-        const targetIds = await this.orm.search(
-            targetModel,
-            [
-                ["project_id", "=", record.resId],
-                ["canvas_ref", "=", hit.shapeId],
-            ],
-            { limit: 1 }
-        );
+        const targetDomain = [
+            ["project_id", "=", record.resId],
+            ["canvas_ref", "=", hit.shapeId],
+        ];
+        let targetIds = await this.orm.search(targetModel, targetDomain, {
+            limit: 1,
+        });
+        if (!targetIds.length) {
+            // The shape was drawn but never synced: run the sync for the user
+            // (same as the 'Meting bijwerken uit tekening' button) and retry.
+            await this.orm.call(
+                "tectora.roof.project", "action_sync_from_canvas", [record.resId]
+            );
+            await record.load();
+            this.draw();
+            targetIds = await this.orm.search(targetModel, targetDomain, {
+                limit: 1,
+            });
+        }
         if (!targetIds.length) {
             this.notification.add(
                 _t(
