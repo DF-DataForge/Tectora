@@ -110,6 +110,58 @@
                     <i class="fa fa-circle-o me-1"/> Koepel — cirkel
                 </button>
             </div>
+            <div t-if="state.panel" class="o_roof_canvas_panel card shadow-sm">
+                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                    <strong class="text-truncate" t-out="state.panel.name"/>
+                    <button type="button" class="btn-close" title="Sluiten"
+                            t-on-click="closePanel"/>
+                </div>
+                <div class="card-body p-0">
+                    <t t-if="state.panel.loading">
+                        <div class="p-2 text-muted small">Laden…</div>
+                    </t>
+                    <t t-elif="!state.panel.synced">
+                        <div class="p-2 text-muted small">
+                            Nog niet gesynchroniseerd — sla het project op.
+                        </div>
+                    </t>
+                    <t t-elif="!state.panel.lines.length">
+                        <div class="p-2 text-muted small">
+                            Nog geen producten toegewezen. Klik op een label,
+                            rand of hoekpunt om producten toe te voegen.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <ul class="list-group list-group-flush small">
+                            <li t-foreach="state.panel.lines" t-as="line" t-key="line.id"
+                                class="list-group-item py-1 px-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="fw-bold me-1" t-out="line.product_id[1]"/>
+                                    <button type="button"
+                                            class="btn btn-link text-danger p-0"
+                                            title="Lijn verwijderen"
+                                            t-on-click="() => this.removeLine(line)">
+                                        <i class="fa fa-trash-o"/>
+                                    </button>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted">
+                                    <span t-out="coverageLabel(line)"/>
+                                    <span>
+                                        <t t-out="line.quantity.toFixed(2)"/>
+                                        <t t-out="line.uom_id ? line.uom_id[1] : ''"/>
+                                        — <t t-out="line.price_subtotal.toFixed(2)"/>
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </t>
+                </div>
+                <div t-if="state.panel.lines.length"
+                     class="card-footer py-1 px-2 d-flex justify-content-between small">
+                    <strong>Totaal</strong>
+                    <strong t-out="state.panel.total.toFixed(2)"/>
+                </div>
+            </div>
             <div class="o_roof_canvas_status text-muted small px-2 py-1">
                 <t t-out="state.status"/>
             </div>

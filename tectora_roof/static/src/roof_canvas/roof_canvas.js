@@ -143,6 +143,7 @@ export class RoofCanvasField extends Component {
             selectedId: null,
             status: "",
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
+            panel: null, // product card for the selected shape
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -217,6 +218,7 @@ export class RoofCanvasField extends Component {
             );
             await record.load();
             this.draw();
+            this.refreshPanel();
         } catch (error) {
             console.warn("Roof canvas auto-sync failed", error);
         } finally {
@@ -432,6 +434,7 @@ export class RoofCanvasField extends Component {
                     };
                     this.updateStatus();
                     this.draw();
+                    this.refreshPanel();
                 }
                 return;
             }
@@ -455,6 +458,7 @@ export class RoofCanvasField extends Component {
             }
             this.updateStatus();
             this.draw();
+            this.refreshPanel();
         }
     }
 
@@ -689,6 +693,83 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
+    // ------------------------------------------------------- product panel
+    coverageLabel(line) {
+        const labels = {
+            surface: "Oppervlak",
+            edges: "Randen",
+            corners: "Hoeken",
+            drainage: "Afvoer",
+            general: "Algemeen",
+        };
+        const label = labels[line.coverage] || line.coverage;
+        return line.side_display ? `${label} · ${line.side_display}` : label;
+    }
+
+    closePanel() {
+        this.state.selectedId = null;
+        this.state.panel = null;
+        this.updateStatus();
+        this.draw();
+    }
+
+    async refreshPanel() {
+        const shape = this.selectedShape;
+        const record = this.props.record;
+        if (!shape || !record.resId) {
+            this.state.panel = null;
+            return;
+        }
+        const isObject = (shape.kind || "section") !== "section";
+        const targetModel = isObject
+            ? "tectora.roof.object"
+            : "tectora.roof.section";
+        this.state.panel = {
+            name: shape.name || "Naamloos",
+            lines: [],
+            total: 0,
+            loading: true,
+            synced: true,
+        };
+        const targetIds = await this.orm.search(
+            targetModel,
+            [
+                ["project_id", "=", record.resId],
+                ["canvas_ref", "=", shape.id],
+            ],
+            { limit: 1 }
+        );
+        if (this.selectedShape !== shape || !this.state.panel) {
+            return; // selection changed while loading
+        }
+        if (!targetIds.length) {
+            this.state.panel.loading = false;
+            this.state.panel.synced = false;
+            return;
+        }
+        const lines = await this.orm.searchRead(
+            "tectora.roof.section.product",
+            [[isObject ? "object_id" : "section_id", "=", targetIds[0]]],
+            ["product_id", "coverage", "side_display", "quantity", "uom_id", "price_subtotal"]
+        );
+        if (this.selectedShape !== shape) {
+            return;
+        }
+        this.state.panel = {
+            name: shape.name || "Naamloos",
+            lines,
+            total: lines.reduce((sum, line) => sum + (line.price_subtotal || 0), 0),
+            loading: false,
+            synced: true,
+        };
+    }
+
+    async removeLine(line) {
+        await this.orm.unlink("tectora.roof.section.product", [line.id]);
+        await this.props.record.load();
+        this.refreshPanel();
+    }
+
     labelHitTest([px, py]) {
         for (let i = this.labelHits.length - 1; i >= 0; i--) {
             const hit = this.labelHits[i];
@@ -829,6 +910,7 @@ export class RoofCanvasField extends Component {
                     { type: "success" }
                 );
                 this.draw();
+                this.refreshPanel();
             },
         });
     }
