@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_project_form" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <form string="Dakproject">
+                <header>
+                    <button name="action_fetch_satellite" type="object"
+                            string="Satellietbeeld ophalen" class="btn-secondary"
+                            help="Geocode the site address and fetch a satellite photo as drawing background."/>
+                    <button name="action_sync_from_canvas" type="object"
+                            string="Meting bijwerken uit tekening" class="btn-secondary"
+                            help="Create or update the roof sections and roof objects from the shapes on the canvas."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte maken" class="btn-primary"
+                            invisible="not section_ids"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,measured,quoted"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_orders" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="sale_order_count == 0">
+                            <field name="sale_order_count" widget="statinfo" string="Offertes"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
+                        <h3><field name="code" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="opportunity_id"/>
+                            <field name="address" placeholder="Straat nr, postcode gemeente"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="total_area"/>
+                            <field name="total_perimeter"/>
+                            <field name="estimated_total"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tekening" name="drawing">
+                            <field name="scale_m_per_px" invisible="1"/>
+                            <field name="has_background_image" invisible="1"/>
+                            <field name="canvas_data" widget="roof_canvas" nolabel="1"/>
+                        </page>
+                        <page string="Daksecties" name="sections">
+                            <field name="section_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="area" sum="Totaal"/>
+                                    <field name="perimeter" sum="Totaal"/>
+                                    <field name="estimated_total" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                                <form string="Daksectie">
+                                    <sheet>
+                                        <div class="oe_title">
+                                            <h2><field name="name"/></h2>
+                                        </div>
+                                        <group>
+                                            <group>
+                                                <field name="width"/>
+                                                <field name="length"/>
+                                                <field name="area"/>
+                                                <field name="perimeter"/>
+                                            </group>
+                                            <group>
+                                                <field name="canvas_ref"/>
+                                                <field name="estimated_total"/>
+                                                <field name="currency_id" invisible="1"/>
+                                                <field name="description"/>
+                                            </group>
+                                        </group>
+                                        <div class="mb-2">
+                                            <button name="action_convert_to_chimney" type="object"
+                                                    string="Zet om naar schoorsteen" class="btn btn-secondary me-2"
+                                                    confirm="This section will become a roof object and its product lines will be removed. Continue?"/>
+                                            <button name="action_convert_to_skylight" type="object"
+                                                    string="Zet om naar koepel" class="btn btn-secondary"
+                                                    confirm="This section will become a roof object and its product lines will be removed. Continue?"/>
+                                        </div>
+                                        <field name="product_line_ids">
+                                            <list editable="bottom">
+                                                <field name="product_id"/>
+                                                <field name="coverage"/>
+                                                <field name="quantity"/>
+                                                <field name="uom_id"/>
+                                                <field name="price_unit"/>
+                                                <field name="price_subtotal" sum="Totaal"/>
+                                                <field name="currency_id" column_invisible="1"/>
+                                            </list>
+                                        </field>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Dakobjecten" name="objects">
+                            <field name="roof_object_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="object_type"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="height"/>
+                                    <field name="area"/>
+                                    <field name="perimeter"/>
+                                    <field name="volume"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Achtergrond &amp; schaal" name="background">
+                            <group>
+                                <group>
+                                    <field name="background_image" widget="image" class="oe_avatar" options="{'size': [300, 300]}"/>
+                                </group>
+                                <group>
+                                    <field name="scale_m_per_px"/>
+                                    <field name="bg_lat"/>
+                                    <field name="bg_lng"/>
+                                    <field name="bg_north" string="Noordgrens"/>
+                                    <field name="bg_south" string="Zuidgrens"/>
+                                    <field name="bg_east" string="Oostgrens"/>
+                                    <field name="bg_west" string="Westgrens"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Notities" name="notes">
+                            <field name="description" placeholder="Werfvoorbereiding, opmerkingen…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_list" model="ir.ui.view">
+        <field name="name">tectora.roof.project.list</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <list string="Dakprojecten">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="address" optional="hide"/>
+                <field name="total_area"/>
+                <field name="total_perimeter" optional="hide"/>
+                <field name="estimated_total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'measured'"
+                       decoration-success="state in ('quoted', 'done')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_search" model="ir.ui.view">
+        <field name="name">tectora.roof.project.search</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <search string="Dakprojecten">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="partner_id"/>
+                <field name="address"/>
+                <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
+                <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
+                <group expand="0" string="Groeperen op">
+                    <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_project" model="ir.actions.act_window">
+        <field name="name">Dakprojecten</field>
+        <field name="res_model">tectora.roof.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak je eerste dakproject</p>
+            <p>Haal een satellietbeeld op, teken de daksecties en genereer een offerte.</p>
+        </field>
+    </record>
+
+</odoo>

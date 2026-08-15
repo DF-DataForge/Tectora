@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tectora_roof_project_user,tectora.roof.project user,model_tectora_roof_project,base.group_user,1,0,0,0
+access_tectora_roof_project_sales,tectora.roof.project sales,model_tectora_roof_project,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_section_user,tectora.roof.section user,model_tectora_roof_section,base.group_user,1,0,0,0
+access_tectora_roof_section_sales,tectora.roof.section sales,model_tectora_roof_section,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_section_product_user,tectora.roof.section.product user,model_tectora_roof_section_product,base.group_user,1,0,0,0
+access_tectora_roof_section_product_sales,tectora.roof.section.product sales,model_tectora_roof_section_product,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_object_user,tectora.roof.object user,model_tectora_roof_object,base.group_user,1,0,0,0
+access_tectora_roof_object_sales,tectora.roof.object sales,model_tectora_roof_object,sales_team.group_sale_salesman,1,1,1,1

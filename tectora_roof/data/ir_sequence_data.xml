@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_tectora_roof_project" model="ir.sequence">
+        <field name="name">Tectora Roof Project</field>
+        <field name="code">tectora.roof.project</field>
+        <field name="prefix">DAK/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

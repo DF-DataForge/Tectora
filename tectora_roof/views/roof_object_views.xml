@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_object_list" model="ir.ui.view">
+        <field name="name">tectora.roof.object.list</field>
+        <field name="model">tectora.roof.object</field>
+        <field name="arch" type="xml">
+            <list string="Dakobjecten">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="object_type"/>
+                <field name="width"/>
+                <field name="length"/>
+                <field name="height"/>
+                <field name="area"/>
+                <field name="perimeter"/>
+                <field name="volume"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_object_form" model="ir.ui.view">
+        <field name="name">tectora.roof.object.form</field>
+        <field name="model">tectora.roof.object</field>
+        <field name="arch" type="xml">
+            <form string="Dakobject">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="object_type"/>
+                            <field name="canvas_ref"/>
+                        </group>
+                        <group>
+                            <field name="width"/>
+                            <field name="length"/>
+                            <field name="height"/>
+                            <field name="area"/>
+                            <field name="perimeter"/>
+                            <field name="volume"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Omschrijving…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_object" model="ir.actions.act_window">
+        <field name="name">Dakobjecten</field>
+        <field name="res_model">tectora.roof.object</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
