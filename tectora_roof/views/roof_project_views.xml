@@ -93,6 +93,8 @@
                                             <list editable="bottom">
                                                 <field name="product_id"/>
                                                 <field name="coverage"/>
+                                                <field name="side_display"/>
+                                                <field name="edge_index" optional="hide"/>
                                                 <field name="quantity"/>
                                                 <field name="uom_id"/>
                                                 <field name="price_unit"/>
@@ -106,7 +108,7 @@
                         </page>
                         <page string="Dakobjecten" name="objects">
                             <field name="roof_object_ids">
-                                <list editable="bottom">
+                                <list editable="bottom" open_form_view="True">
                                     <field name="name"/>
                                     <field name="object_type"/>
                                     <field name="width"/>
@@ -115,6 +117,8 @@
                                     <field name="area"/>
                                     <field name="perimeter"/>
                                     <field name="volume"/>
+                                    <field name="estimated_total" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>

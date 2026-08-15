@@ -535,67 +535,68 @@ export class RoofCanvasField extends Component {
 
     // ---------------------------------------------------- products via labels
     async openProducts(hit) {
-        if ((hit.kind || "section") !== "section") {
-            this.notification.add(
-                _t("Producten kunnen alleen aan daksecties worden gekoppeld."),
-                { type: "warning" }
-            );
-            return;
-        }
         const record = this.props.record;
-        // The section records are created server-side from the drawing, so the
-        // project must be saved (and synced) before lines can be attached.
+        // The section/object records are created server-side from the drawing,
+        // so the project must be saved (and synced) before lines can attach.
         if (!(await record.save())) {
             return;
         }
-        const sectionIds = await this.orm.search(
-            "tectora.roof.section",
+        const isObject = (hit.kind || "section") !== "section";
+        const targetModel = isObject
+            ? "tectora.roof.object"
+            : "tectora.roof.section";
+        const targetIds = await this.orm.search(
+            targetModel,
             [
                 ["project_id", "=", record.resId],
                 ["canvas_ref", "=", hit.shapeId],
             ],
             { limit: 1 }
         );
-        if (!sectionIds.length) {
+        if (!targetIds.length) {
             this.notification.add(
                 _t(
-                    "Er bestaat nog geen sectie voor deze vorm. Klik eerst op " +
-                    "'Meting bijwerken uit tekening'."
+                    "Er bestaat nog geen sectie of dakobject voor deze vorm. " +
+                    "Klik eerst op 'Meting bijwerken uit tekening'."
                 ),
                 { type: "warning" }
             );
             return;
         }
         const isSurface = hit.type === "surface";
+        const sideNumber = isSurface ? 0 : hit.edgeIndex + 1;
         const quantity =
             Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
-        const title = isSurface
-            ? _t("Producten voor oppervlak van %(section)s — %(qty)s m²", {
-                  section: hit.name || _t("sectie"),
+        const shapeName = hit.name || _t("Naamloos");
+        const target = isSurface
+            ? _t("%(shape)s — oppervlak (%(qty)s m²)", {
+                  shape: shapeName,
                   qty: quantity.toFixed(2),
               })
-            : _t("Producten voor rand van %(section)s — %(qty)s m", {
-                  section: hit.name || _t("sectie"),
+            : _t("%(shape)s — zijde %(side)s (%(qty)s m)", {
+                  shape: shapeName,
+                  side: sideNumber,
                   qty: quantity.toFixed(2),
               });
         this.dialog.add(SelectCreateDialog, {
             resModel: "product.product",
-            title,
+            title: _t("Producten toewijzen aan %s", target),
             domain: [["sale_ok", "=", true]],
             multiSelect: true,
             onSelected: async (productIds) => {
                 await this.orm.create(
                     "tectora.roof.section.product",
                     productIds.map((productId) => ({
-                        section_id: sectionIds[0],
+                        [isObject ? "object_id" : "section_id"]: targetIds[0],
                         product_id: productId,
                         coverage: isSurface ? "surface" : "edges",
+                        edge_index: sideNumber,
                         quantity,
                     }))
                 );
                 await record.load();
                 this.notification.add(
-                    _t("Product(en) toegevoegd aan sectie '%s'.", hit.name),
+                    _t("Product(en) toegewezen aan %s.", target),
                     { type: "success" }
                 );
                 this.draw();

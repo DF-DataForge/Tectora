@@ -169,6 +169,7 @@ class TectoraRoofProject(models.Model):
         "section_ids.area",
         "section_ids.perimeter",
         "section_ids.product_line_ids.price_subtotal",
+        "roof_object_ids.product_line_ids.price_subtotal",
     )
     def _compute_totals(self):
         for project in self:
@@ -177,6 +178,8 @@ class TectoraRoofProject(models.Model):
             project.total_perimeter = sum(sections.mapped("perimeter"))
             project.estimated_total = sum(
                 sections.product_line_ids.mapped("price_subtotal")
+            ) + sum(
+                project.roof_object_ids.product_line_ids.mapped("price_subtotal")
             )
 
     @api.model_create_multi
@@ -439,13 +442,30 @@ class TectoraRoofProject(models.Model):
         if not self.partner_id:
             raise UserError(_("Set a customer on the project first."))
         sections = self.section_ids.filtered("product_line_ids")
-        if not sections:
+        roof_objects = self.roof_object_ids.filtered("product_line_ids")
+        if not sections and not roof_objects:
             raise UserError(
                 _(
-                    "No products are assigned to any roof section yet. Add "
-                    "product lines on the sections first."
+                    "No products are assigned to any roof section or roof "
+                    "object yet. Add product lines first."
                 )
             )
+
+        def order_line_values(line):
+            coverage_label = dict(line._fields["coverage"].selection).get(
+                line.coverage, line.coverage
+            )
+            if line.edge_index:
+                coverage_label = _(
+                    "%(coverage)s, zijde %(side)s",
+                    coverage=coverage_label,
+                    side=line.edge_index,
+                )
+            return (0, 0, {
+                "product_id": line.product_id.id,
+                "product_uom_qty": line.quantity,
+                "name": "%s (%s)" % (line.product_id.display_name, coverage_label),
+            })
 
         order_lines = []
         for section in sections:
@@ -457,19 +477,21 @@ class TectoraRoofProject(models.Model):
                     ),
                 })
             )
-            for line in section.product_line_ids:
-                order_lines.append(
-                    (0, 0, {
-                        "product_id": line.product_id.id,
-                        "product_uom_qty": line.quantity,
-                        "name": "%s (%s)" % (
-                            line.product_id.display_name,
-                            dict(line._fields["coverage"].selection).get(
-                                line.coverage, line.coverage
-                            ),
-                        ),
-                    })
-                )
+            order_lines.extend(
+                order_line_values(line) for line in section.product_line_ids
+            )
+        for roof_object in roof_objects:
+            order_lines.append(
+                (0, 0, {
+                    "display_type": "line_section",
+                    "name": "%s — %.2f m², omtrek %.2f m" % (
+                        roof_object.name, roof_object.area, roof_object.perimeter,
+                    ),
+                })
+            )
+            order_lines.extend(
+                order_line_values(line) for line in roof_object.product_line_ids
+            )
 
         order = self.env["sale.order"].create(
             {
