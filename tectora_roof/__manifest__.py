@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "Tectora Dakmeting",
+    "name": "Data Forge Dakmeting",
     "summary": "Teken en meet platte daken, wijs producten toe en maak offertes vanuit de meting",
     "description": """
 Tectora Dakmeting
@@ -20,11 +20,11 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   the standard Sales/Invoicing apps — install l10n_be for the Belgian chart
   of accounts and use a fiscal position for the 6% renovation rate.
     """,
-    "version": "19.0.1.8.0",
+    "version": "19.0.1.9.0",
     "category": "Sales",
-    "license": "LGPL-3",
-    "author": "Tectora",
-    "website": "https://www.tectora.be",
+    "license": "Other proprietary",
+    "author": "Data Forge",
+    "website": "https://www.data-forge.be",
     "depends": ["sale_management", "crm"],
     "external_dependencies": {"python": ["requests", "PIL"]},
     "data": [

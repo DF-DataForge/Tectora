@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "Tectora Productcatalogus",
+    "name": "Data Forge Productcatalogus",
     "summary": "Dakwerken productcatalogus met prijslijsten per projecttype "
     "(renovatie / nieuwbouw / industrie)",
     "description": """
@@ -23,11 +23,11 @@ workbook by ``tools/parse_price_book.py`` (in the repository root). The
 import runs on module install and can be re-run from an Odoo shell via
 ``env["product.template"]._tectora_import_price_book()``.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Sales",
-    "license": "LGPL-3",
-    "author": "Tectora",
-    "website": "https://www.tectora.be",
+    "license": "Other proprietary",
+    "author": "Data Forge",
+    "website": "https://www.data-forge.be",
     "depends": ["product", "sale_management"],
     "post_init_hook": "post_init_hook",
     "installable": True,

@@ -35,7 +35,7 @@ const KIND_STYLES = {
     skylight: { fill: "rgba(37, 99, 235, 0.30)", stroke: "#1d4ed8", label: "Koepel" },
 };
 
-function polygonArea(points) {
+function polygonSignedArea(points) {
     let total = 0;
     const n = points.length;
     for (let i = 0; i < n; i++) {
@@ -43,7 +43,25 @@ function polygonArea(points) {
         const [x2, y2] = points[(i + 1) % n];
         total += x1 * y2 - x2 * y1;
     }
-    return Math.abs(total) / 2;
+    return total / 2;
+}
+
+function polygonArea(points) {
+    return Math.abs(polygonSignedArea(points));
+}
+
+// True when vertex i is a reflex (inner) corner of the polygon.
+function isInnerCorner(points, i) {
+    const n = points.length;
+    const [ax, ay] = points[(i - 1 + n) % n];
+    const [px, py] = points[i];
+    const [bx, by] = points[(i + 1) % n];
+    const cross = (px - ax) * (by - py) - (py - ay) * (bx - px);
+    if (cross === 0) {
+        return false; // collinear: treat as outer
+    }
+    const orientation = Math.sign(polygonSignedArea(points)) || 1;
+    return Math.sign(cross) !== orientation;
 }
 
 function polygonPerimeter(points, closed = true) {
@@ -583,30 +601,51 @@ export class RoofCanvasField extends Component {
             return;
         }
         const isSurface = hit.type === "surface";
+        const isCorner = hit.type === "corner";
         const sideNumber = isSurface ? 0 : hit.edgeIndex + 1;
-        const quantity =
-            Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
+        const quantity = isCorner
+            ? 1
+            : Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
         const shapeName = hit.name || _t("Naamloos");
-        const target = isSurface
-            ? _t("%(shape)s — oppervlak (%(qty)s m²)", {
-                  shape: shapeName,
-                  qty: quantity.toFixed(2),
-              })
-            : _t("%(shape)s — zijde %(side)s (%(qty)s m)", {
-                  shape: shapeName,
-                  side: sideNumber,
-                  qty: quantity.toFixed(2),
-              });
+        let target;
+        if (isSurface) {
+            target = _t("%(shape)s — oppervlak (%(qty)s m²)", {
+                shape: shapeName,
+                qty: quantity.toFixed(2),
+            });
+        } else if (isCorner) {
+            target = _t("%(shape)s — %(kind)s %(side)s", {
+                shape: shapeName,
+                kind: hit.cornerType === "inner" ? _t("binnenhoek") : _t("buitenhoek"),
+                side: sideNumber,
+            });
+        } else {
+            target = _t("%(shape)s — zijde %(side)s (%(qty)s m)", {
+                shape: shapeName,
+                side: sideNumber,
+                qty: quantity.toFixed(2),
+            });
+        }
         // Categories can restrict where their products may be used
         // ('Kan gebruikt worden voor'); unrestricted categories always show.
-        const usage = isObject ? "object" : isSurface ? "surface" : "edge";
+        let usages;
+        if (isObject) {
+            usages = ["object"];
+        } else if (isCorner) {
+            usages = [
+                "corner",
+                hit.cornerType === "inner" ? "corner_inner" : "corner_outer",
+            ];
+        } else if (isSurface) {
+            usages = ["surface"];
+        } else {
+            usages = ["edge"];
+        }
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
                 ["sale_ok", "=", true],
-                "|",
-                ["categ_id.tectora_usage", "=", false],
-                ["categ_id.tectora_usage", "=", usage],
+                ["categ_id.tectora_usage", "in", [false, ...usages]],
             ],
             onConfirm: async (productIds) => {
                 await this.orm.create(
@@ -614,7 +653,11 @@ export class RoofCanvasField extends Component {
                     productIds.map((productId) => ({
                         [isObject ? "object_id" : "section_id"]: targetIds[0],
                         product_id: productId,
-                        coverage: isSurface ? "surface" : "edges",
+                        coverage: isCorner
+                            ? "corners"
+                            : isSurface
+                            ? "surface"
+                            : "edges",
                         edge_index: sideNumber,
                         quantity,
                     }))
@@ -656,8 +699,9 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool. Klik daarna op " +
                 "'Meting bijwerken uit tekening' om de secties aan te maken. " +
-                "Klik op een lengte- of oppervlaktelabel om producten toe te " +
-                "voegen; rechtsklik om een dakobject toe te voegen.";
+                "Klik op een lengte- of oppervlaktelabel of op een hoekpunt " +
+                "om producten toe te voegen (wit = buitenhoek, oranje = " +
+                "binnenhoek); rechtsklik om een dakobject toe te voegen.";
         }
     }
 
@@ -830,6 +874,34 @@ export class RoofCanvasField extends Component {
             });
         }
         ctx.textBaseline = "alphabetic";
+
+        // Corner markers: outer (convex) corners are white with the shape's
+        // stroke color, inner (reflex) corners are filled amber.
+        const cornerRadius = 5 / zoom;
+        for (let i = 0; i < n; i++) {
+            const [px, py] = points[i];
+            const inner = isInnerCorner(points, i);
+            ctx.beginPath();
+            ctx.arc(px, py, cornerRadius, 0, Math.PI * 2);
+            ctx.fillStyle = inner ? "#d97706" : "#ffffff";
+            ctx.fill();
+            ctx.strokeStyle = inner ? "#92400e" : style.stroke;
+            ctx.lineWidth = 1.5 / zoom;
+            ctx.stroke();
+            const hitRadius = cornerRadius * 1.5;
+            this.labelHits.push({
+                type: "corner",
+                cornerType: inner ? "inner" : "outer",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                name: shape.name || "",
+                edgeIndex: i,
+                x: px - hitRadius,
+                y: py - hitRadius,
+                w: hitRadius * 2,
+                h: hitRadius * 2,
+            });
+        }
     }
 
     drawLabelBox(ctx, label, x, y, width, height, strokeColor) {
