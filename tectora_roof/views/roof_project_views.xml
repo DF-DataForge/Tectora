@@ -31,21 +31,48 @@
                         <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
                         <h3><field name="code" readonly="1"/></h3>
                     </div>
-                    <group>
-                        <group string="Klant &amp; werf">
+                    <field name="currency_id" invisible="1"/>
+                    <div class="o_roof_kpis d-flex flex-wrap gap-2 my-2">
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="total_area" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Oppervlakte (m²)</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="total_perimeter" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Omtrek (m)</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="section_count" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Daksecties</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="roof_object_count" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Dakobjecten</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="estimated_total" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Geschat totaal (excl. btw)</span>
+                        </div>
+                    </div>
+                    <group class="mb-0">
+                        <group>
                             <field name="partner_id"/>
                             <field name="project_type"/>
-                            <field name="opportunity_id"/>
-                            <field name="address" placeholder="Straat nr, postcode gemeente"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
                         </group>
-                        <group string="Kerncijfers">
-                            <field name="total_area"/>
-                            <field name="total_perimeter"/>
-                            <field name="section_count"/>
-                            <field name="roof_object_count"/>
-                            <field name="estimated_total"/>
-                            <field name="currency_id" invisible="1"/>
+                        <group>
+                            <field name="address" placeholder="Straat nr, postcode gemeente"/>
+                            <field name="opportunity_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
                     <notebook>
