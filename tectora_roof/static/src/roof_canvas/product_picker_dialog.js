@@ -18,6 +18,7 @@ export class RoofProductPickerDialog extends Component {
         onConfirm: { type: Function },
         close: { type: Function },
         assignedDomain: { type: Array, optional: true },
+        assignedLabel: { type: String, optional: true },
     };
 
     setup() {
@@ -111,7 +112,10 @@ export class RoofProductPickerDialog extends Component {
         const rest = products.filter((p) => !this.assignedByProduct[p.id]);
         const rows = [];
         if (assigned.length) {
-            rows.push({ key: "header-assigned", header: "Reeds toegewezen aan dit onderdeel" });
+            rows.push({
+                key: "header-assigned",
+                header: this.props.assignedLabel || "Reeds toegewezen aan dit onderdeel",
+            });
             rows.push(...assigned.map((p) => ({ key: `p${p.id}`, product: p, assigned: true })));
             if (rest.length) {
                 rows.push({ key: "header-rest", header: "Overige producten" });
