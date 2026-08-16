@@ -940,6 +940,7 @@ export class RoofCanvasField extends Component {
                 : sideNumber
                 ? _t("Reeds toegewezen aan deze zijde")
                 : _t("Reeds toegewezen aan deze omtrek"),
+            quantity,
             onConfirm: async (productIds) => {
                 try {
                     await this.orm.create(

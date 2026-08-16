@@ -19,6 +19,9 @@ export class RoofProductPickerDialog extends Component {
         close: { type: Function },
         assignedDomain: { type: Array, optional: true },
         assignedLabel: { type: String, optional: true },
+        // Quantity the assignment will get (the clicked side's length, the
+        // surface in m², 1 for a corner); shown per row with the subtotal.
+        quantity: { type: Number, optional: true },
     };
 
     setup() {
