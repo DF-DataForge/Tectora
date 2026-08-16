@@ -10,6 +10,12 @@
         <xpath expr="//div[@id='portal_sale_content']" position="replace">
             <div t-attf-class="#{'pb-5' if report_type == 'html' else ''}" id="portal_sale_content">
                 <t t-if="sale_order.roof_project_id">
+                    <!-- Invisible stub: sale_management's SaleUpdateLineButton
+                         interaction reads this table's dataset unconditionally
+                         and crashes when the HTML order table is absent. -->
+                    <table id="sales_order_table" class="d-none"
+                           t-att-data-order-id="sale_order.id"
+                           t-att-data-token="sale_order.access_token"/>
                     <iframe class="w-100 d-block border-0"
                             style="min-height: 85vh;"
                             t-attf-src="/my/orders/#{sale_order.id}?report_type=pdf&amp;download=false"/>
