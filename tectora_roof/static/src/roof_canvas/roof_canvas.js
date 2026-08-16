@@ -156,6 +156,8 @@ export class RoofCanvasField extends Component {
         this.labelHits = []; // clickable measurement boxes, in world coordinates
 
         this.onWindowResize = () => this.resizeCanvas();
+        this._destroyed = false;
+        this._autoSyncTimer = null;
 
         onMounted(() => {
             this.resizeCanvas();
@@ -163,6 +165,8 @@ export class RoofCanvasField extends Component {
             window.addEventListener("resize", this.onWindowResize);
         });
         onWillUnmount(() => {
+            this._destroyed = true;
+            clearTimeout(this._autoSyncTimer);
             window.removeEventListener("resize", this.onWindowResize);
         });
     }
@@ -192,7 +196,15 @@ export class RoofCanvasField extends Component {
         }
         this.props.record.update(values);
         this.draw();
-        this.autoSyncFromCanvas();
+        this.scheduleAutoSync();
+    }
+
+    scheduleAutoSync() {
+        // Debounced: quick successive edits sync once, and a sync never
+        // starts in the same tick as a user action (avoids racing the form
+        // controller's own save when e.g. the pager is clicked).
+        clearTimeout(this._autoSyncTimer);
+        this._autoSyncTimer = setTimeout(() => this.autoSyncFromCanvas(), 400);
     }
 
     async autoSyncFromCanvas() {
@@ -201,7 +213,7 @@ export class RoofCanvasField extends Component {
         // projects: on a brand-new record the drawing stays local until the
         // user saves it for the first time.
         const record = this.props.record;
-        if (!record.resId) {
+        if (this._destroyed || !record.resId) {
             return;
         }
         if (this._syncing) {
@@ -211,6 +223,9 @@ export class RoofCanvasField extends Component {
         this._syncing = true;
         try {
             if (!(await record.save())) {
+                return;
+            }
+            if (this._destroyed) {
                 return;
             }
             await this.orm.call(
@@ -715,6 +730,14 @@ export class RoofCanvasField extends Component {
     }
 
     async refreshPanel() {
+        try {
+            await this._refreshPanel();
+        } catch (error) {
+            console.warn("Roof canvas: could not refresh product panel", error);
+        }
+    }
+
+    async _refreshPanel() {
         const shape = this.selectedShape;
         const record = this.props.record;
         if (!shape || !record.resId) {
@@ -766,8 +789,12 @@ export class RoofCanvasField extends Component {
     }
 
     async removeLine(line) {
-        await this.orm.unlink("tectora.roof.section.product", [line.id]);
-        await this.props.record.load();
+        try {
+            await this.orm.unlink("tectora.roof.section.product", [line.id]);
+            await this.props.record.load();
+        } catch (error) {
+            console.warn("Roof canvas: could not remove product line", error);
+        }
         this.refreshPanel();
     }
 
@@ -790,19 +817,6 @@ export class RoofCanvasField extends Component {
             return; // corner products only apply to roof sections
         }
         const record = this.props.record;
-        // The section/object records are created server-side from the drawing,
-        // so the project must be saved (and synced) before lines can attach.
-        if (!(await record.save())) {
-            this.notification.add(
-                _t(
-                    "Producten koppelen kan pas nadat het project is " +
-                    "opgeslagen. Vul de verplichte velden in (zoals de " +
-                    "projectnaam) en klik daarna opnieuw op het label."
-                ),
-                { type: "warning" }
-            );
-            return;
-        }
         const isObject = (hit.kind || "section") !== "section";
         const targetModel = isObject
             ? "tectora.roof.object"
@@ -811,21 +825,41 @@ export class RoofCanvasField extends Component {
             ["project_id", "=", record.resId],
             ["canvas_ref", "=", hit.shapeId],
         ];
-        let targetIds = await this.orm.search(targetModel, targetDomain, {
-            limit: 1,
-        });
-        if (!targetIds.length) {
-            // The shape was drawn but never synced: run the sync for the user
-            // (same as the 'Meting bijwerken uit tekening' button) and retry.
-            await this.orm.call(
-                "tectora.roof.project", "action_sync_from_canvas",
-                [record.resId], { context: { tectora_quiet_sync: true } }
-            );
-            await record.load();
-            this.draw();
+        let targetIds;
+        try {
+            // The section/object records are created server-side from the
+            // drawing, so the project must be saved (synced) before lines
+            // can attach.
+            if (!(await record.save())) {
+                this.notification.add(
+                    _t(
+                        "Producten koppelen kan pas nadat het project is " +
+                        "opgeslagen. Vul de verplichte velden in (zoals de " +
+                        "projectnaam) en klik daarna opnieuw op het label."
+                    ),
+                    { type: "warning" }
+                );
+                return;
+            }
             targetIds = await this.orm.search(targetModel, targetDomain, {
                 limit: 1,
             });
+            if (!targetIds.length) {
+                // The shape was drawn but never synced: run the sync for the
+                // user (same as 'Meting bijwerken uit tekening') and retry.
+                await this.orm.call(
+                    "tectora.roof.project", "action_sync_from_canvas",
+                    [record.resId], { context: { tectora_quiet_sync: true } }
+                );
+                await record.load();
+                this.draw();
+                targetIds = await this.orm.search(targetModel, targetDomain, {
+                    limit: 1,
+                });
+            }
+        } catch (error) {
+            console.warn("Roof canvas: preparing product assignment failed", error);
+            return;
         }
         if (!targetIds.length) {
             this.notification.add(
@@ -891,25 +925,33 @@ export class RoofCanvasField extends Component {
                 ["categ_id.tectora_usage", "in", [false, ...usages]],
             ],
             onConfirm: async (productIds) => {
-                await this.orm.create(
-                    "tectora.roof.section.product",
-                    productIds.map((productId) => ({
-                        [isObject ? "object_id" : "section_id"]: targetIds[0],
-                        product_id: productId,
-                        coverage: isCorner
-                            ? "corners"
-                            : isSurface
-                            ? "surface"
-                            : "edges",
-                        edge_index: sideNumber,
-                        quantity,
-                    }))
-                );
-                await record.load();
-                this.notification.add(
-                    _t("Product(en) toegewezen aan %s.", target),
-                    { type: "success" }
-                );
+                try {
+                    await this.orm.create(
+                        "tectora.roof.section.product",
+                        productIds.map((productId) => ({
+                            [isObject ? "object_id" : "section_id"]: targetIds[0],
+                            product_id: productId,
+                            coverage: isCorner
+                                ? "corners"
+                                : isSurface
+                                ? "surface"
+                                : "edges",
+                            edge_index: sideNumber,
+                            quantity,
+                        }))
+                    );
+                    await record.load();
+                    this.notification.add(
+                        _t("Product(en) toegewezen aan %s.", target),
+                        { type: "success" }
+                    );
+                } catch (error) {
+                    console.warn("Roof canvas: product assignment failed", error);
+                    this.notification.add(
+                        _t("Producten toewijzen is mislukt, probeer opnieuw."),
+                        { type: "danger" }
+                    );
+                }
                 this.draw();
                 this.refreshPanel();
             },

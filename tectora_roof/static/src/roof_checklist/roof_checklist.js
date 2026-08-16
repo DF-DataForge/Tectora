@@ -119,23 +119,27 @@ export class RoofChecklistField extends Component {
     }
 
     async toggle(product) {
-        if (!(await this.ensureSaved())) {
-            return;
+        try {
+            if (!(await this.ensureSaved())) {
+                return;
+            }
+            const line = this.state.lines[product.id];
+            if (line) {
+                await this.orm.unlink(this.lineModel, [line.id]);
+            } else {
+                await this.orm.create(this.lineModel, [
+                    {
+                        project_direct_id: this.resId,
+                        product_id: product.id,
+                        coverage: "general",
+                        quantity: 1,
+                    },
+                ]);
+            }
+            await this.refresh();
+        } catch (error) {
+            console.warn("Roof checklist: toggle failed", error);
         }
-        const line = this.state.lines[product.id];
-        if (line) {
-            await this.orm.unlink(this.lineModel, [line.id]);
-        } else {
-            await this.orm.create(this.lineModel, [
-                {
-                    project_direct_id: this.resId,
-                    product_id: product.id,
-                    coverage: "general",
-                    quantity: 1,
-                },
-            ]);
-        }
-        await this.refresh();
     }
 
     async setQuantity(product, ev) {
@@ -144,8 +148,12 @@ export class RoofChecklistField extends Component {
         if (!line || isNaN(quantity)) {
             return;
         }
-        await this.orm.write(this.lineModel, [line.id], { quantity });
-        await this.refresh();
+        try {
+            await this.orm.write(this.lineModel, [line.id], { quantity });
+            await this.refresh();
+        } catch (error) {
+            console.warn("Roof checklist: quantity update failed", error);
+        }
     }
 }
 
