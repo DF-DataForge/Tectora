@@ -17,10 +17,12 @@ export class RoofProductPickerDialog extends Component {
         domain: { type: Array },
         onConfirm: { type: Function },
         close: { type: Function },
+        assignedDomain: { type: Array, optional: true },
     };
 
     setup() {
         this.orm = useService("orm");
+        this.assignedByProduct = {}; // product_id -> [line summaries]
         this.state = useState({
             products: [],
             activeCategory: null, // false = zonder categorie, null = alle
@@ -34,7 +36,36 @@ export class RoofProductPickerDialog extends Component {
                 ["default_code", "name", "list_price", "uom_id", "categ_id"],
                 { limit: 1000, order: "default_code, name" }
             );
+            if (this.props.assignedDomain) {
+                const lines = await this.orm.searchRead(
+                    "tectora.roof.section.product",
+                    this.props.assignedDomain,
+                    ["product_id", "coverage", "side_display", "quantity", "uom_id"]
+                );
+                for (const line of lines) {
+                    const productId = line.product_id[0];
+                    (this.assignedByProduct[productId] ||= []).push(
+                        this.lineSummary(line)
+                    );
+                }
+            }
         });
+    }
+
+    lineSummary(line) {
+        const labels = {
+            surface: "Oppervlak",
+            edges: "Randen",
+            corners: "Hoeken",
+            drainage: "Afvoer",
+            general: "Algemeen",
+        };
+        const parts = [labels[line.coverage] || line.coverage];
+        if (line.side_display) {
+            parts.push(line.side_display);
+        }
+        const uom = line.uom_id ? ` ${line.uom_id[1]}` : "";
+        return `${parts.join(" · ")} — ${line.quantity.toFixed(2)}${uom}`;
     }
 
     get categories() {
@@ -70,6 +101,24 @@ export class RoofProductPickerDialog extends Component {
                 (product.default_code || "").toLowerCase().includes(query)
             );
         });
+    }
+
+    // Visible products as rows, with the products already assigned to the
+    // clicked shape pinned on top under their own header.
+    get visibleRows() {
+        const products = this.visibleProducts;
+        const assigned = products.filter((p) => this.assignedByProduct[p.id]);
+        const rest = products.filter((p) => !this.assignedByProduct[p.id]);
+        const rows = [];
+        if (assigned.length) {
+            rows.push({ key: "header-assigned", header: "Reeds toegewezen aan dit onderdeel" });
+            rows.push(...assigned.map((p) => ({ key: `p${p.id}`, product: p, assigned: true })));
+            if (rest.length) {
+                rows.push({ key: "header-rest", header: "Overige producten" });
+            }
+        }
+        rows.push(...rest.map((p) => ({ key: `p${p.id}`, product: p, assigned: false })));
+        return rows;
     }
 
     get selectedIds() {

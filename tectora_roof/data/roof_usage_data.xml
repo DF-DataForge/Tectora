@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="usage_object" model="tectora.roof.usage">
+        <field name="name">Dakobjecten</field>
+        <field name="code">object</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="usage_edge" model="tectora.roof.usage">
+        <field name="name">Randen</field>
+        <field name="code">edge</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="usage_surface" model="tectora.roof.usage">
+        <field name="name">Oppervlaktes</field>
+        <field name="code">surface</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="usage_corner" model="tectora.roof.usage">
+        <field name="name">Hoeken (alle)</field>
+        <field name="code">corner</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="usage_corner_inner" model="tectora.roof.usage">
+        <field name="name">Binnenhoeken</field>
+        <field name="code">corner_inner</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="usage_corner_outer" model="tectora.roof.usage">
+        <field name="name">Buitenhoeken</field>
+        <field name="code">corner_outer</field>
+        <field name="sequence">60</field>
+    </record>
+</odoo>

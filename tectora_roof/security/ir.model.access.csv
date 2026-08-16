@@ -7,3 +7,5 @@ access_tectora_roof_section_product_user,tectora.roof.section.product user,model
 access_tectora_roof_section_product_sales,tectora.roof.section.product sales,model_tectora_roof_section_product,sales_team.group_sale_salesman,1,1,1,1
 access_tectora_roof_object_user,tectora.roof.object user,model_tectora_roof_object,base.group_user,1,0,0,0
 access_tectora_roof_object_sales,tectora.roof.object sales,model_tectora_roof_object,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_usage_user,tectora.roof.usage user,model_tectora_roof_usage,base.group_user,1,0,0,0
+access_tectora_roof_usage_sales,tectora.roof.usage sales,model_tectora_roof_usage,sales_team.group_sale_salesman,1,1,1,1

@@ -903,8 +903,9 @@ export class RoofCanvasField extends Component {
                 qty: quantity.toFixed(2),
             });
         }
-        // Categories can restrict where their products may be used
-        // ('Kan gebruikt worden voor'); unrestricted categories always show.
+        // Strict whitelist: a category only shows up for the targets listed
+        // in its 'Kan gebruikt worden voor'; categories without any usage
+        // never appear in the canvas assignment dialog.
         let usages;
         if (isObject) {
             usages = ["object"];
@@ -922,7 +923,10 @@ export class RoofCanvasField extends Component {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
                 ["sale_ok", "=", true],
-                ["categ_id.tectora_usage", "in", [false, ...usages]],
+                ["categ_id.tectora_usage_ids.code", "in", usages],
+            ],
+            assignedDomain: [
+                [isObject ? "object_id" : "section_id", "=", targetIds[0]],
             ],
             onConfirm: async (productIds) => {
                 try {
