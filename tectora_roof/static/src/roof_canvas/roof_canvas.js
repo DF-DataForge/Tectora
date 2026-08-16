@@ -981,12 +981,21 @@ export class RoofCanvasField extends Component {
             this.drawGrid(ctx);
         }
 
+        // Per-shape try/catch: one malformed shape must never blank the form.
         for (const shape of this.shapes) {
-            this.drawShape(ctx, shape, shape.id === this.state.selectedId);
+            try {
+                this.drawShape(ctx, shape, shape.id === this.state.selectedId);
+            } catch (error) {
+                console.warn("Roof canvas: could not draw shape", shape, error);
+            }
         }
         this.labelHits = [];
         for (const shape of this.shapes) {
-            this.drawShapeLabels(ctx, shape);
+            try {
+                this.drawShapeLabels(ctx, shape);
+            } catch (error) {
+                console.warn("Roof canvas: could not label shape", shape, error);
+            }
         }
         if (this.drag && this.drag.mode === "rect") {
             this.drawDraftRect(ctx);

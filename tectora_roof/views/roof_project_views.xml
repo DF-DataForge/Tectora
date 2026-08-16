@@ -32,16 +32,18 @@
                         <h3><field name="code" readonly="1"/></h3>
                     </div>
                     <group>
-                        <group>
+                        <group string="Klant &amp; werf">
                             <field name="partner_id"/>
                             <field name="project_type"/>
                             <field name="opportunity_id"/>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
-                        <group>
+                        <group string="Kerncijfers">
                             <field name="total_area"/>
                             <field name="total_perimeter"/>
+                            <field name="section_count"/>
+                            <field name="roof_object_count"/>
                             <field name="estimated_total"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
