@@ -34,10 +34,14 @@
                                 <t t-out="'%.4f m/pixel' % doc.scale_m_per_px"/>
                             </div>
                         </div>
-                        <div class="text-center mb-2">
-                            <img t-att-src="image_data_uri(doc._get_drawing_b64())"
+                        <t t-set="drawing_b64" t-value="doc._get_drawing_b64()"/>
+                        <div t-if="drawing_b64" class="text-center mb-2">
+                            <img t-att-src="image_data_uri(drawing_b64)"
                                  style="max-width: 100%; max-height: 115mm;"
                                  alt="Dakmeting"/>
+                        </div>
+                        <div t-else="" class="text-muted text-center mb-2">
+                            (geen tekening beschikbaar)
                         </div>
                         <table class="table table-sm small mb-2">
                             <thead>

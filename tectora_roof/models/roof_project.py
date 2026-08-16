@@ -494,12 +494,19 @@ class TectoraRoofProject(models.Model):
 
     def _get_drawing_b64(self):
         """Base64 PNG of the drawing for the measurement sheet: the snapshot
-        stored by the canvas widget, or a server-side render as fallback."""
+        stored by the canvas widget, or a server-side render as fallback.
+        Never raises: without a drawing the sheet renders without image."""
         self.ensure_one()
         if self.canvas_snapshot:
             snapshot = self.canvas_snapshot
             return snapshot.decode() if isinstance(snapshot, bytes) else snapshot
-        return self._render_drawing_fallback_b64()
+        try:
+            return self._render_drawing_fallback_b64()
+        except Exception:
+            _logger.exception(
+                "Could not render the fallback drawing for %s", self.code
+            )
+            return False
 
     def _render_drawing_fallback_b64(self):
         self.ensure_one()
@@ -564,9 +571,18 @@ class TectoraRoofProject(models.Model):
             pdf_content = self.env["ir.actions.report"]._render_qweb_pdf(
                 "tectora_roof.action_report_roof_project", res_ids=self.ids
             )[0]
-        except Exception:
+        except Exception as error:
             _logger.exception(
                 "Could not render the measurement sheet PDF for %s", self.code
+            )
+            self.message_post(
+                body=_(
+                    "Het meetblad kon niet gegenereerd worden en is niet aan "
+                    "de offerte toegevoegd (%s). De offerte zelf is wel "
+                    "aangemaakt. Test via Afdrukken → Meetblad dakmeting "
+                    "voor de volledige foutmelding.",
+                    str(error) or type(error).__name__,
+                )
             )
             return
         attachment = self.env["ir.attachment"].create(
