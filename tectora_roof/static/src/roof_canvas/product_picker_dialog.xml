@@ -29,14 +29,16 @@
                                 <th style="width: 2rem;"/>
                                 <th>Interne ref.</th>
                                 <th>Naam</th>
-                                <th class="text-end">Verkoopprijs</th>
+                                <th class="text-end">Prijs/eenheid</th>
                                 <th>Eenheid</th>
+                                <th t-if="props.quantity !== undefined" class="text-end">Aantal</th>
+                                <th t-if="props.quantity !== undefined" class="text-end">Subtotaal</th>
                             </tr>
                         </thead>
                         <tbody>
                             <t t-foreach="visibleRows" t-as="row" t-key="row.key">
                                 <tr t-if="row.header" class="table-light">
-                                    <td colspan="5" class="fw-bold text-muted small text-uppercase"
+                                    <td colspan="7" class="fw-bold text-muted small text-uppercase"
                                         t-out="row.header"/>
                                 </tr>
                                 <tr t-else=""
@@ -61,10 +63,16 @@
                                     </td>
                                     <td class="text-end" t-out="row.product.list_price.toFixed(2)"/>
                                     <td t-out="row.product.uom_id ? row.product.uom_id[1] : ''"/>
+                                    <td t-if="props.quantity !== undefined" class="text-end">
+                                        <t t-out="props.quantity.toFixed(2)"/>
+                                        <t t-out="row.product.uom_id ? ' ' + row.product.uom_id[1] : ''"/>
+                                    </td>
+                                    <td t-if="props.quantity !== undefined" class="text-end fw-bold"
+                                        t-out="(props.quantity * row.product.list_price).toFixed(2)"/>
                                 </tr>
                             </t>
                             <tr t-if="!visibleProducts.length">
-                                <td colspan="5" class="text-muted text-center py-3">
+                                <td colspan="7" class="text-muted text-center py-3">
                                     Geen producten gevonden.
                                 </td>
                             </tr>
