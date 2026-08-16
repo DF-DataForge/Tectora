@@ -164,6 +164,12 @@ class TectoraRoofProject(models.Model):
         "sale.order", "roof_project_id", string="Offertes / Orders"
     )
     sale_order_count = fields.Integer(compute="_compute_sale_order_count")
+    section_count = fields.Integer(
+        string="Aantal daksecties", compute="_compute_shape_counts"
+    )
+    roof_object_count = fields.Integer(
+        string="Aantal dakobjecten", compute="_compute_shape_counts"
+    )
 
     total_area = fields.Float(
         string="Totale oppervlakte (m²)",
@@ -200,6 +206,12 @@ class TectoraRoofProject(models.Model):
     def _compute_sale_order_count(self):
         for project in self:
             project.sale_order_count = len(project.sale_order_ids)
+
+    @api.depends("section_ids", "roof_object_ids")
+    def _compute_shape_counts(self):
+        for project in self:
+            project.section_count = len(project.section_ids)
+            project.roof_object_count = len(project.roof_object_ids)
 
     @api.depends(
         "section_ids.area",
