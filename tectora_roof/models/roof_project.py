@@ -563,43 +563,6 @@ class TectoraRoofProject(models.Model):
         image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode()
 
-    def _attach_measurement_sheet(self, order):
-        """Render the one-page measurement sheet PDF and attach it to the
-        quotation. Never blocks quotation creation."""
-        self.ensure_one()
-        try:
-            pdf_content = self.env["ir.actions.report"]._render_qweb_pdf(
-                "tectora_roof.action_report_roof_project", res_ids=self.ids
-            )[0]
-        except Exception as error:
-            _logger.exception(
-                "Could not render the measurement sheet PDF for %s", self.code
-            )
-            self.message_post(
-                body=_(
-                    "Het meetblad kon niet gegenereerd worden en is niet aan "
-                    "de offerte toegevoegd (%s). De offerte zelf is wel "
-                    "aangemaakt. Test via Afdrukken → Meetblad dakmeting "
-                    "voor de volledige foutmelding.",
-                    str(error) or type(error).__name__,
-                )
-            )
-            return
-        attachment = self.env["ir.attachment"].create(
-            {
-                "name": _("Meetblad %s.pdf") % self.code,
-                "type": "binary",
-                "raw": pdf_content,
-                "res_model": "sale.order",
-                "res_id": order.id,
-                "mimetype": "application/pdf",
-            }
-        )
-        order.message_post(
-            body=_("Meetblad van de dakmeting toegevoegd."),
-            attachment_ids=[attachment.id],
-        )
-
     # ------------------------------------------------------------- quotation
     def action_create_sale_order(self):
         """Generate a native quotation from the measured sections."""
@@ -715,7 +678,9 @@ class TectoraRoofProject(models.Model):
             if pricelist:
                 order_vals["pricelist_id"] = pricelist.id
         order = self.env["sale.order"].create(order_vals)
-        self._attach_measurement_sheet(order)
+        # The meetblad is rendered as an extra page inside the quotation PDF
+        # itself (see report_saleorder_inherit_tectora), so no separate
+        # attachment is created here anymore.
         self.state = "quoted"
         self.message_post(
             body=_(
