@@ -51,6 +51,41 @@
     }
 }
 
+// Compact KPI tiles on the dakproject form header.
+.o_roof_kpis {
+    .o_roof_kpi {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+        background: #f8f9fa;
+        border: 1px solid var(--border-color, #e2e6e9);
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+
+        .o_roof_kpi_value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.3;
+
+            .o_field_widget,
+            .o_field_widget span,
+            .o_field_widget input {
+                font-size: inherit;
+                font-weight: inherit;
+            }
+        }
+
+        .o_roof_kpi_label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6c757d;
+        }
+    }
+}
+
 // Forms containing the roof canvas: give the sheet the full width and keep
 // the side chatter narrow, so the drawing plus its sidebar get the space.
 // (Deliberately conservative: no layout-direction overrides — a previous
