@@ -101,8 +101,9 @@
     </template>
 
     <!-- Append the meetblad to the quotation PDF for orders created from a
-         roof project. -->
-    <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder">
+         roof project. In Odoo 19 the per-document loop lives in
+         sale.report_saleorder_raw (report_saleorder merely calls it). -->
+    <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder_raw">
         <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="after">
             <t t-if="doc.roof_project_id">
                 <t t-set="roof_doc" t-value="doc.roof_project_id"/>
