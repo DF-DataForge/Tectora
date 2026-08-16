@@ -495,11 +495,12 @@ class TectoraRoofProject(models.Model):
     def _get_drawing_b64(self):
         """Base64 PNG of the drawing for the measurement sheet: the snapshot
         stored by the canvas widget, or a server-side render as fallback.
-        Never raises: without a drawing the sheet renders without image."""
+        Returns bytes (image_data_uri decodes them itself); never raises —
+        without a drawing the sheet renders without image."""
         self.ensure_one()
         if self.canvas_snapshot:
             snapshot = self.canvas_snapshot
-            return snapshot.decode() if isinstance(snapshot, bytes) else snapshot
+            return snapshot if isinstance(snapshot, bytes) else snapshot.encode()
         try:
             return self._render_drawing_fallback_b64()
         except Exception:
@@ -561,7 +562,7 @@ class TectoraRoofProject(models.Model):
         image = Image.alpha_composite(base, overlay).convert("RGB")
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
-        return base64.b64encode(buffer.getvalue()).decode()
+        return base64.b64encode(buffer.getvalue())
 
     # ------------------------------------------------------------- quotation
     def action_create_sale_order(self):
