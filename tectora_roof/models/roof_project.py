@@ -494,12 +494,19 @@ class TectoraRoofProject(models.Model):
 
     def _get_drawing_b64(self):
         """Base64 PNG of the drawing for the measurement sheet: the snapshot
-        stored by the canvas widget, or a server-side render as fallback."""
+        stored by the canvas widget, or a server-side render as fallback.
+        Never raises: without a drawing the sheet renders without image."""
         self.ensure_one()
         if self.canvas_snapshot:
             snapshot = self.canvas_snapshot
             return snapshot.decode() if isinstance(snapshot, bytes) else snapshot
-        return self._render_drawing_fallback_b64()
+        try:
+            return self._render_drawing_fallback_b64()
+        except Exception:
+            _logger.exception(
+                "Could not render the fallback drawing for %s", self.code
+            )
+            return False
 
     def _render_drawing_fallback_b64(self):
         self.ensure_one()
@@ -556,34 +563,6 @@ class TectoraRoofProject(models.Model):
         image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode()
 
-    def _attach_measurement_sheet(self, order):
-        """Render the one-page measurement sheet PDF and attach it to the
-        quotation. Never blocks quotation creation."""
-        self.ensure_one()
-        try:
-            pdf_content = self.env["ir.actions.report"]._render_qweb_pdf(
-                "tectora_roof.action_report_roof_project", res_ids=self.ids
-            )[0]
-        except Exception:
-            _logger.exception(
-                "Could not render the measurement sheet PDF for %s", self.code
-            )
-            return
-        attachment = self.env["ir.attachment"].create(
-            {
-                "name": _("Meetblad %s.pdf") % self.code,
-                "type": "binary",
-                "raw": pdf_content,
-                "res_model": "sale.order",
-                "res_id": order.id,
-                "mimetype": "application/pdf",
-            }
-        )
-        order.message_post(
-            body=_("Meetblad van de dakmeting toegevoegd."),
-            attachment_ids=[attachment.id],
-        )
-
     # ------------------------------------------------------------- quotation
     def action_create_sale_order(self):
         """Generate a native quotation from the measured sections."""
@@ -601,28 +580,42 @@ class TectoraRoofProject(models.Model):
                 )
             )
 
-        def order_line_values(line):
-            name = line.product_id.display_name
-            if line.coverage != "general":
-                coverage_label = dict(line._fields["coverage"].selection).get(
-                    line.coverage, line.coverage
+        def aggregated_order_lines(lines):
+            """One order line per (product, coverage), quantities summed over
+            the sides/corners; the covered sides are listed in the label."""
+            grouped = {}
+            for line in lines:
+                key = (line.product_id.id, line.coverage)
+                entry = grouped.setdefault(
+                    key, {"first": line, "quantity": 0.0, "sides": set()}
                 )
+                entry["quantity"] += line.quantity
                 if line.edge_index:
-                    position_label = (
-                        _("hoek") if line.coverage == "corners" else _("zijde")
+                    entry["sides"].add(line.edge_index)
+            values = []
+            for (_product_id, coverage), entry in grouped.items():
+                first = entry["first"]
+                name = first.product_id.display_name
+                if coverage != "general":
+                    label = dict(first._fields["coverage"].selection).get(
+                        coverage, coverage
                     )
-                    coverage_label = _(
-                        "%(coverage)s, %(position)s %(side)s",
-                        coverage=coverage_label,
-                        position=position_label,
-                        side=line.edge_index,
-                    )
-                name = "%s (%s)" % (name, coverage_label)
-            return (0, 0, {
-                "product_id": line.product_id.id,
-                "product_uom_qty": line.quantity,
-                "name": name,
-            })
+                    sides = sorted(entry["sides"])
+                    if sides:
+                        if coverage == "corners":
+                            position = _("hoek") if len(sides) == 1 else _("hoeken")
+                        else:
+                            position = _("zijde") if len(sides) == 1 else _("zijden")
+                        label = "%s, %s %s" % (
+                            label, position, ", ".join(str(s) for s in sides),
+                        )
+                    name = "%s (%s)" % (name, label)
+                values.append((0, 0, {
+                    "product_id": first.product_id.id,
+                    "product_uom_qty": entry["quantity"],
+                    "name": name,
+                }))
+            return values
 
         order_lines = []
         # Project-wide chapters (Algemene werken, Veiligheid, ...) first,
@@ -639,9 +632,11 @@ class TectoraRoofProject(models.Model):
                 })
             )
             order_lines.extend(
-                order_line_values(line)
-                for line in direct_lines
-                if line.product_id.categ_id == category
+                aggregated_order_lines(
+                    direct_lines.filtered(
+                        lambda line: line.product_id.categ_id == category
+                    )
+                )
             )
         for section in sections:
             order_lines.append(
@@ -652,9 +647,7 @@ class TectoraRoofProject(models.Model):
                     ),
                 })
             )
-            order_lines.extend(
-                order_line_values(line) for line in section.product_line_ids
-            )
+            order_lines.extend(aggregated_order_lines(section.product_line_ids))
         for roof_object in roof_objects:
             order_lines.append(
                 (0, 0, {
@@ -665,7 +658,7 @@ class TectoraRoofProject(models.Model):
                 })
             )
             order_lines.extend(
-                order_line_values(line) for line in roof_object.product_line_ids
+                aggregated_order_lines(roof_object.product_line_ids)
             )
 
         order_vals = {
@@ -685,7 +678,9 @@ class TectoraRoofProject(models.Model):
             if pricelist:
                 order_vals["pricelist_id"] = pricelist.id
         order = self.env["sale.order"].create(order_vals)
-        self._attach_measurement_sheet(order)
+        # The meetblad is rendered as an extra page inside the quotation PDF
+        # itself (see report_saleorder_inherit_tectora), so no separate
+        # attachment is created here anymore.
         self.state = "quoted"
         self.message_post(
             body=_(

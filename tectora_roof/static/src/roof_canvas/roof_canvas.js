@@ -927,7 +927,19 @@ export class RoofCanvasField extends Component {
             ],
             assignedDomain: [
                 [isObject ? "object_id" : "section_id", "=", targetIds[0]],
+                [
+                    "coverage", "=",
+                    isCorner ? "corners" : isSurface ? "surface" : "edges",
+                ],
+                ["edge_index", "=", sideNumber],
             ],
+            assignedLabel: isSurface
+                ? _t("Reeds toegewezen aan dit oppervlak")
+                : isCorner
+                ? _t("Reeds toegewezen aan deze hoek")
+                : sideNumber
+                ? _t("Reeds toegewezen aan deze zijde")
+                : _t("Reeds toegewezen aan deze omtrek"),
             onConfirm: async (productIds) => {
                 try {
                     await this.orm.create(
