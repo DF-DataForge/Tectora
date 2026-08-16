@@ -924,6 +924,9 @@ export class RoofCanvasField extends Component {
                 ["sale_ok", "=", true],
                 ["categ_id.tectora_usage", "in", [false, ...usages]],
             ],
+            assignedDomain: [
+                [isObject ? "object_id" : "section_id", "=", targetIds[0]],
+            ],
             onConfirm: async (productIds) => {
                 try {
                     await this.orm.create(

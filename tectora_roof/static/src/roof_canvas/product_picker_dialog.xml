@@ -34,18 +34,33 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="visibleProducts" t-as="product" t-key="product.id">
-                                <tr t-on-click="() => this.toggle(product)"
-                                    t-att-class="state.selected[product.id] ? 'table-primary' : ''"
+                            <t t-foreach="visibleRows" t-as="row" t-key="row.key">
+                                <tr t-if="row.header" class="table-light">
+                                    <td colspan="5" class="fw-bold text-muted small text-uppercase"
+                                        t-out="row.header"/>
+                                </tr>
+                                <tr t-else=""
+                                    t-on-click="() => this.toggle(row.product)"
+                                    t-att-class="state.selected[row.product.id] ? 'table-primary' : ''"
                                     style="cursor: pointer;">
                                     <td>
                                         <input type="checkbox"
-                                               t-att-checked="state.selected[product.id]"/>
+                                               t-att-checked="state.selected[row.product.id]"/>
                                     </td>
-                                    <td t-out="product.default_code || ''"/>
-                                    <td t-out="product.name"/>
-                                    <td class="text-end" t-out="product.list_price.toFixed(2)"/>
-                                    <td t-out="product.uom_id ? product.uom_id[1] : ''"/>
+                                    <td t-out="row.product.default_code || ''"/>
+                                    <td>
+                                        <span t-out="row.product.name"/>
+                                        <span t-if="row.assigned"
+                                              class="badge text-bg-success ms-1">✓</span>
+                                        <div t-if="row.assigned" class="text-muted small">
+                                            <t t-foreach="assignedByProduct[row.product.id]"
+                                               t-as="summary" t-key="summary_index">
+                                                <div t-out="summary"/>
+                                            </t>
+                                        </div>
+                                    </td>
+                                    <td class="text-end" t-out="row.product.list_price.toFixed(2)"/>
+                                    <td t-out="row.product.uom_id ? row.product.uom_id[1] : ''"/>
                                 </tr>
                             </t>
                             <tr t-if="!visibleProducts.length">
