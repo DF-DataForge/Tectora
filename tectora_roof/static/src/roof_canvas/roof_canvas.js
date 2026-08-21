@@ -28,6 +28,8 @@ const GRID_MIN_SCREEN_PX = 30;
 const GRID_MAJOR_EVERY = 5;
 // Edges shorter than this on screen don't get a length box (unreadable).
 const EDGE_LABEL_MIN_SCREEN_PX = 34;
+const DEFAULT_CANVAS_HEIGHT = 620;
+const WHEEL_ZOOM_STEP = 1.12;
 // Default real-world size (meters) of roof objects added via right-click.
 const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
 // Circles are stored as regular polygons so measurements and the server-side
@@ -197,6 +199,8 @@ export class RoofCanvasField extends Component {
         this.canvasRef = useRef("canvas");
         this.wrapperRef = useRef("wrapper");
         this.mainRef = useRef("main");
+        this.toolbarRef = useRef("toolbar");
+        this.statusRef = useRef("status");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -210,6 +214,7 @@ export class RoofCanvasField extends Component {
             status: "",
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
             panel: null, // product card for the selected shape
+            fullscreen: false,
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -361,9 +366,24 @@ export class RoofCanvasField extends Component {
             return;
         }
         canvas.width = Math.max(wrapper.clientWidth - 2, 600);
-        canvas.height = 620;
+        canvas.height = this.state.fullscreen
+            ? Math.max(
+                  window.innerHeight -
+                      (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) -
+                      (this.statusRef.el ? this.statusRef.el.offsetHeight : 0) -
+                      6,
+                  320
+              )
+            : DEFAULT_CANVAS_HEIGHT;
         this.fitView();
         this.draw();
+    }
+
+    toggleFullscreen() {
+        this.state.fullscreen = !this.state.fullscreen;
+        // The canvas is sized in pixels, so re-measure once the new layout
+        // has been painted.
+        requestAnimationFrame(() => this.resizeCanvas());
     }
 
     loadBackground() {
@@ -402,11 +422,18 @@ export class RoofCanvasField extends Component {
         this.view.y = (canvas.height - this.world.h * zoom) / 2;
     }
 
-    toWorld(ev) {
+    // Pointer position in canvas pixels (the space view.x/y live in).
+    canvasPoint(ev) {
         const canvas = this.canvasRef.el;
         const rect = canvas.getBoundingClientRect();
-        const cx = ((ev.clientX - rect.left) * canvas.width) / rect.width;
-        const cy = ((ev.clientY - rect.top) * canvas.height) / rect.height;
+        return [
+            ((ev.clientX - rect.left) * canvas.width) / rect.width,
+            ((ev.clientY - rect.top) * canvas.height) / rect.height,
+        ];
+    }
+
+    toWorld(ev) {
+        const [cx, cy] = this.canvasPoint(ev);
         return [
             (cx - this.view.x) / this.view.zoom,
             (cy - this.view.y) / this.view.zoom,
@@ -439,15 +466,31 @@ export class RoofCanvasField extends Component {
         this.draw();
     }
 
-    zoomBy(factor) {
-        const canvas = this.canvasRef.el;
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
+    // Zoom keeping the given canvas-pixel anchor under the cursor.
+    zoomAt(anchorX, anchorY, factor) {
         const newZoom = Math.min(Math.max(this.view.zoom * factor, 0.05), 20);
-        this.view.x = cx - ((cx - this.view.x) / this.view.zoom) * newZoom;
-        this.view.y = cy - ((cy - this.view.y) / this.view.zoom) * newZoom;
+        if (newZoom === this.view.zoom) {
+            return;
+        }
+        this.view.x = anchorX - ((anchorX - this.view.x) / this.view.zoom) * newZoom;
+        this.view.y = anchorY - ((anchorY - this.view.y) / this.view.zoom) * newZoom;
         this.view.zoom = newZoom;
         this.draw();
+    }
+
+    zoomBy(factor) {
+        const canvas = this.canvasRef.el;
+        this.zoomAt(canvas.width / 2, canvas.height / 2, factor);
+    }
+
+    onWheel(ev) {
+        if (!ev.deltaY) {
+            return;
+        }
+        // Scroll = zoom on the drawing, centered on the pointer.
+        ev.preventDefault();
+        const [cx, cy] = this.canvasPoint(ev);
+        this.zoomAt(cx, cy, ev.deltaY < 0 ? WHEEL_ZOOM_STEP : 1 / WHEEL_ZOOM_STEP);
     }
 
     deleteSelected() {
@@ -666,10 +709,24 @@ export class RoofCanvasField extends Component {
                 this.deleteSelected();
             }
         } else if (ev.key === "Escape") {
-            this.draftPolygon = null;
-            this.state.contextMenu = null;
+            // Cancel the most local thing first, leave fullscreen last.
+            if (this.state.contextMenu) {
+                this.state.contextMenu = null;
+            } else if (this.draftPolygon) {
+                this.draftPolygon = null;
+            } else if (this.state.fullscreen) {
+                this.toggleFullscreen();
+            }
             this.updateStatus();
             this.draw();
+        } else if (
+            (ev.key === "f" || ev.key === "F") &&
+            ev.target.tagName !== "INPUT" &&
+            !ev.ctrlKey &&
+            !ev.metaKey
+        ) {
+            ev.preventDefault();
+            this.toggleFullscreen();
         } else if (ev.key === "Enter" && this.draftPolygon) {
             ev.preventDefault();
             this.closePolygon();
@@ -1172,7 +1229,7 @@ export class RoofCanvasField extends Component {
                 "opslaan). Klik op een lengte- of oppervlaktelabel of op een " +
                 "hoekpunt om producten toe te voegen (wit = buitenhoek, " +
                 "oranje = binnenhoek); rechtsklik om een dakobject toe te " +
-                "voegen.";
+                "voegen. Scroll om te zoomen, F voor volledig scherm.";
         }
     }
 
