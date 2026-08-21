@@ -1,3 +1,5 @@
 # -*- coding: utf-8 -*-
 def post_init_hook(env):
-    env["product.template"]._tectora_import_price_book()
+    # The supplier catalogue replaced the price book as the product source;
+    # the price-book importer stays available for reference/rollback.
+    env["product.template"]._tectora_import_product_catalog()

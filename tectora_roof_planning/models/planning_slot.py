@@ -19,3 +19,13 @@ class PlanningSlot(models.Model):
         store=True,
         index=True,
     )
+    roof_team_id = fields.Many2one(
+        related="roof_planning_id.team_id",
+        string="Ploeg",
+        store=True,
+        index=True,
+    )
+    roof_partner_id = fields.Many2one(
+        related="roof_planning_id.partner_id", string="Klant"
+    )
+    roof_address = fields.Char(related="roof_planning_id.address", string="Werfadres")

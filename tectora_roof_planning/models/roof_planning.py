@@ -91,6 +91,16 @@ class TectoraRoofPlanning(models.Model):
             Slot.create(to_create)
         return True
 
+    def action_open_in_planner(self):
+        """Open the standard resource planner on this project's shifts."""
+        self.ensure_one()
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            "tectora_roof_planning.action_planning_slot_by_resource"
+        )
+        action["domain"] = [("roof_project_id", "=", self.project_id.id)]
+        action["context"] = {"search_default_group_resource": 1}
+        return action
+
     def action_view_slots(self):
         self.ensure_one()
         return {

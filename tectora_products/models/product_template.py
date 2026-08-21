@@ -8,6 +8,7 @@ from odoo import api, models
 _logger = logging.getLogger(__name__)
 
 PRICE_BOOK = Path(__file__).parent.parent / "data" / "price_book.json"
+PRODUCT_CATALOG = Path(__file__).parent.parent / "data" / "product_catalog.json"
 
 # Core UoM external ids to try before creating our own, per price-book unit.
 CORE_UOM_REFS = {
@@ -16,6 +17,16 @@ CORE_UOM_REFS = {
     "m2": "uom.product_uom_square_meter",
     "day": "uom.product_uom_day",
     "hour": "uom.product_uom_hour",
+    "kg": "uom.product_uom_kgm",
+}
+CATALOG_UOM_NAMES = {
+    "unit": "Stuk",
+    "m": "m",
+    "m2": "m²",
+    "kg": "kg",
+    "hour": "Uur",
+    "day": "Dag",
+    "forfait": "Forfait",
 }
 
 
@@ -89,6 +100,158 @@ class ProductTemplate(models.Model):
             "tectora_products: price book imported (%s created, %s updated, "
             "%s pricelist rules)", created, updated, rules,
         )
+
+    # ------------------------------------------------------- product catalog
+    @api.model
+    def _tectora_import_product_catalog(self, archive_price_book=True):
+        """Load (or refresh) the supplier catalogue from
+        data/product_catalog.json: categories, units, vendors, products,
+        purchase prices and vendor pricelists.
+
+        Idempotent: products are matched on their ``default_code`` (the
+        supplier export's productcode) and vendor lines on vendor+product.
+        The old price-book products (``DAK-*``) are archived rather than
+        deleted, so quotations that reference them stay intact.
+        """
+        if not PRODUCT_CATALOG.exists():
+            _logger.warning(
+                "tectora_products: %s missing, nothing imported", PRODUCT_CATALOG
+            )
+            return
+        data = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))
+
+        categories = self._tectora_load_category_paths(
+            data["categories"], data.get("root_category") or "Dakwerken"
+        )
+        uoms = {
+            key: self._tectora_get_uom(key, name)
+            for key, name in CATALOG_UOM_NAMES.items()
+        }
+        vendors = self._tectora_load_vendors(data["suppliers"])
+        tags = self._tectora_load_tags(data["products"])
+
+        Product = self.env["product.template"]
+        SupplierInfo = self.env["product.supplierinfo"]
+        created = updated = vendor_lines = 0
+        for entry in data["products"]:
+            values = {
+                "name": entry["name"],
+                "default_code": entry["code"],
+                "sale_ok": True,
+                "purchase_ok": not entry["is_service"],
+                "list_price": entry["list_price"],
+                "categ_id": categories[entry["category"]].id,
+                "uom_id": uoms[entry["uom"]].id,
+                "description_sale": entry["description"] or False,
+            }
+            if entry["is_service"]:
+                values["type"] = "service"
+            else:
+                values["type"] = "consu"
+                if "is_storable" in Product._fields:
+                    values["is_storable"] = True
+            if entry["barcode"]:
+                values["barcode"] = entry["barcode"]
+            if entry["weight"] and "weight" in Product._fields:
+                values["weight"] = entry["weight"]
+            if "product_tag_ids" in Product._fields and entry["tags"]:
+                values["product_tag_ids"] = [
+                    (6, 0, [tags[tag].id for tag in entry["tags"]])
+                ]
+            product = Product.with_context(active_test=False).search(
+                [("default_code", "=", entry["code"])], limit=1
+            )
+            if product:
+                product.write(values)
+                updated += 1
+            else:
+                product = Product.create(values)
+                created += 1
+            if entry["standard_price"]:
+                product.standard_price = entry["standard_price"]
+
+            vendor = vendors.get(entry["supplier"])
+            if not vendor:
+                continue
+            line_values = {
+                "partner_id": vendor.id,
+                "product_tmpl_id": product.id,
+                "price": entry["standard_price"],
+                "product_code": entry["supplier_code"] or False,
+            }
+            line = SupplierInfo.search(
+                [
+                    ("partner_id", "=", vendor.id),
+                    ("product_tmpl_id", "=", product.id),
+                ],
+                limit=1,
+            )
+            if line:
+                line.write(line_values)
+            else:
+                SupplierInfo.create(line_values)
+            vendor_lines += 1
+
+        archived = 0
+        if archive_price_book:
+            old = Product.search(
+                [("default_code", "=like", "DAK-%"), ("active", "=", True)]
+            )
+            archived = len(old)
+            if old:
+                old.write({"active": False})
+        _logger.info(
+            "tectora_products: catalogue imported (%s created, %s updated, "
+            "%s vendor lines, %s price-book products archived)",
+            created, updated, vendor_lines, archived,
+        )
+        return {
+            "created": created,
+            "updated": updated,
+            "vendor_lines": vendor_lines,
+            "archived": archived,
+        }
+
+    def _tectora_load_category_paths(self, entries, root_name):
+        """Resolve 'A/B' category paths under the root, creating what is
+        missing and reusing every category that already exists."""
+        Category = self.env["product.category"]
+        root = Category.search(
+            [("name", "=", root_name), ("parent_id", "=", False)], limit=1
+        )
+        if not root:
+            root = Category.create({"name": root_name})
+        result = {}
+        for entry in entries:
+            parent = root
+            for part in entry["path"].split("/"):
+                part = part.strip()
+                category = Category.search(
+                    [("name", "=", part), ("parent_id", "=", parent.id)], limit=1
+                )
+                if not category:
+                    category = Category.create(
+                        {"name": part, "parent_id": parent.id}
+                    )
+                parent = category
+            result[entry["key"]] = parent
+        return result
+
+    def _tectora_load_vendors(self, names):
+        Partner = self.env["res.partner"]
+        result = {}
+        for name in names:
+            partner = Partner.search(
+                [("name", "=ilike", name), ("supplier_rank", ">", 0)], limit=1
+            ) or Partner.search([("name", "=ilike", name)], limit=1)
+            if not partner:
+                partner = Partner.create(
+                    {"name": name, "company_type": "company", "supplier_rank": 1}
+                )
+            elif not partner.supplier_rank:
+                partner.supplier_rank = 1
+            result[name] = partner
+        return result
 
     def _tectora_load_categories(self, entries):
         Category = self.env["product.category"]
