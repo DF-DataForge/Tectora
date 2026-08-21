@@ -124,6 +124,71 @@ function makeId() {
     return "shape-" + Math.random().toString(36).slice(2, 10) + "-" + Date.now().toString(36);
 }
 
+function lineIntersection(point1, dir1, point2, dir2) {
+    const cross = dir1[0] * dir2[1] - dir1[1] * dir2[0];
+    if (Math.abs(cross) < 1e-9) {
+        return null; // parallel
+    }
+    const t =
+        ((point2[0] - point1[0]) * dir2[1] - (point2[1] - point1[1]) * dir2[0]) /
+        cross;
+    return [point1[0] + dir1[0] * t, point1[1] + dir1[1] * t];
+}
+
+// Inset a polygon with a per-edge distance (canvas px): every edge is moved
+// inward by its own width, new vertices are the intersections of adjacent
+// offset edges. Returns null when the widths degenerate the polygon.
+function insetPolygon(points, widths) {
+    const n = points.length;
+    if (n < 3) {
+        return null;
+    }
+    const offsetEdges = [];
+    for (let i = 0; i < n; i++) {
+        const [ax, ay] = points[i];
+        const [bx, by] = points[(i + 1) % n];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const length = Math.hypot(dx, dy) || 1;
+        let nx = -dy / length;
+        let ny = dx / length;
+        const probe = [(ax + bx) / 2 + nx * 0.5, (ay + by) / 2 + ny * 0.5];
+        if (!pointInPolygon(probe, points)) {
+            nx = -nx;
+            ny = -ny;
+        }
+        const width = widths[i] || 0;
+        offsetEdges.push({
+            p: [ax + nx * width, ay + ny * width],
+            d: [dx, dy],
+        });
+    }
+    const inner = [];
+    for (let i = 0; i < n; i++) {
+        const previous = offsetEdges[(i - 1 + n) % n];
+        const current = offsetEdges[i];
+        const vertex =
+            lineIntersection(previous.p, previous.d, current.p, current.d) ||
+            [...current.p];
+        if (!isFinite(vertex[0]) || !isFinite(vertex[1])) {
+            return null;
+        }
+        inner.push(vertex);
+    }
+    // Degenerate widths flip the polygon inside-out: the orientation of the
+    // result must match the original.
+    const signedInner = polygonSignedArea(inner);
+    const signedOuter = polygonSignedArea(points);
+    if (
+        !isFinite(signedInner) ||
+        Math.sign(signedInner) !== Math.sign(signedOuter) ||
+        Math.abs(signedInner) > Math.abs(signedOuter)
+    ) {
+        return null;
+    }
+    return inner;
+}
+
 export class RoofCanvasField extends Component {
     static template = "tectora_roof.RoofCanvasField";
     static props = { ...standardFieldProps };
@@ -737,6 +802,53 @@ export class RoofCanvasField extends Component {
         }
     }
 
+    panelGeometry(shape) {
+        if (shape.shape === "circle") {
+            return { edges: [], inner: null };
+        }
+        const scale = this.scaleMPerPx;
+        const n = shape.points.length;
+        const edges = shape.points.map((point, index) => {
+            const next = shape.points[(index + 1) % n];
+            return {
+                index,
+                label: `Zijde ${index + 1}`,
+                lengthM:
+                    Math.hypot(next[0] - point[0], next[1] - point[1]) * scale,
+                width: this.edgeWidth(shape, index),
+            };
+        });
+        const innerPoints = this.innerPolygon(shape);
+        const inner = innerPoints
+            ? {
+                  area: polygonArea(innerPoints) * scale * scale,
+                  perimeter: polygonPerimeter(innerPoints) * scale,
+              }
+            : null;
+        return { edges, inner };
+    }
+
+    setEdgeWidth(edge, ev) {
+        const shape = this.selectedShape;
+        if (!shape) {
+            return;
+        }
+        const value = parseFloat(ev.target.value);
+        const widths = { ...(shape.edgeWidths || {}) };
+        if (value > 0) {
+            widths[edge.index] = Math.round(value * 100) / 100;
+        } else {
+            delete widths[edge.index];
+        }
+        if (Object.keys(widths).length) {
+            shape.edgeWidths = widths;
+        } else {
+            delete shape.edgeWidths;
+        }
+        this.commit();
+        this.refreshPanel();
+    }
+
     async _refreshPanel() {
         const shape = this.selectedShape;
         const record = this.props.record;
@@ -754,6 +866,7 @@ export class RoofCanvasField extends Component {
             total: 0,
             loading: true,
             synced: true,
+            ...this.panelGeometry(shape),
         };
         const targetIds = await this.orm.search(
             targetModel,
@@ -785,6 +898,7 @@ export class RoofCanvasField extends Component {
             total: lines.reduce((sum, line) => sum + (line.price_subtotal || 0), 0),
             loading: false,
             synced: true,
+            ...this.panelGeometry(shape),
         };
     }
 
@@ -986,6 +1100,29 @@ export class RoofCanvasField extends Component {
         };
     }
 
+    // Inner polygon (canvas px) of a shape whose sides carry a width (m),
+    // or null when no widths are set or the inset degenerates.
+    innerPolygon(shape) {
+        if (shape.shape === "circle" || !shape.edgeWidths) {
+            return null;
+        }
+        const scale = this.scaleMPerPx;
+        const n = shape.points.length;
+        const widths = [];
+        let hasWidth = false;
+        for (let i = 0; i < n; i++) {
+            const meters = parseFloat(shape.edgeWidths[i]) || 0;
+            widths.push(meters > 0 ? meters / scale : 0);
+            hasWidth = hasWidth || meters > 0;
+        }
+        return hasWidth ? insetPolygon(shape.points, widths) : null;
+    }
+
+    edgeWidth(shape, edgeIndex) {
+        const value = shape.edgeWidths && shape.edgeWidths[edgeIndex];
+        return parseFloat(value) || 0;
+    }
+
     updateStatus() {
         if (this.draftPolygon) {
             this.state.status = `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
@@ -1161,7 +1298,13 @@ export class RoofCanvasField extends Component {
             });
             ctx.font = `${fontSize}px sans-serif`;
             ctx.fillStyle = "#0b1f24";
-            ctx.fillText(`${m.area.toFixed(1)} m²`, cx, cy + boxHeight * 1.1);
+            const innerPoints = this.innerPolygon(shape);
+            const areaText = innerPoints
+                ? `${m.area.toFixed(1)} m² · binnen ${(
+                      polygonArea(innerPoints) * scale * scale
+                  ).toFixed(1)} m²`
+                : `${m.area.toFixed(1)} m²`;
+            ctx.fillText(areaText, cx, cy + boxHeight * 1.1);
             ctx.font = `600 ${fontSize}px sans-serif`;
         }
 
@@ -1218,7 +1361,10 @@ export class RoofCanvasField extends Component {
                 continue;
             }
             const lengthM = lengthPx * scale;
-            const label = `${lengthM.toFixed(2)} m`;
+            const sideWidth = this.edgeWidth(shape, i);
+            const label = sideWidth
+                ? `${lengthM.toFixed(2)} m · b ${sideWidth.toFixed(2)}`
+                : `${lengthM.toFixed(2)} m`;
             const width = ctx.measureText(label).width + padX * 2;
             const cx = (x1 + x2) / 2;
             const cy = (y1 + y2) / 2;
@@ -1312,6 +1458,22 @@ export class RoofCanvasField extends Component {
         ctx.strokeStyle = selected ? "#111827" : style.stroke;
         ctx.lineWidth = (selected ? 3 : 2) / this.view.zoom;
         ctx.stroke();
+
+        // Dashed inner outline when sides carry a width (dakrand).
+        const inner = this.innerPolygon(shape);
+        if (inner) {
+            ctx.beginPath();
+            ctx.moveTo(inner[0][0], inner[0][1]);
+            for (let i = 1; i < inner.length; i++) {
+                ctx.lineTo(inner[i][0], inner[i][1]);
+            }
+            ctx.closePath();
+            ctx.setLineDash([5 / this.view.zoom, 4 / this.view.zoom]);
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = 1.5 / this.view.zoom;
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
 
         if (selected && !isCircle) {
             const r = 4 / this.view.zoom;

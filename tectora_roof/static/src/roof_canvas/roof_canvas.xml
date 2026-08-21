@@ -148,6 +148,33 @@
                             <strong t-out="state.panel.total.toFixed(2)"/>
                         </div>
                     </div>
+                    <div t-if="state.panel.edges.length" class="o_roof_canvas_panel card">
+                        <div class="card-header py-1 px-2">
+                            <strong>Randbreedte per zijde (m)</strong>
+                        </div>
+                        <ul class="list-group list-group-flush small">
+                            <li t-foreach="state.panel.edges" t-as="edge" t-key="edge.index"
+                                class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center">
+                                <span>
+                                    <t t-out="edge.label"/> —
+                                    <t t-out="edge.lengthM.toFixed(2)"/> m
+                                </span>
+                                <input type="number" step="0.01" min="0"
+                                       class="form-control form-control-sm text-end"
+                                       style="width: 5.5rem;" placeholder="0"
+                                       t-att-value="edge.width || ''"
+                                       t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
+                            </li>
+                        </ul>
+                        <div t-if="state.panel.inner"
+                             class="card-footer py-1 px-2 small d-flex justify-content-between">
+                            <span>Binnenmaat</span>
+                            <span>
+                                <t t-out="state.panel.inner.area.toFixed(2)"/> m² ·
+                                omtrek <t t-out="state.panel.inner.perimeter.toFixed(2)"/> m
+                            </span>
+                        </div>
+                    </div>
                 </t>
                 <div t-else="" class="text-muted small p-2">
                     Selecteer een vorm op de tekening om de toegewezen producten
