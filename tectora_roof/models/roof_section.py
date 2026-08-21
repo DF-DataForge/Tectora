@@ -40,6 +40,13 @@ class TectoraRoofSection(models.Model):
     length = fields.Float(string="Lengte (m)", digits=(16, 2))
     area = fields.Float(string="Oppervlakte (m²)", digits=(16, 2))
     perimeter = fields.Float(string="Omtrek (m)", digits=(16, 2))
+    inner_area = fields.Float(
+        string="Binnenopp. (m²)",
+        digits=(16, 2),
+        help="Oppervlakte binnen de randen, berekend uit de per zijde "
+        "ingestelde randbreedtes op de tekening.",
+    )
+    inner_perimeter = fields.Float(string="Binnenomtrek (m)", digits=(16, 2))
     description = fields.Text(string="Omschrijving")
     product_line_ids = fields.One2many(
         "tectora.roof.section.product", "section_id", string="Producten"

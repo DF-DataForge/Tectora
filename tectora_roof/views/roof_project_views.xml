@@ -90,6 +90,8 @@
                                     <field name="length"/>
                                     <field name="area" sum="Totaal"/>
                                     <field name="perimeter" sum="Totaal"/>
+                                    <field name="inner_area" sum="Totaal" optional="show"/>
+                                    <field name="inner_perimeter" sum="Totaal" optional="hide"/>
                                     <field name="estimated_total" sum="Totaal"/>
                                     <field name="currency_id" column_invisible="1"/>
                                 </list>
@@ -104,6 +106,8 @@
                                                 <field name="length"/>
                                                 <field name="area"/>
                                                 <field name="perimeter"/>
+                                                <field name="inner_area"/>
+                                                <field name="inner_perimeter"/>
                                             </group>
                                             <group>
                                                 <field name="canvas_ref"/>

@@ -64,6 +64,74 @@ def _bounding_box_px(points):
     return max(xs) - min(xs), max(ys) - min(ys)
 
 
+def _point_in_polygon(point, points):
+    px, py = point
+    inside = False
+    n = len(points)
+    j = n - 1
+    for i in range(n):
+        xi, yi = points[i]
+        xj, yj = points[j]
+        if (yi > py) != (yj > py) and px < (xj - xi) * (py - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _line_intersection(point1, dir1, point2, dir2):
+    cross = dir1[0] * dir2[1] - dir1[1] * dir2[0]
+    if abs(cross) < 1e-9:
+        return None
+    t = ((point2[0] - point1[0]) * dir2[1] - (point2[1] - point1[1]) * dir2[0]) / cross
+    return (point1[0] + dir1[0] * t, point1[1] + dir1[1] * t)
+
+
+def _inset_polygon_px(points, widths):
+    """Variable inset (mirror of the canvas widget): each edge moves inward
+    by its own width (px); returns None when the result degenerates."""
+    n = len(points)
+    if n < 3:
+        return None
+    offset_edges = []
+    for i in range(n):
+        ax, ay = points[i]
+        bx, by = points[(i + 1) % n]
+        dx, dy = bx - ax, by - ay
+        length = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / length, dx / length
+        probe = ((ax + bx) / 2 + nx * 0.5, (ay + by) / 2 + ny * 0.5)
+        if not _point_in_polygon(probe, points):
+            nx, ny = -nx, -ny
+        width = widths[i] if i < len(widths) else 0.0
+        offset_edges.append(((ax + nx * width, ay + ny * width), (dx, dy)))
+    inner = []
+    for i in range(n):
+        previous = offset_edges[i - 1]
+        current = offset_edges[i]
+        vertex = _line_intersection(previous[0], previous[1], current[0], current[1])
+        inner.append(vertex or current[0])
+
+    def signed_area(polygon):
+        total = 0.0
+        for i in range(len(polygon)):
+            x1, y1 = polygon[i]
+            x2, y2 = polygon[(i + 1) % len(polygon)]
+            total += x1 * y2 - x2 * y1
+        return total / 2.0
+
+    # Degenerate widths flip the polygon inside-out: the orientation of the
+    # result must match the original.
+    signed_inner = signed_area(inner)
+    signed_outer = signed_area(points)
+    if (
+        not signed_inner
+        or (signed_inner > 0) != (signed_outer > 0)
+        or abs(signed_inner) > abs(signed_outer)
+    ):
+        return None
+    return inner
+
+
 class TectoraRoofProject(models.Model):
     _name = "tectora.roof.project"
     _description = "Roof Measurement Project"
@@ -396,12 +464,19 @@ class TectoraRoofProject(models.Model):
                 if isinstance(p, (list, tuple)) and len(p) >= 2
             ]
             if len(points) >= 3 and shape.get("id"):
+                edge_widths = {}
+                for key, value in (shape.get("edgeWidths") or {}).items():
+                    try:
+                        edge_widths[int(key)] = float(value)
+                    except (TypeError, ValueError):
+                        continue
                 shapes.append(
                     {
                         "id": str(shape["id"]),
                         "kind": shape.get("kind") or "section",
                         "name": shape.get("name") or "",
                         "points": points,
+                        "edge_widths": edge_widths,
                     }
                 )
         return shapes
@@ -414,6 +489,23 @@ class TectoraRoofProject(models.Model):
             "length": round(length_px * scale, 2),
             "area": round(_polygon_area_px(points) * scale * scale, 2),
             "perimeter": round(_polygon_perimeter_px(points) * scale, 2),
+        }
+
+    def _shape_inner_measurements(self, points, edge_widths):
+        """Inner area/perimeter derived from per-side widths (m); zeros when
+        no widths are set or the inset degenerates."""
+        scale = self.scale_m_per_px or DEFAULT_SCALE_M_PER_PX
+        if not edge_widths or not any(w > 0 for w in edge_widths.values()):
+            return {"inner_area": 0.0, "inner_perimeter": 0.0}
+        widths_px = [
+            max(edge_widths.get(i, 0.0), 0.0) / scale for i in range(len(points))
+        ]
+        inner = _inset_polygon_px(points, widths_px)
+        if not inner:
+            return {"inner_area": 0.0, "inner_perimeter": 0.0}
+        return {
+            "inner_area": round(_polygon_area_px(inner) * scale * scale, 2),
+            "inner_perimeter": round(_polygon_perimeter_px(inner) * scale, 2),
         }
 
     def action_sync_from_canvas(self):
@@ -438,6 +530,11 @@ class TectoraRoofProject(models.Model):
         section_count = 0
         for index, shape in enumerate(section_shapes, start=1):
             values = self._shape_measurements(shape["points"])
+            values.update(
+                self._shape_inner_measurements(
+                    shape["points"], shape.get("edge_widths")
+                )
+            )
             values["name"] = shape["name"] or _("Sectie %s") % index
             existing = sections_by_ref.pop(shape["id"], None)
             if existing:
