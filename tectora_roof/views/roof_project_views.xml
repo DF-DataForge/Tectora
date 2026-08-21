@@ -26,6 +26,29 @@
                                 invisible="sale_order_count == 0">
                             <field name="sale_order_count" widget="statinfo" string="Offertes"/>
                         </button>
+                        <button name="action_view_materials" type="object"
+                                class="oe_stat_button" icon="fa-cubes"
+                                invisible="material_count == 0">
+                            <field name="material_count" widget="statinfo" string="Materialen"/>
+                        </button>
+                        <button name="action_view_pickings" type="object"
+                                class="oe_stat_button" icon="fa-truck"
+                                invisible="picking_count == 0">
+                            <field name="picking_count" widget="statinfo" string="Leveringen"/>
+                        </button>
+                        <button name="action_view_purchase_orders" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="Inkoop"/>
+                        </button>
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Facturen"/>
+                        </button>
+                        <button name="action_open_project" type="object"
+                                class="oe_stat_button" icon="fa-tasks"
+                                string="Projectdossier"/>
                     </div>
                     <div class="oe_title">
                         <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
@@ -63,6 +86,24 @@
                             </span>
                             <span class="o_roof_kpi_label">Geschat totaal (excl. btw)</span>
                         </div>
+                        <div class="o_roof_kpi" invisible="revenue == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="revenue" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Omzet (bevestigd)</span>
+                        </div>
+                        <div class="o_roof_kpi" invisible="material_cost == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="material_cost" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Materiaalkost</span>
+                        </div>
+                        <div class="o_roof_kpi" invisible="revenue == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="margin" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Marge</span>
+                        </div>
                     </div>
                     <group class="mb-0">
                         <group>
@@ -72,6 +113,11 @@
                         <group>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>
                             <field name="opportunity_id"/>
+                            <field name="project_id" readonly="1"
+                                   invisible="not project_id"/>
+                            <field name="analytic_account_id" readonly="1"
+                                   invisible="not analytic_account_id"
+                                   groups="analytic.group_analytic_accounting"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
@@ -184,6 +230,28 @@
                                     <field name="bg_west" string="Westgrens"/>
                                 </group>
                             </group>
+                        </page>
+                        <page string="Materiaallijst" name="materials">
+                            <field name="material_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="unit_cost" optional="show"/>
+                                    <field name="cost_subtotal" sum="Totaal"/>
+                                    <field name="source_product_id" optional="show"/>
+                                    <field name="bom_name" optional="hide"/>
+                                    <field name="sale_order_id" optional="show"/>
+                                    <field name="notes" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De materiaallijst wordt automatisch opgebouwd uit de
+                                stuklijsten van de verkochte producten zodra een
+                                verkooporder bevestigd wordt. Handmatig toegevoegde
+                                lijnen blijven bewaard.
+                            </div>
                         </page>
                         <page string="Notities" name="notes">
                             <field name="description" placeholder="Werfvoorbereiding, opmerkingen…"/>

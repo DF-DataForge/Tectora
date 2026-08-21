@@ -232,6 +232,44 @@ class TectoraRoofProject(models.Model):
         "sale.order", "roof_project_id", string="Offertes / Orders"
     )
     sale_order_count = fields.Integer(compute="_compute_sale_order_count")
+
+    # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
+    project_id = fields.Many2one(
+        "project.project",
+        string="Projectdossier",
+        copy=False,
+        ondelete="set null",
+        help="Odoo-project achter dit dakproject: draagt de analytische "
+        "rekening waarop omzet en kosten (verkooporders, facturen, "
+        "inkooporders, leveringen) samenkomen.",
+    )
+    analytic_account_id = fields.Many2one(
+        related="project_id.account_id", string="Analytische rekening", readonly=True
+    )
+    material_line_ids = fields.One2many(
+        "tectora.roof.material", "project_id", string="Materiaallijst"
+    )
+    material_count = fields.Integer(compute="_compute_material_totals")
+    material_cost = fields.Monetary(
+        string="Materiaalkost",
+        compute="_compute_material_totals",
+        currency_field="currency_id",
+    )
+    revenue = fields.Monetary(
+        string="Omzet (excl. btw)",
+        compute="_compute_revenue",
+        currency_field="currency_id",
+        help="Bevestigde verkooporders van dit dakproject.",
+    )
+    margin = fields.Monetary(
+        string="Marge",
+        compute="_compute_revenue",
+        currency_field="currency_id",
+        help="Omzet minus de kostprijs van de materiaallijst.",
+    )
+    picking_count = fields.Integer(compute="_compute_logistics_counts")
+    purchase_count = fields.Integer(compute="_compute_logistics_counts")
+    invoice_count = fields.Integer(compute="_compute_logistics_counts")
     section_count = fields.Integer(
         string="Aantal daksecties", compute="_compute_shape_counts"
     )
@@ -274,6 +312,150 @@ class TectoraRoofProject(models.Model):
     def _compute_sale_order_count(self):
         for project in self:
             project.sale_order_count = len(project.sale_order_ids)
+
+    @api.depends("material_line_ids.cost_subtotal")
+    def _compute_material_totals(self):
+        for project in self:
+            project.material_count = len(project.material_line_ids)
+            project.material_cost = sum(
+                project.material_line_ids.mapped("cost_subtotal")
+            )
+
+    @api.depends(
+        "sale_order_ids.state",
+        "sale_order_ids.amount_untaxed",
+        "material_line_ids.cost_subtotal",
+    )
+    def _compute_revenue(self):
+        for project in self:
+            confirmed = project.sale_order_ids.filtered(
+                lambda order: order.state == "sale"
+            )
+            project.revenue = sum(confirmed.mapped("amount_untaxed"))
+            project.margin = project.revenue - sum(
+                project.material_line_ids.mapped("cost_subtotal")
+            )
+
+    def _compute_logistics_counts(self):
+        for project in self:
+            orders = project.sale_order_ids
+            project.picking_count = len(project._get_pickings())
+            project.invoice_count = len(orders.mapped("invoice_ids"))
+            purchases = project._get_purchase_orders()
+            project.purchase_count = len(purchases) if purchases is not None else 0
+
+    # --------------------------------------------------------- project dossier
+    def _get_pickings(self):
+        """Deliveries of the project's sale orders (sale_stock)."""
+        self.ensure_one()
+        orders = self.sale_order_ids
+        if not orders or "picking_ids" not in orders._fields:
+            return self.env["stock.picking"]
+        return orders.mapped("picking_ids")
+
+    def _get_purchase_orders(self):
+        """Purchase orders whose lines carry the project's analytic account.
+
+        Returns None when Purchase is not installed (an optional dependency).
+        """
+        self.ensure_one()
+        PurchaseLine = self.env.get("purchase.order.line")
+        if PurchaseLine is None:
+            return None
+        account = self.analytic_account_id
+        if not account:
+            return self.env["purchase.order"]
+        # analytic.mixin's search accepts account ids for the JSON field.
+        lines = PurchaseLine.search([("analytic_distribution", "in", [account.id])])
+        return lines.order_id
+
+    def _prepare_project_values(self):
+        self.ensure_one()
+        values = {
+            "name": "%s — %s" % (self.code, self.name),
+            "partner_id": self.partner_id.id or False,
+            "company_id": self.company_id.id or self.env.company.id,
+        }
+        Project = self.env["project.project"]
+        if "allow_billable" in Project._fields:
+            values["allow_billable"] = True
+        return values
+
+    def _ensure_project(self):
+        """Create (or complete) the project.project dossier and its analytic
+        account, so revenue, costs, POs, deliveries and invoices aggregate."""
+        for roof_project in self:
+            project = roof_project.project_id
+            if not project:
+                project = self.env["project.project"].create(
+                    roof_project._prepare_project_values()
+                )
+                roof_project.project_id = project
+            elif not project.partner_id and roof_project.partner_id:
+                project.partner_id = roof_project.partner_id
+            # sale.order.project_id only accepts billable projects.
+            if "allow_billable" in project._fields and not project.allow_billable:
+                project.allow_billable = True
+            if not project.account_id:
+                project._create_analytic_account()
+        return self.mapped("project_id")
+
+    def action_open_project(self):
+        self.ensure_one()
+        self._ensure_project()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "project.project",
+            "res_id": self.project_id.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
+    def action_view_materials(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Materiaallijst"),
+            "res_model": "tectora.roof.material",
+            "view_mode": "list,form",
+            "domain": [("project_id", "=", self.id)],
+            "context": {"default_project_id": self.id},
+        }
+
+    def action_view_pickings(self):
+        self.ensure_one()
+        pickings = self._get_pickings()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Leveringen"),
+            "res_model": "stock.picking",
+            "view_mode": "list,form",
+            "domain": [("id", "in", pickings.ids)],
+        }
+
+    def action_view_purchase_orders(self):
+        self.ensure_one()
+        orders = self._get_purchase_orders()
+        if orders is None:
+            raise UserError(_("De module Inkoop is niet geïnstalleerd."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Inkooporders"),
+            "res_model": "purchase.order",
+            "view_mode": "list,form",
+            "domain": [("id", "in", orders.ids)],
+        }
+
+    def action_view_invoices(self):
+        self.ensure_one()
+        invoices = self.sale_order_ids.mapped("invoice_ids")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Facturen"),
+            "res_model": "account.move",
+            "view_mode": "list,form",
+            "domain": [("id", "in", invoices.ids)],
+        }
 
     @api.depends("section_ids", "roof_object_ids")
     def _compute_shape_counts(self):
@@ -791,6 +973,10 @@ class TectoraRoofProject(models.Model):
                 aggregated_order_lines(roof_object.product_line_ids)
             )
 
+        # The project dossier carries the analytic account: linking it on the
+        # order makes Odoo apply the analytic distribution to every line, so
+        # revenue and costs aggregate on the project.
+        self._ensure_project()
         order_vals = {
             "partner_id": self.partner_id.id,
             "opportunity_id": self.opportunity_id.id or False,
@@ -798,6 +984,9 @@ class TectoraRoofProject(models.Model):
             "roof_project_id": self.id,
             "order_line": order_lines,
         }
+        SaleOrder = self.env["sale.order"]
+        if self.project_id and "project_id" in SaleOrder._fields:
+            order_vals["project_id"] = self.project_id.id
         if self.project_type:
             type_label = dict(self._fields["project_type"].selection)[
                 self.project_type

@@ -26,6 +26,12 @@
               action="action_tectora_roof_object"
               sequence="20"/>
 
+    <menuitem id="menu_tectora_materials"
+              name="Materiaalbehoefte"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_material"
+              sequence="25"/>
+
     <menuitem id="menu_tectora_products"
               name="Producten"
               parent="menu_tectora_root"
