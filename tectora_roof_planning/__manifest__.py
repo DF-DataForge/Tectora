@@ -23,7 +23,7 @@ report.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.2.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -33,6 +33,7 @@ installed.
         "views/planning_slot_views.xml",
         "views/roof_planning_views.xml",
     ],
+    "post_init_hook": "post_init_hook",
     "auto_install": True,
     "installable": True,
 }

@@ -82,7 +82,7 @@ class TectoraRoofPlanning(models.Model):
         to_create = []
         for employee in self.employee_ids:
             values = self._planning_slot_values(employee)
-            slot = by_resource.get(employee.resource_id)
+            slot = by_resource.get(employee.resource_id) or self._adopt_slot(employee)
             if slot:
                 slot.write(values)
             else:
@@ -90,6 +90,28 @@ class TectoraRoofPlanning(models.Model):
         if to_create:
             Slot.create(to_create)
         return True
+
+    def _adopt_slot(self, employee):
+        """Reuse a shift the Planning app already created for this employee on
+        this project instead of adding a second one next to it."""
+        self.ensure_one()
+        Slot = self.env["planning.slot"]
+        if not employee.resource_id:
+            return Slot
+        domain = [
+            ("roof_planning_id", "=", False),
+            ("resource_id", "=", employee.resource_id.id),
+            ("start_datetime", "<", self.end_datetime),
+            ("end_datetime", ">", self.start_datetime),
+        ]
+        dossier = self.project_id.project_id
+        if dossier and "project_id" in Slot._fields:
+            domain.append(("project_id", "=", dossier.id))
+        else:
+            # Without the project bridge there is nothing tying a loose shift
+            # to this project, so never adopt one.
+            return Slot
+        return Slot.search(domain, limit=1)
 
     def action_open_in_planner(self):
         """Open the standard resource planner on this project's shifts."""
