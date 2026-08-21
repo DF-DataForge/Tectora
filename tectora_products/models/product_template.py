@@ -5,6 +5,8 @@ from pathlib import Path
 
 from odoo import api, models
 
+from . import catalog_rules
+
 _logger = logging.getLogger(__name__)
 
 PRICE_BOOK = Path(__file__).parent.parent / "data" / "price_book.json"
@@ -103,139 +105,180 @@ class ProductTemplate(models.Model):
 
     # ------------------------------------------------------- product catalog
     @api.model
-    def _tectora_import_product_catalog(self, archive_price_book=True):
-        """Load (or refresh) the supplier catalogue from
-        data/product_catalog.json: categories, units, vendors, products,
-        purchase prices and vendor pricelists.
+    def _tectora_apply_catalog(self, entries, options=None):
+        """Create/update products from catalogue entries.
 
-        Idempotent: products are matched on their ``default_code`` (the
-        supplier export's productcode) and vendor lines on vendor+product.
-        The old price-book products (``DAK-*``) are archived rather than
-        deleted, so quotations that reference them stay intact.
+        Shared by the shipped JSON catalogue and the import wizard. Every
+        entry carries a ``category_path`` (resolved under the root category),
+        a unit key, prices, the vendor and whether it is a service (a sales/
+        works item) or goods (a purchasable, storable material).
+
+        Matching is on the internal reference (``default_code``); entries
+        without one are matched on name inside their category, so a file
+        without references still imports without creating duplicates.
         """
-        if not PRODUCT_CATALOG.exists():
-            _logger.warning(
-                "tectora_products: %s missing, nothing imported", PRODUCT_CATALOG
-            )
-            return
-        data = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))
-
-        categories = self._tectora_load_category_paths(
-            data["categories"], data.get("root_category") or "Dakwerken"
-        )
-        uoms = {
-            key: self._tectora_get_uom(key, name)
-            for key, name in CATALOG_UOM_NAMES.items()
-        }
-        vendors = self._tectora_load_vendors(data["suppliers"])
-        tags = self._tectora_load_tags(data["products"])
-
+        options = options or {}
+        root_name = options.get("root_category") or "Dakwerken"
+        sale_ok_goods = options.get("sale_ok_goods", True)
         Product = self.env["product.template"]
         SupplierInfo = self.env["product.supplierinfo"]
-        created = updated = vendor_lines = 0
-        for entry in data["products"]:
+
+        uoms = {}
+        categories = {}
+        vendors = {}
+        tags = self._tectora_load_tags(entries)
+        counters = {"created": 0, "updated": 0, "vendor_lines": 0}
+
+        for entry in entries:
+            path = entry["category_path"]
+            if path not in categories:
+                categories[path] = self._tectora_resolve_category(path, root_name)
+            key = entry["uom"]
+            if key not in uoms:
+                uoms[key] = self._tectora_get_uom(
+                    key, catalog_rules.UOM_NAMES.get(key, "Stuk")
+                )
             values = {
                 "name": entry["name"],
-                "default_code": entry["code"],
-                "sale_ok": True,
-                "purchase_ok": not entry["is_service"],
                 "list_price": entry["list_price"],
-                "categ_id": categories[entry["category"]].id,
-                "uom_id": uoms[entry["uom"]].id,
-                "description_sale": entry["description"] or False,
+                "categ_id": categories[path].id,
+                "uom_id": uoms[key].id,
+                "description_sale": entry.get("description") or False,
             }
+            if entry.get("code"):
+                values["default_code"] = entry["code"]
             if entry["is_service"]:
-                values["type"] = "service"
+                # Sales/works item: quoted, not stocked.
+                values.update({"type": "service", "sale_ok": True,
+                               "purchase_ok": False})
             else:
-                values["type"] = "consu"
+                # Raw material: purchased and stocked.
+                values.update({"type": "consu", "sale_ok": sale_ok_goods,
+                               "purchase_ok": True})
                 if "is_storable" in Product._fields:
                     values["is_storable"] = True
-            if entry["barcode"]:
+            if entry.get("barcode"):
                 values["barcode"] = entry["barcode"]
-            if entry["weight"] and "weight" in Product._fields:
+            if entry.get("weight") and "weight" in Product._fields:
                 values["weight"] = entry["weight"]
-            if "product_tag_ids" in Product._fields and entry["tags"]:
+            if "product_tag_ids" in Product._fields and entry.get("tags"):
                 values["product_tag_ids"] = [
                     (6, 0, [tags[tag].id for tag in entry["tags"]])
                 ]
-            product = Product.with_context(active_test=False).search(
-                [("default_code", "=", entry["code"])], limit=1
-            )
+
+            product = Product.browse()
+            if entry.get("code"):
+                product = Product.with_context(active_test=False).search(
+                    [("default_code", "=", entry["code"])], limit=1
+                )
+            if not product:
+                product = Product.with_context(active_test=False).search(
+                    [
+                        ("name", "=", entry["name"]),
+                        ("categ_id", "=", categories[path].id),
+                    ],
+                    limit=1,
+                )
             if product:
                 product.write(values)
-                updated += 1
+                counters["updated"] += 1
             else:
                 product = Product.create(values)
-                created += 1
-            if entry["standard_price"]:
+                counters["created"] += 1
+            if entry.get("standard_price"):
                 product.standard_price = entry["standard_price"]
 
-            vendor = vendors.get(entry["supplier"])
-            if not vendor:
+            supplier_name = entry.get("supplier")
+            if not supplier_name:
                 continue
+            if supplier_name not in vendors:
+                vendors.update(self._tectora_load_vendors([supplier_name]))
+            vendor = vendors[supplier_name]
             line_values = {
                 "partner_id": vendor.id,
                 "product_tmpl_id": product.id,
-                "price": entry["standard_price"],
-                "product_code": entry["supplier_code"] or False,
+                "price": entry.get("standard_price") or 0.0,
+                "product_code": entry.get("supplier_code") or False,
             }
             line = SupplierInfo.search(
-                [
-                    ("partner_id", "=", vendor.id),
-                    ("product_tmpl_id", "=", product.id),
-                ],
+                [("partner_id", "=", vendor.id),
+                 ("product_tmpl_id", "=", product.id)],
                 limit=1,
             )
             if line:
                 line.write(line_values)
             else:
                 SupplierInfo.create(line_values)
-            vendor_lines += 1
+            counters["vendor_lines"] += 1
+        return counters
 
-        archived = 0
-        if archive_price_book:
-            old = Product.search(
-                [("default_code", "=like", "DAK-%"), ("active", "=", True)]
-            )
-            archived = len(old)
-            if old:
-                old.write({"active": False})
-        _logger.info(
-            "tectora_products: catalogue imported (%s created, %s updated, "
-            "%s vendor lines, %s price-book products archived)",
-            created, updated, vendor_lines, archived,
-        )
-        return {
-            "created": created,
-            "updated": updated,
-            "vendor_lines": vendor_lines,
-            "archived": archived,
-        }
-
-    def _tectora_load_category_paths(self, entries, root_name):
-        """Resolve 'A/B' category paths under the root, creating what is
-        missing and reusing every category that already exists."""
+    def _tectora_resolve_category(self, path, root_name):
+        """Resolve (and create where missing) an 'A/B' category path under the
+        root, reusing every category that already exists."""
         Category = self.env["product.category"]
         root = Category.search(
             [("name", "=", root_name), ("parent_id", "=", False)], limit=1
         )
         if not root:
             root = Category.create({"name": root_name})
-        result = {}
-        for entry in entries:
-            parent = root
-            for part in entry["path"].split("/"):
-                part = part.strip()
-                category = Category.search(
-                    [("name", "=", part), ("parent_id", "=", parent.id)], limit=1
+        parent = root
+        parts = [part.strip() for part in str(path).split("/") if part.strip()]
+        # A path that already starts with the root ("Dakwerken/Afdichting")
+        # must not nest the root twice.
+        if parts and parts[0].lower() == root_name.lower():
+            parts = parts[1:]
+        for part in parts:
+            if not part:
+                continue
+            category = Category.search(
+                [("name", "=", part), ("parent_id", "=", parent.id)], limit=1
+            )
+            if not category:
+                category = Category.create({"name": part, "parent_id": parent.id})
+            parent = category
+        return parent
+
+    @api.model
+    def _tectora_import_product_catalog(self, archive_price_book=True):
+        """Load the shipped catalogue (data/product_catalog.json) through the
+        shared applier. Idempotent; archives the old price-book products."""
+        if not PRODUCT_CATALOG.exists():
+            _logger.warning(
+                "tectora_products: %s missing, nothing imported", PRODUCT_CATALOG
+            )
+            return
+        data = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))
+        # Current files carry category_path per product; older ones a key plus
+        # a categories table.
+        paths = {
+            entry["key"]: entry["path"] for entry in data.get("categories", [])
+        }
+        entries = []
+        for entry in data["products"]:
+            entry = dict(entry)
+            if not entry.get("category_path"):
+                entry["category_path"] = paths.get(
+                    entry.get("category"), catalog_rules.CATEGORY_PATHS["andere"]
                 )
-                if not category:
-                    category = Category.create(
-                        {"name": part, "parent_id": parent.id}
-                    )
-                parent = category
-            result[entry["key"]] = parent
-        return result
+            entries.append(entry)
+        counters = self._tectora_apply_catalog(
+            entries,
+            {"root_category": data.get("root_category") or "Dakwerken"},
+        )
+        counters["archived"] = self._tectora_archive_price_book(archive_price_book)
+        _logger.info("tectora_products: catalogue imported (%s)", counters)
+        return counters
+
+    def _tectora_archive_price_book(self, enabled=True):
+        if not enabled:
+            return 0
+        old = self.env["product.template"].search(
+            [("default_code", "=like", "DAK-%"), ("active", "=", True)]
+        )
+        count = len(old)
+        if old:
+            old.write({"active": False})
+        return count
 
     def _tectora_load_vendors(self, names):
         Partner = self.env["res.partner"]

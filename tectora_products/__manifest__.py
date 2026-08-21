@@ -33,12 +33,17 @@ The earlier works price book stays available through
 ``_tectora_import_price_book()`` and the Renovatie / Nieuwbouw / Industrie
 pricelists.
     """,
-    "version": "19.0.2.0.0",
+    "version": "19.0.2.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
     "depends": ["product", "sale_management"],
+    "external_dependencies": {"python": ["openpyxl"]},
+    "data": [
+        "security/ir.model.access.csv",
+        "wizard/product_catalog_import_views.xml",
+    ],
     "post_init_hook": "post_init_hook",
     "installable": True,
 }
