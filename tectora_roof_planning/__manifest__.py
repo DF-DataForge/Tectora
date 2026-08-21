@@ -23,13 +23,14 @@ report.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
     "depends": ["tectora_roof", "planning"],
     "data": [
+        "views/planning_slot_views.xml",
         "views/roof_planning_views.xml",
     ],
     "auto_install": True,

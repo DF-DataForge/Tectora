@@ -26,11 +26,19 @@
               action="action_tectora_roof_object"
               sequence="20"/>
 
+    <!-- Planning is a parent menu: the work blocks of the roof projects and
+         (when the Planning app is installed) the resource planner seen per
+         project or per employee. -->
     <menuitem id="menu_tectora_planning"
               name="Planning"
               parent="menu_tectora_root"
-              action="action_tectora_roof_planning"
               sequence="15"/>
+
+    <menuitem id="menu_tectora_planning_blocks"
+              name="Werkblokken"
+              parent="menu_tectora_planning"
+              action="action_tectora_roof_planning"
+              sequence="10"/>
 
     <menuitem id="menu_tectora_materials"
               name="Materiaalbehoefte"

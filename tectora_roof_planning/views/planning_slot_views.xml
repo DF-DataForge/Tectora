@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Own views on planning.slot so both perspectives live inside the
+         standard resource planner without touching Odoo's own views. -->
+    <record id="view_planning_slot_gantt_roof_project" model="ir.ui.view">
+        <field name="name">planning.slot.gantt.roof.project</field>
+        <field name="model">planning.slot</field>
+        <field name="arch" type="xml">
+            <gantt string="Planning per dakproject"
+                   date_start="start_datetime"
+                   date_stop="end_datetime"
+                   default_group_by="roof_project_id"/>
+        </field>
+    </record>
+
+    <record id="view_planning_slot_gantt_roof_resource" model="ir.ui.view">
+        <field name="name">planning.slot.gantt.roof.resource</field>
+        <field name="model">planning.slot</field>
+        <field name="arch" type="xml">
+            <gantt string="Planning per medewerker"
+                   date_start="start_datetime"
+                   date_stop="end_datetime"
+                   default_group_by="resource_id"/>
+        </field>
+    </record>
+
+    <record id="view_planning_slot_list_roof" model="ir.ui.view">
+        <field name="name">planning.slot.list.roof</field>
+        <field name="model">planning.slot</field>
+        <field name="arch" type="xml">
+            <list string="Planning-items">
+                <field name="start_datetime"/>
+                <field name="end_datetime"/>
+                <field name="resource_id"/>
+                <field name="roof_project_id"/>
+                <field name="roof_team_id" optional="show"/>
+                <field name="roof_partner_id" optional="hide"/>
+                <field name="roof_address" optional="hide"/>
+                <field name="name" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_planning_slot_search_roof" model="ir.ui.view">
+        <field name="name">planning.slot.search.roof</field>
+        <field name="model">planning.slot</field>
+        <field name="arch" type="xml">
+            <search string="Planning">
+                <field name="roof_project_id"/>
+                <field name="roof_team_id"/>
+                <field name="resource_id"/>
+                <filter string="Dakprojecten" name="roof_only"
+                        domain="[('roof_planning_id', '!=', False)]"/>
+                <group>
+                    <filter string="Dakproject" name="group_roof_project"
+                            context="{'group_by': 'roof_project_id'}"/>
+                    <filter string="Ploeg" name="group_roof_team"
+                            context="{'group_by': 'roof_team_id'}"/>
+                    <filter string="Medewerker" name="group_resource"
+                            context="{'group_by': 'resource_id'}"/>
+                    <filter string="Startdatum" name="group_start"
+                            context="{'group_by': 'start_datetime:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_planning_slot_by_roof_project" model="ir.actions.act_window">
+        <field name="name">Planning per dakproject</field>
+        <field name="res_model">planning.slot</field>
+        <field name="view_mode">gantt,list,form</field>
+        <field name="search_view_id" ref="view_planning_slot_search_roof"/>
+        <field name="context">{'search_default_roof_only': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen planning-items</p>
+            <p>Wijs een ploeg en geplande data toe aan een dakproject: elke
+               medewerker van de ploeg krijgt dan een planning-item.</p>
+        </field>
+    </record>
+
+    <record id="action_planning_slot_by_roof_project_views" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">gantt</field>
+        <field name="view_id" ref="view_planning_slot_gantt_roof_project"/>
+        <field name="act_window_id" ref="action_planning_slot_by_roof_project"/>
+    </record>
+
+    <record id="action_planning_slot_by_roof_project_list" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_planning_slot_list_roof"/>
+        <field name="act_window_id" ref="action_planning_slot_by_roof_project"/>
+    </record>
+
+    <record id="action_planning_slot_by_resource" model="ir.actions.act_window">
+        <field name="name">Planning per medewerker</field>
+        <field name="res_model">planning.slot</field>
+        <field name="view_mode">gantt,list,form</field>
+        <field name="search_view_id" ref="view_planning_slot_search_roof"/>
+    </record>
+
+    <record id="action_planning_slot_by_resource_views" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">gantt</field>
+        <field name="view_id" ref="view_planning_slot_gantt_roof_resource"/>
+        <field name="act_window_id" ref="action_planning_slot_by_resource"/>
+    </record>
+
+    <record id="action_planning_slot_by_resource_list" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_planning_slot_list_roof"/>
+        <field name="act_window_id" ref="action_planning_slot_by_resource"/>
+    </record>
+
+    <menuitem id="menu_planning_slot_by_roof_project"
+              name="Per dakproject"
+              parent="tectora_roof.menu_tectora_planning"
+              action="action_planning_slot_by_roof_project"
+              sequence="20"/>
+
+    <menuitem id="menu_planning_slot_by_resource"
+              name="Per medewerker"
+              parent="tectora_roof.menu_tectora_planning"
+              action="action_planning_slot_by_resource"
+              sequence="30"/>
+
+</odoo>
