@@ -5,6 +5,21 @@
     background: #fff;
     outline: none;
 
+    // Fullscreen drawing: covers the form (but stays below Odoo's dialogs,
+    // so the product picker keeps working).
+    &.o_roof_canvas_fullscreen {
+        position: fixed;
+        inset: 0;
+        z-index: 1030;
+        border: 0;
+        border-radius: 0;
+        overflow: hidden;
+
+        .o_roof_canvas_body {
+            height: 100%;
+        }
+    }
+
     .o_roof_canvas_ctxmenu {
         position: absolute;
         z-index: 100;

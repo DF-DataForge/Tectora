@@ -20,12 +20,12 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   the standard Sales/Invoicing apps — install l10n_be for the Belgian chart
   of accounts and use a fiscal position for the 6% renovation rate.
     """,
-    "version": "19.0.2.0.0",
+    "version": "19.0.2.2.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["sale_management", "crm", "project", "sale_project"],
+    "depends": ["sale_management", "crm", "project", "sale_project", "hr"],
     "external_dependencies": {"python": ["requests", "PIL"]},
     "data": [
         "security/ir.model.access.csv",
@@ -34,6 +34,8 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/roof_project_views.xml",
         "views/roof_object_views.xml",
         "views/roof_material_views.xml",
+        "views/roof_team_views.xml",
+        "views/roof_planning_views.xml",
         "views/sale_order_views.xml",
         "views/res_config_settings_views.xml",
         "views/product_category_views.xml",

@@ -2,10 +2,12 @@
 <templates xml:space="preserve">
 
     <t t-name="tectora_roof.RoofCanvasField">
-        <div class="o_roof_canvas" t-ref="wrapper" tabindex="0" t-on-keydown="onKeyDown">
+        <div class="o_roof_canvas" t-ref="wrapper" tabindex="0" t-on-keydown="onKeyDown"
+             t-att-class="{ o_roof_canvas_fullscreen: state.fullscreen }">
             <div class="o_roof_canvas_body d-flex align-items-stretch">
             <div class="o_roof_canvas_main flex-grow-1" t-ref="main" style="min-width: 0;">
-            <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1">
+            <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1"
+                 t-ref="toolbar">
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: state.tool === 'select' }"
@@ -43,7 +45,13 @@
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
-                        <i class="fa fa-expand"/>
+                        <i class="fa fa-arrows-alt"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.fullscreen }"
+                            t-on-click="toggleFullscreen"
+                            t-att-title="state.fullscreen ? 'Terug naar overzicht met tabbladen (Esc)' : 'Tekening op volledig scherm (F)'">
+                        <i t-att-class="state.fullscreen ? 'fa fa-compress' : 'fa fa-expand'"/>
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
@@ -89,8 +97,9 @@
                     t-on-pointermove="onPointerMove"
                     t-on-pointerup="onPointerUp"
                     t-on-dblclick="onDblClick"
-                    t-on-contextmenu="onContextMenu"/>
-            <div class="o_roof_canvas_status text-muted small px-2 py-1">
+                    t-on-contextmenu="onContextMenu"
+                    t-on-wheel="onWheel"/>
+            <div class="o_roof_canvas_status text-muted small px-2 py-1" t-ref="status">
                 <t t-out="state.status"/>
             </div>
             </div>
