@@ -53,6 +53,7 @@
                             <th class="text-end">Omtrek (m)</th>
                             <th class="text-end">Binnenopp. (m²)</th>
                             <th class="text-end">Binnenomtrek (m)</th>
+                            <th class="text-end">Opstandopp. (m²)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,6 +67,8 @@
                                 t-out="'%.2f' % section.inner_area if section.inner_area else '-'"/>
                             <td class="text-end"
                                 t-out="'%.2f' % section.inner_perimeter if section.inner_perimeter else '-'"/>
+                            <td class="text-end"
+                                t-out="'%.2f' % section.upstand_area if section.upstand_area else '-'"/>
                         </tr>
                         <tr t-foreach="roof_doc.roof_object_ids" t-as="roof_object">
                             <td>
@@ -78,6 +81,7 @@
                             <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
                             <td class="text-end">-</td>
                             <td class="text-end">-</td>
+                            <td class="text-end">-</td>
                         </tr>
                     </tbody>
                     <tfoot>
@@ -87,6 +91,7 @@
                             <th/>
                             <th class="text-end" t-out="'%.2f' % roof_doc.total_area"/>
                             <th class="text-end" t-out="'%.2f' % roof_doc.total_perimeter"/>
+                            <th/>
                             <th/>
                             <th/>
                         </tr>

@@ -464,19 +464,23 @@ class TectoraRoofProject(models.Model):
                 if isinstance(p, (list, tuple)) and len(p) >= 2
             ]
             if len(points) >= 3 and shape.get("id"):
-                edge_widths = {}
-                for key, value in (shape.get("edgeWidths") or {}).items():
-                    try:
-                        edge_widths[int(key)] = float(value)
-                    except (TypeError, ValueError):
-                        continue
+                def _per_edge(raw):
+                    result = {}
+                    for key, value in (raw or {}).items():
+                        try:
+                            result[int(key)] = float(value)
+                        except (TypeError, ValueError):
+                            continue
+                    return result
+
                 shapes.append(
                     {
                         "id": str(shape["id"]),
                         "kind": shape.get("kind") or "section",
                         "name": shape.get("name") or "",
                         "points": points,
-                        "edge_widths": edge_widths,
+                        "edge_widths": _per_edge(shape.get("edgeWidths")),
+                        "edge_upstands": _per_edge(shape.get("edgeUpstands")),
                     }
                 )
         return shapes
@@ -508,6 +512,29 @@ class TectoraRoofProject(models.Model):
             "inner_perimeter": round(_polygon_perimeter_px(inner) * scale, 2),
         }
 
+    def _shape_upstand_measurements(self, points, edge_upstands):
+        """Length of the sides carrying an upstand and the vertical surface
+        of those upstands (per side: length x height), in m and m²."""
+        scale = self.scale_m_per_px or DEFAULT_SCALE_M_PER_PX
+        if not edge_upstands:
+            return {"upstand_length": 0.0, "upstand_area": 0.0}
+        total_length = 0.0
+        total_area = 0.0
+        count = len(points)
+        for index in range(count):
+            height = max(edge_upstands.get(index, 0.0), 0.0)
+            if not height:
+                continue
+            ax, ay = points[index]
+            bx, by = points[(index + 1) % count]
+            length = math.hypot(bx - ax, by - ay) * scale
+            total_length += length
+            total_area += length * height
+        return {
+            "upstand_length": round(total_length, 2),
+            "upstand_area": round(total_area, 2),
+        }
+
     def action_sync_from_canvas(self):
         """Create/update roof sections and objects from the drawn shapes.
 
@@ -533,6 +560,11 @@ class TectoraRoofProject(models.Model):
             values.update(
                 self._shape_inner_measurements(
                     shape["points"], shape.get("edge_widths")
+                )
+            )
+            values.update(
+                self._shape_upstand_measurements(
+                    shape["points"], shape.get("edge_upstands")
                 )
             )
             values["name"] = shape["name"] or _("Sectie %s") % index
