@@ -270,6 +270,22 @@ class TectoraRoofProject(models.Model):
     picking_count = fields.Integer(compute="_compute_logistics_counts")
     purchase_count = fields.Integer(compute="_compute_logistics_counts")
     invoice_count = fields.Integer(compute="_compute_logistics_counts")
+
+    # --- Planning on teams ---------------------------------------------------
+    team_id = fields.Many2one(
+        "tectora.roof.team",
+        string="Ploeg",
+        tracking=True,
+        help="Ploeg die de werf uitvoert. Samen met de geplande data wordt "
+        "automatisch een werkblok aangemaakt met planning-items voor elke "
+        "medewerker van de ploeg.",
+    )
+    planned_date_begin = fields.Datetime(string="Geplande start", tracking=True)
+    planned_date_end = fields.Datetime(string="Gepland einde", tracking=True)
+    planning_ids = fields.One2many(
+        "tectora.roof.planning", "project_id", string="Werkblokken"
+    )
+    planning_count = fields.Integer(compute="_compute_planning_count")
     section_count = fields.Integer(
         string="Aantal daksecties", compute="_compute_shape_counts"
     )
@@ -312,6 +328,11 @@ class TectoraRoofProject(models.Model):
     def _compute_sale_order_count(self):
         for project in self:
             project.sale_order_count = len(project.sale_order_ids)
+
+    @api.depends("planning_ids")
+    def _compute_planning_count(self):
+        for project in self:
+            project.planning_count = len(project.planning_ids)
 
     @api.depends("material_line_ids.cost_subtotal")
     def _compute_material_totals(self):
@@ -489,7 +510,70 @@ class TectoraRoofProject(models.Model):
                     self.env["ir.sequence"].next_by_code("tectora.roof.project")
                     or _("New")
                 )
-        return super().create(vals_list)
+        projects = super().create(vals_list)
+        projects._autogenerate_planning()
+        return projects
+
+    def write(self, vals):
+        result = super().write(vals)
+        if {"team_id", "planned_date_begin", "planned_date_end"} & set(vals):
+            self._autogenerate_planning()
+        return result
+
+    # ---------------------------------------------------------- team planning
+    def _autogenerate_planning(self):
+        """A project with a team and a planned window gets its work block (and
+        through it the individual employee planning items) automatically.
+        Existing blocks are never overwritten: use the button to add one."""
+        for project in self:
+            if not (
+                project.team_id
+                and project.planned_date_begin
+                and project.planned_date_end
+                and not project.planning_ids
+            ):
+                continue
+            project._create_planning_item()
+        return True
+
+    def _create_planning_item(self):
+        self.ensure_one()
+        return self.env["tectora.roof.planning"].create(
+            {
+                "project_id": self.id,
+                "team_id": self.team_id.id or False,
+                "employee_ids": [(6, 0, self.team_id.member_ids.ids)],
+                "start_datetime": self.planned_date_begin,
+                "end_datetime": self.planned_date_end,
+            }
+        )
+
+    def action_generate_planning(self):
+        self.ensure_one()
+        if not (self.planned_date_begin and self.planned_date_end):
+            raise UserError(
+                _("Vul eerst de geplande start- en einddatum van de werf in.")
+            )
+        if not self.team_id:
+            raise UserError(_("Kies eerst de ploeg die de werf uitvoert."))
+        self._create_planning_item()
+        return self.action_view_planning()
+
+    def action_view_planning(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Planning"),
+            "res_model": "tectora.roof.planning",
+            "view_mode": "calendar,list,form",
+            "domain": [("project_id", "=", self.id)],
+            "context": {
+                "default_project_id": self.id,
+                "default_team_id": self.team_id.id,
+                "default_start_datetime": self.planned_date_begin,
+                "default_end_datetime": self.planned_date_end,
+            },
+        }
 
     # -------------------------------------------------------------- map service
     def _get_map_credentials(self):

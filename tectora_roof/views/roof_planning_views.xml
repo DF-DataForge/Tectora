@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_planning_calendar" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.calendar</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="arch" type="xml">
+            <calendar string="Planning" date_start="start_datetime"
+                      date_stop="end_datetime" color="team_id" mode="month"
+                      event_open_popup="1" quick_create="0">
+                <field name="project_id"/>
+                <field name="team_id" filters="1"/>
+                <field name="partner_id"/>
+                <field name="address"/>
+                <field name="employee_ids" widget="many2many_avatar_employee"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_list" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.list</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="arch" type="xml">
+            <list string="Werkblokken" multi_edit="1"
+                  decoration-muted="state == 'done'">
+                <field name="start_datetime"/>
+                <field name="end_datetime"/>
+                <field name="duration_hours" sum="Totaal" optional="show"/>
+                <field name="project_id"/>
+                <field name="project_code" optional="hide"/>
+                <field name="partner_id" optional="show"/>
+                <field name="address" optional="show"/>
+                <field name="total_area" optional="hide"/>
+                <field name="team_id"/>
+                <field name="employee_ids" widget="many2many_avatar_employee"/>
+                <field name="employee_count" string="#" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'published'"/>
+                <button name="action_split" type="object" icon="fa-scissors"
+                        title="Splits per dag"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_form" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="arch" type="xml">
+            <form string="Werkblok">
+                <header>
+                    <button name="action_publish" type="object" string="Inplannen"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_set_done" type="object" string="Uitgevoerd"
+                            class="btn-primary" invisible="state != 'published'"/>
+                    <button name="action_split" type="object" string="Splits per dag"
+                            class="btn-secondary"
+                            help="Splitst dit werkblok in één blok per kalenderdag; elk blok kan daarna eigen medewerkers krijgen."/>
+                    <button name="action_reset_draft" type="object" string="Terug naar concept"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Werf">
+                            <field name="project_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="address" readonly="1"/>
+                            <field name="project_type" readonly="1"/>
+                            <field name="total_area" readonly="1"/>
+                            <field name="total_perimeter" readonly="1"/>
+                        </group>
+                        <group string="Planning">
+                            <field name="start_datetime"/>
+                            <field name="end_datetime"/>
+                            <field name="duration_hours" readonly="1"/>
+                            <field name="team_id"/>
+                            <field name="color" widget="color_picker" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                    <separator string="Toegewezen medewerkers"/>
+                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                    <div class="text-muted small">
+                        Elke medewerker krijgt een eigen planning-item voor dit
+                        werkblok. Pas de lijst aan om iemand toe te voegen of te
+                        verwijderen.
+                    </div>
+                    <separator string="Werfinstructies"/>
+                    <field name="notes" nolabel="1" placeholder="Instructies voor de ploeg…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_search" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.search</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="arch" type="xml">
+            <search string="Planning">
+                <field name="project_id"/>
+                <field name="team_id"/>
+                <field name="employee_ids"/>
+                <field name="partner_id"/>
+                <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Ingepland" name="published"
+                        domain="[('state', '=', 'published')]"/>
+                <filter string="Uitgevoerd" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Toekomstig" name="upcoming"
+                        domain="[('end_datetime', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter string="Ploeg" name="group_team"
+                            context="{'group_by': 'team_id'}"/>
+                    <filter string="Dakproject" name="group_project"
+                            context="{'group_by': 'project_id'}"/>
+                    <filter string="Startdatum" name="group_start"
+                            context="{'group_by': 'start_datetime:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_planning" model="ir.actions.act_window">
+        <field name="name">Planning</field>
+        <field name="res_model">tectora.roof.planning</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen werkblokken</p>
+            <p>Wijs een ploeg en geplande data toe aan een dakproject: het werkblok
+               en de planning-items van de medewerkers worden dan automatisch
+               aangemaakt.</p>
+        </field>
+    </record>
+
+</odoo>

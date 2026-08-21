@@ -98,3 +98,36 @@ rekening. Het dossier wordt aangemaakt zodra je een offerte genereert of op
 Manufacturing (`mrp`) en Inkoop (`purchase`) zijn optioneel: zonder
 Manufacturing bevat de materiaallijst de verkochte producten zelf, zonder
 Inkoop blijft de inkoopknop leeg.
+
+## Planning op ploegen
+
+**Ploegen** (menu *Ploegen*) zijn vaste groepen medewerkers: eigen ploegleden,
+of — als je die leeg laat — de medewerkers van een gekozen afdeling, telkens
+samen met de ploegbaas. Zo blijft het model configureerbaar zonder de
+HR-structuur te dupliceren.
+
+Op een dakproject kies je een **ploeg** en de **geplande start/einde**. Zodra
+beide ingevuld zijn, maakt het systeem automatisch een **werkblok**
+(`tectora.roof.planning`) aan met alle leden van de ploeg. Een werkblok is het
+planning-item van de werf: het toont de basisinformatie van het project
+(referentie, klant, werfadres, projecttype, oppervlakte en omtrek) plus de
+toegewezen medewerkers, en is te bekijken in kalender- of lijstweergave
+(menu *Planning*).
+
+* **Splitsen per dag** (knop op het werkblok of in de lijst) splitst een
+  meerdaags blok in één blok per kalenderdag — dezelfde logica als het
+  splitsen van een planning-shift. Elk resulterend blok krijgt een eigen kopie
+  van de medewerkerslijst en kan daarna onafhankelijk herbezet worden.
+* Bestaande werkblokken worden nooit overschreven: pas de ploeg of de data aan
+  en gebruik **Planning aanmaken** voor een extra blok.
+
+### Planning-app (optioneel)
+
+Het aparte bridge-moduletje **tectora_roof_planning** installeert zichzelf
+zodra zowel Dakmeting als de Odoo **Planning**-app aanwezig zijn. Dan wordt
+elke toegewezen medewerker een echte planning-shift (`planning.slot`), zichtbaar
+in de Planning-app en in de eigen planning van de medewerker. De shifts volgen
+het werkblok: data, medewerkers en status worden gesynchroniseerd, splitsen
+splitst de shifts mee en het verwijderen van een blok verwijdert zijn shifts.
+Zonder de Planning-app blijven de werkblokken met hun medewerkerslijst gewoon
+werken.

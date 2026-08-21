@@ -26,6 +26,12 @@
               action="action_tectora_roof_object"
               sequence="20"/>
 
+    <menuitem id="menu_tectora_planning"
+              name="Planning"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_planning"
+              sequence="15"/>
+
     <menuitem id="menu_tectora_materials"
               name="Materiaalbehoefte"
               parent="menu_tectora_root"
@@ -37,6 +43,12 @@
               parent="menu_tectora_root"
               action="action_tectora_products"
               sequence="30"/>
+
+    <menuitem id="menu_tectora_teams"
+              name="Ploegen"
+              parent="menu_tectora_root"
+              action="action_tectora_roof_team"
+              sequence="80"/>
 
     <menuitem id="menu_tectora_config"
               name="Instellingen"
