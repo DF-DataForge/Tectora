@@ -816,6 +816,7 @@ export class RoofCanvasField extends Component {
                 lengthM:
                     Math.hypot(next[0] - point[0], next[1] - point[1]) * scale,
                 width: this.edgeWidth(shape, index),
+                upstand: this.edgeUpstand(shape, index),
             };
         });
         const innerPoints = this.innerPolygon(shape);
@@ -825,25 +826,46 @@ export class RoofCanvasField extends Component {
                   perimeter: polygonPerimeter(innerPoints) * scale,
               }
             : null;
-        return { edges, inner };
+        // Vertical surface of the upstands: per side length x height.
+        const upstandArea = edges.reduce(
+            (sum, edge) => sum + edge.lengthM * edge.upstand, 0
+        );
+        const upstandLength = edges.reduce(
+            (sum, edge) => sum + (edge.upstand ? edge.lengthM : 0), 0
+        );
+        return {
+            edges,
+            inner,
+            upstand: upstandArea
+                ? { area: upstandArea, length: upstandLength }
+                : null,
+        };
     }
 
     setEdgeWidth(edge, ev) {
+        this.setEdgeValue("edgeWidths", edge, ev);
+    }
+
+    setEdgeUpstand(edge, ev) {
+        this.setEdgeValue("edgeUpstands", edge, ev);
+    }
+
+    setEdgeValue(key, edge, ev) {
         const shape = this.selectedShape;
         if (!shape) {
             return;
         }
         const value = parseFloat(ev.target.value);
-        const widths = { ...(shape.edgeWidths || {}) };
+        const values = { ...(shape[key] || {}) };
         if (value > 0) {
-            widths[edge.index] = Math.round(value * 100) / 100;
+            values[edge.index] = Math.round(value * 100) / 100;
         } else {
-            delete widths[edge.index];
+            delete values[edge.index];
         }
-        if (Object.keys(widths).length) {
-            shape.edgeWidths = widths;
+        if (Object.keys(values).length) {
+            shape[key] = values;
         } else {
-            delete shape.edgeWidths;
+            delete shape[key];
         }
         this.commit();
         this.refreshPanel();
@@ -1123,6 +1145,12 @@ export class RoofCanvasField extends Component {
         return parseFloat(value) || 0;
     }
 
+    // Vertical height of the upstand (opstand) at this side, in meters.
+    edgeUpstand(shape, edgeIndex) {
+        const value = shape.edgeUpstands && shape.edgeUpstands[edgeIndex];
+        return parseFloat(value) || 0;
+    }
+
     updateStatus() {
         if (this.draftPolygon) {
             this.state.status = `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
@@ -1135,7 +1163,8 @@ export class RoofCanvasField extends Component {
                 `${shape.name || "Naamloos"} — ${m.width.toFixed(2)} × ` +
                 `${m.length.toFixed(2)} m, ${m.area.toFixed(2)} m², omtrek ` +
                 `${m.perimeter.toFixed(2)} m · geselecteerd: sleep om te ` +
-                `verplaatsen, versleep een hoekpunt om de vorm aan te passen`;
+                `verplaatsen, versleep een hoekpunt om de vorm aan te passen, ` +
+                `stel rand en opstand per zijde in via het paneel rechts`;
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool; de meting " +
@@ -1362,9 +1391,14 @@ export class RoofCanvasField extends Component {
             }
             const lengthM = lengthPx * scale;
             const sideWidth = this.edgeWidth(shape, i);
-            const label = sideWidth
-                ? `${lengthM.toFixed(2)} m · b ${sideWidth.toFixed(2)}`
-                : `${lengthM.toFixed(2)} m`;
+            const sideUpstand = this.edgeUpstand(shape, i);
+            let label = `${lengthM.toFixed(2)} m`;
+            if (sideWidth) {
+                label += ` · b ${sideWidth.toFixed(2)}`;
+            }
+            if (sideUpstand) {
+                label += ` · h ${sideUpstand.toFixed(2)}`;
+            }
             const width = ctx.measureText(label).width + padX * 2;
             const cx = (x1 + x2) / 2;
             const cy = (y1 + y2) / 2;
@@ -1458,6 +1492,26 @@ export class RoofCanvasField extends Component {
         ctx.strokeStyle = selected ? "#111827" : style.stroke;
         ctx.lineWidth = (selected ? 3 : 2) / this.view.zoom;
         ctx.stroke();
+
+        // Sides with an upstand (opstand) get a heavier accented outline.
+        if (!isCircle && shape.edgeUpstands) {
+            const n = points.length;
+            ctx.strokeStyle = "#7c3aed";
+            ctx.lineWidth = 5 / this.view.zoom;
+            ctx.lineCap = "round";
+            for (let i = 0; i < n; i++) {
+                if (!this.edgeUpstand(shape, i)) {
+                    continue;
+                }
+                const [ax, ay] = points[i];
+                const [bx, by] = points[(i + 1) % n];
+                ctx.beginPath();
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(bx, by);
+                ctx.stroke();
+            }
+            ctx.lineCap = "butt";
+        }
 
         // Dashed inner outline when sides carry a width (dakrand).
         const inner = this.innerPolygon(shape);

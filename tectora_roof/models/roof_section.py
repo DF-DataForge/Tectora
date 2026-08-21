@@ -47,6 +47,17 @@ class TectoraRoofSection(models.Model):
         "ingestelde randbreedtes op de tekening.",
     )
     inner_perimeter = fields.Float(string="Binnenomtrek (m)", digits=(16, 2))
+    upstand_length = fields.Float(
+        string="Opstandlengte (m)",
+        digits=(16, 2),
+        help="Totale lengte van de zijden waarop een opstand is ingesteld.",
+    )
+    upstand_area = fields.Float(
+        string="Opstandopp. (m²)",
+        digits=(16, 2),
+        help="Verticale oppervlakte van de opstanden: per zijde de lengte "
+        "maal de ingestelde opstandhoogte.",
+    )
     description = fields.Text(string="Omschrijving")
     product_line_ids = fields.One2many(
         "tectora.roof.section.product", "section_id", string="Producten"

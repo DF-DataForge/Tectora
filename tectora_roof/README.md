@@ -73,3 +73,28 @@ install on Odoo 17 or earlier without adjustments.
   the legacy app).
 - Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
   accounts for the retina factor by measuring the actual stored image width.
+
+## Projectdossier (Odoo Project integratie)
+
+Elk dakproject krijgt een `project.project` dossier met een eigen analytische
+rekening. Het dossier wordt aangemaakt zodra je een offerte genereert of op
+**Projectdossier** klikt.
+
+* De gegenereerde verkooporder krijgt `project_id`, waardoor Odoo de
+  analytische distributie op elke orderlijn zet: omzet, facturen, inkoop-
+  kosten en leveringen komen samen op de analytische rekening en in de
+  winstgevendheidsrapportering van het project.
+* Bij het **bevestigen** van een verkooporder wordt de **materiaallijst**
+  opgebouwd: elk verkocht product wordt via zijn stuklijst (`mrp.bom`,
+  inclusief geneste kit-stuklijsten) ontbonden in componenten; producten
+  zonder stuklijst komen zelf als materiaal in de lijst. Diensten worden
+  overgeslagen. Handmatig toegevoegde lijnen blijven bewaard; lijnen van een
+  eerdere bevestiging van dezelfde order worden vervangen.
+* Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
+  **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
+* Slimme knoppen: Offertes, Materialen, Leveringen, Inkoop, Facturen en het
+  Projectdossier zelf.
+
+Manufacturing (`mrp`) en Inkoop (`purchase`) zijn optioneel: zonder
+Manufacturing bevat de materiaallijst de verkochte producten zelf, zonder
+Inkoop blijft de inkoopknop leeg.
