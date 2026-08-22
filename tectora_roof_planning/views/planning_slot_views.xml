@@ -114,16 +114,9 @@
         <field name="act_window_id" ref="action_planning_slot_by_resource"/>
     </record>
 
-    <menuitem id="menu_planning_slot_by_roof_project"
-              name="Per dakproject"
-              parent="tectora_roof.menu_tectora_planning"
-              action="action_planning_slot_by_roof_project"
-              sequence="20"/>
-
-    <menuitem id="menu_planning_slot_by_resource"
-              name="Per medewerker"
-              parent="tectora_roof.menu_tectora_planning"
-              action="action_planning_slot_by_resource"
-              sequence="30"/>
+    <!-- No menu entries of our own: the planning lives in the standard
+         Planning app (its gantt, list and search views are extended at
+         install/upgrade, see hooks.py). These actions only back the
+         'Open in planner' button on a work block. -->
 
 </odoo>
