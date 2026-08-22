@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Data Forge Dakmeting — Planning",
-    "summary": "Zet de werkblokken van een dakproject om in planning-items "
-    "per medewerker in de Planning-app",
+    "summary": "Plan dakprojecten per ploeg in de Planning-app; elk ploeglid "
+    "krijgt een eigen planning-item",
     "description": """
 Data Forge Dakmeting — Planning
 ===============================
@@ -20,10 +20,16 @@ report.
   and each resulting block can be re-assigned independently;
 * deleting a block removes its shifts.
 
+The Planning app also gets a "Per ploeg" planner, which becomes the planner
+the app opens on: pick a dakproject and a ploeg on a shift and every member of
+that ploeg is planned for the period. Ploegen themselves move from Dakmeting to
+Planning -> Configuratie, since that is where they are used. Uninstalling puts
+the app's own default planner and the Ploegen menu back.
+
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.3.0",
+    "version": "19.0.1.4.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -34,6 +40,7 @@ installed.
         "views/roof_planning_views.xml",
     ],
     "post_init_hook": "post_init_hook",
+    "uninstall_hook": "uninstall_hook",
     "auto_install": True,
     "installable": True,
 }

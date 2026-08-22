@@ -32,6 +32,8 @@ class TectoraRoofPlanning(models.Model):
         Slot = self.env["planning.slot"]
         values = {
             "roof_planning_id": self.id,
+            "roof_project_id": self.project_id.id,
+            "roof_team_id": self.team_id.id,
             "resource_id": employee.resource_id.id,
             "start_datetime": self.start_datetime,
             "end_datetime": self.end_datetime,
@@ -58,6 +60,11 @@ class TectoraRoofPlanning(models.Model):
         """Create, update and remove the employees' planning shifts so they
         mirror the work block."""
         super()._sync_employee_items()
+        if self.env.context.get("tectora_planning_sync"):
+            # The caller is a shift that is turning itself into this block; it
+            # attaches itself first and then drives the sync, so that its own
+            # record is reused instead of a duplicate being created.
+            return True
         for item in self:
             if not (item.start_datetime and item.end_datetime):
                 continue
@@ -72,7 +79,9 @@ class TectoraRoofPlanning(models.Model):
 
     def _sync_slots(self):
         self.ensure_one()
-        Slot = self.env["planning.slot"]
+        # The shifts written here belong to this block, so they must not be
+        # taken for a user planning a team by hand.
+        Slot = self.env["planning.slot"].with_context(tectora_planning_sync=True)
         wanted_resources = self.employee_ids.resource_id
         slots = self.slot_ids
         stale = slots.filtered(lambda slot: slot.resource_id not in wanted_resources)
@@ -84,7 +93,7 @@ class TectoraRoofPlanning(models.Model):
             values = self._planning_slot_values(employee)
             slot = by_resource.get(employee.resource_id) or self._adopt_slot(employee)
             if slot:
-                slot.write(values)
+                slot.with_context(tectora_planning_sync=True).write(values)
             else:
                 to_create.append(values)
         if to_create:
