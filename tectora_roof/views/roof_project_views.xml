@@ -247,6 +247,94 @@
                                 </group>
                             </group>
                         </page>
+                        <page string="Projectinformatie" name="project_info">
+                            <group>
+                                <group string="Projectleiding">
+                                    <field name="project_manager_id"/>
+                                    <field name="project_manager_phone" readonly="1"
+                                           invisible="not project_manager_phone"/>
+                                    <field name="project_manager_email" readonly="1"
+                                           invisible="not project_manager_email"/>
+                                    <field name="date_deadline"/>
+                                </group>
+                                <group string="Contactpersoon werf">
+                                    <field name="site_contact_id"/>
+                                    <field name="site_contact_phone" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                    <field name="site_contact_email" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                </group>
+                                <group string="Voorbereiding">
+                                    <field name="checkin_at_work"/>
+                                    <field name="asbestos_present"/>
+                                    <field name="roof_height"/>
+                                    <field name="roof_substrate"/>
+                                    <field name="roof_substrate_note"
+                                           invisible="roof_substrate != 'andere'"/>
+                                </group>
+                                <group string="Bereikbaarheid materiaal">
+                                    <field name="material_direct_roof"/>
+                                    <field name="material_through_building"/>
+                                    <field name="material_via_side"/>
+                                    <field name="aerial_lift_needed"/>
+                                    <field name="aerial_lift_type"
+                                           invisible="aerial_lift_needed != 'yes'"/>
+                                </group>
+                                <group string="Transport">
+                                    <field name="material_transport"/>
+                                    <field name="waste_disposal"/>
+                                    <field name="supplier_pickup_time"/>
+                                    <field name="transport_over_building"/>
+                                </group>
+                                <group string="Extra's te voorzien">
+                                    <field name="scaffolding_needed"/>
+                                    <field name="mobile_scaffolding_needed"/>
+                                    <field name="concrete_drilling_needed"/>
+                                    <field name="hvac_contractor_needed"/>
+                                    <field name="precautions_needed"/>
+                                </group>
+                                <group string="Te voorzien ter plaatse">
+                                    <field name="generator_needed"/>
+                                    <field name="site_toilet_needed"/>
+                                    <field name="site_hut_needed"/>
+                                </group>
+                                <group string="Bereikbaarheid werf">
+                                    <field name="easy_parking"/>
+                                    <field name="parking_ban_needed"/>
+                                    <field name="driveway_paved"/>
+                                </group>
+                                <group string="Afwijking dakranden">
+                                    <field name="roof_edge_types"/>
+                                    <field name="roof_edge_colors"/>
+                                </group>
+                                <group string="EPDM">
+                                    <field name="epdm_thickness"/>
+                                    <field name="epdm_total_area" readonly="1"/>
+                                    <field name="epdm_sheet_count" invisible="1"/>
+                                </group>
+                            </group>
+                            <separator string="EPDM-doeken"/>
+                            <field name="epdm_sheet_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="area" sum="Totaal"/>
+                                    <field name="note" optional="show"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group string="Voorzorgsmaatregelen">
+                                    <field name="precautions_note" nolabel="1"
+                                           placeholder="bv. PE-folie en schilderskarton (zie offerte)…"/>
+                                </group>
+                                <group string="Andere werken / extra's">
+                                    <field name="other_works" nolabel="1"
+                                           placeholder="bv. zonnepanelen weg en terug: partner…"/>
+                                </group>
+                            </group>
+                        </page>
                         <page string="Materiaallijst" name="materials">
                             <field name="material_line_ids" nolabel="1">
                                 <list editable="bottom">

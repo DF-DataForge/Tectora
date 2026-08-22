@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_roof_project_info" model="ir.actions.report">
+        <field name="name">Projectinformatie</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_roof.report_roof_project_info</field>
+        <field name="report_file">tectora_roof.report_roof_project_info</field>
+        <field name="print_report_name">'Projectinformatie %s' % (object.code or object.name)</field>
+        <field name="binding_model_id" ref="model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Werfblad voor de ploeg: dezelfde structuur als het papieren
+         "Projectinformatie"-blad. -->
+    <template id="report_roof_project_info_document">
+        <t t-call="web.external_layout">
+            <div class="page o_roof_info_sheet">
+                <h3 class="mb-2">Projectinformatie</h3>
+
+                <table class="table table-sm table-borderless small mb-3">
+                    <tr>
+                        <td style="width:22%"><strong>Naam</strong></td>
+                        <td style="width:28%"><t t-out="doc.name"/></td>
+                        <td style="width:22%"><strong>Projectnummer</strong></td>
+                        <td style="width:28%"><t t-out="doc.code or '/'"/></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Startdatum</strong></td>
+                        <td><t t-out="doc.planned_date_begin" t-options='{"widget": "datetime"}'/></td>
+                        <td><strong>Deadline</strong></td>
+                        <td><t t-out="doc.date_deadline" t-options='{"widget": "date"}'/></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Projectleider</strong></td>
+                        <td><t t-out="doc.project_manager_id.display_name or '/'"/></td>
+                        <td><strong>E-mail / GSM</strong></td>
+                        <td>
+                            <t t-out="doc.project_manager_email or '/'"/>
+                            <t t-if="doc.project_manager_phone"> — <t t-out="doc.project_manager_phone"/></t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Klant</strong></td>
+                        <td><t t-out="doc.partner_id.display_name or '/'"/></td>
+                        <td><strong>Werfadres</strong></td>
+                        <td><t t-out="doc.address or '/'"/></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contactpersoon werf</strong></td>
+                        <td><t t-out="doc.site_contact_id.display_name or '/'"/></td>
+                        <td><strong>Tel. / e-mail</strong></td>
+                        <td>
+                            <t t-out="doc.site_contact_phone or '/'"/>
+                            <t t-if="doc.site_contact_email"> — <t t-out="doc.site_contact_email"/></t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Huidige status</strong></td>
+                        <td colspan="3"><t t-out="doc._info_label('state')"/></td>
+                    </tr>
+                </table>
+
+                <div class="row">
+                    <div class="col-6">
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Voorbereiding</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Checkin@work</td>
+                                    <td class="text-end"><t t-out="doc._info_label('checkin_at_work')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Asbesthoudende materialen</td>
+                                    <td class="text-end"><t t-out="doc._info_label('asbestos_present')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Hoogte dak(en)</td>
+                                    <td class="text-end">
+                                        <t t-if="doc.roof_height">
+                                            <t t-out="'%.2f m' % doc.roof_height"/>
+                                        </t>
+                                        <t t-else="">/</t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Ondergrond dak(en)</td>
+                                    <td class="text-end">
+                                        <t t-out="doc._info_label('roof_substrate')"/>
+                                        <t t-if="doc.roof_substrate_note">
+                                            (<t t-out="doc.roof_substrate_note"/>)
+                                        </t>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Bereikbaarheid materiaal</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Materiaal rechtstreeks op het dak</td>
+                                    <td class="text-end"><t t-out="doc._info_label('material_direct_roof')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Materiaal doorheen het gebouw</td>
+                                    <td class="text-end"><t t-out="doc._info_label('material_through_building')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Materiaal via zijkant gebouw</td>
+                                    <td class="text-end"><t t-out="doc._info_label('material_via_side')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Hoogwerker nodig</td>
+                                    <td class="text-end">
+                                        <t t-out="doc._info_label('aerial_lift_needed')"/>
+                                        <t t-if="doc.aerial_lift_type">
+                                            (<t t-out="doc.aerial_lift_type"/>)
+                                        </t>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Transport</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Transport materialen naar werf</td>
+                                    <td class="text-end"><t t-out="doc.material_transport or '/'"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Afval afvoer via</td>
+                                    <td class="text-end"><t t-out="doc.waste_disposal or '/'"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Geschat uur levering/ophaling</td>
+                                    <td class="text-end"><t t-out="doc.supplier_pickup_time or '/'"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Transport overheen gebouw</td>
+                                    <td class="text-end"><t t-out="doc._info_label('transport_over_building')"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Bereikbaarheid werf</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Makkelijk parkeren</td>
+                                    <td class="text-end"><t t-out="doc._info_label('easy_parking')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Parkeerverbod nodig</td>
+                                    <td class="text-end"><t t-out="doc._info_label('parking_ban_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Oprit verhard</td>
+                                    <td class="text-end"><t t-out="doc._info_label('driveway_paved')"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-6">
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Extra's te voorzien</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Stelling</td>
+                                    <td class="text-end"><t t-out="doc._info_label('scaffolding_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Rolstelling</td>
+                                    <td class="text-end"><t t-out="doc._info_label('mobile_scaffolding_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Betonboring</td>
+                                    <td class="text-end"><t t-out="doc._info_label('concrete_drilling_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Aannemer HVAC</td>
+                                    <td class="text-end"><t t-out="doc._info_label('hvac_contractor_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Specifieke voorzorgsmaatregelen</td>
+                                    <td class="text-end"><t t-out="doc._info_label('precautions_needed')"/></td>
+                                </tr>
+                                <tr t-if="doc.precautions_note">
+                                    <td colspan="2"><t t-out="doc.precautions_note"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Te voorzien ter plaatse</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Stroomgenerator</td>
+                                    <td class="text-end"><t t-out="doc._info_label('generator_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Werftoilet</td>
+                                    <td class="text-end"><t t-out="doc._info_label('site_toilet_needed')"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Werfkeet</td>
+                                    <td class="text-end"><t t-out="doc._info_label('site_hut_needed')"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr>
+                                    <th class="bg-200">
+                                        EPDM doeken
+                                        <t t-if="doc.epdm_thickness">
+                                            <t t-out="'%.2f mm' % doc.epdm_thickness"/>
+                                        </t>
+                                    </th>
+                                    <th class="bg-200 text-end">Afmeting</th>
+                                    <th class="bg-200 text-end">m²</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.epdm_sheet_ids" t-as="sheet">
+                                    <td><t t-out="sheet.name"/></td>
+                                    <td class="text-end"><t t-out="sheet.dimensions or '/'"/></td>
+                                    <td class="text-end"><t t-out="'%.2f' % sheet.area"/></td>
+                                </tr>
+                                <tr t-if="not doc.epdm_sheet_ids">
+                                    <td colspan="3">/</td>
+                                </tr>
+                            </tbody>
+                            <tfoot t-if="doc.epdm_sheet_ids">
+                                <tr>
+                                    <td colspan="2"><strong>Totaal</strong></td>
+                                    <td class="text-end">
+                                        <strong><t t-out="'%.2f' % doc.epdm_total_area"/></strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <table class="table table-sm small">
+                            <thead>
+                                <tr><th colspan="2" class="bg-200">Afwijking dakranden</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Type(s)</td>
+                                    <td class="text-end"><t t-out="doc.roof_edge_types or '/'"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Kleur(en)</td>
+                                    <td class="text-end"><t t-out="doc.roof_edge_colors or '/'"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <table class="table table-sm small">
+                    <thead>
+                        <tr><th class="bg-200">Andere werken / extra's</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><t t-out="doc.other_works or '/'"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_roof_project_info">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="tectora_roof.report_roof_project_info_document"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

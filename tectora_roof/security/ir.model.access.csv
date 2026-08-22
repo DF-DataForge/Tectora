@@ -15,3 +15,5 @@ access_tectora_roof_team_user,tectora.roof.team user,model_tectora_roof_team,bas
 access_tectora_roof_team_sales,tectora.roof.team sales,model_tectora_roof_team,sales_team.group_sale_salesman,1,1,1,1
 access_tectora_roof_planning_user,tectora.roof.planning user,model_tectora_roof_planning,base.group_user,1,0,0,0
 access_tectora_roof_planning_sales,tectora.roof.planning sales,model_tectora_roof_planning,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_epdm_sheet_user,tectora.roof.epdm.sheet user,model_tectora_roof_epdm_sheet,base.group_user,1,0,0,0
+access_tectora_roof_epdm_sheet_sales,tectora.roof.epdm.sheet sales,model_tectora_roof_epdm_sheet,sales_team.group_sale_salesman,1,1,1,1
