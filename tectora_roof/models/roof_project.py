@@ -190,9 +190,14 @@ class TectoraRoofProject(models.Model):
         string="Schaal (m per pixel)",
         digits=(16, 6),
         default=DEFAULT_SCALE_M_PER_PX,
+        tracking=True,
         help="Geographic scale of the drawing: how many meters one canvas pixel "
         "represents. Set automatically when a satellite image is fetched; can be "
-        "corrected manually when working from an uploaded plan.",
+        "corrected manually when working from an uploaded plan, or calibrated "
+        "from the drawing by right-clicking a side's length label and entering "
+        "the measured length. Calibrating moves nothing, so the drawing keeps "
+        "lining up with the background image, but it does make the geographic "
+        "bounds (bg_north/south/east/west) of the fetched image approximate.",
     )
 
     # --- Drawing --------------------------------------------------------------

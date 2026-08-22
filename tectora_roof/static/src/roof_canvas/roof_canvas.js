@@ -5,6 +5,7 @@ import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { RoofProductPickerDialog } from "./product_picker_dialog";
+import { RoofEdgeLengthDialog } from "./edge_length_dialog";
 import {
     Component,
     onMounted,
@@ -94,6 +95,36 @@ function polygonPerimeter(points, closed = true) {
         total += Math.hypot(x2 - x1, y2 - y1);
     }
     return total;
+}
+
+// Give side `index` of the polygon exactly `targetPx` length by sliding its
+// corner(s) along the side, so the side keeps its direction. `anchor` says
+// which end stays put: "start", "end" or "center" (both move half).
+// Returns a new point list; the polygon stays closed, and the two
+// neighbouring sides stretch along with the moved corner.
+function resizeEdgePoints(points, index, targetPx, anchor = "start") {
+    const n = points.length;
+    const next = (index + 1) % n;
+    const [x1, y1] = points[index];
+    const [x2, y2] = points[next];
+    const lengthPx = Math.hypot(x2 - x1, y2 - y1);
+    if (!(lengthPx > 0) || !(targetPx > 0)) {
+        return points.map((p) => [...p]);
+    }
+    const ux = (x2 - x1) / lengthPx;
+    const uy = (y2 - y1) / lengthPx;
+    const delta = targetPx - lengthPx;
+    const round = (value) => Math.round(value * 100) / 100;
+    const result = points.map((p) => [...p]);
+    if (anchor === "end") {
+        result[index] = [round(x1 - ux * delta), round(y1 - uy * delta)];
+    } else if (anchor === "center") {
+        result[index] = [round(x1 - (ux * delta) / 2), round(y1 - (uy * delta) / 2)];
+        result[next] = [round(x2 + (ux * delta) / 2), round(y2 + (uy * delta) / 2)];
+    } else {
+        result[next] = [round(x2 + ux * delta), round(y2 + uy * delta)];
+    }
+    return result;
 }
 
 function boundingBox(points) {
@@ -739,6 +770,14 @@ export class RoofCanvasField extends Component {
         if (!wrapper) {
             return;
         }
+        // Right-clicking a length box edits that side's length; anywhere else
+        // opens the "add dakobject" menu.
+        const hit = this.labelHitTest(this.toWorld(ev));
+        if (hit && hit.type === "edge") {
+            this.state.contextMenu = null;
+            this.openEdgeLength(hit);
+            return;
+        }
         const rect = wrapper.getBoundingClientRect();
         this.state.contextMenu = {
             x: ev.clientX - rect.left,
@@ -926,6 +965,115 @@ export class RoofCanvasField extends Component {
         }
         this.commit();
         this.refreshPanel();
+    }
+
+    // ------------------------------------------------- side length / calibration
+    edgeLengthM(shape, edgeIndex) {
+        const n = shape.points.length;
+        const [x1, y1] = shape.points[edgeIndex];
+        const [x2, y2] = shape.points[(edgeIndex + 1) % n];
+        return Math.hypot(x2 - x1, y2 - y1) * this.scaleMPerPx;
+    }
+
+    // Real length of the clicked side, entered by the user. Opened by
+    // right-clicking a length box.
+    openEdgeLength(hit) {
+        const shape = this.shapes.find((s) => s.id === hit.shapeId);
+        if (!shape || !shape.points || shape.points.length < 3) {
+            return;
+        }
+        const isCircle = shape.shape === "circle";
+        const index = isCircle ? -1 : hit.edgeIndex;
+        const current = isCircle
+            ? polygonPerimeter(shape.points) * this.scaleMPerPx
+            : this.edgeLengthM(shape, index);
+        if (!(current > 0)) {
+            return;
+        }
+        const name = shape.name || KIND_NAMES[shape.kind || "section"] || "Vorm";
+        const n = shape.points.length;
+        this.state.selectedId = shape.id;
+        this.updateStatus();
+        this.draw();
+        this.refreshPanel();
+        this.dialog.add(RoofEdgeLengthDialog, {
+            title: isCircle
+                ? `${name} — omtrek aanpassen`
+                : `${name} — zijde ${index + 1} aanpassen`,
+            currentLength: current,
+            currentScale: this.scaleMPerPx,
+            lengthLabel: isCircle ? "Omtrek" : "Lengte",
+            allowAnchor: !isCircle,
+            startPoint: index + 1,
+            endPoint: ((index + 1) % n) + 1,
+            onConfirm: (result) => this.applyEdgeLength(shape, index, result),
+        });
+    }
+
+    applyEdgeLength(shape, index, { length, scaleAll, anchor }) {
+        const isCircle = shape.shape === "circle";
+        const current = isCircle
+            ? polygonPerimeter(shape.points) * this.scaleMPerPx
+            : this.edgeLengthM(shape, index);
+        if (!(current > 0) || !(length > 0)) {
+            return;
+        }
+        const factor = length / current;
+        if (Math.abs(factor - 1) < 1e-9) {
+            return;
+        }
+        if (scaleAll) {
+            this.recalibrateScale(this.scaleMPerPx * factor);
+            return;
+        }
+        if (isCircle) {
+            // Keep it a circle: same center, radius scaled to the new
+            // circumference.
+            const box = boundingBox(shape.points);
+            const radius = (Math.max(box.w, box.h) / 2) * factor;
+            shape.points = circlePoints(
+                box.x + box.w / 2, box.y + box.h / 2, Math.max(radius, 1e-3)
+            );
+        } else {
+            shape.points = resizeEdgePoints(
+                shape.points, index, length / this.scaleMPerPx, anchor
+            );
+        }
+        this.updateStatus();
+        this.commit();
+        this.refreshPanel();
+    }
+
+    // Calibrate the map scale from one measured side. Nothing moves in world
+    // (= background image pixel) coordinates, so the drawing stays exactly on
+    // the satellite image; the grid derives its spacing from the scale and
+    // therefore re-steps itself to real meters, and every other length and
+    // surface in the project scales along.
+    async recalibrateScale(newScale) {
+        const scale = Math.min(Math.max(newScale, 1e-6), 100);
+        try {
+            await this.props.record.update({ scale_m_per_px: scale });
+        } catch (error) {
+            console.warn("Roof canvas: could not update the scale", error);
+            this.notification.add(
+                _t("De schaal kon niet worden aangepast."), { type: "danger" }
+            );
+            return;
+        }
+        if (this._destroyed) {
+            return;
+        }
+        this.updateStatus();
+        this.commit();
+        this.refreshPanel();
+        this.notification.add(
+            _t(
+                "Schaal gekalibreerd op %s m/px — alle maten en het meetraster " +
+                "zijn proportioneel aangepast.",
+                scale.toFixed(4)
+            ),
+            { type: "success" }
+        );
     }
 
     async _refreshPanel() {
@@ -1221,15 +1369,18 @@ export class RoofCanvasField extends Component {
                 `${m.length.toFixed(2)} m, ${m.area.toFixed(2)} m², omtrek ` +
                 `${m.perimeter.toFixed(2)} m · geselecteerd: sleep om te ` +
                 `verplaatsen, versleep een hoekpunt om de vorm aan te passen, ` +
-                `stel rand en opstand per zijde in via het paneel rechts`;
+                `rechtsklik op een lengtelabel om de werkelijke maat in te ` +
+                `geven, stel rand en opstand per zijde in via het paneel rechts`;
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool; de meting " +
                 "wordt automatisch bijgewerkt (bij een nieuw project: eerst " +
                 "opslaan). Klik op een lengte- of oppervlaktelabel of op een " +
                 "hoekpunt om producten toe te voegen (wit = buitenhoek, " +
-                "oranje = binnenhoek); rechtsklik om een dakobject toe te " +
-                "voegen. Scroll om te zoomen, F voor volledig scherm.";
+                "oranje = binnenhoek). Rechtsklik op een lengtelabel om de " +
+                "werkelijke maat in te geven en de tekening te kalibreren; " +
+                "rechtsklik op de tekening om een dakobject toe te voegen. " +
+                "Scroll om te zoomen, F voor volledig scherm.";
         }
     }
 
