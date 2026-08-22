@@ -2,6 +2,8 @@ from . import roof_project
 from . import roof_section
 from . import roof_object
 from . import roof_material
+from . import roof_epdm_sheet
+from . import roof_project_info
 from . import roof_team
 from . import roof_planning
 from . import sale_order

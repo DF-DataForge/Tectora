@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.RoofEdgeLengthDialog">
+        <Dialog title="props.title" size="'md'">
+            <div class="o_roof_edge_length" t-on-keydown="onKeydown">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">
+                            Gemeten op de tekening
+                        </label>
+                        <input type="text" class="form-control" readonly="readonly"
+                               t-att-value="props.currentLength.toFixed(2) + ' m'"/>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1" for="o_roof_edge_length">
+                            Werkelijke <t t-out="lengthLabel.toLowerCase()"/> (m)
+                        </label>
+                        <input id="o_roof_edge_length" t-ref="length"
+                               type="number" step="0.01" min="0"
+                               class="form-control"
+                               t-att-value="state.value"
+                               t-on-input="(ev) => this.state.value = ev.target.value"/>
+                    </div>
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox"
+                           id="o_roof_edge_scale_all"
+                           t-att-checked="state.scaleAll"
+                           t-on-change="(ev) => this.state.scaleAll = ev.target.checked"/>
+                    <label class="form-check-label" for="o_roof_edge_scale_all">
+                        <strong>Schaal de andere zijden mee</strong>
+                    </label>
+                </div>
+
+                <t t-if="state.scaleAll">
+                    <div class="alert alert-info py-2 px-2 mt-2 small mb-0">
+                        De tekening is correct, alleen de schaal klopt niet. Er
+                        beweegt niets: het satellietbeeld blijft exact onder de
+                        tekening liggen, en alle zijden, oppervlaktes en het
+                        meetraster volgen proportioneel
+                        (<t t-out="(factor * 100).toFixed(1)"/>%).
+                        <div class="mt-1">
+                            Schaal:
+                            <strong t-out="props.currentScale.toFixed(4)"/> →
+                            <strong t-out="newScale.toFixed(4)"/> m/px
+                        </div>
+                    </div>
+                    <div t-if="scaleOutOfRange" class="text-danger small mt-1">
+                        Dat is meer dan honderd keer de getekende maat — kijk de
+                        ingevoerde waarde na.
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="alert alert-warning py-2 px-2 mt-2 small mb-0">
+                        Alleen deze <t t-out="lengthLabel.toLowerCase()"/> wordt
+                        aangepast. De schaal, het meetraster en het satellietbeeld
+                        blijven ongewijzigd; de twee aansluitende zijden schuiven
+                        mee met het verplaatste hoekpunt.
+                    </div>
+                    <div t-if="props.allowAnchor" class="mt-2">
+                        <label class="form-label small mb-1" for="o_roof_edge_anchor">
+                            Welk hoekpunt blijft liggen?
+                        </label>
+                        <select id="o_roof_edge_anchor"
+                                class="form-select form-select-sm"
+                                t-on-change="(ev) => this.state.anchor = ev.target.value">
+                            <option value="start"
+                                    t-att-selected="state.anchor === 'start'">
+                                Hoekpunt <t t-out="props.startPoint"/> (begin van de zijde)
+                            </option>
+                            <option value="end"
+                                    t-att-selected="state.anchor === 'end'">
+                                Hoekpunt <t t-out="props.endPoint"/> (einde van de zijde)
+                            </option>
+                            <option value="center"
+                                    t-att-selected="state.anchor === 'center'">
+                                Het midden (beide hoekpunten schuiven half op)
+                            </option>
+                        </select>
+                    </div>
+                </t>
+            </div>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-primary"
+                        t-att-disabled="!valid"
+                        t-on-click="confirm">
+                    Toepassen
+                </button>
+                <button type="button" class="btn btn-secondary"
+                        t-on-click="props.close">
+                    Annuleren
+                </button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

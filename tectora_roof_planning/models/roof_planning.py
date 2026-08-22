@@ -113,6 +113,32 @@ class TectoraRoofPlanning(models.Model):
             return Slot
         return Slot.search(domain, limit=1)
 
+    @api.model
+    def _drop_unavailable_views(self, action):
+        """Strip view types the web client cannot render.
+
+        The gantt view comes from web_gantt. When it is missing the client
+        refuses the whole action with "View types not defined gantt" instead of
+        falling back, and it reads that list from the session it was loaded
+        with -- so a browser tab opened before Planning was installed hits the
+        same error. Dropping the view type here degrades to list/form.
+        """
+        try:
+            available = set(self.env["ir.ui.view"].get_view_info())
+        except Exception:  # pragma: no cover - never break the button
+            _logger.exception("Could not read the available view types")
+            return action
+        views = [
+            view for view in action.get("views") or []
+            if view[1] in available or view[1] == "search"
+        ]
+        kept = [view[1] for view in views if view[1] != "search"]
+        if not kept:
+            return action
+        action["views"] = views
+        action["view_mode"] = ",".join(kept)
+        return action
+
     def action_open_in_planner(self):
         """Open the standard resource planner on this project's shifts."""
         self.ensure_one()
@@ -121,7 +147,7 @@ class TectoraRoofPlanning(models.Model):
         )
         action["domain"] = [("roof_project_id", "=", self.project_id.id)]
         action["context"] = {"search_default_group_resource": 1}
-        return action
+        return self._drop_unavailable_views(action)
 
     def action_view_slots(self):
         self.ensure_one()

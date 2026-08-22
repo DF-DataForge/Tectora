@@ -23,7 +23,7 @@ report.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
