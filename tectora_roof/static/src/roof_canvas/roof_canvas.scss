@@ -101,18 +101,14 @@
     }
 }
 
-// Forms containing the roof canvas: give the sheet the full width and keep
-// the side chatter narrow, so the drawing plus its sidebar get the space.
-// (Deliberately conservative: no layout-direction overrides — a previous
-// flex-flow override collapsed the whole form on some builds.)
+// Forms containing the roof canvas: give the sheet the full width, so the
+// drawing plus its product sidebar get the space. The chatter is kept below
+// the form by asking the renderer for its bottom layout (see
+// roof_form/chatter_bottom.js) rather than by overriding the flex layout of
+// the container it shares with the sheet -- doing that once collapsed the
+// whole form.
 .o_form_view:has(.o_roof_canvas) {
     .o_form_sheet_bg .o_form_sheet {
         max-width: 100%;
-    }
-
-    .o-mail-Form-chatter.o-aside {
-        flex: 0 0 340px;
-        width: 340px;
-        max-width: 340px;
     }
 }
