@@ -8,6 +8,10 @@ import { Component, onWillStart, useState } from "@odoo/owl";
  * Product picker for the roof canvas: the matching products are loaded once
  * and filtered client-side, with one quick-filter button per product
  * category on top.
+ *
+ * The same products can be assigned to more than one item at once: ticking
+ * "toewijzen aan meerdere items" lists every other item of the same type in
+ * the drawing (the other sides, the other surfaces, ...) to pick from.
  */
 export class RoofProductPickerDialog extends Component {
     static template = "tectora_roof.RoofProductPickerDialog";
@@ -22,6 +26,13 @@ export class RoofProductPickerDialog extends Component {
         // Quantity the assignment will get (the clicked side's length, the
         // surface in m², 1 for a corner); shown per row with the subtotal.
         quantity: { type: Number, optional: true },
+        // Other items of the same type in the drawing, each
+        // {key, label, detail, quantity}. Empty or absent hides the option.
+        targets: { type: Array, optional: true },
+        // "Andere zijden in de tekening", "Andere oppervlaktes", ...
+        targetsLabel: { type: String, optional: true },
+        // Unit the quantities are in ("m", "m²", ""), for the totals line.
+        quantityUnit: { type: String, optional: true },
     };
 
     setup() {
@@ -32,6 +43,8 @@ export class RoofProductPickerDialog extends Component {
             activeCategory: null, // false = zonder categorie, null = alle
             search: "",
             selected: {},
+            multi: false,
+            selectedTargets: {}, // target key -> true
         });
         onWillStart(async () => {
             this.state.products = await this.orm.searchRead(
@@ -132,6 +145,56 @@ export class RoofProductPickerDialog extends Component {
         return Object.keys(this.state.selected).map(Number);
     }
 
+    // ------------------------------------------------------- multiple items
+    get targets() {
+        return this.props.targets || [];
+    }
+
+    get selectedTargetKeys() {
+        if (!this.state.multi) {
+            return [];
+        }
+        return this.targets
+            .filter((target) => this.state.selectedTargets[target.key])
+            .map((target) => target.key);
+    }
+
+    // The clicked item plus every extra item ticked: what one product row
+    // actually adds up to.
+    get totalQuantity() {
+        const base = this.props.quantity || 0;
+        const keys = new Set(this.selectedTargetKeys);
+        return this.targets.reduce(
+            (total, target) => total + (keys.has(target.key) ? target.quantity : 0),
+            base
+        );
+    }
+
+    get itemCount() {
+        return 1 + this.selectedTargetKeys.length;
+    }
+
+    toggleMulti(checked) {
+        this.state.multi = checked;
+        if (!checked) {
+            this.state.selectedTargets = {};
+        }
+    }
+
+    toggleTarget(target) {
+        if (this.state.selectedTargets[target.key]) {
+            delete this.state.selectedTargets[target.key];
+        } else {
+            this.state.selectedTargets[target.key] = true;
+        }
+    }
+
+    selectAllTargets(select) {
+        this.state.selectedTargets = select
+            ? Object.fromEntries(this.targets.map((target) => [target.key, true]))
+            : {};
+    }
+
     setCategory(categoryId) {
         this.state.activeCategory = categoryId;
     }
@@ -146,9 +209,10 @@ export class RoofProductPickerDialog extends Component {
 
     async confirm() {
         const ids = this.selectedIds;
+        const targetKeys = this.selectedTargetKeys;
         this.props.close();
         if (ids.length) {
-            await this.props.onConfirm(ids);
+            await this.props.onConfirm(ids, targetKeys);
         }
     }
 }

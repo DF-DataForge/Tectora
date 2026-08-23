@@ -1152,6 +1152,85 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
+    // Every item in the drawing of the same type as the clicked one, so the
+    // same products can be assigned to several at once. Built from the shapes
+    // rather than from the drawn labels: a side too short for a length box
+    // must still be selectable.
+    sameTypeTargets(hit) {
+        const type = hit.type;
+        if (!["surface", "edge", "corner"].includes(type)) {
+            return [];
+        }
+        const isObject = (hit.kind || "section") !== "section";
+        const wantsInner = hit.cornerType === "inner";
+        const targets = [];
+        for (const shape of this.shapes) {
+            if (((shape.kind || "section") !== "section") !== isObject) {
+                continue; // dakobjecten and daksecties take different products
+            }
+            const points = shape.points || [];
+            if (points.length < 3) {
+                continue;
+            }
+            const isCircle = shape.shape === "circle";
+            const name =
+                shape.name || KIND_NAMES[shape.kind || "section"] || "Naamloos";
+            const base = { shapeId: shape.id, kind: shape.kind || "section" };
+            if (type === "surface") {
+                const area = polygonArea(points) * this.scaleMPerPx ** 2;
+                targets.push({
+                    ...base,
+                    key: `${shape.id}|surface|0`,
+                    sideNumber: 0,
+                    quantity: Math.round(area * 100) / 100,
+                    label: name,
+                    detail: `${area.toFixed(2)} m²`,
+                });
+            } else if (type === "edge" && isCircle) {
+                const length = polygonPerimeter(points) * this.scaleMPerPx;
+                targets.push({
+                    ...base,
+                    key: `${shape.id}|edge|0`,
+                    sideNumber: 0,
+                    quantity: Math.round(length * 100) / 100,
+                    label: `${name} — omtrek`,
+                    detail: `${length.toFixed(2)} m`,
+                });
+            } else if (type === "edge") {
+                for (let i = 0; i < points.length; i++) {
+                    const length = this.edgeLengthM(shape, i);
+                    targets.push({
+                        ...base,
+                        key: `${shape.id}|edge|${i + 1}`,
+                        sideNumber: i + 1,
+                        quantity: Math.round(length * 100) / 100,
+                        label: `${name} — zijde ${i + 1}`,
+                        detail: `${length.toFixed(2)} m`,
+                    });
+                }
+            } else if (type === "corner" && !isCircle) {
+                for (let i = 0; i < points.length; i++) {
+                    // Inner and outer corners take different product
+                    // categories, so only offer corners of the same sort.
+                    if (isInnerCorner(points, i) !== wantsInner) {
+                        continue;
+                    }
+                    targets.push({
+                        ...base,
+                        key: `${shape.id}|corner|${i + 1}`,
+                        sideNumber: i + 1,
+                        quantity: 1,
+                        label: `${name} — ${
+                            wantsInner ? "binnenhoek" : "buitenhoek"
+                        } ${i + 1}`,
+                        detail: "1",
+                    });
+                }
+            }
+        }
+        return targets;
+    }
+
     // ---------------------------------------------------- products via labels
     async openProducts(hit) {
         if (hit.type === "corner" && (hit.kind || "section") !== "section") {
@@ -1162,11 +1241,19 @@ export class RoofCanvasField extends Component {
         const targetModel = isObject
             ? "tectora.roof.object"
             : "tectora.roof.section";
-        const targetDomain = [
-            ["project_id", "=", record.resId],
-            ["canvas_ref", "=", hit.shapeId],
-        ];
         let targetIds;
+        let recordByShape = {}; // canvas_ref -> section/object id
+        const loadRecords = async () => {
+            const records = await this.orm.searchRead(
+                targetModel, [["project_id", "=", record.resId]], ["canvas_ref"]
+            );
+            recordByShape = Object.fromEntries(
+                records
+                    .filter((row) => row.canvas_ref)
+                    .map((row) => [row.canvas_ref, row.id])
+            );
+            return recordByShape[hit.shapeId] ? [recordByShape[hit.shapeId]] : [];
+        };
         try {
             // The section/object records are created server-side from the
             // drawing, so the project must be saved (synced) before lines
@@ -1182,9 +1269,7 @@ export class RoofCanvasField extends Component {
                 );
                 return;
             }
-            targetIds = await this.orm.search(targetModel, targetDomain, {
-                limit: 1,
-            });
+            targetIds = await loadRecords();
             if (!targetIds.length) {
                 // The shape was drawn but never synced: run the sync for the
                 // user (same as 'Meting bijwerken uit tekening') and retry.
@@ -1194,9 +1279,7 @@ export class RoofCanvasField extends Component {
                 );
                 await record.load();
                 this.draw();
-                targetIds = await this.orm.search(targetModel, targetDomain, {
-                    limit: 1,
-                });
+                targetIds = await loadRecords();
             }
         } catch (error) {
             console.warn("Roof canvas: preparing product assignment failed", error);
@@ -1260,6 +1343,14 @@ export class RoofCanvasField extends Component {
         } else {
             usages = ["edge"];
         }
+        const coverage = isCorner ? "corners" : isSurface ? "surface" : "edges";
+        const linkField = isObject ? "object_id" : "section_id";
+        const clickedKey = `${hit.shapeId}|${hit.type}|${sideNumber}`;
+        // The other items of the same type, minus the one that was clicked and
+        // any shape the server does not have a record for yet.
+        const others = this.sameTypeTargets(hit).filter(
+            (item) => item.key !== clickedKey && recordByShape[item.shapeId]
+        );
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -1267,11 +1358,8 @@ export class RoofCanvasField extends Component {
                 ["categ_id.tectora_usage_ids.code", "in", usages],
             ],
             assignedDomain: [
-                [isObject ? "object_id" : "section_id", "=", targetIds[0]],
-                [
-                    "coverage", "=",
-                    isCorner ? "corners" : isSurface ? "surface" : "edges",
-                ],
+                [linkField, "=", targetIds[0]],
+                ["coverage", "=", coverage],
                 ["edge_index", "=", sideNumber],
             ],
             assignedLabel: isSurface
@@ -1282,27 +1370,95 @@ export class RoofCanvasField extends Component {
                 ? _t("Reeds toegewezen aan deze zijde")
                 : _t("Reeds toegewezen aan deze omtrek"),
             quantity,
-            onConfirm: async (productIds) => {
+            targets: others,
+            targetsLabel: isSurface
+                ? _t("Andere oppervlaktes in de tekening")
+                : isCorner
+                ? hit.cornerType === "inner"
+                    ? _t("Andere binnenhoeken in de tekening")
+                    : _t("Andere buitenhoeken in de tekening")
+                : _t("Andere zijden in de tekening"),
+            quantityUnit: isSurface ? " m²" : isCorner ? "" : " m",
+            onConfirm: async (productIds, targetKeys) => {
+                const picked = new Set(targetKeys || []);
+                const items = [
+                    {
+                        recordId: targetIds[0],
+                        sideNumber,
+                        quantity,
+                        label: target,
+                    },
+                    ...others
+                        .filter((item) => picked.has(item.key))
+                        .map((item) => ({
+                            recordId: recordByShape[item.shapeId],
+                            sideNumber: item.sideNumber,
+                            quantity: item.quantity,
+                            label: item.label,
+                        })),
+                ];
                 try {
-                    await this.orm.create(
+                    // Assigning to many items at once must not stack a second
+                    // line on the ones that already have the product.
+                    const existing = await this.orm.searchRead(
                         "tectora.roof.section.product",
-                        productIds.map((productId) => ({
-                            [isObject ? "object_id" : "section_id"]: targetIds[0],
-                            product_id: productId,
-                            coverage: isCorner
-                                ? "corners"
-                                : isSurface
-                                ? "surface"
-                                : "edges",
-                            edge_index: sideNumber,
-                            quantity,
-                        }))
+                        [
+                            [linkField, "in", items.map((item) => item.recordId)],
+                            ["coverage", "=", coverage],
+                        ],
+                        [linkField, "edge_index", "product_id"]
                     );
+                    const seen = new Set(
+                        existing.map(
+                            (line) =>
+                                `${line[linkField][0]}|${line.edge_index}|` +
+                                `${line.product_id[0]}`
+                        )
+                    );
+                    const values = [];
+                    for (const item of items) {
+                        for (const productId of productIds) {
+                            const key =
+                                `${item.recordId}|${item.sideNumber}|${productId}`;
+                            if (seen.has(key)) {
+                                continue;
+                            }
+                            seen.add(key);
+                            values.push({
+                                [linkField]: item.recordId,
+                                product_id: productId,
+                                coverage,
+                                edge_index: item.sideNumber,
+                                quantity: item.quantity,
+                            });
+                        }
+                    }
+                    if (values.length) {
+                        await this.orm.create(
+                            "tectora.roof.section.product", values
+                        );
+                    }
                     await record.load();
-                    this.notification.add(
-                        _t("Product(en) toegewezen aan %s.", target),
-                        { type: "success" }
-                    );
+                    const skipped =
+                        items.length * productIds.length - values.length;
+                    let message =
+                        items.length > 1
+                            ? _t(
+                                  "%(lines)s lijn(en) toegewezen aan " +
+                                  "%(items)s items.",
+                                  { lines: values.length, items: items.length }
+                              )
+                            : _t("Product(en) toegewezen aan %s.", target);
+                    if (skipped) {
+                        message += " " + _t(
+                            "%s koppeling(en) bestonden al en zijn " +
+                            "overgeslagen.",
+                            skipped
+                        );
+                    }
+                    this.notification.add(message, {
+                        type: values.length ? "success" : "warning",
+                    });
                 } catch (error) {
                     console.warn("Roof canvas: product assignment failed", error);
                     this.notification.add(

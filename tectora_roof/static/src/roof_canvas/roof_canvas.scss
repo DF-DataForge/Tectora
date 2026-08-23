@@ -64,6 +64,24 @@
         max-height: 50vh;
         overflow-y: auto;
     }
+
+    // The other items of the same type, when assigning to several at once.
+    // Two columns keep a drawing with many sides readable without pushing
+    // the product list off screen.
+    .o_roof_picker_targets_list {
+        max-height: 9rem;
+        overflow-y: auto;
+        columns: 2;
+        font-size: 0.875rem;
+
+        @media (max-width: 767px) {
+            columns: 1;
+        }
+
+        .form-check {
+            break-inside: avoid;
+        }
+    }
 }
 
 // Compact KPI tiles on the dakproject form header.
