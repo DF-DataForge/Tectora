@@ -134,6 +134,34 @@ catalogus eerst de kleurvarianten als artikel kent, wat vandaag niet zo is.
 Aanbeveling: eerst de stuklijsten laden zoals hierboven, en varianten pas
 invoeren voor de families waar de kleur de materiaalprijs echt verandert.
 
+## De implementatie
+
+De module `tectora_boms` (installeert zichzelf zodra Productcatalogus én
+Manufacturing aanwezig zijn) bevat het bovenstaande als **Verkoop →
+Configuratie → Stuklijsten importeren**:
+
+* de matcher zit in `models/bom_rules.py` — pure Python, dus testbaar zonder
+  database;
+* drempels per soort: alleen zekere matches (standaard) of ook waarschijnlijke;
+* verpakkingseenheden: overslaan (standaard), omrekenen, of letterlijk
+  overnemen;
+* **Alleen analyseren** staat standaard aan: het verslag is identiek aan dat van
+  een echte import, er wordt alleen niets aangemaakt;
+* het verslag lijst op wat niet gekoppeld raakte, gesorteerd op het aantal
+  regels dat het blokkeert — dat is de wachtrij uit de tabel hierboven;
+* de import is idempotent op `tectora_bom_key` (product + regels), dus een
+  tweede import werkt bij in plaats van te verdubbelen, en de 36 identieke
+  stuklijsten uit de bron worden samengevoegd.
+
+Één ding kwam pas bij het implementeren boven: **`mrp.bom._bom_find` laat
+diensten vallen** (`products.filtered(lambda p: p.type != 'service')`), en de
+verkoopproducten van Tectora *zijn* diensten. De materiaallijst zou dus leeg
+blijven, hoeveel stuklijsten er ook hangen. `sale.order` zoekt de stuklijst
+daarom nu zelf op, in dezelfde volgorde als Odoo (`sequence, id`), en slaat
+alleen diensten *zonder* stuklijst over — dat is uurloon, geen materiaal.
+`explode()` zelf kijkt niet naar het type van het bovenliggende product en
+werkt dus gewoon.
+
 ## Volgorde van werken
 
 1. **Producten bevestigen** (188 rijen, blad `Producten`). Kleinste stap, en
