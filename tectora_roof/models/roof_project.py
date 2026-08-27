@@ -212,6 +212,13 @@ class TectoraRoofProject(models.Model):
         help="PNG snapshot of the drawing, stored by the canvas widget on "
         "every change and used on the measurement sheet PDF.",
     )
+    canvas_icons = fields.Text(
+        string="Iconen op de tekening (JSON)",
+        compute="_compute_canvas_icons",
+        help="Canvas-id van elk dakobject met de productcategorie waarvan het "
+        "icoon getoond wordt. De tekening leest dit; het staat hier omdat de "
+        "vormen in canvas_data zelf geen producten kennen.",
+    )
 
     section_ids = fields.One2many(
         "tectora.roof.section", "project_id", string="Daksecties"
@@ -329,6 +336,30 @@ class TectoraRoofProject(models.Model):
     def _compute_has_background_image(self):
         for project in self:
             project.has_background_image = bool(project.background_image)
+
+    @api.depends(
+        "roof_object_ids.canvas_ref",
+        "roof_object_ids.product_line_ids.product_id",
+    )
+    def _compute_canvas_icons(self):
+        """Which category's icon each dakobject shows on the drawing.
+
+        The shapes in canvas_data know nothing about products, so the link runs
+        the other way: a dakobject's assigned products name a category, and a
+        category that can be used for dakobjecten may carry an icon. The first
+        assigned product that has one wins, in line order.
+        """
+        for project in self:
+            icons = {}
+            for roof_object in project.roof_object_ids:
+                if not roof_object.canvas_ref:
+                    continue
+                for line in roof_object.product_line_ids:
+                    category = line.product_id.categ_id
+                    if category.tectora_allows_objects and category.tectora_canvas_icon:
+                        icons[roof_object.canvas_ref] = category.id
+                        break
+            project.canvas_icons = json.dumps(icons)
 
     def _compute_sale_order_count(self):
         for project in self:

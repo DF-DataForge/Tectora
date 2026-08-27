@@ -37,6 +37,8 @@ const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
 // Ctrl-selected targets waiting for products.
+// How much of a dakobject the category icon is allowed to fill.
+const ICON_FILL_RATIO = 0.7;
 const MULTI_SELECT_STROKE = "#6c3fa4";
 const MULTI_SELECT_FILL = "rgba(108, 63, 164, 0.92)";
 
@@ -261,6 +263,9 @@ export class RoofCanvasField extends Component {
         this._rawCache = undefined;
         this._shapes = [];
         this.labelHits = []; // clickable measurement boxes, in world coordinates
+        this.iconImages = {}; // product category id -> loaded icon (or null)
+        this._iconRaw = undefined;
+        this._iconMap = {};
 
         this.onWindowResize = () => this.resizeCanvas();
         // On window rather than on the canvas: the picker has to open when Ctrl
@@ -2062,6 +2067,79 @@ export class RoofCanvasField extends Component {
         ctx.fillText(label, x + width / 2, y + height / 2);
     }
 
+    // ------------------------------------------------------ dakobject iconen
+    // A product category that can be used for dakobjecten may carry an icon;
+    // the server says which category each dakobject takes it from
+    // (project.canvas_icons), because the shapes themselves know nothing about
+    // products.
+    get iconCategories() {
+        const raw = this.props.record.data.canvas_icons || "";
+        if (raw !== this._iconRaw) {
+            this._iconRaw = raw;
+            try {
+                this._iconMap = JSON.parse(raw || "{}") || {};
+            } catch {
+                this._iconMap = {};
+            }
+        }
+        return this._iconMap;
+    }
+
+    iconImage(categoryId) {
+        const cached = this.iconImages[categoryId];
+        if (cached !== undefined) {
+            return cached || null; // null: tried and failed, do not retry
+        }
+        this.iconImages[categoryId] = null;
+        const image = new Image();
+        image.onload = () => {
+            if (this._destroyed) {
+                return;
+            }
+            this.iconImages[categoryId] = image;
+            this.draw();
+        };
+        image.onerror = () => {
+            this.iconImages[categoryId] = null;
+        };
+        image.src = `/web/image/product.category/${categoryId}/tectora_canvas_icon`;
+        return null;
+    }
+
+    drawShapeIcon(ctx, shape) {
+        if ((shape.kind || "section") === "section") {
+            return; // only dakobjecten carry an icon
+        }
+        const categoryId = this.iconCategories[shape.id];
+        if (!categoryId) {
+            return;
+        }
+        const image = this.iconImage(categoryId);
+        if (!image || !image.naturalWidth) {
+            return;
+        }
+        const box = boundingBox(shape.points);
+        // Fit inside the shape, aspect kept, with room left for its outline.
+        const room = Math.min(box.w, box.h) * ICON_FILL_RATIO;
+        const scale = room / Math.max(image.naturalWidth, image.naturalHeight);
+        const width = image.naturalWidth * scale;
+        const height = image.naturalHeight * scale;
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        try {
+            ctx.drawImage(
+                image,
+                box.x + (box.w - width) / 2,
+                box.y + (box.h - height) / 2,
+                width,
+                height
+            );
+        } catch (error) {
+            console.warn("Roof canvas: could not draw the icon", error);
+        }
+        ctx.restore();
+    }
+
     drawShape(ctx, shape, selected) {
         const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
         const points = shape.points;
@@ -2088,6 +2166,8 @@ export class RoofCanvasField extends Component {
         ctx.strokeStyle = selected ? "#111827" : style.stroke;
         ctx.lineWidth = (selected ? 3 : 2) / this.view.zoom;
         ctx.stroke();
+
+        this.drawShapeIcon(ctx, shape);
 
         // Sides with an upstand (opstand) get a heavier accented outline.
         if (!isCircle && shape.edgeUpstands) {

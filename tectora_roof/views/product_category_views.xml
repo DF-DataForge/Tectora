@@ -9,6 +9,13 @@
             <xpath expr="//field[@name='parent_id']" position="after">
                 <field name="tectora_usage_ids" widget="many2many_tags"
                        options="{'no_create': True}"/>
+                <field name="tectora_allows_objects" invisible="1"/>
+                <!-- Only asked for where it is used: a category that cannot be
+                     put on a dakobject has nothing to draw. -->
+                <field name="tectora_canvas_icon" widget="image"
+                       class="oe_avatar"
+                       options="{'size': [80, 80]}"
+                       invisible="not tectora_allows_objects"/>
             </xpath>
         </field>
     </record>
