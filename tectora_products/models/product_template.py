@@ -9,6 +9,8 @@ from . import catalog_rules
 
 _logger = logging.getLogger(__name__)
 
+# Root of the works category tree; every chapter hangs under it.
+DEFAULT_ROOT_CATEGORY = "Dakwerken"
 PRICE_BOOK = Path(__file__).parent.parent / "data" / "price_book.json"
 PRODUCT_CATALOG = Path(__file__).parent.parent / "data" / "product_catalog.json"
 
@@ -61,7 +63,9 @@ class ProductTemplate(models.Model):
                 "sale_ok": True,
                 "purchase_ok": False,
                 "list_price": entry["list_price"],
-                "categ_id": categories[entry["category"]].id,
+                "categ_id": self._tectora_refined_category(
+                    entry["category"], entry["name"], categories
+                ).id,
                 "uom_id": uoms[entry["uom"]].id,
                 "description_sale": entry["description"],
                 "description": entry["note"] or False,
@@ -118,7 +122,7 @@ class ProductTemplate(models.Model):
         without references still imports without creating duplicates.
         """
         options = options or {}
-        root_name = options.get("root_category") or "Dakwerken"
+        root_name = options.get("root_category") or DEFAULT_ROOT_CATEGORY
         sale_ok_goods = options.get("sale_ok_goods", True)
         Product = self.env["product.template"]
         SupplierInfo = self.env["product.supplierinfo"]
@@ -212,6 +216,89 @@ class ProductTemplate(models.Model):
             counters["vendor_lines"] += 1
         return counters
 
+    @api.model
+    def _tectora_ensure_category_tree(self, root_name=None):
+        """Create every chapter and sub-category of the works structure.
+
+        The imports create only the categories their products need, so the
+        chapters nobody sells from yet (07. Oversteken, 09. Worst case
+        scenario, ...) would never appear -- and a category that does not exist
+        cannot be filed into by hand either. Idempotent.
+        """
+        root_name = root_name or DEFAULT_ROOT_CATEGORY
+        created = 0
+        before = self.env["product.category"].search_count([])
+        for path in catalog_rules.CATEGORY_PATHS.values():
+            self._tectora_resolve_category(path, root_name)
+        created = self.env["product.category"].search_count([]) - before
+        _logger.info("tectora_products: %s categories added to the tree", created)
+        return created
+
+    @api.model
+    def _tectora_recategorise(self, entries=None, root_name=None):
+        """Re-file existing products on the current category rules.
+
+        Used when the rules gain a sub-category: the products are already
+        there, only their category has to follow. Products whose category was
+        changed by hand outside the works tree are left alone.
+        """
+        root_name = root_name or DEFAULT_ROOT_CATEGORY
+        wanted = {}
+        if entries is None:
+            entries = []
+            if PRODUCT_CATALOG.exists():
+                entries += json.loads(
+                    PRODUCT_CATALOG.read_text(encoding="utf-8")
+                )["products"]
+            # The price book carries a chapter key rather than a path, and its
+            # products are the ones on the quotations -- they have to follow
+            # the same sub-categories.
+            if PRICE_BOOK.exists():
+                for entry in json.loads(
+                    PRICE_BOOK.read_text(encoding="utf-8")
+                )["products"]:
+                    key = catalog_rules.refine(entry["category"], entry["name"])
+                    path = catalog_rules.CATEGORY_PATHS.get(key)
+                    if path and entry.get("code"):
+                        wanted[entry["code"]] = path
+        for entry in entries:
+            code = (entry.get("code") or "").strip()
+            path = entry.get("category_path")
+            if code and path:
+                wanted[code] = path
+        if not wanted:
+            return 0
+        Product = self.env["product.template"].with_context(active_test=False)
+        products = Product.search([("default_code", "in", list(wanted))])
+        cache = {}
+        moved = 0
+        for product in products:
+            path = wanted.get(product.default_code)
+            if not path:
+                continue
+            if path not in cache:
+                cache[path] = self._tectora_resolve_category(path, root_name)
+            category = cache[path]
+            if product.categ_id == category:
+                continue
+            # Only move within the works tree; a category somebody chose
+            # outside it is a deliberate exception.
+            if not product.categ_id or self._tectora_in_tree(
+                product.categ_id, root_name
+            ):
+                product.categ_id = category
+                moved += 1
+        _logger.info("tectora_products: %s products re-categorised", moved)
+        return moved
+
+    def _tectora_in_tree(self, category, root_name):
+        node = category
+        while node:
+            if not node.parent_id and node.name == root_name:
+                return True
+            node = node.parent_id
+        return False
+
     def _tectora_resolve_category(self, path, root_name):
         """Resolve (and create where missing) an 'A/B' category path under the
         root, reusing every category that already exists."""
@@ -261,9 +348,12 @@ class ProductTemplate(models.Model):
                     entry.get("category"), catalog_rules.CATEGORY_PATHS["andere"]
                 )
             entries.append(entry)
-        counters = self._tectora_apply_catalog(
-            entries,
-            {"root_category": data.get("root_category") or "Dakwerken"},
+        root_name = data.get("root_category") or DEFAULT_ROOT_CATEGORY
+        # The chapters nobody sells from yet exist too, so they can be filed
+        # into by hand.
+        counters = {"categories": self._tectora_ensure_category_tree(root_name)}
+        counters.update(
+            self._tectora_apply_catalog(entries, {"root_category": root_name})
         )
         counters["archived"] = self._tectora_archive_price_book(archive_price_book)
         _logger.info("tectora_products: catalogue imported (%s)", counters)
@@ -296,11 +386,28 @@ class ProductTemplate(models.Model):
             result[name] = partner
         return result
 
+    def _tectora_refined_category(self, key, name, chapters):
+        """The chapter's sub-category for this product, or the chapter itself.
+
+        ``chapters`` is the key -> category mapping the price book brings; the
+        sub-categories are not in it, so those are resolved by path.
+        """
+        refined = catalog_rules.refine(key, name)
+        if refined == key:
+            return chapters[key]
+        path = catalog_rules.CATEGORY_PATHS.get(refined)
+        if not path:
+            return chapters[key]
+        return self._tectora_resolve_category(path, DEFAULT_ROOT_CATEGORY)
+
     def _tectora_load_categories(self, entries):
         Category = self.env["product.category"]
-        root = Category.search([("name", "=", "Dakwerken"), ("parent_id", "=", False)], limit=1)
+        root = Category.search(
+            [("name", "=", DEFAULT_ROOT_CATEGORY), ("parent_id", "=", False)],
+            limit=1,
+        )
         if not root:
-            root = Category.create({"name": "Dakwerken"})
+            root = Category.create({"name": DEFAULT_ROOT_CATEGORY})
         result = {}
         for entry in entries:
             category = Category.search(
