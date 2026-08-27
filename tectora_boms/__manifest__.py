@@ -34,9 +34,18 @@ Variants are kept as several bills of materials on one product, with the
 variant in the BoM reference and the default first, so nothing about the
 product structure has to change.
 
+The export ships as ``data/bom_catalog.json`` (regenerate it with
+``tools/parse_bom_export.py``) and is loaded on install and on upgrade, with
+only the confident matches created. The wizard takes a fresh file, can lower
+the thresholds and can analyse without writing anything.
+
+A bill of materials can also be put on a service product: Odoo's own field
+only offers goods, but the works items Tectora sells are services, so the
+domain is widened here.
+
 See ``docs/stuklijst_koppeling.md`` for the analysis.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Manufacturing",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -45,8 +54,10 @@ See ``docs/stuklijst_koppeling.md`` for the analysis.
     "external_dependencies": {"python": ["openpyxl"]},
     "data": [
         "security/ir.model.access.csv",
+        "views/product_views.xml",
         "wizard/bom_import_views.xml",
     ],
+    "post_init_hook": "post_init_hook",
     "auto_install": True,
     "installable": True,
 }

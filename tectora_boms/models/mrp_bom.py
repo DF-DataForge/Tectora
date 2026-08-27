@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import re
+from pathlib import Path
 
 from odoo import api, fields, models
 
 from . import bom_rules
 
 _logger = logging.getLogger(__name__)
+
+BOM_CATALOG = Path(__file__).parent.parent / "data" / "bom_catalog.json"
 
 # More bills of materials than this on one product is reported: a variant range
 # can legitimately be long, but it is also what a run of false product matches
@@ -16,6 +20,20 @@ CROWDED = 12
 
 class MrpBom(models.Model):
     _inherit = "mrp.bom"
+
+    # Odoo offers only goods here ("[('type', '=', 'consu')]"), but the works
+    # items Tectora sells are services -- that is what a quotation line is --
+    # and those are exactly the products whose bill of materials tells the crew
+    # what to load. Nothing in mrp enforces the type beyond this domain:
+    # explode() never looks at the parent's type. (_bom_find does drop
+    # services, which is why sale.order looks its BoM up itself.)
+    product_tmpl_id = fields.Many2one(
+        domain="[('type', 'in', ['consu', 'service'])]"
+    )
+    product_id = fields.Many2one(
+        domain="['&', ('product_tmpl_id', '=', product_tmpl_id), "
+        "('type', 'in', ['consu', 'service'])]"
+    )
 
     tectora_bom_key = fields.Char(
         string="Stuklijstsleutel (import)",
@@ -250,6 +268,47 @@ class MrpBom(models.Model):
                 self.create(values)
                 created += 1
         return {"created": created, "updated": updated}
+
+    @api.model
+    def _tectora_import_shipped_boms(self, options=None):
+        """Load data/bom_catalog.json -- what install and upgrade run.
+
+        Only the confident matches are created: the products and components
+        are matched on their names, so a lower threshold would attach material
+        to the wrong works item. The rest is for the wizard, once the mapping
+        in docs/stuklijst_koppeling.md has been confirmed.
+        """
+        if not BOM_CATALOG.exists():
+            _logger.warning(
+                "tectora_boms: %s missing, no bills of materials loaded",
+                BOM_CATALOG,
+            )
+            return {}
+        data = json.loads(BOM_CATALOG.read_text(encoding="utf-8"))
+        boms = data.get("boms") or []
+        if not boms:
+            _logger.warning("tectora_boms: %s holds no bills of materials", BOM_CATALOG)
+            return {}
+        settings = {
+            "product_min": bom_rules.AUTO,
+            "component_min": bom_rules.AUTO,
+            "uom_policy": "base_only",
+            "dry_run": False,
+        }
+        settings.update(options or {})
+        report = self._tectora_import_boms(boms, settings)
+        _logger.info(
+            "tectora_boms: %s of %s bills of materials loaded from %s "
+            "(%s created, %s updated, %s lines); %s skipped for want of a "
+            "product, %s lines for want of a component, %s lines because the "
+            "quantity is in a packaging unit",
+            report.get("planned"), report.get("boms"), data.get("source"),
+            report.get("created"), report.get("updated"),
+            report.get("planned_lines"), len(report.get("no_product") or []),
+            len(report.get("no_component") or []),
+            len(report.get("uom_skipped") or []),
+        )
+        return report
 
     @api.model
     def _tectora_import_boms(self, boms, options=None):

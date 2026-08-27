@@ -145,8 +145,20 @@ definitie grondstoffen; de stuklijst zelf hangt aan een verkoopproduct.
 ## De implementatie
 
 De module `tectora_boms` (installeert zichzelf zodra Productcatalogus én
-Manufacturing aanwezig zijn) bevat het bovenstaande als **Verkoop →
-Configuratie → Stuklijsten importeren**:
+Manufacturing aanwezig zijn) laadt de export bij **installatie en bij
+upgrade** uit `data/bom_catalog.json` — met enkel de zekere matches, dus 269
+stuklijsten en 345 regels. Regenereer dat bestand met
+`tools/parse_bom_export.py` als Tectora een nieuwe export stuurt.
+
+Een **stuklijst op een dienst** is mogelijk: het veld van Odoo biedt alleen
+goederen aan (`domain="[('type', '=', 'consu')]"`), maar de verkoopproducten
+van Tectora zijn diensten — precies de producten die een stuklijst dragen. Het
+domein is daarom verruimd en de knop "Stuklijst" op de productfiche is
+zichtbaar gemaakt voor diensten. Niets in `mrp` handhaaft het type verder:
+`explode()` kijkt niet naar het type van het bovenliggende product.
+
+Daarnaast is er **Verkoop → Configuratie → Stuklijsten importeren** voor een
+nieuw bestand of een lagere drempel:
 
 * de matcher zit in `models/bom_rules.py` — pure Python, dus testbaar zonder
   database;
