@@ -36,6 +36,9 @@ const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
+// Ctrl-selected targets waiting for products.
+const MULTI_SELECT_STROKE = "#6c3fa4";
+const MULTI_SELECT_FILL = "rgba(108, 63, 164, 0.92)";
 
 function circlePoints(cx, cy, radius) {
     const points = [];
@@ -246,6 +249,9 @@ export class RoofCanvasField extends Component {
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
             panel: null, // product card for the selected shape
             fullscreen: false,
+            // Ctrl-clicked sides, surfaces or corners waiting for Ctrl to be
+            // released; they then all get the same products at once.
+            multiSelect: [],
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -257,6 +263,13 @@ export class RoofCanvasField extends Component {
         this.labelHits = []; // clickable measurement boxes, in world coordinates
 
         this.onWindowResize = () => this.resizeCanvas();
+        // On window rather than on the canvas: the picker has to open when Ctrl
+        // is released even if the focus moved to the panel in between.
+        this.onWindowKeyUp = (ev) => {
+            if (ev.key === "Control" || ev.key === "Meta") {
+                this.flushMultiSelect();
+            }
+        };
         this._destroyed = false;
         this._autoSyncTimer = null;
 
@@ -264,11 +277,13 @@ export class RoofCanvasField extends Component {
             this.resizeCanvas();
             this.loadBackground();
             window.addEventListener("resize", this.onWindowResize);
+            window.addEventListener("keyup", this.onWindowKeyUp);
         });
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
             window.removeEventListener("resize", this.onWindowResize);
+            window.removeEventListener("keyup", this.onWindowKeyUp);
         });
     }
 
@@ -565,6 +580,16 @@ export class RoofCanvasField extends Component {
             return;
         }
         const point = this.toWorld(ev);
+        // Ctrl (Cmd on a Mac) gathers targets instead of acting on one: no
+        // drag, no picker, until Ctrl is released.
+        if ((ev.ctrlKey || ev.metaKey) && this.state.tool === "select") {
+            ev.preventDefault();
+            const hit = this.labelHitTest(point);
+            if (hit) {
+                this.toggleMultiSelect(hit);
+            }
+            return;
+        }
         if (this.state.tool === "rect") {
             this.drag = { mode: "rect", start: point, current: point };
         } else if (this.state.tool === "polygon") {
@@ -743,6 +768,8 @@ export class RoofCanvasField extends Component {
             // Cancel the most local thing first, leave fullscreen last.
             if (this.state.contextMenu) {
                 this.state.contextMenu = null;
+            } else if (this.state.multiSelect.length) {
+                this.clearMultiSelect();
             } else if (this.draftPolygon) {
                 this.draftPolygon = null;
             } else if (this.state.fullscreen) {
@@ -766,6 +793,9 @@ export class RoofCanvasField extends Component {
 
     onContextMenu(ev) {
         ev.preventDefault();
+        if (ev.ctrlKey || ev.metaKey) {
+            return; // Ctrl-click is the multi-select gesture, not a menu
+        }
         const wrapper = this.wrapperRef.el;
         if (!wrapper) {
             return;
@@ -1203,6 +1233,91 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
     }
 
+    // ------------------------------------------------- multiple sides at once
+    // Ctrl-click gathers sides (or surfaces, or corners); releasing Ctrl opens
+    // the picker once for all of them.
+    hitTargetKey(hit) {
+        const side = hit.type === "surface" ? 0 : (hit.edgeIndex || 0) + 1;
+        return `${hit.shapeId}|${hit.type}|${side}`;
+    }
+
+    // Two hits can share a selection only if the same product categories apply
+    // to both: type, section-or-dakobject, and for corners inner-or-outer.
+    sameFamily(a, b) {
+        return (
+            a.type === b.type &&
+            (a.kind || "section") === (b.kind || "section") &&
+            (a.type !== "corner" || a.cornerType === b.cornerType)
+        );
+    }
+
+    toggleMultiSelect(hit) {
+        if (!["edge", "surface", "corner"].includes(hit.type)) {
+            return;
+        }
+        if (hit.type === "corner" && (hit.kind || "section") !== "section") {
+            return; // corner products only apply to roof sections
+        }
+        const key = this.hitTargetKey(hit);
+        const current = this.state.multiSelect;
+        const existing = current.findIndex((item) => this.hitTargetKey(item) === key);
+        if (existing >= 0) {
+            this.state.multiSelect = current.filter((_, i) => i !== existing);
+        } else if (current.length && !this.sameFamily(current[0], hit)) {
+            // A different kind of target starts a new selection: mixing them
+            // would mean mixing product categories.
+            this.state.multiSelect = [hit];
+        } else {
+            this.state.multiSelect = [...current, hit];
+        }
+        this.state.selectedId = hit.shapeId;
+        this.updateStatus();
+        this.draw();
+    }
+
+    // "Sectie 1 — zijde 2", the way the picker and the status bar name a target.
+    multiSelectLabel(hit) {
+        const name = hit.name || KIND_NAMES[hit.kind || "section"] || "Naamloos";
+        if (hit.type === "surface") {
+            return name;
+        }
+        if (hit.type === "corner") {
+            const kind = hit.cornerType === "inner" ? "binnenhoek" : "buitenhoek";
+            return `${name} — ${kind} ${hit.edgeIndex + 1}`;
+        }
+        if (hit.edgeIndex < 0) {
+            return `${name} — omtrek`;
+        }
+        return `${name} — zijde ${hit.edgeIndex + 1}`;
+    }
+
+    isMultiSelected(hit) {
+        const key = this.hitTargetKey(hit);
+        return this.state.multiSelect.some(
+            (item) => this.hitTargetKey(item) === key
+        );
+    }
+
+    clearMultiSelect() {
+        if (this.state.multiSelect.length) {
+            this.state.multiSelect = [];
+            this.updateStatus();
+            this.draw();
+        }
+    }
+
+    flushMultiSelect() {
+        const hits = this.state.multiSelect;
+        if (!hits.length || this._destroyed) {
+            return;
+        }
+        this.state.multiSelect = [];
+        this.updateStatus();
+        this.draw();
+        const [base, ...extra] = hits;
+        this.openProducts(base, extra);
+    }
+
     labelHitTest([px, py]) {
         for (let i = this.labelHits.length - 1; i >= 0; i--) {
             const hit = this.labelHits[i];
@@ -1296,7 +1411,10 @@ export class RoofCanvasField extends Component {
     }
 
     // ---------------------------------------------------- products via labels
-    async openProducts(hit) {
+    // `extraHits` are the other Ctrl-selected targets: they arrive pre-ticked
+    // in the picker's "meerdere items" list, so one confirmation covers them
+    // all.
+    async openProducts(hit, extraHits = []) {
         if (hit.type === "corner" && (hit.kind || "section") !== "section") {
             return; // corner products only apply to roof sections
         }
@@ -1415,6 +1533,10 @@ export class RoofCanvasField extends Component {
         const others = this.sameTypeTargets(hit).filter(
             (item) => item.key !== clickedKey && recordByShape[item.shapeId]
         );
+        const available = new Set(others.map((item) => item.key));
+        const preselected = extraHits
+            .map((extra) => this.hitTargetKey(extra))
+            .filter((key) => key !== clickedKey && available.has(key));
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -1435,13 +1557,8 @@ export class RoofCanvasField extends Component {
                 : _t("Reeds toegewezen aan deze omtrek"),
             quantity,
             targets: others,
-            targetsLabel: isSurface
-                ? _t("Andere oppervlaktes in de tekening")
-                : isCorner
-                ? hit.cornerType === "inner"
-                    ? _t("Andere binnenhoeken in de tekening")
-                    : _t("Andere buitenhoeken in de tekening")
-                : _t("Andere zijden in de tekening"),
+            preselectedTargets: preselected,
+            baseLabel: this.multiSelectLabel(hit),
             quantityUnit: isSurface ? " m²" : isCorner ? "" : " m",
             onConfirm: async (productIds, targetKeys) => {
                 const picked = new Set(targetKeys || []);
@@ -1577,6 +1694,14 @@ export class RoofCanvasField extends Component {
     }
 
     updateStatus() {
+        const pending = this.state.multiSelect;
+        if (pending.length) {
+            const labels = pending.map((hit) => this.multiSelectLabel(hit));
+            this.state.status =
+                `${pending.length} geselecteerd: ${labels.join(", ")} — laat ` +
+                `Ctrl los om producten toe te wijzen, Esc om te annuleren`;
+            return;
+        }
         if (this.draftPolygon) {
             this.state.status = `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
             return;
@@ -1741,7 +1866,12 @@ export class RoofCanvasField extends Component {
             const cy = bbox.y + bbox.h / 2 - boxHeight * 0.2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            this.drawLabelBox(ctx, title, x, y, width, boxHeight, style.stroke);
+            this.drawLabelBox(
+                ctx, title, x, y, width, boxHeight, style.stroke,
+                this.isMultiSelected({
+                    type: "surface", shapeId: shape.id, kind: shape.kind || "section",
+                })
+            );
             this.labelHits.push({
                 type: "surface",
                 shapeId: shape.id,
@@ -1773,7 +1903,12 @@ export class RoofCanvasField extends Component {
             const cx = bbox.x + bbox.w / 2;
             const x = cx - width / 2;
             const y = bbox.y - boxHeight / 2;
-            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.drawLabelBox(
+                ctx, label, x, y, width, boxHeight, style.stroke,
+                this.isMultiSelected({
+                    type: "edge", shapeId: shape.id, kind: shape.kind || "section", edgeIndex: -1,
+                })
+            );
             this.labelHits.push({
                 type: "edge",
                 shapeId: shape.id,
@@ -1832,7 +1967,24 @@ export class RoofCanvasField extends Component {
             const cy = (y1 + y2) / 2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            const picked = this.isMultiSelected({
+                type: "edge", shapeId: shape.id, kind: shape.kind || "section", edgeIndex: i,
+            });
+            if (picked) {
+                // Trace the side too: the label alone is easy to lose on a
+                // drawing with many of them.
+                ctx.save();
+                ctx.strokeStyle = MULTI_SELECT_STROKE;
+                ctx.lineWidth = 4 / zoom;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.restore();
+            }
+            this.drawLabelBox(
+                ctx, label, x, y, width, boxHeight, style.stroke, picked
+            );
             this.labelHits.push({
                 type: "edge",
                 shapeId: shape.id,
@@ -1854,12 +2006,26 @@ export class RoofCanvasField extends Component {
         for (let i = 0; i < n; i++) {
             const [px, py] = points[i];
             const inner = isInnerCorner(points, i);
+            const pickedCorner = this.isMultiSelected({
+                type: "corner",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                edgeIndex: i,
+                cornerType: inner ? "inner" : "outer",
+            });
             ctx.beginPath();
-            ctx.arc(px, py, cornerRadius, 0, Math.PI * 2);
-            ctx.fillStyle = inner ? "#d97706" : "#ffffff";
+            ctx.arc(
+                px, py, pickedCorner ? cornerRadius * 1.4 : cornerRadius,
+                0, Math.PI * 2
+            );
+            ctx.fillStyle = pickedCorner
+                ? MULTI_SELECT_FILL
+                : inner ? "#d97706" : "#ffffff";
             ctx.fill();
-            ctx.strokeStyle = inner ? "#92400e" : style.stroke;
-            ctx.lineWidth = 1.5 / zoom;
+            ctx.strokeStyle = pickedCorner
+                ? MULTI_SELECT_STROKE
+                : inner ? "#92400e" : style.stroke;
+            ctx.lineWidth = (pickedCorner ? 2.5 : 1.5) / zoom;
             ctx.stroke();
             const hitRadius = cornerRadius * 1.5;
             this.labelHits.push({
@@ -1877,7 +2043,7 @@ export class RoofCanvasField extends Component {
         }
     }
 
-    drawLabelBox(ctx, label, x, y, width, height, strokeColor) {
+    drawLabelBox(ctx, label, x, y, width, height, strokeColor, selected = false) {
         const zoom = this.view.zoom;
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -1885,12 +2051,14 @@ export class RoofCanvasField extends Component {
         } else {
             ctx.rect(x, y, width, height);
         }
-        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+        ctx.fillStyle = selected
+            ? MULTI_SELECT_FILL
+            : "rgba(255, 255, 255, 0.92)";
         ctx.fill();
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 1 / zoom;
+        ctx.strokeStyle = selected ? MULTI_SELECT_STROKE : strokeColor;
+        ctx.lineWidth = (selected ? 2 : 1) / zoom;
         ctx.stroke();
-        ctx.fillStyle = "#0b1f24";
+        ctx.fillStyle = selected ? "#ffffff" : "#0b1f24";
         ctx.fillText(label, x + width / 2, y + height / 2);
     }
 
