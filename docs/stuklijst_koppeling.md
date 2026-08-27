@@ -134,6 +134,14 @@ catalogus eerst de kleurvarianten als artikel kent, wat vandaag niet zo is.
 Aanbeveling: eerst de stuklijsten laden zoals hierboven, en varianten pas
 invoeren voor de families waar de kleur de materiaalprijs echt verandert.
 
+## Waar de componenten terechtkomen
+
+De catalogus staat in twee takken: de hoofdstukken zelf houden de
+**verkoopproducten** (diensten, wat op een offerte kan), en dezelfde
+hoofdstukstructuur onder **Grondstoffen** houdt de materialen (niet
+verkoopbaar, wel aankoopbaar). De componenten van een stuklijst zijn per
+definitie grondstoffen; de stuklijst zelf hangt aan een verkoopproduct.
+
 ## De implementatie
 
 De module `tectora_boms` (installeert zichzelf zodra Productcatalogus én
