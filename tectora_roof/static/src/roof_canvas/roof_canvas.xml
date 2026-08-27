@@ -168,6 +168,7 @@
                                     <th class="py-1 px-1 text-end" title="Randbreedte">Breedte</th>
                                     <th class="py-1 px-1 text-end"
                                         title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand</th>
+                                    <th class="py-1 px-1"/>
                                 </tr>
                             </thead>
                             <tbody>
@@ -181,16 +182,25 @@
                                     <td class="py-1 px-1">
                                         <input type="number" step="0.01" min="0"
                                                class="form-control form-control-sm text-end"
-                                               style="width: 4.75rem;" placeholder="0"
+                                               style="width: 4.25rem;" placeholder="0"
                                                t-att-value="edge.width || ''"
                                                t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
                                     </td>
                                     <td class="py-1 px-1">
                                         <input type="number" step="0.01" min="0"
                                                class="form-control form-control-sm text-end"
-                                               style="width: 4.75rem;" placeholder="0"
+                                               style="width: 4.25rem;" placeholder="0"
                                                t-att-value="edge.upstand || ''"
                                                t-on-change="(ev) => this.setEdgeUpstand(edge, ev)"/>
+                                    </td>
+                                    <td class="py-1 px-1 text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary py-0 px-1 text-nowrap"
+                                                t-att-disabled="!edge.width and !edge.upstand"
+                                                t-att-title="applyEverywhereTitle(edge)"
+                                                t-on-click="() => this.applyEdgeValuesToAll(edge)">
+                                            Overal
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>

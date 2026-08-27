@@ -946,6 +946,70 @@ export class RoofCanvasField extends Component {
         this.setEdgeValue("edgeUpstands", edge, ev);
     }
 
+    // Copy one side's rand and opstand to every side of the shape. Only the
+    // values that are filled in are copied: a side with no width must not
+    // wipe the widths of the others, which is what makes this safe to click.
+    applyEdgeValuesToAll(edge) {
+        const shape = this.selectedShape;
+        if (!shape || !shape.points) {
+            return;
+        }
+        const width = this.edgeWidth(shape, edge.index);
+        const upstand = this.edgeUpstand(shape, edge.index);
+        if (!width && !upstand) {
+            return;
+        }
+        const count = shape.points.length;
+        for (const [key, value] of [
+            ["edgeWidths", width],
+            ["edgeUpstands", upstand],
+        ]) {
+            if (!value) {
+                continue;
+            }
+            const values = { ...(shape[key] || {}) };
+            for (let i = 0; i < count; i++) {
+                values[i] = value;
+            }
+            shape[key] = values;
+        }
+        this.updateStatus();
+        this.commit();
+        this.refreshPanel();
+        const parts = [];
+        if (width) {
+            parts.push(_t("breedte %s m", width.toFixed(2)));
+        }
+        if (upstand) {
+            parts.push(_t("opstand %s m", upstand.toFixed(2)));
+        }
+        this.notification.add(
+            _t("%(values)s toegepast op alle %(count)s zijden.",
+               { values: parts.join(" en "), count }),
+            { type: "success" }
+        );
+    }
+
+    applyEverywhereTitle(edge) {
+        const shape = this.selectedShape;
+        const count = shape && shape.points ? shape.points.length : 0;
+        if (!edge.width && !edge.upstand) {
+            return _t("Vul eerst een breedte of opstand in op deze zijde.");
+        }
+        const parts = [];
+        if (edge.width) {
+            parts.push(_t("breedte %s m", edge.width.toFixed(2)));
+        }
+        if (edge.upstand) {
+            parts.push(_t("opstand %s m", edge.upstand.toFixed(2)));
+        }
+        return _t(
+            "Overal toepassen: %(values)s op alle %(count)s zijden. Wat hier " +
+                "leeg staat, blijft op de andere zijden ongewijzigd.",
+            { values: parts.join(" en "), count }
+        );
+    }
+
     setEdgeValue(key, edge, ev) {
         const shape = this.selectedShape;
         if (!shape) {
