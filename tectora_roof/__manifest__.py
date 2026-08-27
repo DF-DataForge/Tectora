@@ -20,7 +20,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   the standard Sales/Invoicing apps — install l10n_be for the Belgian chart
   of accounts and use a fiscal position for the 6% renovation rate.
     """,
-    "version": "19.0.2.7.0",
+    "version": "19.0.2.10.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -47,6 +47,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
     ],
     "assets": {
         "web.assets_backend": [
+            "tectora_roof/static/src/roof_form/chatter_bottom.js",
             "tectora_roof/static/src/roof_canvas/roof_canvas.scss",
             "tectora_roof/static/src/roof_canvas/roof_canvas.xml",
             "tectora_roof/static/src/roof_canvas/roof_canvas.js",
