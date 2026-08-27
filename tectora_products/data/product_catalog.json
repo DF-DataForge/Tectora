@@ -19252,7 +19252,7 @@
   {
    "code": "S00024",
    "name": "Verwijderen ballastlaag (rolgrind/kiezel)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Ballast & terrasvloer",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 14.5,
@@ -19269,7 +19269,7 @@
   {
    "code": "S00025",
    "name": "Verwijderen van de terrasvloer type: tegels/dallen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Ballast & terrasvloer",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 33.85,
@@ -19286,7 +19286,7 @@
   {
    "code": "S00026",
    "name": "Verwijderen van de terrasvloer type: bankirai",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Ballast & terrasvloer",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 26.85,
@@ -19303,7 +19303,7 @@
   {
    "code": "S00027",
    "name": "Verwijderen van de dakbedekking type: roofing 1 laag",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 19.8,
@@ -19320,7 +19320,7 @@
   {
    "code": "S00028",
    "name": "Verwijderen van de dakbedekking type: roofing 2 laags",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 25.6,
@@ -19337,7 +19337,7 @@
   {
    "code": "S00029",
    "name": "Verwijderen van extra lagen roofing (per laag in 'worst case')",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 5.95,
@@ -19354,7 +19354,7 @@
   {
    "code": "S00030",
    "name": "Verwijderen van de dakbedekking type: Resitrix",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 19.85,
@@ -19371,7 +19371,7 @@
   {
    "code": "S00031",
    "name": "Verwijderen van de dakbedekking type: EPDM",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 9.88,
@@ -19388,7 +19388,7 @@
   {
    "code": "S00032",
    "name": "Verwijderen van de dakbedekking type: PVC",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 9.88,
@@ -19405,7 +19405,7 @@
   {
    "code": "S00033",
    "name": "Verwijderen van de dakbedekking type: zink",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 12.85,
@@ -19422,7 +19422,7 @@
   {
    "code": "S00034",
    "name": "Verwijderen van de dakbedekking type: sandwichpanelen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 15.65,
@@ -19439,7 +19439,7 @@
   {
    "code": "S00035",
    "name": "Verwijderen van de isolatie type: ....... dikte: ........",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Isolatie & hellingschape",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 13.7,
@@ -19456,7 +19456,7 @@
   {
    "code": "S00036",
    "name": "Verwijderen van de dakvloer type: houtvezelplaten",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakvloer & draagstructuur",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 14.98,
@@ -19473,7 +19473,7 @@
   {
    "code": "S00037",
    "name": "Verwijderen van de houten roostering (balken)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakvloer & draagstructuur",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 14.52,
@@ -19490,7 +19490,7 @@
   {
    "code": "S00038",
    "name": "Verwijderen van de hellingschape 5-10cm dik",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Isolatie & hellingschape",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 43.74,
@@ -19507,7 +19507,7 @@
   {
    "code": "S00039",
    "name": "Verwijderen van de hellingschape 10-15cm dik",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Isolatie & hellingschape",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 47.5,
@@ -19524,7 +19524,7 @@
   {
    "code": "S00040",
    "name": "Verwijderen van de hellingschape 15-20cm dik",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Isolatie & hellingschape",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 57.95,
@@ -19541,7 +19541,7 @@
   {
    "code": "S00041",
    "name": "Verwijderen van de dekstenen/dekpannen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakranden & muurkappen",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 19.85,
@@ -19558,7 +19558,7 @@
   {
    "code": "S00042",
    "name": "Verwijderen van de asbest dekstenen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakranden & muurkappen",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 46.8,
@@ -19575,7 +19575,7 @@
   {
    "code": "S00043",
    "name": "Verwijderen van de dakranden",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakranden & muurkappen",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 6.98,
@@ -19592,7 +19592,7 @@
   {
    "code": "S00044",
    "name": "Verwijderen en terugplaatsen van de nokpannen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 56.75,
@@ -19609,7 +19609,7 @@
   {
    "code": "S00045",
    "name": "Verwijderen en terugplaatsen van de onderste dakpannen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 26.86,
@@ -19626,7 +19626,7 @@
   {
    "code": "S00046",
    "name": "Verwijderen en terugplaatsen onderste rij leien",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 58.85,
@@ -19643,7 +19643,7 @@
   {
    "code": "S00047",
    "name": "Verwijderen en terugplaatsen onderste rij sidings/gevelleien",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 58.85,
@@ -19660,7 +19660,7 @@
   {
    "code": "S00048",
    "name": "Horizontaal inkorten van de sidings (afslijpen)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 28.95,
@@ -19677,7 +19677,7 @@
   {
    "code": "S00049",
    "name": "Verwijderen van de solins/wandaansluitprofielen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakranden & muurkappen",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 7.45,
@@ -19694,7 +19694,7 @@
   {
    "code": "S00050",
    "name": "Verwijderen van de kunststof koepelschaal",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Koepels & dakluiken",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 35.4,
@@ -19711,7 +19711,7 @@
   {
    "code": "S00051",
    "name": "Verwijderen van de koepel (compleet)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Koepels & dakluiken",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 64.95,
@@ -19728,7 +19728,7 @@
   {
    "code": "S00052",
    "name": "Verwijderen van het dakluik (hout)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Koepels & dakluiken",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 52.15,
@@ -19745,7 +19745,7 @@
   {
    "code": "S00053",
    "name": "Verwijderen van de dakdoorvoer",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 16.85,
@@ -19762,7 +19762,7 @@
   {
    "code": "S00054",
    "name": "Demonteren en terug aansluiten airco-unit",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Installaties",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 485.0,
@@ -19779,7 +19779,7 @@
   {
    "code": "S00055",
    "name": "Demonteren en hermonteren van de zonnepanelen",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Installaties",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 50.0,
@@ -19813,7 +19813,7 @@
   {
    "code": "S00057",
    "name": "Verwijderen van de afvoerbuis",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 5.7,
@@ -19830,7 +19830,7 @@
   {
    "code": "S00058",
    "name": "Verwijderen van de bekleding uit de bakgoot",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken",
    "category_signal": "productgroep",
    "uom": "m",
    "list_price": 27.15,
@@ -19847,7 +19847,7 @@
   {
    "code": "S00059",
    "name": "Verwijderen van de tapbuis",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 22.15,
@@ -19864,7 +19864,7 @@
   {
    "code": "S00060",
    "name": "Reinigen en voorbereiden bestaande dakbedekking",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Dakbedekking",
    "category_signal": "productgroep",
    "uom": "m2",
    "list_price": 2.1,
@@ -22448,7 +22448,7 @@
   {
    "code": "S00212",
    "name": "Uitvoeren van boring voor noodspuwer doorheen ytong/facade",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 115.0,
@@ -23470,7 +23470,7 @@
   {
    "code": "S00272",
    "name": "Uitvoeren van de betonboring voor de dakdoorvoer met diameter ….. (eerste boring)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 150.0,
@@ -23487,7 +23487,7 @@
   {
    "code": "S00273",
    "name": "Uitvoeren van de betonboring voor de dakdoorvoer met diameter ….. (volgende boringen)",
-   "category_path": "03. Afbraakwerken plat dak",
+   "category_path": "03. Afbraakwerken plat dak/Afvoer & doorvoeren",
    "category_signal": "productgroep",
    "uom": "unit",
    "list_price": 70.0,

@@ -61,9 +61,46 @@ CATEGORY_PATHS = OrderedDict([
     ("gereedschap", "04. Opbouwwerken plat dak/Gereedschap & klein materiaal"),
     ("koepels", "05. Koepels"),
     ("dakramen", "06. Dakramen"),
+    ("oversteken", "07. Oversteken"),
     ("terrasvloer", "08. Terrasvloer"),
+    ("worst_case", "09. Worst case scenario"),
+    ("notas", "10. Algemene nota's"),
+    ("garantie", "11. Garantiepakket EPDM Solutions"),
     ("andere", "12. Andere werken"),
+    ("upsale", "13. Upsale"),
+    # Sub-categories of the demolition chapter, keyed on what gets removed.
+    ("afbraak_dakbedekking", "03. Afbraakwerken plat dak/Dakbedekking"),
+    ("afbraak_isolatie", "03. Afbraakwerken plat dak/Isolatie & hellingschape"),
+    ("afbraak_dakvloer", "03. Afbraakwerken plat dak/Dakvloer & draagstructuur"),
+    ("afbraak_ballast", "03. Afbraakwerken plat dak/Ballast & terrasvloer"),
+    ("afbraak_dakranden", "03. Afbraakwerken plat dak/Dakranden & muurkappen"),
+    ("afbraak_gevel", "03. Afbraakwerken plat dak/Aansluitende dak- & gevelwerken"),
+    ("afbraak_afvoer", "03. Afbraakwerken plat dak/Afvoer & doorvoeren"),
+    ("afbraak_koepels", "03. Afbraakwerken plat dak/Koepels & dakluiken"),
+    ("afbraak_installaties", "03. Afbraakwerken plat dak/Installaties"),
 ])
+
+# Second stage: once the chapter is known, refine it on the product name.
+# Ordered, first match wins; no match leaves the product in the chapter itself
+# (which is where the werkuren belong).
+SUBCATEGORY_RULES = {
+    "afbraak": [
+        ("afbraak_koepels", r"koepel|dakluik|lichtstraat"),
+        ("afbraak_installaties", r"airco|zonnepane|warmtepomp|antenne|schotel"),
+        ("afbraak_afvoer", r"afvoerbuis|tapbuis|dakdoorvoer|spuwer|boring"),
+        ("afbraak_dakranden", r"dakrand|dekste|muurkap|solin|wandaansluit"),
+        # "rij pannen" without "dak" in front is the same work; the roof-edge
+        # rule above already claimed the dekpannen.
+        ("afbraak_gevel", r"dakpan|nokpan|\bpannen\b|leien|siding|bakgoot|gevel"),
+        ("afbraak_ballast", r"ballast|rolgrind|kiezel|terrasvloer|tegel|dallen|"
+                            r"bankirai"),
+        # hellingschape / hellingsschape / hellingschappe all occur.
+        ("afbraak_isolatie", r"isolatie|hellingsch|chape|afschot"),
+        ("afbraak_dakvloer", r"dakvloer|roostering|balken|houtvezelplaat"),
+        ("afbraak_dakbedekking", r"dakbedekking|roofing|epdm|pvc|resitrix|"
+                                 r"sandwichpanel|zink"),
+    ],
+}
 
 GROUP_MAP = {
     "ALGEMEEN": "algemene_werken",
@@ -114,6 +151,7 @@ NAME_RULES = [
                     r"gereedschap|mes |spatel|brander|gasfles|kitpistool|pistool"),
     ("terrasvloer", r"terras|tegeldrager|rubbertegel|tegel|dallen|bankirai|"
                     r"vlonder|grind|kiezel|ballast|groendak|substraat|sedum"),
+    ("oversteken", r"\boversteek"),
     ("afbraak", r"verwijderen|afbraak|uitbreken|slopen"),
     ("algemene_werken", r"werkuren|transport|werfinrichting|afvalverwerking|"
                         r"container|voorrijd|parkeervergunning|vaste kosten|"
@@ -200,20 +238,37 @@ def map_columns(header):
     return columns
 
 
+def refine(key, name):
+    """Refine a chapter key to one of its sub-categories, on the name.
+
+    Kept separate from ``classify`` so it can also be applied to products that
+    were categorised elsewhere -- the price book maps its own chapter keys, and
+    already-imported products are re-filed with the same rules.
+    """
+    rules = SUBCATEGORY_RULES.get(key)
+    if not rules:
+        return key
+    lowered = clean(name).lower()
+    for sub_key, pattern in rules:
+        if re.search(pattern, lowered):
+            return sub_key
+    return key
+
+
 def classify(name, group, supplier):
     """Return (category key, signal) from the group, name and supplier."""
     group = clean(group).upper()
     if group and group not in GROUP_IGNORE:
         key = GROUP_MAP.get(group)
         if key:
-            return key, "productgroep"
+            return refine(key, name), "productgroep"
     lowered = clean(name).lower()
     for key, pattern in NAME_RULES:
         if re.search(pattern, lowered):
-            return key, "naam"
+            return refine(key, name), "naam"
     supplier = clean(supplier).upper()
     if supplier in SUPPLIER_MAP:
-        return SUPPLIER_MAP[supplier], "leverancier"
+        return refine(SUPPLIER_MAP[supplier], name), "leverancier"
     return "andere", "restcategorie"
 
 
