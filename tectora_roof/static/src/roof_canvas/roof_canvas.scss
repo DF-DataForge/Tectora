@@ -120,13 +120,42 @@
 }
 
 // Forms containing the roof canvas: give the sheet the full width, so the
-// drawing plus its product sidebar get the space. The chatter is kept below
-// the form by asking the renderer for its bottom layout (see
-// roof_form/chatter_bottom.js) rather than by overriding the flex layout of
-// the container it shares with the sheet -- doing that once collapsed the
-// whole form.
+// drawing plus its product sidebar get the space.
 .o_form_view:has(.o_roof_canvas) {
     .o_form_sheet_bg .o_form_sheet {
         max-width: 100%;
+    }
+}
+
+// Keeping the chatter under the form takes two things, and the direction is
+// the one that decides.
+//
+// form_compiler.js gives the renderer "flex-nowrap h-100" from XXL up and
+// "flex-column" below it -- read off uiService.size, not off the chatter's
+// layout. So dropping the o-aside class (roof_form/chatter_bottom.js) is not
+// enough on a wide screen: without it the chatter is still a flex item in a
+// nowrap row, and it just becomes a wide panel beside the sheet instead of a
+// narrow column beside it.
+//
+// This puts that one container back in the layout Odoo itself uses below XXL.
+// Scoped to .o_form_renderer on purpose: the same override on .o_form_view
+// once collapsed the whole form, because that wrapper holds many other flex
+// containers.
+//
+// The leading .o_form_view is there for weight, not for reach: the rules being
+// undone live under .o_form_view.o_xxl_form_view, and a tie would be settled by
+// bundle order alone.
+.o_form_view .o_form_renderer:has(.o_roof_canvas) {
+    flex-direction: column;
+    // h-100 is a Bootstrap utility, so it needs the same weight to undo.
+    height: auto !important;
+
+    // At XXL the sheet is "flex: 2 1 <min-width>; overflow: auto" so it can
+    // scroll on its own next to the chatter. In a column that basis becomes a
+    // height and the sheet keeps its own scrollbar, with the chatter pinned
+    // under it. Let it take its natural height and scroll the page instead.
+    > .o_form_sheet_bg {
+        flex: 0 0 auto;
+        overflow: visible;
     }
 }

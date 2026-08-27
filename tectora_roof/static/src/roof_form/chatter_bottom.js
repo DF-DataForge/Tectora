@@ -9,7 +9,12 @@ const BOTTOM_CHATTER_MODELS = new Set(["tectora.roof.project"]);
 // Odoo puts the chatter beside the form on wide screens (mailLayout() returns
 // SIDE_CHATTER from XXL up). On the roof project that column eats the width the
 // drawing and its product sidebar need, so ask for the layout Odoo itself uses
-// on narrower screens instead of moving the chatter around with CSS.
+// on narrower screens.
+//
+// This is half of the fix. It drops the o-aside class, which is what makes the
+// chatter a fixed-width column, but not the row: form_compiler.js keeps the
+// renderer "flex-nowrap" from XXL up whatever the chatter's layout is, so the
+// direction is turned back in roof_canvas.scss.
 const AS_BOTTOM = {
     SIDE_CHATTER: "BOTTOM_CHATTER",
     // Only reachable once the form has an attachment preview, but the same
