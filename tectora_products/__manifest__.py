@@ -37,8 +37,21 @@ previous price-book products (``DAK-*``) instead of deleting them.
 The earlier works price book stays available through
 ``_tectora_import_price_book()`` and the Renovatie / Nieuwbouw / Industrie
 pricelists.
+
+Twenty quotation templates (``sale.order.template``) are built on the same
+catalogue: ten for a renovation, with the demolition works, and ten for new
+construction, without. All of them open with the general works and the
+mandatory safety measures and carry a roof build-up of vapour barrier, one
+insulation and one membrane, a roof edge with the inner and outer corners that
+belong to that very profile, and the rainwater drainage; a dome, a roof window,
+scaffolding and a lift are offered as optional lines. The quantities describe a
+reference roof of 100 m² with 40 lm of edge, one inner and four outer corners
+and two outlets, and are overwritten by the measurement -- the drawing feeds
+the quotation. The data lives in ``data/quotation_templates.json``, generated
+and validated by ``tools/build_quotation_templates.py``; loading is idempotent
+and never overwrites the lines of a template the office has already tuned.
     """,
-    "version": "19.0.2.3.0",
+    "version": "19.0.2.4.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -48,6 +61,7 @@ pricelists.
     "data": [
         "security/ir.model.access.csv",
         "wizard/product_catalog_import_views.xml",
+        "wizard/quotation_template_import_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

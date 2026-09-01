@@ -1,0 +1,4720 @@
+{
+ "source": "product_catalog.json",
+ "reference_roof": {
+  "area": 100.0,
+  "perimeter": 40.0,
+  "inner_corners": 1.0,
+  "outer_corners": 4.0,
+  "outlets": 2.0
+ },
+ "templates": [
+  {
+   "key": "renovatie_roofing1_pir12_alu2d",
+   "name": "Renovatie plat dak - roofing 1 laag, PIR 12 cm, EPDM 1,1 mm, 2-delige dakrand",
+   "kind": "renovatie",
+   "edge": "alu2d_ral",
+   "edge_label": "2-delige aluminium dakrand in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00027",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 1 laag",
+     "uom": "m2",
+     "price": 19.8
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "code": "S00060",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Reinigen en voorbereiden bestaande dakbedekking",
+     "uom": "m2",
+     "price": 2.1
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00404",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00139",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 52.55
+    },
+    {
+     "code": "S00177",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+     "uom": "m2",
+     "price": 46.58
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00400",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen 2-delige alu dakrandprofielen in RAL naar keuze",
+     "uom": "m",
+     "price": 41.65
+    },
+    {
+     "code": "S00401",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek 2-delige dakranden in RAL naar keuze",
+     "uom": "unit",
+     "price": 29.65
+    },
+    {
+     "code": "S00402",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek 2-delige dakranden in RAL naar keuze",
+     "uom": "unit",
+     "price": 29.65
+    },
+    {
+     "code": "S00403",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Eindstuk voor bovenstaande dakranden",
+     "uom": "unit",
+     "price": 6.5
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_roofing2_pir14_alu2d_9005",
+   "name": "Renovatie plat dak - roofing 2 lagen, PIR 14 cm, EPDM 1,1 mm, 2-delige dakrand RAL 9005",
+   "kind": "renovatie",
+   "edge": "alu2d_9005",
+   "edge_label": "2-delige aluminium dakrand in RAL 9005 structuurlak",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00028",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 2 laags",
+     "uom": "m2",
+     "price": 25.6
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00049",
+     "quantity": 8.0,
+     "optional": false,
+     "label": "Verwijderen van de solins/wandaansluitprofielen",
+     "uom": "m",
+     "price": 7.45
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "code": "S00060",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Reinigen en voorbereiden bestaande dakbedekking",
+     "uom": "m2",
+     "price": 2.1
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00140",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 55.83
+    },
+    {
+     "code": "S00177",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+     "uom": "m2",
+     "price": 46.58
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00097",
+     "quantity": 8.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de solins in anthrazink",
+     "uom": "m",
+     "price": 28.5
+    },
+    {
+     "code": "S00070",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen 2-delige alu dakrandprofielen in RAL 9005 structuurlak",
+     "uom": "m",
+     "price": 38.8
+    },
+    {
+     "code": "S00072",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek 2-delige dakranden in RAL 9005 structuurlak",
+     "uom": "unit",
+     "price": 24.85
+    },
+    {
+     "code": "S00391",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek 2-delige dakranden in RAL 9005 stuctuurlak",
+     "uom": "unit",
+     "price": 24.85
+    },
+    {
+     "code": "S00403",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Eindstuk voor bovenstaande dakranden",
+     "uom": "unit",
+     "price": 6.5
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_epdm_pir16_enkel100",
+   "name": "Renovatie plat dak - bestaande EPDM, PIR 16 cm, EPDM 1,5 mm, enkelvoudige dakrand 100 mm",
+   "kind": "renovatie",
+   "edge": "enkel100_ral",
+   "edge_label": "enkelvoudige dakrand 100 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00031",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: EPDM",
+     "uom": "m2",
+     "price": 9.88
+    },
+    {
+     "code": "S00035",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de isolatie type: ....... dikte: ........",
+     "uom": "m2",
+     "price": 13.7
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00123",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Alutrix (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00076",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "m",
+     "price": 37.7
+    },
+    {
+     "code": "S00083",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 24.97
+    },
+    {
+     "code": "S00395",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 24.97
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_grinddak_pir14_hoog150",
+   "name": "Renovatie grinddak - PIR 14 cm, EPDM 1,1 mm geballast, dakrand 150 mm",
+   "kind": "renovatie",
+   "edge": "enkel150_ral",
+   "edge_label": "enkelvoudige dakrand 150 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00024",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen ballastlaag (rolgrind/kiezel)",
+     "uom": "m2",
+     "price": 14.5
+    },
+    {
+     "code": "S00028",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 2 laags",
+     "uom": "m2",
+     "price": 25.6
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00140",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 55.83
+    },
+    {
+     "code": "S00179",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik geballast",
+     "uom": "m2",
+     "price": 35.56
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "code": "S00183",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de ballastlaag inclusief beschermdoek (rolgrind 16/32)",
+     "uom": "m2",
+     "price": 16.26
+    },
+    {
+     "code": "S00468",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de alu grindvangers",
+     "uom": "m",
+     "price": 24.81
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00077",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "m",
+     "price": 52.63
+    },
+    {
+     "code": "S00084",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00396",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_zink_pir16_kraal_naturel",
+   "name": "Renovatie plat dak - zinken bedekking, nieuwe dakvloer, PIR 16 cm, EPDM 1,5 mm, zinken kraal",
+   "kind": "renovatie",
+   "edge": "kraal_naturel",
+   "edge_label": "zinken kraal in naturel zink",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00033",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: zink",
+     "uom": "m2",
+     "price": 12.85
+    },
+    {
+     "code": "S00036",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakvloer type: houtvezelplaten",
+     "uom": "m2",
+     "price": 14.98
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00064",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de OSB dikte 18mm tand & groef",
+     "uom": "m2",
+     "price": 27.95
+    },
+    {
+     "code": "S00404",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00068",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+     "uom": "m2",
+     "price": 54.85
+    },
+    {
+     "code": "S00088",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de zinken kralen in naturel zink",
+     "uom": "m",
+     "price": 27.15
+    },
+    {
+     "code": "S00090",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor naturel zinken kralen",
+     "uom": "unit",
+     "price": 35.85
+    },
+    {
+     "code": "S00399",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor naturel zinken kralen",
+     "uom": "unit",
+     "price": 35.85
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_roofing2_pir18_iconik",
+   "name": "Renovatie plat dak - roofing 2 lagen, PIR 18 cm, EPDM 1,5 mm, aluminium kraal Iconik",
+   "kind": "renovatie",
+   "edge": "kraal_iconik",
+   "edge_label": "2-delige aluminium kraal Iconik in RAL",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00028",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 2 laags",
+     "uom": "m2",
+     "price": 25.6
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00049",
+     "quantity": 8.0,
+     "optional": false,
+     "label": "Verwijderen van de solins/wandaansluitprofielen",
+     "uom": "m",
+     "price": 7.45
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "code": "S00060",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Reinigen en voorbereiden bestaande dakbedekking",
+     "uom": "m2",
+     "price": 2.1
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00142",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 60.45
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00068",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+     "uom": "m2",
+     "price": 54.85
+    },
+    {
+     "code": "S00091",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de 2-delige aluminium kralen Iconik in RAL naar keuze",
+     "uom": "m",
+     "price": 51.95
+    },
+    {
+     "code": "S00092",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor 2-delige aluminium kralen Iconik in RAL",
+     "uom": "unit",
+     "price": 84.76
+    },
+    {
+     "code": "S00093",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor 2-delige aluminium kralen Iconik in RAL",
+     "uom": "unit",
+     "price": 84.76
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00325",
+     "quantity": 4.0,
+     "optional": true,
+     "label": "Creëren van de dakopstand voor het nieuwe Dakraem. Timmermaten dakopstand: …..mm x …..mm",
+     "uom": "m",
+     "price": 34.95
+    },
+    {
+     "code": "S00327",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van het dakraam op maat type: Dakraem met dubbele zonwerende beglazing. Zichtmaat na afwerking: …..mm x …..mm",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_dakterras_pir16_hoog175",
+   "name": "Renovatie dakterras - PIR 16 cm, EPDM 1,5 mm, keramische tegels, dakrand 175 mm",
+   "kind": "renovatie",
+   "edge": "enkel175_ral",
+   "edge_label": "enkelvoudige dakrand 175 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00025",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de terrasvloer type: tegels/dallen",
+     "uom": "m2",
+     "price": 33.85
+    },
+    {
+     "code": "S00028",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 2 laags",
+     "uom": "m2",
+     "price": 25.6
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00078",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "m",
+     "price": 53.18
+    },
+    {
+     "code": "S00085",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00397",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Terrasafwerking",
+     "optional": false
+    },
+    {
+     "code": "S00330",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 50-80mm",
+     "uom": "unit",
+     "price": 6.6
+    },
+    {
+     "code": "S00333",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de volkeramische tegels maat: 60x60cm (dikte: 2cm)",
+     "uom": "m2",
+     "price": 119.8
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_sandwich_roofing_pir14_enkel150",
+   "name": "Renovatie plat dak - sandwichpanelen, PIR 14 cm, 2-laagse roofing, dakrand 150 mm geanodiseerd",
+   "kind": "renovatie",
+   "edge": "enkel150_geanodiseerd",
+   "edge_label": "enkelvoudige dakrand 150 mm geanodiseerd",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00338",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B roofing",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00034",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: sandwichpanelen",
+     "uom": "m2",
+     "price": 15.65
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00065",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de OSB dikte 22mm tand & groef",
+     "uom": "m2",
+     "price": 33.95
+    },
+    {
+     "code": "S00122",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E2 type: PE-folie",
+     "uom": "m2",
+     "price": 4.74
+    },
+    {
+     "code": "S00140",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 55.83
+    },
+    {
+     "code": "S00181",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Soprema 2-laagse bitumineuze roofing met leislag (SBS)",
+     "uom": "m2",
+     "price": 47.96
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00410",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "m",
+     "price": 48.65
+    },
+    {
+     "code": "S00431",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00451",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00205",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 75mm",
+     "uom": "unit",
+     "price": 120.0
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_rockwool16_alu2d_geanodiseerd",
+   "name": "Renovatie plat dak - Rockwool 16 cm (onbrandbaar), EPDM 1,5 mm, 2-delige dakrand geanodiseerd",
+   "kind": "renovatie",
+   "edge": "alu2d_geanodiseerd",
+   "edge_label": "2-delige aluminium dakrand geanodiseerd",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00028",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 2 laags",
+     "uom": "m2",
+     "price": 25.6
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00059",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "code": "S00060",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Reinigen en voorbereiden bestaande dakbedekking",
+     "uom": "m2",
+     "price": 2.1
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00171",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Rockwool Rhinoxx dikte: 16cm (600x1000)",
+     "uom": "m2",
+     "price": 85.66
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00071",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen 2-delige alu dakrandprofielen geanodiseerd",
+     "uom": "m",
+     "price": 40.65
+    },
+    {
+     "code": "S00336",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek 2-delige dakranden geanodiseerd",
+     "uom": "unit",
+     "price": 26.85
+    },
+    {
+     "code": "S00335",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek 2-delige dakranden geanodiseerd",
+     "uom": "unit",
+     "price": 26.85
+    },
+    {
+     "code": "S00403",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Eindstuk voor bovenstaande dakranden",
+     "uom": "unit",
+     "price": 6.5
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "renovatie_bijgebouw_pir12_kraal_anthra",
+   "name": "Renovatie bijgebouw - roofing 1 laag, PIR 12 cm, EPDM 1,1 mm, zinken kraal Anthra",
+   "kind": "renovatie",
+   "edge": "kraal_anthra",
+   "edge_label": "zinken kraal in Anthra zink",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00002",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen manueel",
+     "uom": "unit",
+     "price": 155.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Afbraakwerken",
+     "optional": false
+    },
+    {
+     "code": "S00027",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Verwijderen van de dakbedekking type: roofing 1 laag",
+     "uom": "m2",
+     "price": 19.8
+    },
+    {
+     "code": "S00043",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Verwijderen van de dakranden",
+     "uom": "m",
+     "price": 6.98
+    },
+    {
+     "code": "S00057",
+     "quantity": 6.0,
+     "optional": false,
+     "label": "Verwijderen van de afvoerbuis",
+     "uom": "m",
+     "price": 5.7
+    },
+    {
+     "code": "S00059",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verwijderen van de tapbuis",
+     "uom": "unit",
+     "price": 22.15
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00404",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00139",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 52.55
+    },
+    {
+     "code": "S00177",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+     "uom": "m2",
+     "price": 46.58
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00487",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de zinken kralen in Anthra zink",
+     "uom": "m",
+     "price": 29.45
+    },
+    {
+     "code": "S00488",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor Anthra zinken kralen",
+     "uom": "unit",
+     "price": 37.85
+    },
+    {
+     "code": "S00489",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor Anthra zinken kralen",
+     "uom": "unit",
+     "price": 37.85
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir14_alu2d_ral",
+   "name": "Nieuwbouw plat dak - PIR 14 cm, EPDM 1,1 mm, 2-delige dakrand in RAL",
+   "kind": "nieuwbouw",
+   "edge": "alu2d_ral",
+   "edge_label": "2-delige aluminium dakrand in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00140",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 55.83
+    },
+    {
+     "code": "S00177",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+     "uom": "m2",
+     "price": 46.58
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00068",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+     "uom": "m2",
+     "price": 54.85
+    },
+    {
+     "code": "S00400",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen 2-delige alu dakrandprofielen in RAL naar keuze",
+     "uom": "m",
+     "price": 41.65
+    },
+    {
+     "code": "S00401",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek 2-delige dakranden in RAL naar keuze",
+     "uom": "unit",
+     "price": 29.65
+    },
+    {
+     "code": "S00402",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek 2-delige dakranden in RAL naar keuze",
+     "uom": "unit",
+     "price": 29.65
+    },
+    {
+     "code": "S00403",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Eindstuk voor bovenstaande dakranden",
+     "uom": "unit",
+     "price": 6.5
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir16_alu2d_geanodiseerd",
+   "name": "Nieuwbouw plat dak - PIR 16 cm, EPDM 1,5 mm, 2-delige dakrand geanodiseerd",
+   "kind": "nieuwbouw",
+   "edge": "alu2d_geanodiseerd",
+   "edge_label": "2-delige aluminium dakrand geanodiseerd",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00068",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+     "uom": "m2",
+     "price": 54.85
+    },
+    {
+     "code": "S00071",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen 2-delige alu dakrandprofielen geanodiseerd",
+     "uom": "m",
+     "price": 40.65
+    },
+    {
+     "code": "S00336",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek 2-delige dakranden geanodiseerd",
+     "uom": "unit",
+     "price": 26.85
+    },
+    {
+     "code": "S00335",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek 2-delige dakranden geanodiseerd",
+     "uom": "unit",
+     "price": 26.85
+    },
+    {
+     "code": "S00403",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Eindstuk voor bovenstaande dakranden",
+     "uom": "unit",
+     "price": 6.5
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir18_enkel100",
+   "name": "Nieuwbouw plat dak - PIR 18 cm, EPDM 1,5 mm, enkelvoudige dakrand 100 mm",
+   "kind": "nieuwbouw",
+   "edge": "enkel100_ral",
+   "edge_label": "enkelvoudige dakrand 100 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00142",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 60.45
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00130",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 16cm / hoogte: 20cm",
+     "uom": "m",
+     "price": 30.27
+    },
+    {
+     "code": "S00076",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "m",
+     "price": 37.7
+    },
+    {
+     "code": "S00083",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 24.97
+    },
+    {
+     "code": "S00395",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 24.97
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir20_hoog200",
+   "name": "Nieuwbouw plat dak - PIR 20 cm, EPDM 1,5 mm, dakrand 200 mm",
+   "kind": "nieuwbouw",
+   "edge": "enkel200_ral",
+   "edge_label": "enkelvoudige dakrand 200 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00143",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 63.02
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00130",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 16cm / hoogte: 20cm",
+     "uom": "m",
+     "price": 30.27
+    },
+    {
+     "code": "S00079",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+     "uom": "m",
+     "price": 55.15
+    },
+    {
+     "code": "S00086",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 51.15
+    },
+    {
+     "code": "S00398",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 51.15
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir16_kraal_naturel",
+   "name": "Nieuwbouw plat dak - PIR 16 cm, EPDM 1,5 mm, zinken kraal in naturel zink",
+   "kind": "nieuwbouw",
+   "edge": "kraal_naturel",
+   "edge_label": "zinken kraal in naturel zink",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00064",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de OSB dikte 18mm tand & groef",
+     "uom": "m2",
+     "price": 27.95
+    },
+    {
+     "code": "S00404",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00068",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+     "uom": "m2",
+     "price": 54.85
+    },
+    {
+     "code": "S00088",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de zinken kralen in naturel zink",
+     "uom": "m",
+     "price": 27.15
+    },
+    {
+     "code": "S00090",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor naturel zinken kralen",
+     "uom": "unit",
+     "price": 35.85
+    },
+    {
+     "code": "S00399",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor naturel zinken kralen",
+     "uom": "unit",
+     "price": 35.85
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir18_iconik",
+   "name": "Nieuwbouw plat dak - PIR 18 cm, EPDM 1,5 mm, aluminium kraal Iconik",
+   "kind": "nieuwbouw",
+   "edge": "kraal_iconik",
+   "edge_label": "2-delige aluminium kraal Iconik in RAL",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00142",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 60.45
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00069",
+     "quantity": 12.0,
+     "optional": false,
+     "label": "Leveren en plaatsen spouwplaat type: Solid John 15mm",
+     "uom": "m2",
+     "price": 79.85
+    },
+    {
+     "code": "S00091",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de 2-delige aluminium kralen Iconik in RAL naar keuze",
+     "uom": "m",
+     "price": 51.95
+    },
+    {
+     "code": "S00092",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor 2-delige aluminium kralen Iconik in RAL",
+     "uom": "unit",
+     "price": 84.76
+    },
+    {
+     "code": "S00093",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor 2-delige aluminium kralen Iconik in RAL",
+     "uom": "unit",
+     "price": 84.76
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00325",
+     "quantity": 4.0,
+     "optional": true,
+     "label": "Creëren van de dakopstand voor het nieuwe Dakraem. Timmermaten dakopstand: …..mm x …..mm",
+     "uom": "m",
+     "price": 34.95
+    },
+    {
+     "code": "S00327",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van het dakraam op maat type: Dakraem met dubbele zonwerende beglazing. Zichtmaat na afwerking: …..mm x …..mm",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_pir16_geballast_hoog150",
+   "name": "Nieuwbouw plat dak - PIR 16 cm, EPDM 1,1 mm geballast, dakrand 150 mm",
+   "kind": "nieuwbouw",
+   "edge": "enkel150_ral",
+   "edge_label": "enkelvoudige dakrand 150 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00141",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 58.2
+    },
+    {
+     "code": "S00179",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik geballast",
+     "uom": "m2",
+     "price": 35.56
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "code": "S00183",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de ballastlaag inclusief beschermdoek (rolgrind 16/32)",
+     "uom": "m2",
+     "price": 16.26
+    },
+    {
+     "code": "S00468",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de alu grindvangers",
+     "uom": "m",
+     "price": 24.81
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00077",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "m",
+     "price": 52.63
+    },
+    {
+     "code": "S00084",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00396",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00287",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de kunststof koepelschaal type: Skylux acrylaat dubbelwandig helder",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00306",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de vaste PVC koepelopstand type: Skylux 16/00",
+     "uom": "unit",
+     "price": 74.0
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_dakterras_pir18_hoog175",
+   "name": "Nieuwbouw dakterras - PIR 18 cm, EPDM 1,5 mm, keramische tegels, dakrand 175 mm",
+   "kind": "nieuwbouw",
+   "edge": "enkel175_ral",
+   "edge_label": "enkelvoudige dakrand 175 mm in RAL naar keuze",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00142",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 60.45
+    },
+    {
+     "code": "S00180",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik geballast",
+     "uom": "m2",
+     "price": 38.96
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00078",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "m",
+     "price": 53.18
+    },
+    {
+     "code": "S00085",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00397",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Terrasafwerking",
+     "optional": false
+    },
+    {
+     "code": "S00330",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 50-80mm",
+     "uom": "unit",
+     "price": 6.6
+    },
+    {
+     "code": "S00333",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de volkeramische tegels maat: 60x60cm (dikte: 2cm)",
+     "uom": "m2",
+     "price": 119.8
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_rockwool16_enkel150",
+   "name": "Nieuwbouw industriedak - Rockwool 16 cm (onbrandbaar), EPDM 1,5 mm, dakrand 150 mm geanodiseerd",
+   "kind": "nieuwbouw",
+   "edge": "enkel150_geanodiseerd",
+   "edge_label": "enkelvoudige dakrand 150 mm geanodiseerd",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00405",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+     "uom": "m2",
+     "price": 17.36
+    },
+    {
+     "code": "S00171",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Rockwool Rhinoxx dikte: 16cm (600x1000)",
+     "uom": "m2",
+     "price": 85.66
+    },
+    {
+     "code": "S00178",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+     "uom": "m2",
+     "price": 49.99
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00410",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "m",
+     "price": 48.65
+    },
+    {
+     "code": "S00431",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "code": "S00451",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+     "uom": "unit",
+     "price": 45.4
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  },
+  {
+   "key": "nieuwbouw_carport_pir10_kraal_quartz",
+   "name": "Nieuwbouw carport of bijgebouw - PIR 10 cm, EPDM 1,1 mm, zinken kraal Quartz",
+   "kind": "nieuwbouw",
+   "edge": "kraal_quartz",
+   "edge_label": "zinken kraal in Quartz zink",
+   "number_of_days": 30,
+   "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
+   "lines": [
+    {
+     "section": "Algemene werken",
+     "optional": false
+    },
+    {
+     "code": "S00001",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Algemene vaste kosten",
+     "uom": "unit",
+     "price": 85.0
+    },
+    {
+     "code": "S00003",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Verticaal transport van de materialen met camionkraan",
+     "uom": "unit",
+     "price": 295.0
+    },
+    {
+     "code": "S00007",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Afvalverwerking forfaitair",
+     "uom": "unit",
+     "price": 125.0
+    },
+    {
+     "section": "Verplichte veiligheidsvoorzieningen",
+     "optional": false
+    },
+    {
+     "code": "S00012",
+     "quantity": 2.0,
+     "optional": false,
+     "label": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+     "uom": "unit",
+     "price": 175.0
+    },
+    {
+     "code": "S00023",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Gebruik van tijdelijke balustrades met montage op opstand",
+     "uom": "m",
+     "price": 9.5
+    },
+    {
+     "section": "Dakopbouw",
+     "optional": false
+    },
+    {
+     "code": "S00064",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de OSB dikte 18mm tand & groef",
+     "uom": "m2",
+     "price": 27.95
+    },
+    {
+     "code": "S00404",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+     "uom": "m2",
+     "price": 15.16
+    },
+    {
+     "code": "S00138",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200) verkleefd",
+     "uom": "m2",
+     "price": 49.58
+    },
+    {
+     "code": "S00177",
+     "quantity": 100.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+     "uom": "m2",
+     "price": 46.58
+    },
+    {
+     "code": "S00182",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+     "uom": "m",
+     "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
+     "code": "S00481",
+     "quantity": 40.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de zinken kralen in Quartz zink",
+     "uom": "m",
+     "price": 28.85
+    },
+    {
+     "code": "S00482",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen binnenhoek voor Quartz zinken kralen",
+     "uom": "unit",
+     "price": 37.85
+    },
+    {
+     "code": "S00483",
+     "quantity": 4.0,
+     "optional": false,
+     "label": "Leveren en plaatsen buitenhoek voor Quartz zinken kralen",
+     "uom": "unit",
+     "price": 37.85
+    },
+    {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
+     "code": "S00191",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+     "uom": "unit",
+     "price": 126.5
+    },
+    {
+     "code": "S00197",
+     "quantity": 1.0,
+     "optional": false,
+     "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+     "uom": "unit",
+     "price": 7.82
+    },
+    {
+     "section": "Opties",
+     "optional": true
+    },
+    {
+     "code": "S00009",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Parkeervergunning-Inname openbaar domein",
+     "uom": "unit",
+     "price": 150.0
+    },
+    {
+     "code": "S00018",
+     "quantity": 40.0,
+     "optional": true,
+     "label": "Plaatsen van de stelling",
+     "uom": "m2",
+     "price": 20.0
+    },
+    {
+     "code": "S00020",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Keuren van de stelling",
+     "uom": "forfait",
+     "price": 125.0
+    },
+    {
+     "code": "S00010",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Huur en gebruik van de hoogwerker",
+     "uom": "day",
+     "price": 350.0
+    },
+    {
+     "code": "S00202",
+     "quantity": 1.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+     "uom": "unit",
+     "price": 92.0
+    },
+    {
+     "code": "S00248",
+     "quantity": 6.0,
+     "optional": true,
+     "label": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+     "uom": "m",
+     "price": 28.5
+    }
+   ]
+  }
+ ]
+}

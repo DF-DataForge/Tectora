@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_tectora_product_catalog_import_manager,tectora.product.catalog.import manager,model_tectora_product_catalog_import,sales_team.group_sale_manager,1,1,1,1
 access_tectora_product_catalog_import_system,tectora.product.catalog.import system,model_tectora_product_catalog_import,base.group_system,1,1,1,1
+access_tectora_quotation_template_import_manager,tectora.quotation.template.import manager,model_tectora_quotation_template_import,sales_team.group_sale_manager,1,1,1,1
+access_tectora_quotation_template_import_system,tectora.quotation.template.import system,model_tectora_quotation_template_import,base.group_system,1,1,1,1

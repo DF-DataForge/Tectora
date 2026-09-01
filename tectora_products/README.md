@@ -26,9 +26,14 @@ Vult de Odoo-productendatabase met de **leverancierscatalogus** van Tectora
   hergebruikt) met een leverancierslijn per product: aankoopprijs en de
   productcode van de leverancier. `DEFRANCQ`/`DEFRANCQ BOUWSPECIALITEITEN`
   worden samengevoegd.
-- **Type**: producten met een leverancier zijn voorraadartikelen
-  (aankoopbaar); producten zonder leverancier zijn de werkposten uit het
-  prijsboek en worden diensten (459 diensten, 1038 materialen).
+- **Type**: de export nummert zijn twee prijslijsten uit elkaar — `S0001…` zijn
+  de **werkposten** die geoffreerd worden, `P0001…` de artikels die aangekocht
+  worden. Een `S`-referentie is dus altijd een verkoopproduct, ook al staat er
+  een leverancier bij (bij *Leveren en plaatsen van de koepelschaal type:
+  Skylux* staat Cintralux als leverancier van het materiaal, niet als teken dat
+  de post zelf voorraad is). Voor een rij zonder referentie beslist de
+  leverancier: mét leverancier een voorraadartikel, zonder leverancier een
+  dienst. Samen 499 diensten en 998 materialen.
 - **Eenheden** worden genormaliseerd naar Stuk, m, m², kg, Uur, Dag en
   Forfait; verpakkingsinfo ("12 stuks", "20 BOX", rol, doos) gaat naar de
   omschrijving.
@@ -87,6 +92,52 @@ python3 tools/parse_product_export.py producten_Tectora_BV_<datum>.xlsx \
 
 Bij installatie wordt dat bestand geïmporteerd; bij een upgrade doet de
 migratie van 19.0.2.0.0 hetzelfde.
+
+## Offertesjablonen
+
+Twintig startpunten voor een offerte, opgebouwd uit dezelfde catalogus:
+**tien renovatie** (mét afbraakwerken) en **tien nieuwbouw** (zonder). Ze staan
+onder **Verkoop → Configuratie → Offertesjablonen** en worden geladen via
+**Verkoop → Configuratie → Offertesjablonen laden**.
+
+Elk sjabloon heeft dezelfde ruggengraat, in secties:
+
+| Sectie | Inhoud |
+|---|---|
+| Algemene werken | Vaste kosten, verticaal transport (manueel bij renovatie, camionkraan bij nieuwbouw), afvalverwerking. |
+| Verplichte veiligheidsvoorzieningen | Twee permanente ankerpunten en tijdelijke balustrades over de volledige omtrek. |
+| Afbraakwerken | **Enkel bij renovatie**: de bestaande bedekking, de dakranden, de tapbuizen en wat daarbij hoort. |
+| Dakopbouw | Eén dampscherm, één isolatie, één dakbedekking, plus de kimfixatie — en bij een geballast systeem het grind met grindvangers. |
+| Dakranden en hoeken | Eén dakrandtype met **de binnen- en buitenhoek die bij dat profiel horen**. |
+| Regenwaterafvoer | Tapbuizen met bolrooster. |
+| Opties | Koepel of dakraam, parkeervergunning, stelling en keuring, hoogwerker, noodspuwer, afvoerbuis. Optionele lijnen: ze staan op de offerte maar tellen niet mee. |
+
+De twintig variëren in dakbedekking (Elevate EPDM 1,1 of 1,5 mm, verkleefd of
+geballast, en 2-laagse bitumineuze roofing), isolatie (PIR 10 tot 20 cm en
+Rockwool 16 cm voor een onbrandbaar pakket) en dakrand (2-delig aluminium in
+RAL, RAL 9005 of geanodiseerd; enkelvoudig 100/150/175/200 mm; zinken kraal in
+naturel, Anthra of Quartz; aluminium kraal Iconik). Verder zijn er varianten
+voor een dakterras, een industriedak en een bijgebouw of carport.
+
+De hoeveelheden beschrijven één **referentiedak**: 100 m² dakvlak, 40 lm
+dakrand, één binnenhoek, vier buitenhoeken en twee tapbuizen. Ze worden
+overschreven door de opmeting — de tekening voedt de offerte — maar een
+sjabloon vol enen zou de rand- en hoeklijnen betekenisloos maken.
+
+Het laden is idempotent en **overschrijft nooit de lijnen van een sjabloon dat
+het bureau al heeft bijgesteld**; enkel de naam, de geldigheidsduur en de
+voorwaarden volgen het bestand. Wil je toch terug naar de meegeleverde versie,
+vink dan *Bestaande sjablonen opnieuw opbouwen* aan.
+
+Het bestand `data/quotation_templates.json` wordt gegenereerd door
+`tools/build_quotation_templates.py`. Dat script controleert elke
+productreferentie tegen de catalogus en controleert dat elke hoek bij het
+profiel hoort waar hij onder staat — een hoek uit een andere profielfamilie is
+de fout waarvoor die controle bestaat. Bij een fout schrijft het niets weg.
+
+```bash
+python3 tools/build_quotation_templates.py
+```
 
 ## Prijsboek (historiek)
 

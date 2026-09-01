@@ -331,6 +331,40 @@ class ProductTemplate(models.Model):
         _logger.info("tectora_products: %s raw materials set to not sellable", len(goods))
         return len(goods)
 
+    def _tectora_enforce_works_sellable(self):
+        """Put the works items back in the sales catalogue.
+
+        The counterpart of ``_tectora_enforce_goods_not_sellable``: the export
+        names the vendor a works item's material comes from ("Leveren en
+        plaatsen van de koepelschaal type: Skylux", vendor Cintralux), which
+        used to file the item itself as stock -- and a raw material is not
+        sellable, so a dome could not be quoted at all. Which is which comes
+        from the shipped catalogue.
+        """
+        if not PRODUCT_CATALOG.exists():
+            return 0
+        entries = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))[
+            "products"
+        ]
+        codes = [
+            entry["code"]
+            for entry in entries
+            if entry.get("code") and entry.get("is_service")
+        ]
+        if not codes:
+            return 0
+        works = self.env["product.template"].with_context(active_test=False).search(
+            ["&", ("default_code", "in", codes),
+             "|", ("type", "!=", "service"), ("sale_ok", "=", False)]
+        )
+        if works:
+            values = {"type": "service", "sale_ok": True, "purchase_ok": False}
+            if "is_storable" in self.env["product.template"]._fields:
+                values["is_storable"] = False
+            works.write(values)
+        _logger.info("tectora_products: %s works items back on sale", len(works))
+        return len(works)
+
     def _tectora_in_tree(self, category, root_name):
         node = category
         while node:
