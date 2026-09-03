@@ -137,6 +137,7 @@ class TectoraRoofProject(models.Model):
     _description = "Roof Measurement Project"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
+    _rec_names_search = ["name", "code", "partner_id.name"]
 
     name = fields.Char(string="Projectnaam", required=True, tracking=True)
     code = fields.Char(
@@ -155,6 +156,7 @@ class TectoraRoofProject(models.Model):
             ("draft", "Concept"),
             ("measured", "Opgemeten"),
             ("quoted", "Offerte gemaakt"),
+            ("confirmed", "Order bevestigd"),
             ("done", "Afgerond"),
         ],
         default="draft",
@@ -241,19 +243,41 @@ class TectoraRoofProject(models.Model):
         "tectora.roof.object", "project_id", string="Dakobjecten"
     )
     sale_order_ids = fields.One2many(
-        "sale.order", "roof_project_id", string="Offertes / Orders"
+        "sale.order", "roof_project_id", string="Offertes / Orders",
+        help="Alle offertes en orders die ooit aan dit dakproject hingen; "
+        "de actieve staat in Offerte / Order.",
     )
     sale_order_count = fields.Integer(compute="_compute_sale_order_count")
+    sale_order_id = fields.Many2one(
+        "sale.order",
+        string="Offerte / Order",
+        compute="_compute_sale_order_id",
+        inverse="_inverse_sale_order_id",
+        store=True,
+        readonly=False,
+        copy=False,
+        index=True,
+        help="De verkooporder van dit dakproject: één dakproject staat "
+        "tegenover één offerte/order. Klant, opportuniteit, verkoper, "
+        "leverdatum en prijslijst/projecttype worden in beide richtingen "
+        "gelijk gehouden. Een geannuleerde order blijft in de historiek "
+        "(Offertes / Orders) en maakt plaats voor een nieuwe.",
+    )
+    sale_order_state = fields.Selection(
+        related="sale_order_id.state", string="Orderstatus", readonly=True
+    )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
     project_id = fields.Many2one(
         "project.project",
-        string="Projectdossier",
+        string="Project",
         copy=False,
         ondelete="set null",
-        help="Odoo-project achter dit dakproject: draagt de analytische "
-        "rekening waarop omzet en kosten (verkooporders, facturen, "
-        "inkooporders, leveringen) samenkomen.",
+        index=True,
+        help="Planbaar Odoo-project achter dit dakproject, aangemaakt bij het "
+        "bevestigen van de order. Het draagt de analytische rekening waarop "
+        "omzet en kosten (order, facturen, inkoop, leveringen, urenstaten) "
+        "samenkomen en toont het projectdashboard.",
     )
     analytic_account_id = fields.Many2one(
         related="project_id.account_id", string="Analytische rekening", readonly=True
@@ -365,6 +389,44 @@ class TectoraRoofProject(models.Model):
         for project in self:
             project.sale_order_count = len(project.sale_order_ids)
 
+    @api.depends("code", "name")
+    def _compute_display_name(self):
+        for project in self:
+            code = project.code if project.code and project.code != _("New") else ""
+            project.display_name = " — ".join(filter(None, [code, project.name]))
+
+    @api.depends("sale_order_ids", "sale_order_ids.state")
+    def _compute_sale_order_id(self):
+        """The one order that stands against this roof project: the most
+        recent one that is not cancelled, or -- when every order was
+        cancelled -- the most recent one, so the history stays reachable."""
+        for project in self:
+            orders = project.sale_order_ids.sorted("id", reverse=True)
+            current = project.sale_order_id
+            if current and current in orders and current.state != "cancel":
+                continue
+            active = orders.filtered(lambda order: order.state != "cancel")
+            project.sale_order_id = (active or orders)[:1]
+
+    def _inverse_sale_order_id(self):
+        """Linking an order from the roof project side: the order points back
+        at this roof project and any other open order of the project is let
+        go, so the pair stays one-to-one. Cancelled orders stay as history."""
+        for project in self:
+            order = project.sale_order_id
+            others = project.sale_order_ids.filtered(
+                lambda o: o != order and o.state != "cancel"
+            )
+            if others:
+                others.with_context(tectora_sync=True).write(
+                    {"roof_project_id": False}
+                )
+            if order and order.roof_project_id != project:
+                order.with_context(tectora_sync=True).write(
+                    {"roof_project_id": project.id}
+                )
+                order._tectora_sync_pair(project, master="roof")
+
     @api.depends("planning_ids")
     def _compute_planning_count(self):
         for project in self:
@@ -429,44 +491,105 @@ class TectoraRoofProject(models.Model):
     def _prepare_project_values(self):
         self.ensure_one()
         values = {
-            "name": "%s — %s" % (self.code, self.name),
+            "name": self._project_name(),
             "partner_id": self.partner_id.id or False,
             "company_id": self.company_id.id or self.env.company.id,
+            "allow_billable": True,
         }
+        if self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        values.update(
+            self._tectora_project_sync_values(
+                {"planned_date_begin", "planned_date_end"}
+            )
+        )
         Project = self.env["project.project"]
-        if "allow_billable" in Project._fields:
-            values["allow_billable"] = True
+        if "allow_timesheets" in Project._fields:
+            values["allow_timesheets"] = True
         return values
 
     def _ensure_project(self):
-        """Create (or complete) the project.project dossier and its analytic
-        account, so revenue, costs, POs, deliveries and invoices aggregate."""
+        """Create (or complete) the plannable project and its analytic
+        account, so revenue, costs, POs, deliveries, invoices and timesheets
+        aggregate on it. Links the project to the order as well."""
+        Project = self.env["project.project"].with_context(tectora_sync=True)
         for roof_project in self:
             project = roof_project.project_id
             if not project:
-                project = self.env["project.project"].create(
-                    roof_project._prepare_project_values()
-                )
-                roof_project.project_id = project
+                # An order confirmed with project-generating services may
+                # already have had its project created by Odoo: adopt it.
+                order = roof_project.sale_order_id
+                candidates = order.project_id if order else Project
+                if order and not candidates and "project_ids" in order._fields:
+                    candidates = order.sudo().project_ids.filtered(
+                        lambda p: p.active and not p.roof_project_id
+                    )
+                project = candidates[:1]
+                if project:
+                    project.write(
+                        {
+                            key: value
+                            for key, value in roof_project._prepare_project_values().items()
+                            if key in ("allow_billable", "date_start", "date")
+                            or not project[key]
+                        }
+                    )
+                else:
+                    project = Project.create(roof_project._prepare_project_values())
+                roof_project.with_context(tectora_sync=True).project_id = project
             elif not project.partner_id and roof_project.partner_id:
                 project.partner_id = roof_project.partner_id
             # sale.order.project_id only accepts billable projects.
-            if "allow_billable" in project._fields and not project.allow_billable:
+            if not project.allow_billable:
                 project.allow_billable = True
             if not project.account_id:
                 project._create_analytic_account()
+            roof_project._tectora_link_order_to_project(project)
         return self.mapped("project_id")
 
+    def _tectora_link_order_to_project(self, project):
+        """Point the order and the project at each other, the way Odoo's own
+        sale/project bridge expects it (so its smart buttons and its
+        profitability report pick the order up too)."""
+        self.ensure_one()
+        order = self.sale_order_id
+        if not order:
+            return
+        order_values = {}
+        if order.project_id != project:
+            order_values["project_id"] = project.id
+        if order_values:
+            order.with_context(tectora_sync=True).write(order_values)
+            # Re-trigger the analytic distribution now the project is known.
+            order.order_line._compute_analytic_distribution()
+        project_values = {}
+        if (
+            "reinvoiced_sale_order_id" in project._fields
+            and not project.sudo().reinvoiced_sale_order_id
+        ):
+            project_values["reinvoiced_sale_order_id"] = order.id
+        if "sale_line_id" in project._fields and not project.sale_line_id:
+            # Not a line invoiced on timesheets: hours logged on the project
+            # must not become invoiceable quantities by accident.
+            service_line = order.order_line.filtered(
+                lambda line: not line.display_type
+                and line.product_id
+                and line.product_id.type == "service"
+                and not line.is_downpayment
+                and getattr(line.product_id, "service_policy", None)
+                != "delivered_timesheet"
+            )[:1]
+            if service_line and order.state == "sale":
+                project_values["sale_line_id"] = service_line.id
+        if project_values:
+            project.sudo().with_context(tectora_sync=True).write(project_values)
+
     def action_open_project(self):
+        """Open the project dashboard; a roof project without a project yet
+        gets one (the button is the manual counterpart of the confirmation)."""
         self.ensure_one()
         self._ensure_project()
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "project.project",
-            "res_id": self.project_id.id,
-            "view_mode": "form",
-            "target": "current",
-        }
+        return self.project_id.action_open_dashboard()
 
     def action_view_materials(self):
         self.ensure_one()
@@ -554,7 +677,66 @@ class TectoraRoofProject(models.Model):
         result = super().write(vals)
         if {"team_id", "planned_date_begin", "planned_date_end"} & set(vals):
             self._autogenerate_planning()
+        if not self.env.context.get("tectora_sync"):
+            self._tectora_push_sync(vals)
         return result
+
+    # ------------------------------------------------ sale order / project sync
+    def _tectora_push_sync(self, vals):
+        """Mirror the fields shared with the order and the project onto them.
+
+        The roof project is the master here: whatever was just written on it
+        goes to its order (customer, opportunity, salesperson/project manager,
+        deadline, project type as pricelist) and to its project (customer,
+        planned dates, project manager). The context flag stops the write from
+        coming straight back.
+        """
+        SaleOrder = self.env["sale.order"]
+        order_fields = set(SaleOrder._tectora_roof_to_order_fields())
+        project_fields = {
+            "partner_id", "planned_date_begin", "planned_date_end",
+            "project_manager_id", "name", "code",
+        }
+        touched = set(vals)
+        for project in self:
+            order = project.sale_order_id
+            if order and touched & order_fields:
+                order._tectora_sync_pair(project, master="roof", changed=touched)
+            dossier = project.project_id
+            if dossier and touched & project_fields:
+                dossier.with_context(tectora_sync=True).write(
+                    project._tectora_project_sync_values(touched)
+                )
+
+    def _tectora_project_sync_values(self, fields_changed=None):
+        """Values of the project (project.project) that follow this roof
+        project; restricted to the roof fields in ``fields_changed``."""
+        self.ensure_one()
+        values = {}
+        changed = fields_changed or {
+            "partner_id", "planned_date_begin", "planned_date_end",
+            "project_manager_id", "name", "code",
+        }
+        if "partner_id" in changed and self.partner_id:
+            values["partner_id"] = self.partner_id.id
+        if {"planned_date_begin", "planned_date_end"} & changed:
+            begin = self.planned_date_begin
+            end = self.planned_date_end
+            if begin:
+                values["date_start"] = fields.Datetime.context_timestamp(
+                    self, begin
+                ).date()
+            if end:
+                values["date"] = fields.Datetime.context_timestamp(self, end).date()
+        if "project_manager_id" in changed and self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        if {"name", "code"} & changed:
+            values["name"] = self._project_name()
+        return values
+
+    def _project_name(self):
+        self.ensure_one()
+        return "%s — %s" % (self.code, self.name)
 
     # ---------------------------------------------------------- team planning
     def _autogenerate_planning(self):
@@ -996,11 +1178,10 @@ class TectoraRoofProject(models.Model):
         return base64.b64encode(buffer.getvalue())
 
     # ------------------------------------------------------------- quotation
-    def action_create_sale_order(self):
-        """Generate a native quotation from the measured sections."""
+    def _prepare_sale_order_lines(self):
+        """Order lines (commands) for the measured sections, roof objects and
+        project-wide chapters; raises when nothing is priced yet."""
         self.ensure_one()
-        if not self.partner_id:
-            raise UserError(_("Set a customer on the project first."))
         sections = self.section_ids.filtered("product_line_ids")
         roof_objects = self.roof_object_ids.filtered("product_line_ids")
         direct_lines = self.direct_line_ids
@@ -1092,41 +1273,92 @@ class TectoraRoofProject(models.Model):
             order_lines.extend(
                 aggregated_order_lines(roof_object.product_line_ids)
             )
+        return order_lines
 
-        # The project dossier carries the analytic account: linking it on the
-        # order makes Odoo apply the analytic distribution to every line, so
-        # revenue and costs aggregate on the project.
-        self._ensure_project()
-        order_vals = {
+    def _find_pricelist(self):
+        """Pricelist named after the project type, if the company has one."""
+        self.ensure_one()
+        if not self.project_type:
+            return self.env["product.pricelist"]
+        type_label = dict(self._fields["project_type"].selection)[self.project_type]
+        return self.env["product.pricelist"].search(
+            [
+                ("name", "=ilike", type_label),
+                ("company_id", "in", [False, self.company_id.id]),
+            ],
+            limit=1,
+        )
+
+    def _prepare_sale_order_values(self):
+        self.ensure_one()
+        values = {
             "partner_id": self.partner_id.id,
             "opportunity_id": self.opportunity_id.id or False,
             "origin": self.code,
             "roof_project_id": self.id,
-            "order_line": order_lines,
+            "company_id": self.company_id.id or self.env.company.id,
         }
-        SaleOrder = self.env["sale.order"]
-        if self.project_id and "project_id" in SaleOrder._fields:
-            order_vals["project_id"] = self.project_id.id
-        if self.project_type:
-            type_label = dict(self._fields["project_type"].selection)[
-                self.project_type
-            ]
-            pricelist = self.env["product.pricelist"].search(
-                [("name", "=ilike", type_label)], limit=1
+        if self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        if self.project_id:
+            values["project_id"] = self.project_id.id
+        pricelist = self._find_pricelist()
+        if pricelist:
+            values["pricelist_id"] = pricelist.id
+        return values
+
+    def action_create_sale_order(self):
+        """Generate the quotation from the measurement, or refresh it.
+
+        One roof project stands against one order: while its quotation is
+        still open the lines are rebuilt on that quotation, a confirmed order
+        is left alone, and only when there is no (open) order yet a new
+        quotation is created.
+        """
+        self.ensure_one()
+        if not self.partner_id:
+            raise UserError(_("Set a customer on the project first."))
+        order_lines = self._prepare_sale_order_lines()
+        order = self.sale_order_id
+        if order and order.state == "cancel":
+            order = self.env["sale.order"]
+        if order and order.state not in ("draft", "sent"):
+            raise UserError(
+                _(
+                    "Order %(order)s van dit dakproject is al bevestigd. Pas de "
+                    "order zelf aan, of annuleer ze en maak een nieuwe offerte.",
+                    order=order.name,
+                )
             )
-            if pricelist:
-                order_vals["pricelist_id"] = pricelist.id
-        order = self.env["sale.order"].create(order_vals)
+        if order:
+            # Odoo has no command that only drops the generated lines, so
+            # everything on the open quotation is replaced by the measurement.
+            order.with_context(tectora_sync=True).write(
+                {"order_line": [(5, 0, 0)] + order_lines}
+            )
+            self.message_post(
+                body=_(
+                    "Quotation %s refreshed from the roof measurement.",
+                    order._get_html_link(),
+                )
+            )
+        else:
+            order_vals = self._prepare_sale_order_values()
+            order_vals["order_line"] = order_lines
+            order = self.env["sale.order"].with_context(
+                tectora_sync=True
+            ).create(order_vals)
+            self.message_post(
+                body=_(
+                    "Quotation %s created from the roof measurement.",
+                    order._get_html_link(),
+                )
+            )
         # The meetblad is rendered as an extra page inside the quotation PDF
         # itself (see report_saleorder_inherit_tectora), so no separate
-        # attachment is created here anymore.
-        self.state = "quoted"
-        self.message_post(
-            body=_(
-                "Quotation %s created from the roof measurement.",
-                order._get_html_link(),
-            )
-        )
+        # attachment is created here.
+        if self.state in ("draft", "measured"):
+            self.with_context(tectora_sync=True).state = "quoted"
         return {
             "type": "ir.actions.act_window",
             "res_model": "sale.order",
@@ -1135,8 +1367,37 @@ class TectoraRoofProject(models.Model):
             "target": "current",
         }
 
-    def action_view_sale_orders(self):
+    def action_view_sale_order(self):
+        """The order of this roof project; a new quotation when there is
+        none yet (the smart button is always there)."""
         self.ensure_one()
+        order = self.sale_order_id
+        if order:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "sale.order",
+                "res_id": order.id,
+                "view_mode": "form",
+                "target": "current",
+            }
+        context = {
+            "default_%s" % key: value
+            for key, value in self._prepare_sale_order_values().items()
+        }
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Offerte"),
+            "res_model": "sale.order",
+            "view_mode": "form",
+            "target": "current",
+            "context": context,
+        }
+
+    def action_view_sale_orders(self):
+        """History of every quotation/order of this roof project."""
+        self.ensure_one()
+        if len(self.sale_order_ids) <= 1:
+            return self.action_view_sale_order()
         return {
             "type": "ir.actions.act_window",
             "name": _("Offertes / Orders"),

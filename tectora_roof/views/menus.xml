@@ -20,6 +20,14 @@
               action="action_tectora_roof_project"
               sequence="10"/>
 
+    <!-- The plannable projects behind the roof projects, opening on their
+         dashboard (omzet en kosten, leveringen, taken, planning). -->
+    <menuitem id="menu_tectora_project_dashboards"
+              name="Projecten"
+              parent="menu_tectora_root"
+              action="action_tectora_projects"
+              sequence="12"/>
+
     <menuitem id="menu_tectora_roof_objects"
               name="Dakobjecten"
               parent="menu_tectora_root"

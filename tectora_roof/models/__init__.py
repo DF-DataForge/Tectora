@@ -7,6 +7,7 @@ from . import roof_project_info
 from . import roof_team
 from . import roof_planning
 from . import sale_order
+from . import project_project
 from . import res_config_settings
 from . import roof_usage
 from . import product_category

@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Project dashboard: the view a project opens on. Every card opens the
+         records behind its figure; the order and the roof project are always
+         a click away; the roof measurement is part of the dashboard. -->
+    <record id="view_project_project_tectora_dashboard" model="ir.ui.view">
+        <field name="name">project.project.form.tectora.dashboard</field>
+        <field name="model">project.project</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form string="Projectdashboard" class="o_tectora_dashboard" create="0" duplicate="0">
+                <field name="company_id" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="allow_billable" invisible="1"/>
+                <field name="tectora_has_timesheets" invisible="1"/>
+                <field name="tectora_sale_order_state" invisible="1"/>
+                <field name="roof_project_id" invisible="1"/>
+                <header>
+                    <button name="action_view_roof_project" type="object"
+                            string="Dakmeting openen" class="btn-primary"
+                            help="Opent het dakproject met de tekening en de meting."/>
+                    <button name="action_view_sale_order" type="object"
+                            string="Offerte maken" class="btn-secondary"
+                            invisible="tectora_sale_order_id"/>
+                    <button name="action_view_tectora_planning" type="object"
+                            string="Planning" class="btn-secondary"/>
+                    <button name="action_open_project_form" type="object"
+                            string="Projectinstellingen" class="btn-secondary"/>
+                    <field name="stage_id" widget="statusbar"
+                           options="{'clickable': '1', 'fold_field': 'fold'}"
+                           groups="project.group_project_stages"
+                           domain="[('company_id', 'in', (company_id, False))]"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_order" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="tectora_sale_order_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not tectora_sale_order_id"/>
+                                    <span invisible="tectora_sale_order_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Offerte / Order</span>
+                            </div>
+                        </button>
+                        <button name="action_view_roof_project" type="object"
+                                class="oe_stat_button" icon="fa-home">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="roof_total_area" readonly="1"
+                                           invisible="not roof_project_id"/>
+                                    <span invisible="not roof_project_id"> m²</span>
+                                    <span invisible="roof_project_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Dakproject</span>
+                            </div>
+                        </button>
+                        <button name="action_view_tectora_tasks" type="object"
+                                class="oe_stat_button" icon="fa-check">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="open_task_count" readonly="1"/> /
+                                    <field name="task_count" readonly="1"/>
+                                </span>
+                                <span class="o_stat_text">Open taken</span>
+                            </div>
+                        </button>
+                        <button name="action_view_tectora_invoices" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="tectora_invoice_count == 0">
+                            <field name="tectora_invoice_count" widget="statinfo" string="Facturen"/>
+                        </button>
+                        <button name="action_view_tectora_pickings" type="object"
+                                class="oe_stat_button" icon="fa-truck"
+                                invisible="tectora_picking_count == 0">
+                            <field name="tectora_picking_count" widget="statinfo" string="Leveringen"/>
+                        </button>
+                        <button name="action_view_tectora_purchases" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="tectora_purchase_count == 0">
+                            <field name="tectora_purchase_count" widget="statinfo" string="Inkoop"/>
+                        </button>
+                        <button name="action_view_tectora_materials" type="object"
+                                class="oe_stat_button" icon="fa-cubes"
+                                invisible="tectora_material_count == 0">
+                            <field name="tectora_material_count" widget="statinfo" string="Materialen"/>
+                        </button>
+                        <button name="action_view_tectora_planning" type="object"
+                                class="oe_stat_button" icon="fa-calendar"
+                                invisible="tectora_planning_count == 0">
+                            <field name="tectora_planning_count" widget="statinfo" string="Werkblokken"/>
+                        </button>
+                        <button name="action_view_tectora_timesheets" type="object"
+                                class="oe_stat_button" icon="fa-clock-o"
+                                invisible="not tectora_has_timesheets">
+                            <field name="tectora_timesheet_hours" widget="statinfo" string="Uren"/>
+                        </button>
+                        <button name="action_open_project_form" type="object"
+                                class="oe_stat_button" icon="fa-cog" string="Instellingen"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                        <div class="text-muted">
+                            <field name="partner_id" readonly="1" class="me-2"/>
+                            <field name="roof_address" readonly="1" invisible="not roof_address"/>
+                        </div>
+                    </div>
+                    <div class="o_tectora_cards d-flex flex-wrap gap-3 my-3">
+                        <button name="action_view_tectora_profitability" type="object"
+                                class="o_tectora_card o_tectora_card_revenue"
+                                help="Detail van omzet en kosten (winstgevendheid)">
+                            <span class="o_tectora_card_label">Omzet (order excl. btw)</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_revenue" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                Gefactureerd <field name="tectora_invoiced" readonly="1"/>
+                                · te factureren <field name="tectora_to_invoice" readonly="1"/>
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_profitability" type="object"
+                                class="o_tectora_card o_tectora_card_costs"
+                                help="Detail van de kosten (winstgevendheid)">
+                            <span class="o_tectora_card_label">Kosten (nacalculatie)</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_costs" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                Geboekt <field name="tectora_cost_billed" readonly="1"/>
+                                · verwacht <field name="tectora_cost_to_bill" readonly="1"/>
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_profitability" type="object"
+                                class="o_tectora_card o_tectora_card_margin">
+                            <span class="o_tectora_card_label">Marge</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_margin" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="tectora_margin_percent" readonly="1"/> % van de omzet
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_materials" type="object"
+                                class="o_tectora_card">
+                            <span class="o_tectora_card_label">Materiaalkost (stuklijst)</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_material_cost" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="tectora_material_count" readonly="1"/> materiaallijn(en)
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_purchases" type="object"
+                                class="o_tectora_card">
+                            <span class="o_tectora_card_label">Inkoop</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_purchase_amount" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="tectora_purchase_count" readonly="1"/> inkooporder(s)
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_timesheets" type="object"
+                                class="o_tectora_card" invisible="not tectora_has_timesheets">
+                            <span class="o_tectora_card_label">Urenstaten</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_timesheet_hours" readonly="1" widget="float_time"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                Loonkost <field name="tectora_timesheet_cost" readonly="1"/>
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_invoices" type="object"
+                                class="o_tectora_card">
+                            <span class="o_tectora_card_label">Facturen</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_invoice_count" readonly="1"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                Openstaand <field name="tectora_invoice_due" readonly="1"/>
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_pickings" type="object"
+                                class="o_tectora_card">
+                            <span class="o_tectora_card_label">Leveringen</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_delivery_status" readonly="1"
+                                       decoration-success="tectora_delivery_status == 'done'"
+                                       decoration-warning="tectora_delivery_status == 'partial'"
+                                       decoration-info="tectora_delivery_status == 'waiting'"/>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="tectora_picking_done_count" readonly="1"/> /
+                                <field name="tectora_picking_count" readonly="1"/> geleverd
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_tasks" type="object"
+                                class="o_tectora_card">
+                            <span class="o_tectora_card_label">Taken</span>
+                            <span class="o_tectora_card_value">
+                                <field name="open_task_count" readonly="1"/> open
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="closed_task_count" readonly="1"/> afgerond van
+                                <field name="task_count" readonly="1"/>
+                            </span>
+                        </button>
+                        <button name="action_view_tectora_planning" type="object"
+                                class="o_tectora_card o_tectora_card_planning">
+                            <span class="o_tectora_card_label">Planning</span>
+                            <span class="o_tectora_card_value">
+                                <field name="tectora_next_planning_date" readonly="1"
+                                       invisible="not tectora_next_planning_date"/>
+                                <span invisible="tectora_next_planning_date">Niet ingepland</span>
+                            </span>
+                            <span class="o_tectora_card_sub">
+                                <field name="roof_team_id" readonly="1" options="{'no_open': True}"
+                                       invisible="not roof_team_id"/>
+                                <field name="tectora_planning_hours" readonly="1" widget="float_time"/> u gepland
+                            </span>
+                            <field name="tectora_planned_employee_ids" readonly="1"
+                                   widget="many2many_avatar_employee"
+                                   invisible="not tectora_planned_employee_ids"/>
+                        </button>
+                    </div>
+                    <notebook>
+                        <page string="Dakmeting" name="roof">
+                            <div invisible="roof_project_id" class="text-muted">
+                                Dit project heeft nog geen dakproject. Klik op
+                                <b>Dakmeting openen</b> om er een aan te maken.
+                            </div>
+                            <div invisible="not roof_project_id">
+                                <div class="row">
+                                    <div class="col-12 col-lg-5">
+                                        <field name="roof_canvas_snapshot" widget="image" readonly="1"
+                                               options="{'size': [480, 360], 'zoom': true}"
+                                               class="o_tectora_roof_snapshot"/>
+                                        <div class="mt-2">
+                                            <button name="action_view_roof_project" type="object"
+                                                    class="btn btn-link p-0" icon="fa-external-link">
+                                                Dakmeting openen
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-7">
+                                        <group>
+                                            <group>
+                                                <field name="roof_project_id" readonly="1"/>
+                                                <field name="roof_state" readonly="1" widget="badge"/>
+                                                <field name="roof_project_type" readonly="1"/>
+                                                <field name="roof_address" readonly="1"/>
+                                            </group>
+                                            <group>
+                                                <field name="roof_total_area" readonly="1"/>
+                                                <field name="roof_total_perimeter" readonly="1"/>
+                                                <field name="roof_section_count" readonly="1"/>
+                                                <field name="roof_object_count" readonly="1"/>
+                                            </group>
+                                        </group>
+                                        <field name="roof_section_ids" readonly="1" nolabel="1">
+                                            <list string="Daksecties">
+                                                <field name="name"/>
+                                                <field name="width"/>
+                                                <field name="length"/>
+                                                <field name="area" sum="Totaal"/>
+                                                <field name="perimeter" sum="Totaal"/>
+                                                <field name="estimated_total" sum="Totaal"/>
+                                                <field name="currency_id" column_invisible="1"/>
+                                            </list>
+                                        </field>
+                                    </div>
+                                </div>
+                            </div>
+                        </page>
+                        <page string="Planning" name="planning">
+                            <group>
+                                <group>
+                                    <field name="roof_team_id" readonly="1"/>
+                                    <field name="tectora_planned_employee_ids" readonly="1"
+                                           widget="many2many_avatar_employee"/>
+                                </group>
+                                <group>
+                                    <field name="roof_planned_date_begin" readonly="1"/>
+                                    <field name="roof_planned_date_end" readonly="1"/>
+                                    <field name="tectora_planning_hours" readonly="1" widget="float_time"/>
+                                </group>
+                            </group>
+                            <field name="roof_planning_ids" readonly="1" nolabel="1">
+                                <list string="Werkblokken" decoration-muted="state == 'done'">
+                                    <field name="start_datetime"/>
+                                    <field name="end_datetime"/>
+                                    <field name="duration_hours" sum="Totaal"/>
+                                    <field name="team_id"/>
+                                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                                    <field name="state" widget="badge"
+                                           decoration-info="state == 'draft'"
+                                           decoration-success="state == 'published'"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De planning wordt op het dakproject beheerd: kies er de ploeg en de
+                                geplande periode, dan worden het werkblok en de planning-items van
+                                de medewerkers aangemaakt.
+                            </div>
+                        </page>
+                        <page string="Taken" name="tasks">
+                            <field name="task_ids" readonly="1" nolabel="1"
+                                   context="{'default_project_id': id}">
+                                <list string="Open taken" default_order="date_deadline, priority desc">
+                                    <field name="priority" widget="priority"/>
+                                    <field name="name"/>
+                                    <field name="user_ids" widget="many2many_avatar_user"/>
+                                    <field name="date_deadline"/>
+                                    <field name="stage_id"/>
+                                    <field name="state" widget="project_task_state_selection"/>
+                                </list>
+                            </field>
+                            <div class="mt-2">
+                                <button name="action_view_tectora_tasks" type="object"
+                                        class="btn btn-link p-0" icon="fa-external-link">
+                                    Alle taken (ook afgeronde) openen
+                                </button>
+                            </div>
+                        </page>
+                        <page string="Materiaallijst" name="materials">
+                            <field name="roof_material_line_ids" readonly="1" nolabel="1">
+                                <list string="Materiaallijst">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="unit_cost" optional="show"/>
+                                    <field name="cost_subtotal" sum="Totaal"/>
+                                    <field name="source_product_id" optional="hide"/>
+                                    <field name="sale_order_id" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Omschrijving" name="description">
+                            <field name="description" placeholder="Omschrijving van het project…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- The dashboard action Python opens the dashboard with. -->
+    <record id="action_project_project_tectora_dashboard" model="ir.actions.act_window">
+        <field name="name">Projectdashboard</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_project_project_tectora_dashboard"/>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Clicking a project in the Project app opens its dashboard, and the
+         card menu keeps a "Dashboard" entry next to "Tasks". -->
+    <record id="view_project_kanban_inherit_tectora" model="ir.ui.view">
+        <field name="name">project.project.kanban.inherit.tectora.roof</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="action">action_open_dashboard</attribute>
+                <attribute name="type">object</attribute>
+            </xpath>
+            <xpath expr="//t[@t-name='menu']//a[@name='action_view_tasks']/.." position="before">
+                <div role="menuitem">
+                    <a name="action_open_dashboard" type="object">Dashboard</a>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Smart buttons to the order, the roof project and the dashboard on the
+         standard project form. -->
+    <record id="view_project_form_inherit_tectora" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.tectora.roof</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_dashboard" type="object"
+                        class="oe_stat_button" icon="fa-tachometer"
+                        string="Projectdashboard"/>
+                <button name="action_view_sale_order" type="object"
+                        class="oe_stat_button" icon="fa-file-text-o">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="tectora_sale_order_id" readonly="1"
+                                   options="{'no_open': True}"
+                                   invisible="not tectora_sale_order_id"/>
+                            <span invisible="tectora_sale_order_id">Nieuw</span>
+                        </span>
+                        <span class="o_stat_text">Offerte / Order</span>
+                    </div>
+                </button>
+                <button name="action_view_roof_project" type="object"
+                        class="oe_stat_button" icon="fa-home">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="roof_total_area" readonly="1"
+                                   invisible="not roof_project_id"/>
+                            <span invisible="not roof_project_id"> m²</span>
+                            <span invisible="roof_project_id">Nieuw</span>
+                        </span>
+                        <span class="o_stat_text">Dakproject</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="roof_project_id" readonly="1" invisible="not roof_project_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Projects from the Dakmeting app: the projects behind the roof
+         projects, opening on the dashboard. -->
+    <record id="action_tectora_projects" model="ir.actions.act_window">
+        <field name="name">Projecten</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_template', '=', False)]</field>
+        <field name="context">{'search_default_tectora_roof_projects': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('project.view_project_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('project.view_project')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_project_project_tectora_dashboard')})]"/>
+        <field name="search_view_id" ref="project.view_project_project_filter"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen projecten</p>
+            <p>Een project ontstaat bij het bevestigen van een offerte. Het
+               verzamelt omzet, kosten, leveringen, taken en planning van de werf.</p>
+        </field>
+    </record>
+
+    <record id="view_project_project_filter_inherit_tectora" model="ir.ui.view">
+        <field name="name">project.project.search.inherit.tectora.roof</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_project_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="roof_project_id"/>
+                <filter string="Met dakproject" name="tectora_roof_projects"
+                        domain="[('roof_project_id', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

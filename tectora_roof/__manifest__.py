@@ -19,8 +19,18 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   Invoicing, Belgian VAT (21/12/6/0%), payments and reporting are handled by
   the standard Sales/Invoicing apps — install l10n_be for the Belgian chart
   of accounts and use a fiscal position for the 6% renovation rate.
+* One roof project stands against one order, in both directions: an order
+  created directly gets its roof project, a quotation can be made from either
+  side, and customer, opportunity, salesperson, deadline and pricelist/project
+  type are kept equal.
+* Confirming the order creates the plannable project (Odoo Project), the
+  basis of the post-calculation: revenue, material and purchase costs,
+  invoices and timesheets are logged on it. Opening a project shows its
+  dashboard -- revenue and costs, deliveries, tasks, team planning and the roof
+  measurement itself -- with every card opening the records behind it and the
+  order and the roof project one click away.
     """,
-    "version": "19.0.2.14.0",
+    "version": "19.0.3.0.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -37,6 +47,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/roof_team_views.xml",
         "views/roof_planning_views.xml",
         "views/sale_order_views.xml",
+        "views/project_project_views.xml",
         "views/res_config_settings_views.xml",
         "views/product_category_views.xml",
         "views/crm_lead_views.xml",
@@ -57,6 +68,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
             "tectora_roof/static/src/roof_canvas/edge_length_dialog.js",
             "tectora_roof/static/src/roof_checklist/roof_checklist.xml",
             "tectora_roof/static/src/roof_checklist/roof_checklist.js",
+            "tectora_roof/static/src/project_dashboard/project_dashboard.scss",
         ],
     },
     "application": True,

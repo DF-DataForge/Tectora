@@ -7,7 +7,10 @@ contractors.
 
 | Module | Description |
 |---|---|
-| [`tectora_roof`](tectora_roof/) | Tectora Dakmeting — draw and measure flat roofs on a satellite photo, assign products per coverage type and generate a quotation from the measurement. |
+| [`tectora_roof`](tectora_roof/) | Tectora Dakmeting — draw and measure flat roofs on a satellite photo, assign products per coverage type and generate a quotation from the measurement. One roof project stands against one sale order (synchronised both ways); confirming the order creates the plannable project with its dashboard (revenue and costs, deliveries, tasks, team planning). |
+| [`tectora_roof_planning`](tectora_roof_planning/) | Bridge to the Planning app: work blocks become employee shifts, the project dashboard shows them. Installs itself with Planning. |
+| [`tectora_products`](tectora_products/) | Supplier catalogue, price book and quotation templates. |
+| [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list. |
 
 The application originates from the standalone BROOF app
 (React + Express + PostgreSQL), which was rewritten as a native Odoo module

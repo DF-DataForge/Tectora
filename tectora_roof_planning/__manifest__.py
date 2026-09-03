@@ -26,10 +26,13 @@ that ploeg is planned for the period. Ploegen themselves move from Dakmeting to
 Planning -> Configuratie, since that is where they are used. Uninstalling puts
 the app's own default planner and the Ploegen menu back.
 
+The project dashboard of Dakmeting lists the employees' shifts on its
+Planning tab and its planning card opens the resource planner on them.
+
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.4.0",
+    "version": "19.0.1.5.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -38,6 +41,7 @@ installed.
     "data": [
         "views/planning_slot_views.xml",
         "views/roof_planning_views.xml",
+        "views/project_project_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",

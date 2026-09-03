@@ -15,20 +15,36 @@
                             help="Create or update the roof sections and roof objects from the shapes on the canvas."/>
                     <button name="action_create_sale_order" type="object"
                             string="Offerte maken" class="btn-primary"
-                            invisible="not section_ids"/>
+                            invisible="not section_ids or (sale_order_id and sale_order_state != 'cancel')"
+                            help="Maakt de offerte van dit dakproject uit de meting."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte bijwerken uit meting" class="btn-primary"
+                            invisible="not section_ids or not sale_order_id or sale_order_state not in ('draft', 'sent')"
+                            confirm="De lijnen van de openstaande offerte worden vervangen door de meting. Doorgaan?"
+                            help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
                     <button name="action_generate_planning" type="object"
                             string="Planning aanmaken" class="btn-secondary"
                             invisible="not team_id or not planned_date_begin"
                             help="Maakt een werkblok voor de ploeg met planning-items voor elke medewerker."/>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,measured,quoted"/>
+                           statusbar_visible="draft,measured,quoted,confirmed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_sale_orders" type="object"
-                                class="oe_stat_button" icon="fa-file-text-o"
-                                invisible="sale_order_count == 0">
-                            <field name="sale_order_count" widget="statinfo" string="Offertes"/>
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="sale_order_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not sale_order_id"/>
+                                    <span invisible="sale_order_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Offerte / Order</span>
+                                <span class="o_stat_text" invisible="sale_order_count &lt; 2">
+                                    (<field name="sale_order_count" readonly="1"/> in historiek)
+                                </span>
+                            </div>
                         </button>
                         <button name="action_view_materials" type="object"
                                 class="oe_stat_button" icon="fa-cubes"
@@ -56,8 +72,18 @@
                             <field name="planning_count" widget="statinfo" string="Werkblokken"/>
                         </button>
                         <button name="action_open_project" type="object"
-                                class="oe_stat_button" icon="fa-tasks"
-                                string="Projectdossier"/>
+                                class="oe_stat_button" icon="fa-tachometer"
+                                help="Het planbare project achter dit dakproject, met het dashboard van omzet, kosten, leveringen, taken en planning.">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="project_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not project_id"/>
+                                    <span invisible="project_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Project</span>
+                            </div>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
@@ -129,6 +155,9 @@
                         <group>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>
                             <field name="opportunity_id"/>
+                            <field name="sale_order_id"
+                                   context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>
+                            <field name="sale_order_state" invisible="1"/>
                             <field name="project_id" readonly="1"
                                    invisible="not project_id"/>
                             <field name="analytic_account_id" readonly="1"
@@ -381,10 +410,12 @@
                 <field name="total_perimeter" optional="hide"/>
                 <field name="estimated_total"/>
                 <field name="currency_id" column_invisible="1"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="project_id" optional="hide"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-warning="state == 'measured'"
-                       decoration-success="state in ('quoted', 'done')"/>
+                       decoration-success="state in ('quoted', 'confirmed', 'done')"/>
             </list>
         </field>
     </record>
@@ -401,6 +432,7 @@
                 <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
                 <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
+                <filter string="Order bevestigd" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <group>
                     <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
