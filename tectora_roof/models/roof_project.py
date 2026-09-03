@@ -232,12 +232,34 @@ class TectoraRoofProject(models.Model):
     general_line_ids = fields.One2many(
         "tectora.roof.section.product", "project_direct_id",
         string="Algemene werken",
-        domain=[("product_id.categ_id.name", "ilike", "algemene werken")],
+        domain=[("product_id.categ_id.complete_name", "ilike", "algemene werken")],
     )
     safety_line_ids = fields.One2many(
         "tectora.roof.section.product", "project_direct_id",
         string="Veiligheid",
-        domain=[("product_id.categ_id.name", "ilike", "veiligheid")],
+        domain=[("product_id.categ_id.complete_name", "ilike", "veiligheid")],
+    )
+    demolition_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Afbraak",
+        domain=[("product_id.categ_id.complete_name", "ilike", "afbraak")],
+    )
+    buildup_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Opbouw",
+        domain=[("product_id.categ_id.complete_name", "ilike", "opbouw")],
+    )
+    other_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Overige projectlijnen",
+        domain=[
+            ("product_id.categ_id.complete_name", "not ilike", "algemene werken"),
+            ("product_id.categ_id.complete_name", "not ilike", "veiligheid"),
+            ("product_id.categ_id.complete_name", "not ilike", "afbraak"),
+            ("product_id.categ_id.complete_name", "not ilike", "opbouw"),
+        ],
+        help="Lijnen van de offerte buiten de vier hoofdstukken (dakranden, "
+        "regenwaterafvoer, opties...), gespiegeld op het dakproject.",
     )
     roof_object_ids = fields.One2many(
         "tectora.roof.object", "project_id", string="Dakobjecten"
@@ -1105,6 +1127,8 @@ class TectoraRoofProject(models.Model):
 
         if self.state == "draft" and (section_count or object_count):
             self.state = "measured"
+        # The quotation follows the drawing.
+        self._tectora_mirror_to_order()
         # Automatic syncs from the canvas widget run on every drawing change;
         # they pass this flag so the chatter is not flooded.
         if not self.env.context.get("tectora_quiet_sync"):
@@ -1196,24 +1220,16 @@ class TectoraRoofProject(models.Model):
         return base64.b64encode(buffer.getvalue())
 
     # ------------------------------------------------------------- quotation
-    def _prepare_sale_order_lines(self):
-        """Order lines (commands) for the measured sections, roof objects and
-        project-wide chapters; raises when nothing is priced yet."""
+    def _measurement_order_lines(self):
+        """The measurement part of the quotation: per roof section and roof
+        object a header and the assigned products, one line per (product,
+        coverage) with the quantities summed over the sides.
+
+        Returns a list of (header name, [line values]).
+        """
         self.ensure_one()
-        sections = self.section_ids.filtered("product_line_ids")
-        roof_objects = self.roof_object_ids.filtered("product_line_ids")
-        direct_lines = self.direct_line_ids
-        if not sections and not roof_objects and not direct_lines:
-            raise UserError(
-                _(
-                    "No products are assigned to any roof section, roof "
-                    "object or project tab yet. Add product lines first."
-                )
-            )
 
         def aggregated_order_lines(lines):
-            """One order line per (product, coverage), quantities summed over
-            the sides/corners; the covered sides are listed in the label."""
             grouped = {}
             for line in lines:
                 key = (line.product_id.id, line.coverage)
@@ -1241,57 +1257,174 @@ class TectoraRoofProject(models.Model):
                             label, position, ", ".join(str(s) for s in sides),
                         )
                     name = "%s (%s)" % (name, label)
-                values.append((0, 0, {
+                values.append({
                     "product_id": first.product_id.id,
                     "product_uom_qty": entry["quantity"],
                     "name": name,
-                }))
+                })
             return values
 
-        order_lines = []
-        # Project-wide chapters (Algemene werken, Veiligheid, ...) first,
-        # grouped per product category like the price book.
-        direct_categories = sorted(
-            set(direct_lines.mapped("product_id.categ_id")),
-            key=lambda category: category.name,
-        )
-        for category in direct_categories:
-            order_lines.append(
-                (0, 0, {
-                    "display_type": "line_section",
-                    "name": re.sub(r"^\d+\.\s*", "", category.name),
+        blocks = []
+        for target in self.section_ids.filtered("product_line_ids"):
+            blocks.append((
+                "%s — %.2f m², omtrek %.2f m" % (
+                    target.name, target.area, target.perimeter,
+                ),
+                aggregated_order_lines(target.product_line_ids),
+            ))
+        for target in self.roof_object_ids.filtered("product_line_ids"):
+            blocks.append((
+                "%s — %.2f m², omtrek %.2f m" % (
+                    target.name, target.area, target.perimeter,
+                ),
+                aggregated_order_lines(target.product_line_ids),
+            ))
+        return blocks
+
+    # ------------------------------------------------- quotation mirroring
+    @api.model
+    def _chapter_of(self, category):
+        """The chapter (top category under the root, "04. Opbouwwerken plat
+        dak") a category belongs to, and its label without the number."""
+        chapter = category
+        while chapter.parent_id and chapter.parent_id.parent_id:
+            chapter = chapter.parent_id
+        if not re.match(r"^\d+\.", chapter.name or "") and category.name:
+            chapter = category
+        label = re.sub(r"^\d+\.\s*", "", chapter.name or _("Overige"))
+        return chapter, label
+
+    @api.model
+    def _header_matches(self, header_name, label):
+        """Whether an existing section header on the quotation is the
+        chapter ``label``: equal names, or a shared stem ("Dakopbouw" for
+        "Opbouwwerken plat dak", "Veiligheid" for "Verplichte
+        veiligheidsvoorzieningen")."""
+        header = (header_name or "").strip().lower()
+        wanted = label.strip().lower()
+        if not header or not wanted:
+            return False
+        if header == wanted:
+            return True
+        stop = {"werken", "plat", "dak", "en", "van", "de", "het", "verplichte"}
+        for token in re.findall(r"[a-zà-ÿ]+", wanted):
+            if len(token) >= 5 and token not in stop:
+                stem = token[:6]
+                if stem in header:
+                    return True
+        return False
+
+    def _tectora_mirror_to_order(self, order=None):
+        """Roof project -> open quotation.
+
+        Chapter lines (project level) each keep one order line under the
+        header of their chapter, with the quantity of the roof project; the
+        measurement lines (sections, objects) are rebuilt from the drawing.
+        Lines the user added to the quotation by hand are left alone. A
+        chapter line for a product the drawing now prices is dropped, so
+        nothing is counted twice.
+        """
+        Line = self.env["sale.order.line"].with_context(tectora_sync=True)
+        for project in self:
+            target = order or project.sale_order_id
+            if not target or target.state not in ("draft", "sent"):
+                continue
+            target = target.with_context(tectora_sync=True)
+            measured_products = (
+                project.section_ids.product_line_ids
+                | project.roof_object_ids.product_line_ids
+            ).product_id
+            superseded = project.direct_line_ids.filtered(
+                lambda line: line.product_id in measured_products
+            )
+            if superseded:
+                superseded.with_context(tectora_sync=True).unlink()
+
+            lines = target.order_line.sorted(lambda l: (l.sequence, l.id))
+            by_roof_line = {}
+            for line in lines:
+                if line.roof_line_id:
+                    by_roof_line.setdefault(line.roof_line_id, line)
+
+            # Chapter lines.
+            for roof_line in project.direct_line_ids:
+                line = by_roof_line.get(roof_line)
+                if line:
+                    values = {}
+                    if line.product_id != roof_line.product_id:
+                        values["product_id"] = roof_line.product_id.id
+                    if roof_line._quantity_differs(line.product_uom_qty):
+                        values["product_uom_qty"] = roof_line.quantity
+                    if values:
+                        line.with_context(tectora_sync=True).write(values)
+                    continue
+                _chapter, label = self._chapter_of(roof_line.product_id.categ_id)
+                header = lines.filtered(
+                    lambda l: l.display_type == "line_section"
+                    and self._header_matches(l.name, label)
+                )[:1]
+                if not header:
+                    header = Line.create({
+                        "order_id": target.id,
+                        "display_type": "line_section",
+                        "name": label,
+                        "sequence": (max(lines.mapped("sequence")) if lines else 0) + 10,
+                    })
+                    lines |= header
+                # Right behind the last line of that chapter block.
+                block_end = header
+                for line in lines.sorted(lambda l: (l.sequence, l.id)):
+                    if (line.sequence, line.id) <= (header.sequence, header.id):
+                        continue
+                    if line.display_type == "line_section":
+                        break
+                    block_end = line
+                new_line = Line.create({
+                    "order_id": target.id,
+                    "product_id": roof_line.product_id.id,
+                    "product_uom_qty": roof_line.quantity,
+                    "roof_line_id": roof_line.id,
+                    "sequence": block_end.sequence,
                 })
-            )
-            order_lines.extend(
-                aggregated_order_lines(
-                    direct_lines.filtered(
-                        lambda line: line.product_id.categ_id == category
-                    )
-                )
-            )
-        for section in sections:
-            order_lines.append(
-                (0, 0, {
+                # Keep it after block_end when sequences tie: resequenced below.
+                lines = self._insert_after(lines, block_end, new_line)
+
+            # Measurement lines: rebuilt every time.
+            stale = lines.filtered("roof_measurement_line")
+            lines -= stale
+            if stale:
+                stale.unlink()
+            ordered = list(lines.sorted(lambda l: (l.sequence, l.id)))
+            for header_name, values_list in project._measurement_order_lines():
+                ordered.append(Line.create({
+                    "order_id": target.id,
                     "display_type": "line_section",
-                    "name": "%s — %.2f m², omtrek %.2f m" % (
-                        section.name, section.area, section.perimeter,
-                    ),
-                })
-            )
-            order_lines.extend(aggregated_order_lines(section.product_line_ids))
-        for roof_object in roof_objects:
-            order_lines.append(
-                (0, 0, {
-                    "display_type": "line_section",
-                    "name": "%s — %.2f m², omtrek %.2f m" % (
-                        roof_object.name, roof_object.area, roof_object.perimeter,
-                    ),
-                })
-            )
-            order_lines.extend(
-                aggregated_order_lines(roof_object.product_line_ids)
-            )
-        return order_lines
+                    "name": header_name,
+                    "roof_measurement_line": True,
+                }))
+                for values in values_list:
+                    values.update({"order_id": target.id, "roof_measurement_line": True})
+                    ordered.append(Line.create(values))
+            # One clean sequence for the whole quotation.
+            for index, line in enumerate(ordered, start=1):
+                if line.sequence != index * 10:
+                    line.with_context(tectora_sync=True).write({"sequence": index * 10})
+        return True
+
+    @api.model
+    def _insert_after(self, lines, anchor, new_line):
+        """Recordset ``lines`` with ``new_line`` placed right after ``anchor``
+        (order carried by the recordset itself, sequences set afterwards)."""
+        result = self.env["sale.order.line"]
+        inserted = False
+        for line in lines:
+            result |= line
+            if line == anchor:
+                result |= new_line
+                inserted = True
+        if not inserted:
+            result |= new_line
+        return result
 
     def _find_pricelist(self):
         """Pricelist named after the project type, if the company has one."""
@@ -1326,17 +1459,17 @@ class TectoraRoofProject(models.Model):
         return values
 
     def action_create_sale_order(self):
-        """Generate the quotation from the measurement, or refresh it.
+        """Create the quotation of the roof project, or bring it in line with
+        the measurement.
 
-        One roof project stands against one order: while its quotation is
-        still open the lines are rebuilt on that quotation, a confirmed order
-        is left alone, and only when there is no (open) order yet a new
-        quotation is created.
+        One roof project stands against one order: an open quotation is
+        aligned (chapter lines and measurement lines follow the roof project,
+        manual lines stay), a confirmed order is left alone, and only when
+        there is no open order a new quotation is created.
         """
         self.ensure_one()
         if not self.partner_id:
             raise UserError(_("Set a customer on the project first."))
-        order_lines = self._prepare_sale_order_lines()
         order = self.sale_order_id
         if order and order.state == "cancel":
             order = self.env["sale.order"]
@@ -1348,30 +1481,35 @@ class TectoraRoofProject(models.Model):
                     order=order.name,
                 )
             )
-        if order:
-            # Odoo has no command that only drops the generated lines, so
-            # everything on the open quotation is replaced by the measurement.
-            order.with_context(tectora_sync=True).write(
-                {"order_line": [(5, 0, 0)] + order_lines}
-            )
-            self.message_post(
-                body=_(
-                    "Quotation %s refreshed from the roof measurement.",
-                    order._get_html_link(),
+        if not order:
+            if not (
+                self.direct_line_ids
+                or self.section_ids.product_line_ids
+                or self.roof_object_ids.product_line_ids
+            ):
+                raise UserError(
+                    _(
+                        "No products are assigned to any roof section, roof "
+                        "object or project tab yet. Add product lines first."
+                    )
                 )
+            order = self.env["sale.order"].with_context(tectora_sync=True).create(
+                self._prepare_sale_order_values()
             )
-        else:
-            order_vals = self._prepare_sale_order_values()
-            order_vals["order_line"] = order_lines
-            order = self.env["sale.order"].with_context(
-                tectora_sync=True
-            ).create(order_vals)
             self.message_post(
                 body=_(
                     "Quotation %s created from the roof measurement.",
                     order._get_html_link(),
                 )
             )
+        else:
+            self.message_post(
+                body=_(
+                    "Quotation %s refreshed from the roof measurement.",
+                    order._get_html_link(),
+                )
+            )
+        self._tectora_mirror_to_order(order)
         # The meetblad is rendered as an extra page inside the quotation PDF
         # itself (see report_saleorder_inherit_tectora), so no separate
         # attachment is created here.

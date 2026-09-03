@@ -187,6 +187,7 @@ class SaleOrder(models.Model):
                                 order._get_html_link(),
                             )
                         )
+                        order._tectora_mirror_lines(roof)
                         continue
                     roof = Roof.create(order._tectora_roof_project_values())
                     order.with_context(tectora_sync=True).write(
@@ -198,6 +199,7 @@ class SaleOrder(models.Model):
                             order._get_html_link(),
                         )
                     )
+                    order._tectora_mirror_lines(roof)
             except Exception:
                 if raise_if_failed:
                     raise
@@ -217,6 +219,95 @@ class SaleOrder(models.Model):
         if others:
             others.with_context(tectora_sync=True).write({"roof_project_id": False})
         self._tectora_sync_pair(roof, master="order")
+        self._tectora_mirror_lines(roof)
+
+    # ------------------------------------------------------- line mirroring
+    def _tectora_mirror_lines(self, roof=None):
+        """Align the lines of this quotation and its roof project: the order's
+        own lines become chapter lines of the roof project, then the roof
+        project (quantities from the drawing, measurement lines) is written
+        back onto the quotation."""
+        self.ensure_one()
+        roof = roof or self.roof_project_id
+        if not roof or self.state not in ("draft", "sent"):
+            return
+        self._tectora_mirror_to_roof()
+        roof._tectora_mirror_to_order(self)
+
+    def _tectora_mirror_to_roof(self, lines=None):
+        """Order lines -> roof project.
+
+        A product line without a roof counterpart becomes a project-level
+        (chapter) line of the roof project, measured by its unit: m² lines
+        take the roof area, m lines the perimeter, counted lines the quantity
+        of the order. A line that already has its counterpart pushes an
+        edited count onto it; for measured lines the roof project decides, so
+        the order quantity is put back.
+        """
+        self.ensure_one()
+        roof = self.roof_project_id
+        if not roof or self.state not in ("draft", "sent"):
+            return
+        RoofLine = self.env["tectora.roof.section.product"].with_context(
+            tectora_sync=True
+        )
+        candidates = (lines if lines is not None else self.order_line)
+        candidates = candidates._tectora_mirrorable().filtered(
+            lambda line: line.order_id == self
+        )
+        measured_products = (
+            roof.section_ids.product_line_ids | roof.roof_object_ids.product_line_ids
+        ).product_id
+        direct_by_product = {}
+        for roof_line in roof.direct_line_ids:
+            direct_by_product.setdefault(roof_line.product_id, roof_line)
+        for line in candidates:
+            roof_line = line.roof_line_id
+            if roof_line and roof_line.project_id != roof:
+                roof_line = self.env["tectora.roof.section.product"]
+            if not roof_line:
+                if line.product_id in measured_products:
+                    # The drawing already prices this product; a manually
+                    # added line is left to the user.
+                    continue
+                roof_line = direct_by_product.get(line.product_id)
+                if roof_line and roof_line.sale_line_ids.filtered(
+                    lambda sol: sol.order_id == self and sol != line
+                ):
+                    roof_line = self.env["tectora.roof.section.product"]
+                if not roof_line:
+                    coverage = RoofLine._coverage_from_product(line.product_id)
+                    values = {
+                        "project_direct_id": roof.id,
+                        "product_id": line.product_id.id,
+                        "coverage": coverage,
+                    }
+                    if coverage == "general":
+                        values["quantity"] = line.product_uom_qty
+                    roof_line = RoofLine.create(values)
+                    direct_by_product[line.product_id] = roof_line
+                line.with_context(tectora_sync=True).write(
+                    {"roof_line_id": roof_line.id}
+                )
+            elif roof_line.product_id != line.product_id:
+                roof_line.with_context(tectora_sync=True).write(
+                    {
+                        "product_id": line.product_id.id,
+                        "coverage": RoofLine._coverage_from_product(line.product_id),
+                    }
+                )
+            # Quantities: counted chapter lines follow the order, measured
+            # lines follow the roof project.
+            if roof_line.project_direct_id and roof_line.coverage == "general":
+                if roof_line._quantity_differs(line.product_uom_qty):
+                    roof_line.with_context(tectora_sync=True).write(
+                        {"quantity": line.product_uom_qty}
+                    )
+            elif roof_line._quantity_differs(line.product_uom_qty):
+                line.with_context(tectora_sync=True).write(
+                    {"product_uom_qty": roof_line.quantity}
+                )
+        return True
 
     # --------------------------------------------------------- field mirror
     @api.model

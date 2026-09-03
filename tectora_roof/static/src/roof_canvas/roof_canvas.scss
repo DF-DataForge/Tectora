@@ -119,8 +119,13 @@
     }
 }
 
-// Forms containing the roof canvas: give the sheet the full width, so the
-// drawing plus its product sidebar get the space.
+// Forms of the roof project and the project dashboard: give the sheet the
+// full width on every tab (the drawing plus its product sidebar need it, and
+// the other tabs should not jump back to the narrow sheet when the drawing is
+// not the active tab). The <form> class ends up on the .o_form_view root
+// (form_controller's className), so it is there whatever tab is open; the
+// canvas selector is kept for forms that embed the drawing without the class.
+.o_form_view.o_tectora_chatter_bottom,
 .o_form_view:has(.o_roof_canvas) {
     .o_form_sheet_bg .o_form_sheet {
         max-width: 100%;
@@ -145,8 +150,9 @@
 // The leading .o_form_view is there for weight, not for reach: the rules being
 // undone live under .o_form_view.o_xxl_form_view, and a tie would be settled by
 // bundle order alone.
+.o_form_view.o_tectora_chatter_bottom .o_form_renderer,
 .o_form_view .o_form_renderer:has(.o_roof_canvas) {
-    flex-direction: column;
+    flex-direction: column !important;
     // h-100 is a Bootstrap utility, so it needs the same weight to undo.
     height: auto !important;
 

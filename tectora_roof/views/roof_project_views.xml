@@ -5,7 +5,7 @@
         <field name="name">tectora.roof.project.form</field>
         <field name="model">tectora.roof.project</field>
         <field name="arch" type="xml">
-            <form string="Dakproject">
+            <form string="Dakproject" class="o_tectora_chatter_bottom">
                 <header>
                     <button name="action_fetch_satellite" type="object"
                             string="Satellietbeeld ophalen" class="btn-secondary"
@@ -261,6 +261,33 @@
                             <field name="safety_line_ids" widget="roof_checklist"
                                    options="{'category': 'veiligheid'}" nolabel="1"/>
                         </page>
+                        <page string="Afbraak" name="demolition">
+                            <field name="demolition_line_ids" widget="roof_checklist"
+                                   options="{'category': 'afbraak'}" nolabel="1"/>
+                        </page>
+                        <page string="Opbouw" name="buildup">
+                            <field name="buildup_line_ids" widget="roof_checklist"
+                                   options="{'category': 'opbouw'}" nolabel="1"/>
+                        </page>
+                        <page string="Overige" name="other_lines">
+                            <field name="other_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                Offertelijnen buiten de vier hoofdstukken (dakranden,
+                                regenwaterafvoer, opties…), gespiegeld op het dakproject.
+                                Oppervlak- en randlijnen volgen de meting.
+                            </div>
+                        </page>
                         <page string="Achtergrond &amp; schaal" name="background">
                             <group>
                                 <group>
@@ -277,7 +304,7 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Projectinformatie" name="project_info">
+                        <page string="Werf" name="project_info">
                             <group>
                                 <group string="Projectleiding">
                                     <field name="project_manager_id"/>

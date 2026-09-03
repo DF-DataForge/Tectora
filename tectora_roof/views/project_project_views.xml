@@ -9,7 +9,7 @@
         <field name="model">project.project</field>
         <field name="priority">99</field>
         <field name="arch" type="xml">
-            <form string="Projectdashboard" class="o_tectora_dashboard" create="0" duplicate="0">
+            <form string="Projectdashboard" class="o_tectora_dashboard o_tectora_chatter_bottom" create="0" duplicate="0">
                 <field name="company_id" invisible="1"/>
                 <field name="currency_id" invisible="1"/>
                 <field name="allow_billable" invisible="1"/>

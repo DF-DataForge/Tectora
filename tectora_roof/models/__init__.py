@@ -8,6 +8,7 @@ from . import roof_team
 from . import hr_employee
 from . import roof_planning
 from . import sale_order
+from . import sale_order_line
 from . import project_project
 from . import res_config_settings
 from . import roof_usage

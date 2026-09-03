@@ -3,8 +3,16 @@
 import { patch } from "@web/core/utils/patch";
 import { FormRenderer } from "@web/views/form/form_renderer";
 
-// Forms whose chatter always belongs below the form, never beside it.
-const BOTTOM_CHATTER_MODELS = new Set(["tectora.roof.project"]);
+// Forms whose chatter always belongs below the form, never beside it: the
+// ones whose root <form> carries this class (the roof project and the project
+// dashboard).
+const BOTTOM_CHATTER_CLASS = "o_tectora_chatter_bottom";
+
+function wantsBottomChatter(renderer) {
+    const xmlDoc = renderer.props.archInfo?.xmlDoc;
+    const classes = xmlDoc?.getAttribute?.("class") || "";
+    return classes.split(/\s+/).includes(BOTTOM_CHATTER_CLASS);
+}
 
 // Odoo puts the chatter beside the form on wide screens (mailLayout() returns
 // SIDE_CHATTER from XXL up). On the roof project that column eats the width the
@@ -27,7 +35,7 @@ patch(FormRenderer.prototype, {
         // mailLayout is added by the mail addon's own patch; keep working if
         // that ever stops being the case.
         const layout = super.mailLayout?.(...args);
-        if (!BOTTOM_CHATTER_MODELS.has(this.props.record?.resModel)) {
+        if (!wantsBottomChatter(this)) {
             return layout;
         }
         return AS_BOTTOM[layout] || layout;

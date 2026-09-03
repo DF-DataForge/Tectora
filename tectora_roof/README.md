@@ -106,6 +106,33 @@ Eén dakproject staat tegenover één offerte/order, in beide richtingen:
 Elke order zonder dakproject krijgt er een bij het aanmaken; wie dat voor een
 technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 
+### Offerte volgt de meting (spiegeling)
+
+De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
+
+* De **hoofdstuktabs** op het dakproject — *Algemene werken*, *Veiligheid*,
+  *Afbraak*, *Opbouw* en *Overige* — zijn de projectlijnen; elke aangevinkte
+  regel staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
+  Omgekeerd wordt elke offertelijn (ook uit een offertesjabloon of handmatig
+  toegevoegd) een projectlijn op het dakproject, in de tab van haar
+  productcategorie.
+* **Hoeveelheden volgen de meting**: een m²-product neemt de dakoppervlakte,
+  een m-product de omtrek (uit de tekening); getelde producten (stuks, forfait,
+  dagen) nemen het aantal van de offerte over en zijn op beide kanten te
+  wijzigen. Op een daksectie of dakobject volgt een oppervlakteproduct de
+  oppervlakte en een randproduct de omtrek van die vorm.
+* De **meetlijnen** (per daksectie en dakobject, uit het tekenen en de
+  productkiezer) worden bij elke wijziging van de tekening herbouwd op de
+  offerte, onder een kop per daksectie. Een projectlijn voor een product dat
+  de tekening intussen zelf prijst, valt weg zodat niets dubbel telt.
+* Lijnen die je zelf op de offerte toevoegt voor een product dat de meting al
+  prijst, worden met rust gelaten; een lijn verwijderen op de offerte
+  verwijdert de projectlijn, en omgekeerd.
+
+**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn;
+een bevestigde order wordt nooit meer aangepast. De tab **Werf** (voorheen
+*Projectinformatie*) bundelt de werfvoorbereiding.
+
 ## Project (Odoo Project) en projectdashboard
 
 Bij het **bevestigen** van de order wordt een planbaar **project**

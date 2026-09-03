@@ -13,6 +13,10 @@
                     totaal <t t-out="total.toFixed(2)"/>
                 </span>
             </div>
+            <div class="text-muted small mb-2">
+                Aangevinkte producten staan op de offerte; m²- en m-hoeveelheden
+                volgen de meting (oppervlakte en omtrek van het dak).
+            </div>
             <t t-if="state.loading">
                 <div class="text-muted p-2">Laden…</div>
             </t>
@@ -47,6 +51,7 @@
                                            class="form-control form-control-sm text-end"
                                            t-att-value="line ? line.quantity : ''"
                                            t-att-disabled="line ? undefined : true"
+                                           t-att-title="line and line.coverage !== 'general' ? 'Volgt de meting' : undefined"
                                            t-on-change="(ev) => this.setQuantity(product, ev)"/>
                                 </td>
                                 <td t-out="product.uom_id ? product.uom_id[1] : ''"/>
