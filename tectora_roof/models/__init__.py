@@ -5,6 +5,7 @@ from . import roof_material
 from . import roof_epdm_sheet
 from . import roof_project_info
 from . import roof_team
+from . import hr_employee
 from . import roof_planning
 from . import sale_order
 from . import project_project

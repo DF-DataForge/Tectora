@@ -165,10 +165,17 @@ overeenkomstige kaarten leeg.
 
 ## Planning op ploegen
 
-**Ploegen** (menu *Ploegen*) zijn vaste groepen medewerkers: eigen ploegleden,
-of — als je die leeg laat — de medewerkers van een gekozen afdeling, telkens
-samen met de ploegbaas. Zo blijft het model configureerbaar zonder de
-HR-structuur te dupliceren.
+**Ploegen** zijn vaste groepen medewerkers. De ploeg wordt op de
+**werknemer** ingesteld: *Werknemers → werknemersfiche → tab Werk → Ploeg*
+(één ploeg per medewerker), en de ploegen zelf staan onder *Werknemers →
+Configuratie → Ploegen* (met de Planning-app ook onder *Planning →
+Configuratie*). De Werknemers-app opent **per ploeg**: één kolom per ploeg,
+ook lege, zodat medewerkers naar hun ploeg gesleept kunnen worden; wie geen
+ploeg heeft staat in een eigen kolom. Filters *In een ploeg* en *Ploegbazen*
+en een groepering *Ploeg* staan in het zoekvenster; de fiche toont ook de
+ploegbaas. Een ploeg zonder eigen leden gebruikt de medewerkers van een
+gekozen afdeling, telkens samen met de ploegbaas. Zo blijft het model
+configureerbaar zonder de HR-structuur te dupliceren.
 
 Op een dakproject kies je een **ploeg** en de **geplande start/einde**. Zodra
 beide ingevuld zijn, maakt het systeem automatisch een **werkblok**

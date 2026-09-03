@@ -21,12 +21,12 @@ class TectoraRoofTeam(models.Model):
         help="Optioneel: als de ploeg geen eigen leden heeft, worden de "
         "medewerkers van deze afdeling als ploegleden gebruikt.",
     )
-    employee_ids = fields.Many2many(
+    employee_ids = fields.One2many(
         "hr.employee",
-        "tectora_roof_team_employee_rel",
-        "team_id",
-        "employee_id",
+        "roof_team_id",
         string="Ploegleden",
+        help="De medewerkers met deze ploeg op hun werknemersfiche "
+        "(Werknemers -> tab Werk -> Ploeg).",
     )
     member_ids = fields.Many2many(
         "hr.employee",
@@ -39,7 +39,8 @@ class TectoraRoofTeam(models.Model):
     note = fields.Text(string="Notities")
 
     @api.depends(
-        "employee_ids", "leader_id", "department_id", "department_id.member_ids"
+        "employee_ids", "employee_ids.active", "leader_id", "department_id",
+        "department_id.member_ids",
     )
     def _compute_member_ids(self):
         for team in self:

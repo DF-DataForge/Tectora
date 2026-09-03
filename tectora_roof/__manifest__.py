@@ -29,8 +29,11 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   dashboard -- revenue and costs, deliveries, tasks, team planning and the roof
   measurement itself -- with every card opening the records behind it and the
   order and the roof project one click away.
+* Ploegen are configured on the employee (Employees -> Work -> Ploeg, and
+  Employees -> Configuration -> Ploegen); the Employees app opens grouped per
+  team.
     """,
-    "version": "19.0.3.1.0",
+    "version": "19.0.3.2.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -45,6 +48,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/roof_object_views.xml",
         "views/roof_material_views.xml",
         "views/roof_team_views.xml",
+        "views/hr_employee_views.xml",
         "views/roof_planning_views.xml",
         "views/sale_order_views.xml",
         "views/project_project_views.xml",
