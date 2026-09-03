@@ -317,7 +317,7 @@
                                     <field name="material_via_side"/>
                                     <field name="aerial_lift_needed"/>
                                     <field name="aerial_lift_type"
-                                           invisible="aerial_lift_needed != 'yes'"/>
+                                           invisible="not aerial_lift_needed"/>
                                 </group>
                                 <group string="Transport">
                                     <field name="material_transport"/>
