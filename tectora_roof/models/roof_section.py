@@ -284,6 +284,14 @@ class TectoraRoofSectionProduct(models.Model):
             else:
                 line.quantity = line.quantity or 1.0
 
+    @api.onchange("product_id")
+    def _onchange_product_id(self):
+        """A chapter line picked in one of the project tabs is measured by
+        the unit of its product (m² -> surface, m -> edges, else counted)."""
+        for line in self:
+            if line.product_id and (line.project_direct_id or not (line.section_id or line.object_id)):
+                line.coverage = self._coverage_from_product(line.product_id)
+
     # ----------------------------------------------------------- unit -> use
     @api.model
     def _coverage_from_product(self, product):

@@ -113,9 +113,12 @@ technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 
 De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
 
-* De **hoofdstuktabs** op het dakproject — *Algemene werken*, *Veiligheid*,
-  *Afbraak*, *Opbouw* en *Overige* — zijn de projectlijnen; elke aangevinkte
-  regel staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
+* De **hoofdstuktabs** op het dakproject zijn de projectlijnen; elke regel
+  staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
+  *Algemene werken* en *Veiligheid* tonen de volledige checklist van het
+  hoofdstuk om aan te vinken; *Afbraak*, *Opbouw* en *Overige* tonen alleen
+  de producten die op de offerte staan, met een regel *Toevoegen* die enkel
+  producten van dat hoofdstuk aanbiedt.
   Omgekeerd wordt elke offertelijn (ook uit een offertesjabloon of handmatig
   toegevoegd) een projectlijn op het dakproject, in de tab van haar
   productcategorie.
