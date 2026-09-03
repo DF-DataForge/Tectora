@@ -37,7 +37,9 @@ LINE = colors.HexColor("#D8E3E8")
 
 import os as _os
 LOGO = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "dataforge_logo.png")
-OUT = sys.argv[1] if len(sys.argv) > 1 else "Tectora_Dakmeting_Handleiding_DataForge.pdf"
+LANGS = {"nl": (content_nl, "nl"), "en": (content_en, "en"), "sq": (content_sq, "sq")}
+LANG = sys.argv[1] if len(sys.argv) > 1 else "nl"
+OUT = sys.argv[2] if len(sys.argv) > 2 else "Tectora_Dakmeting_Handleiding_%s.pdf" % LANG.upper()
 
 styles = {
     "body": ParagraphStyle("body", fontName="DejaVu", fontSize=9.5, leading=14, textColor=colors.HexColor("#1f2933"), spaceAfter=6),
@@ -62,11 +64,12 @@ MARGIN = 20 * mm
 
 
 class Manual(BaseDocTemplate):
-    def __init__(self, filename, **kw):
+    def __init__(self, filename, meta, **kw):
+        self.meta = meta
         super().__init__(filename, pagesize=A4, leftMargin=MARGIN, rightMargin=MARGIN,
                          topMargin=26 * mm, bottomMargin=20 * mm,
-                         title="Tectora Dakmeting — Handleiding / Manual / Manual", author="Data Forge",
-                         subject="Handleiding Tectora Dakmeting (NL / EN / SQ)", **kw)
+                         title="Tectora Dakmeting — " + meta["part"], author="Data Forge",
+                         subject=meta["subtitle"], **kw)
         frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id="normal")
         cover = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id="cover")
         self.addPageTemplates([
@@ -99,14 +102,14 @@ class Manual(BaseDocTemplate):
         canvas.drawImage(LOGO, MARGIN, PAGE_H - 17 * mm, width=42 * mm, height=10 * mm, mask="auto")
         canvas.setFillColor(GREY)
         canvas.setFont("DejaVu", 8)
-        label = self.part_label or "Inhoud · Contents · Përmbajtja"
+        label = self.part_label or self.meta["toc"]
         canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - 13 * mm, "Tectora Dakmeting — " + label)
         canvas.setStrokeColor(LINE)
         canvas.setLineWidth(0.6)
         canvas.line(MARGIN, PAGE_H - 19 * mm, PAGE_W - MARGIN, PAGE_H - 19 * mm)
         canvas.line(MARGIN, 14 * mm, PAGE_W - MARGIN, 14 * mm)
         canvas.setFont("DejaVu", 7.5)
-        canvas.drawString(MARGIN, 9 * mm, "Data Forge voor Tectora · www.data-forge.be")
+        canvas.drawString(MARGIN, 9 * mm, self.meta["for"] + " · www.data-forge.be")
         canvas.drawRightString(PAGE_W - MARGIN, 9 * mm, str(doc.page))
         canvas.restoreState()
 
@@ -217,23 +220,25 @@ def build_part(module, flow, story):
 
 
 def main():
-    doc = Manual(OUT)
+    module, flow_key = LANGS[LANG]
+    meta = module.META
+    doc = Manual(OUT, meta)
     story = []
     # Cover
     story.append(Spacer(1, 70 * mm))
-    story.append(Paragraph("Tectora Dakmeting", styles["cover_title"]))
+    story.append(Paragraph(meta["title"], styles["cover_title"]))
     story.append(Spacer(1, 6))
-    story.append(Paragraph("Handleiding · User Manual · Manuali i përdorimit", styles["cover_sub"]))
+    story.append(Paragraph(meta["part"], styles["cover_sub"]))
     story.append(Spacer(1, 4))
-    story.append(Paragraph("Nederlands · English · Shqip", styles["cover_sub"]))
+    story.append(Paragraph(meta["subtitle"], styles["cover_sub"]))
     story.append(Spacer(1, 40 * mm))
-    story.append(Paragraph(content_nl.META["for"] + "<br/>" + content_nl.META["version"], styles["cover_small"]))
+    story.append(Paragraph(meta["for"] + "<br/>" + meta["version"], styles["cover_small"]))
     story.append(Spacer(1, 6))
-    story.append(Paragraph("Odoo 19 · modules tectora_roof, tectora_roof_planning, tectora_products, tectora_boms", styles["cover_small"]))
+    story.append(Paragraph("Odoo 19 · tectora_roof, tectora_roof_planning, tectora_products, tectora_boms", styles["cover_small"]))
     # Table of contents
     story.append(NextPageTemplate("Body"))
     story.append(PageBreak())
-    story.append(Paragraph("Inhoud · Contents · Përmbajtja", styles["toc_title"]))
+    story.append(Paragraph(meta["toc"], styles["toc_title"]))
     toc = TableOfContents()
     toc.levelStyles = [
         ParagraphStyle("toc0", fontName="DejaVu-Bold", fontSize=11, leading=16, textColor=NAVY, spaceBefore=8),
@@ -241,9 +246,7 @@ def main():
     ]
     toc.dotsMinLevel = 1
     story.append(toc)
-    build_part(content_nl, FLOWS["nl"], story)
-    build_part(content_en, FLOWS["en"], story)
-    build_part(content_sq, FLOWS["sq"], story)
+    build_part(module, FLOWS[flow_key], story)
     doc.multiBuild(story)
     print("written", OUT)
 
