@@ -53,6 +53,11 @@ install on Odoo 17 or earlier without adjustments.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
+   A **naad** (seam) marks that two roof surfaces are separate: draw it with
+   the *Naad* tool as an open dotted line (click points, double-click to
+   finish). It is stored as a roof object of type *Naad* with its length;
+   clicking its label assigns products from categories whose *Kan gebruikt
+   worden voor* includes **Naden**, measured by the seam length.
 4. Click **Meting bijwerken uit tekening**: sections and roof objects are
    created/updated from the shapes (matched by canvas ID, so re-syncing after
    edits keeps assigned products).

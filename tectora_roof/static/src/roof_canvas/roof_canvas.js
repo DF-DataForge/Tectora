@@ -53,13 +53,54 @@ function circlePoints(cx, cy, radius) {
     }
     return points;
 }
-const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel" };
+const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
 
 const KIND_STYLES = {
     section: { fill: "rgba(10, 116, 131, 0.28)", stroke: "#0a7483", label: "" },
     chimney: { fill: "rgba(217, 119, 6, 0.35)", stroke: "#b45309", label: "Schoorsteen" },
     skylight: { fill: "rgba(37, 99, 235, 0.30)", stroke: "#1d4ed8", label: "Koepel" },
+    // A seam (naad) is an open dotted line between two roof surfaces.
+    seam: { fill: "rgba(0, 0, 0, 0)", stroke: "#374151", label: "Naad", dashed: true },
 };
+
+// How close (screen px) a click must come to a seam to select it.
+const SEAM_HIT_SCREEN_PX = 8;
+
+function isSeam(shape) {
+    return (shape && shape.kind) === "seam";
+}
+
+// Distance from a point to an open polyline (world units).
+function distanceToPolyline([px, py], points) {
+    let best = Infinity;
+    for (let i = 0; i < points.length - 1; i++) {
+        const [ax, ay] = points[i];
+        const [bx, by] = points[i + 1];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const lengthSq = dx * dx + dy * dy || 1;
+        const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lengthSq));
+        best = Math.min(best, Math.hypot(px - (ax + dx * t), py - (ay + dy * t)));
+    }
+    return best;
+}
+
+// Point halfway along an open polyline, for its label.
+function polylineMidpoint(points) {
+    const total = polygonPerimeter(points, false);
+    let remaining = total / 2;
+    for (let i = 0; i < points.length - 1; i++) {
+        const [ax, ay] = points[i];
+        const [bx, by] = points[i + 1];
+        const length = Math.hypot(bx - ax, by - ay);
+        if (remaining <= length || i === points.length - 2) {
+            const t = length ? Math.min(1, remaining / length) : 0;
+            return [ax + (bx - ax) * t, ay + (by - ay) * t];
+        }
+        remaining -= length;
+    }
+    return points[0];
+}
 
 function polygonSignedArea(points) {
     let total = 0;
@@ -696,7 +737,7 @@ export class RoofCanvasField extends Component {
         }
         if (this.state.tool === "rect") {
             this.drag = { mode: "rect", start: point, current: point };
-        } else if (this.state.tool === "polygon") {
+        } else if (this.state.tool === "polygon" || this.state.tool === "seam") {
             this.addPolygonPoint(point);
         } else if (this.state.tool === "select") {
             const labelHit = this.labelHitTest(point);
@@ -851,7 +892,7 @@ export class RoofCanvasField extends Component {
     }
 
     onDblClick(ev) {
-        if (this.state.tool === "polygon" && this.draftPolygon) {
+        if ((this.state.tool === "polygon" || this.state.tool === "seam") && this.draftPolygon) {
             this.closePolygon();
         } else if (this.state.tool === "select") {
             const hit = this.hitTest(this.toWorld(ev));
@@ -956,6 +997,7 @@ export class RoofCanvasField extends Component {
             const first = this.draftPolygon[0];
             const snap = CLOSE_SNAP_PX / this.view.zoom;
             if (
+                this.state.tool !== "seam" &&
                 this.draftPolygon.length >= 3 &&
                 Math.hypot(point[0] - first[0], point[1] - first[1]) <= snap
             ) {
@@ -969,7 +1011,12 @@ export class RoofCanvasField extends Component {
     }
 
     closePolygon() {
-        if (this.draftPolygon && this.draftPolygon.length >= 3) {
+        if (this.state.tool === "seam") {
+            // An open line: two points make a seam.
+            if (this.draftPolygon && this.draftPolygon.length >= 2) {
+                this.addShape(this.draftPolygon, "seam");
+            }
+        } else if (this.draftPolygon && this.draftPolygon.length >= 3) {
             this.addShape(this.draftPolygon);
         }
         this.draftPolygon = null;
@@ -1000,8 +1047,15 @@ export class RoofCanvasField extends Component {
 
     hitTest(point) {
         const shapes = this.shapes;
+        const seamTolerance = SEAM_HIT_SCREEN_PX / this.view.zoom;
+        // Seams first: a thin line inside a section must stay selectable.
         for (let i = shapes.length - 1; i >= 0; i--) {
-            if (pointInPolygon(point, shapes[i].points)) {
+            if (isSeam(shapes[i]) && distanceToPolyline(point, shapes[i].points) <= seamTolerance) {
+                return shapes[i];
+            }
+        }
+        for (let i = shapes.length - 1; i >= 0; i--) {
+            if (!isSeam(shapes[i]) && pointInPolygon(point, shapes[i].points)) {
                 return shapes[i];
             }
         }
@@ -1037,7 +1091,7 @@ export class RoofCanvasField extends Component {
     }
 
     panelGeometry(shape) {
-        if (shape.shape === "circle") {
+        if (shape.shape === "circle" || isSeam(shape)) {
             return { edges: [], inner: null };
         }
         const scale = this.scaleMPerPx;
@@ -1345,7 +1399,8 @@ export class RoofCanvasField extends Component {
     // Ctrl-click gathers sides (or surfaces, or corners); releasing Ctrl opens
     // the picker once for all of them.
     hitTargetKey(hit) {
-        const side = hit.type === "surface" ? 0 : (hit.edgeIndex || 0) + 1;
+        const side =
+            hit.type === "surface" || hit.type === "seam" ? 0 : (hit.edgeIndex || 0) + 1;
         return `${hit.shapeId}|${hit.type}|${side}`;
     }
 
@@ -1360,7 +1415,7 @@ export class RoofCanvasField extends Component {
     }
 
     toggleMultiSelect(hit) {
-        if (!["edge", "surface", "corner"].includes(hit.type)) {
+        if (!["edge", "surface", "corner", "seam"].includes(hit.type)) {
             return;
         }
         if (hit.type === "corner" && (hit.kind || "section") !== "section") {
@@ -1388,6 +1443,9 @@ export class RoofCanvasField extends Component {
         const name = hit.name || KIND_NAMES[hit.kind || "section"] || "Naamloos";
         if (hit.type === "surface") {
             return name;
+        }
+        if (hit.type === "seam") {
+            return `${name} — naad`;
         }
         if (hit.type === "corner") {
             const kind = hit.cornerType === "inner" ? "binnenhoek" : "buitenhoek";
@@ -1445,13 +1503,29 @@ export class RoofCanvasField extends Component {
     // must still be selectable.
     sameTypeTargets(hit) {
         const type = hit.type;
-        if (!["surface", "edge", "corner"].includes(type)) {
+        if (!["surface", "edge", "corner", "seam"].includes(type)) {
             return [];
         }
         const isObject = (hit.kind || "section") !== "section";
         const wantsInner = hit.cornerType === "inner";
         const targets = [];
         for (const shape of this.shapes) {
+            if (isSeam(shape) !== (type === "seam")) {
+                continue; // seams take their own products
+            }
+            if (type === "seam") {
+                const length = polygonPerimeter(shape.points || [], false) * this.scaleMPerPx;
+                targets.push({
+                    shapeId: shape.id,
+                    kind: "seam",
+                    key: `${shape.id}|seam|0`,
+                    sideNumber: 0,
+                    quantity: Math.round(length * 100) / 100,
+                    label: shape.name || KIND_NAMES.seam,
+                    detail: `${length.toFixed(2)} m`,
+                });
+                continue;
+            }
             if (((shape.kind || "section") !== "section") !== isObject) {
                 continue; // dakobjecten and daksecties take different products
             }
@@ -1587,13 +1661,19 @@ export class RoofCanvasField extends Component {
         }
         const isSurface = hit.type === "surface";
         const isCorner = hit.type === "corner";
-        const sideNumber = isSurface ? 0 : hit.edgeIndex + 1;
+        const isSeamHit = hit.type === "seam";
+        const sideNumber = isSurface || isSeamHit ? 0 : hit.edgeIndex + 1;
         const quantity = isCorner
             ? 1
             : Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
         const shapeName = hit.name || _t("Naamloos");
         let target;
-        if (isSurface) {
+        if (isSeamHit) {
+            target = _t("%(shape)s — naad (%(qty)s m)", {
+                shape: shapeName,
+                qty: quantity.toFixed(2),
+            });
+        } else if (isSurface) {
             target = _t("%(shape)s — oppervlak (%(qty)s m²)", {
                 shape: shapeName,
                 qty: quantity.toFixed(2),
@@ -1621,7 +1701,9 @@ export class RoofCanvasField extends Component {
         // in its 'Kan gebruikt worden voor'; categories without any usage
         // never appear in the canvas assignment dialog.
         let usages;
-        if (isObject) {
+        if (isSeamHit) {
+            usages = ["seam"];
+        } else if (isObject) {
             usages = ["object"];
         } else if (isCorner) {
             usages = [
@@ -1656,7 +1738,9 @@ export class RoofCanvasField extends Component {
                 ["coverage", "=", coverage],
                 ["edge_index", "=", sideNumber],
             ],
-            assignedLabel: isSurface
+            assignedLabel: isSeamHit
+                ? _t("Reeds toegewezen aan deze naad")
+                : isSurface
                 ? _t("Reeds toegewezen aan dit oppervlak")
                 : isCorner
                 ? _t("Reeds toegewezen aan deze hoek")
@@ -1811,11 +1895,20 @@ export class RoofCanvasField extends Component {
             return;
         }
         if (this.draftPolygon) {
-            this.state.status = `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
+            this.state.status =
+                this.state.tool === "seam"
+                    ? `Naad: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om af te sluiten, Esc om te annuleren`
+                    : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
             return;
         }
         const shape = this.selectedShape;
-        if (shape) {
+        if (shape && isSeam(shape)) {
+            const length = polygonPerimeter(shape.points, false) * this.scaleMPerPx;
+            this.state.status =
+                `${shape.name || "Naad"} — naad van ${length.toFixed(2)} m · ` +
+                `geselecteerd: sleep om te verplaatsen, versleep een punt om de ` +
+                `lijn aan te passen, klik op het label om naadproducten toe te wijzen`;
+        } else if (shape) {
             const m = this.measurements(shape.points);
             this.state.status =
                 `${shape.name || "Naamloos"} — ${m.width.toFixed(2)} × ` +
@@ -1833,7 +1926,8 @@ export class RoofCanvasField extends Component {
                 "oranje = binnenhoek). Rechtsklik op een lengtelabel om de " +
                 "werkelijke maat in te geven en de tekening te kalibreren; " +
                 "rechtsklik op de tekening om een dakobject toe te voegen. " +
-                "Scroll om te zoomen, F voor volledig scherm.";
+                "Teken een naad (stippellijn tussen twee dakvlakken) met de " +
+                "naadtool. Scroll om te zoomen, F voor volledig scherm.";
         }
     }
 
@@ -1958,6 +2052,12 @@ export class RoofCanvasField extends Component {
         ctx.font = `600 ${fontSize}px sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+
+        if (isSeam(shape)) {
+            this.drawSeamLabels(ctx, shape, { zoom, scale, fontSize, boxHeight, padX, style });
+            ctx.textBaseline = "alphabetic";
+            return;
+        }
 
         // Clickable name box at the shape's center (assigns surface
         // products), with only the area as plain text underneath.
@@ -2151,6 +2251,57 @@ export class RoofCanvasField extends Component {
         }
     }
 
+    // A seam gets one clickable label halfway along it (assigns seam
+    // products) and drag handles on its points.
+    drawSeamLabels(ctx, shape, { zoom, scale, fontSize, boxHeight, padX, style }) {
+        const points = shape.points;
+        const lengthM = polygonPerimeter(points, false) * scale;
+        const title = `${style.label}: ${shape.name || ""} · ${lengthM.toFixed(2)} m`.trim();
+        const width = ctx.measureText(title).width + padX * 2;
+        const [mx, my] = polylineMidpoint(points);
+        const x = mx - width / 2;
+        const y = my - boxHeight * 1.3;
+        const picked = this.isMultiSelected({ type: "seam", shapeId: shape.id, kind: "seam" });
+        this.drawLabelBox(ctx, title, x, y, width, boxHeight, style.stroke, picked);
+        this.labelHits.push({
+            type: "seam",
+            shapeId: shape.id,
+            kind: "seam",
+            name: shape.name || "",
+            edgeIndex: 0,
+            x,
+            y,
+            w: width,
+            h: boxHeight,
+            lengthM,
+        });
+        const handleRadius = 5 / zoom;
+        for (let i = 0; i < points.length; i++) {
+            const [px, py] = points[i];
+            ctx.beginPath();
+            ctx.arc(px, py, handleRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = 1.5 / zoom;
+            ctx.stroke();
+            const hitRadius = handleRadius * 1.5;
+            this.labelHits.push({
+                type: "corner",
+                cornerType: "outer",
+                shapeId: shape.id,
+                kind: "seam",
+                name: shape.name || "",
+                edgeIndex: i,
+                x: px - hitRadius,
+                y: py - hitRadius,
+                w: hitRadius * 2,
+                h: hitRadius * 2,
+            });
+        }
+        ctx.font = `${fontSize}px sans-serif`;
+    }
+
     drawLabelBox(ctx, label, x, y, width, height, strokeColor, selected = false) {
         const zoom = this.view.zoom;
         ctx.beginPath();
@@ -2247,6 +2398,22 @@ export class RoofCanvasField extends Component {
         const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
         const points = shape.points;
         const isCircle = shape.shape === "circle";
+        if (isSeam(shape)) {
+            // Open dotted line: the two surfaces on either side are separate.
+            ctx.beginPath();
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i][0], points[i][1]);
+            }
+            ctx.setLineDash([3 / this.view.zoom, 5 / this.view.zoom]);
+            ctx.lineCap = "round";
+            ctx.strokeStyle = selected ? "#111827" : style.stroke;
+            ctx.lineWidth = (selected ? 4 : 3) / this.view.zoom;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.lineCap = "butt";
+            return;
+        }
         ctx.beginPath();
         if (isCircle) {
             const box = boundingBox(points);

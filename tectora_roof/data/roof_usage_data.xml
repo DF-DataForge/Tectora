@@ -30,4 +30,9 @@
         <field name="code">corner_outer</field>
         <field name="sequence">60</field>
     </record>
+    <record id="usage_seam" model="tectora.roof.usage">
+        <field name="name">Naden</field>
+        <field name="code">seam</field>
+        <field name="sequence">70</field>
+    </record>
 </odoo>

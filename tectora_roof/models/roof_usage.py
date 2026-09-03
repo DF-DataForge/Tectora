@@ -12,6 +12,7 @@ class TectoraRoofUsage(models.Model):
         string="Code",
         required=True,
         help="Technical code the canvas uses when filtering products: "
-        "object, edge, surface, corner, corner_inner or corner_outer.",
+        "object, edge, surface, corner, corner_inner, corner_outer or seam "
+        "(a naad between two roof surfaces).",
     )
     sequence = fields.Integer(default=10)

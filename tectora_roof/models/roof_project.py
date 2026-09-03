@@ -987,7 +987,11 @@ class TectoraRoofProject(models.Model):
                 for p in shape.get("points", [])
                 if isinstance(p, (list, tuple)) and len(p) >= 2
             ]
-            if len(points) >= 3 and shape.get("id"):
+            kind = shape.get("kind") or "section"
+            # A seam (naad) is an open line between two roof surfaces: two
+            # points are enough; everything else is a polygon.
+            minimum = 2 if kind == "seam" else 3
+            if len(points) >= minimum and shape.get("id"):
                 def _per_edge(raw):
                     result = {}
                     for key, value in (raw or {}).items():
@@ -1018,6 +1022,17 @@ class TectoraRoofProject(models.Model):
             "area": round(_polygon_area_px(points) * scale * scale, 2),
             "perimeter": round(_polygon_perimeter_px(points) * scale, 2),
         }
+
+    def _seam_measurements(self, points):
+        """A seam has a length only; it is stored as the object's length and
+        perimeter, so edge products on it take the seam length."""
+        scale = self.scale_m_per_px or DEFAULT_SCALE_M_PER_PX
+        length_px = sum(
+            math.hypot(points[i + 1][0] - points[i][0], points[i + 1][1] - points[i][1])
+            for i in range(len(points) - 1)
+        )
+        length = round(length_px * scale, 2)
+        return {"width": 0.0, "length": length, "area": 0.0, "perimeter": length}
 
     def _shape_inner_measurements(self, points, edge_widths):
         """Inner area/perimeter derived from per-side widths (m); zeros when
@@ -1102,9 +1117,15 @@ class TectoraRoofProject(models.Model):
 
         object_count = 0
         for index, shape in enumerate(object_shapes, start=1):
-            values = self._shape_measurements(shape["points"])
+            if shape["kind"] == "seam":
+                values = self._seam_measurements(shape["points"])
+                values["height"] = 0.0
+            else:
+                values = self._shape_measurements(shape["points"])
             values["object_type"] = shape["kind"]
-            values["name"] = shape["name"] or _("Object %s") % index
+            values["name"] = shape["name"] or (
+                _("Naad %s") if shape["kind"] == "seam" else _("Object %s")
+            ) % index
             existing = objects_by_ref.pop(shape["id"], None)
             if existing:
                 existing.write(values)
@@ -1198,12 +1219,36 @@ class TectoraRoofProject(models.Model):
             font = ImageFont.load_default()
         for shape in shapes:
             points = [tuple(p) for p in shape["points"]]
+            cx = sum(p[0] for p in points) / len(points)
+            cy = sum(p[1] for p in points) / len(points)
+            if shape["kind"] == "seam":
+                # Dotted line: PIL has no dash pattern, so draw the dashes.
+                seam_color = (55, 65, 81, 255)
+                for (ax, ay), (bx, by) in zip(points, points[1:]):
+                    total = math.hypot(bx - ax, by - ay) or 1.0
+                    dash, gap, pos = 8.0, 6.0, 0.0
+                    while pos < total:
+                        end = min(pos + dash, total)
+                        draw.line(
+                            [
+                                (ax + (bx - ax) * pos / total, ay + (by - ay) * pos / total),
+                                (ax + (bx - ax) * end / total, ay + (by - ay) * end / total),
+                            ],
+                            fill=seam_color,
+                            width=3,
+                        )
+                        pos += dash + gap
+                measures = self._seam_measurements(shape["points"])
+                label = "%s\nnaad %.1f m" % (shape["name"] or "", measures["length"])
+                draw.multiline_text(
+                    (cx, cy), label.strip(), fill=(11, 31, 36, 255),
+                    font=font, anchor="mm", align="center",
+                )
+                continue
             kind = shape["kind"] if shape["kind"] in fills else "section"
             draw.polygon(points, fill=fills[kind])
             draw.line(points + [points[0]], fill=strokes[kind], width=3)
             measures = self._shape_measurements(shape["points"])
-            cx = sum(p[0] for p in points) / len(points)
-            cy = sum(p[1] for p in points) / len(points)
             label = "%s\n%.1f × %.1f m — %.1f m²" % (
                 shape["name"] or "",
                 measures["width"],
@@ -1273,12 +1318,13 @@ class TectoraRoofProject(models.Model):
                 aggregated_order_lines(target.product_line_ids),
             ))
         for target in self.roof_object_ids.filtered("product_line_ids"):
-            blocks.append((
-                "%s — %.2f m², omtrek %.2f m" % (
+            if target.object_type == "seam":
+                header = "%s — naad %.2f m" % (target.name, target.perimeter)
+            else:
+                header = "%s — %.2f m², omtrek %.2f m" % (
                     target.name, target.area, target.perimeter,
-                ),
-                aggregated_order_lines(target.product_line_ids),
-            ))
+                )
+            blocks.append((header, aggregated_order_lines(target.product_line_ids)))
         return blocks
 
     # ------------------------------------------------- quotation mirroring

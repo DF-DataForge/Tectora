@@ -28,6 +28,12 @@
                         <i class="fa fa-star-o"/> Polygoon
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
+                            t-att-class="{ active: state.tool === 'seam' }"
+                            t-on-click="() => this.setTool('seam')"
+                            title="Naad tekenen: stippellijn die aangeeft dat twee dakvlakken gescheiden zijn (klik punten, dubbelklik om af te sluiten). Klik nadien op het label om naadproducten toe te wijzen.">
+                        <i class="fa fa-ellipsis-h"/> Naad
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: state.tool === 'pan' }"
                             t-on-click="() => this.setTool('pan')"
                             title="Verschuiven">
