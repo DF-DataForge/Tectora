@@ -25,6 +25,16 @@
         z-index: 100;
     }
 
+    // The background menu hangs under its toolbar icon.
+    .o_roof_canvas_bgmenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 100;
+        min-width: 20rem;
+        margin-top: 0.15rem;
+    }
+
     .o_roof_canvas_sidebar {
         flex: 0 0 320px;
         width: 320px;

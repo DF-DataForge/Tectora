@@ -237,6 +237,8 @@ export class RoofCanvasField extends Component {
         this.mainRef = useRef("main");
         this.toolbarRef = useRef("toolbar");
         this.statusRef = useRef("status");
+        this.bgMenuRef = useRef("bgmenu");
+        this.bgFileRef = useRef("bgfile");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -251,6 +253,8 @@ export class RoofCanvasField extends Component {
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
             panel: null, // product card for the selected shape
             fullscreen: false,
+            bgMenu: false, // the background menu (satellite, plan) is open
+            bgBusy: false, // a background fetch/upload is running
             // Ctrl-clicked sides, surfaces or corners waiting for Ctrl to be
             // released; they then all get the same products at once.
             multiSelect: [],
@@ -275,6 +279,12 @@ export class RoofCanvasField extends Component {
                 this.flushMultiSelect();
             }
         };
+        // A click anywhere outside the background menu closes it.
+        this.onWindowPointerDown = (ev) => {
+            if (this.state.bgMenu && this.bgMenuRef.el && !this.bgMenuRef.el.contains(ev.target)) {
+                this.state.bgMenu = false;
+            }
+        };
         this._destroyed = false;
         this._autoSyncTimer = null;
 
@@ -283,12 +293,14 @@ export class RoofCanvasField extends Component {
             this.loadBackground();
             window.addEventListener("resize", this.onWindowResize);
             window.addEventListener("keyup", this.onWindowKeyUp);
+            window.addEventListener("pointerdown", this.onWindowPointerDown, true);
         });
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
             window.removeEventListener("resize", this.onWindowResize);
             window.removeEventListener("keyup", this.onWindowKeyUp);
+            window.removeEventListener("pointerdown", this.onWindowPointerDown, true);
         });
     }
 
@@ -437,13 +449,100 @@ export class RoofCanvasField extends Component {
         requestAnimationFrame(() => this.resizeCanvas());
     }
 
-    loadBackground() {
-        const url = this.backgroundUrl;
+    // ------------------------------------------------------------ background
+    toggleBackgroundMenu() {
+        this.state.bgMenu = !this.state.bgMenu;
+    }
+
+    /**
+     * Run a server-side change of the background: the record is saved first
+     * (the address may have just been typed), then reloaded so the widget
+     * sees the new image, scale and bounds, and the drawing is refitted.
+     */
+    async _withBackgroundChange(label, action) {
+        const record = this.props.record;
+        if (this.state.bgBusy) {
+            return;
+        }
+        this.state.bgBusy = true;
+        this.state.bgMenu = false;
+        try {
+            if (!(await record.save())) {
+                return;
+            }
+            if (!record.resId) {
+                this.notification.add(
+                    _t("Sla het dakproject eerst op."), { type: "warning" }
+                );
+                return;
+            }
+            await action(record.resId);
+            if (this._destroyed) {
+                return;
+            }
+            await record.load();
+            // The stored image changed but its URL did not: reload it for real.
+            this.backgroundImage = null;
+            this.loadBackground(true);
+            this.state.showBackground = true;
+            if (label) {
+                this.state.status = label;
+            }
+        } catch (error) {
+            const message =
+                error?.data?.message || error?.message?.message || error?.message || String(error);
+            this.notification.add(message, { type: "danger", title: _t("Achtergrond") });
+        } finally {
+            this.state.bgBusy = false;
+        }
+    }
+
+    async fetchSatellite() {
+        await this._withBackgroundChange(_t("Satellietbeeld opgehaald."), (resId) =>
+            this.orm.call("tectora.roof.project", "action_fetch_satellite", [resId])
+        );
+    }
+
+    chooseUpload() {
+        this.bgFileRef.el?.click();
+    }
+
+    async uploadPlan(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!file) {
+            return;
+        }
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+        await this._withBackgroundChange(
+            _t("Plan geladen als achtergrond. Kalibreer de schaal via rechtsklik op een zijdelengte."),
+            (resId) =>
+                this.orm.write("tectora.roof.project", [resId], { background_image: base64 })
+        );
+    }
+
+    async clearBackground() {
+        await this._withBackgroundChange(_t("Achtergrond verwijderd."), (resId) =>
+            this.orm.write("tectora.roof.project", [resId], { background_image: false })
+        );
+    }
+
+    loadBackground(bustCache = false) {
+        let url = this.backgroundUrl;
         if (!url) {
+            this.backgroundImage = null;
             this.world = { ...DEFAULT_WORLD };
             this.fitView();
             this.draw();
             return;
+        }
+        if (bustCache) {
+            url += `?t=${Date.now()}`;
         }
         const image = new Image();
         image.onload = () => {
@@ -771,6 +870,10 @@ export class RoofCanvasField extends Component {
             }
         } else if (ev.key === "Escape") {
             // Cancel the most local thing first, leave fullscreen last.
+            if (this.state.bgMenu) {
+                this.state.bgMenu = false;
+                return;
+            }
             if (this.state.contextMenu) {
                 this.state.contextMenu = null;
             } else if (this.state.multiSelect.length) {

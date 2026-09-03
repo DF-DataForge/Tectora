@@ -32,7 +32,8 @@ turning the measurement into a quotation.
 4. Optional: in *Settings → Tectora Dakmeting*, set a **Google Maps API key**
    (Geocoding + Static Maps APIs) or a **Mapbox access token** to enable
    satellite backgrounds. Without a key you can still draw — upload a plan
-   image manually and set the scale on the *Achtergrond & schaal* tab.
+   image through the globe icon on the drawing and calibrate the scale by
+   right-clicking a side's length label.
 
 Requires Odoo **19.0**. Python dependencies (`requests`, `Pillow`) ship with
 every standard Odoo install. The module uses the modern view syntax
@@ -44,9 +45,11 @@ install on Odoo 17 or earlier without adjustments.
 
 1. **Dakmeting → Dakprojecten → New**: name the project, pick the customer
    (address auto-fills) and optionally link a CRM opportunity.
-2. Save, then click **Satellietbeeld ophalen**: the address is geocoded, a
-   satellite photo is stored as drawing background and the geographic scale
-   (m/pixel) is computed from the map projection.
+2. On the **Tekening** tab, open the globe icon and choose **Satellietbeeld
+   ophalen**: the project is saved, the address is geocoded, a satellite
+   photo is stored as drawing background and the geographic scale (m/pixel)
+   is computed from the map projection. The same menu uploads your own plan,
+   shows/hides the background, sets its transparency and removes it.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
