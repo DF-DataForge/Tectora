@@ -695,7 +695,7 @@ class TectoraRoofProject(models.Model):
         order_fields = set(SaleOrder._tectora_roof_to_order_fields())
         project_fields = {
             "partner_id", "planned_date_begin", "planned_date_end",
-            "project_manager_id", "name", "code",
+            "project_manager_id", "name", "code", "address",
         }
         touched = set(vals)
         for project in self:
@@ -715,7 +715,7 @@ class TectoraRoofProject(models.Model):
         values = {}
         changed = fields_changed or {
             "partner_id", "planned_date_begin", "planned_date_end",
-            "project_manager_id", "name", "code",
+            "project_manager_id", "name", "code", "address",
         }
         if "partner_id" in changed and self.partner_id:
             values["partner_id"] = self.partner_id.id
@@ -730,13 +730,31 @@ class TectoraRoofProject(models.Model):
                 values["date"] = fields.Datetime.context_timestamp(self, end).date()
         if "project_manager_id" in changed and self.project_manager_id:
             values["user_id"] = self.project_manager_id.id
-        if {"name", "code"} & changed:
+        if {"name", "code", "partner_id", "address"} & changed:
             values["name"] = self._project_name()
         return values
 
-    def _project_name(self):
+    def _site_city(self):
+        """Municipality of the site: the order's delivery address, else the
+        customer's, else the last part of the free-text site address
+        ("Straat 1, 9790 Wortegem" -> "Wortegem")."""
         self.ensure_one()
-        return "%s — %s" % (self.code, self.name)
+        order = self.sale_order_id
+        for partner in (order.partner_shipping_id if order else None, self.partner_id):
+            if partner and partner.city:
+                return partner.city.strip()
+        match = re.search(r"\b\d{4,5}\s+([^,]+?)\s*$", self.address or "")
+        if match:
+            return match.group(1).strip()
+        return ""
+
+    def _project_name(self):
+        """Name of the project: the customer and the municipality of the site
+        ("Data Forge — Wortegem"); the roof project's own name as fallback."""
+        self.ensure_one()
+        customer = self.partner_id.name or ""
+        name = " — ".join(filter(None, [customer, self._site_city()]))
+        return name or self.name
 
     # ---------------------------------------------------------- team planning
     def _autogenerate_planning(self):

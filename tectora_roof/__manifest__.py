@@ -30,7 +30,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   measurement itself -- with every card opening the records behind it and the
   order and the roof project one click away.
     """,
-    "version": "19.0.3.0.0",
+    "version": "19.0.3.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

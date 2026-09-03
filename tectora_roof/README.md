@@ -109,7 +109,8 @@ technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 ## Project (Odoo Project) en projectdashboard
 
 Bij het **bevestigen** van de order wordt een planbaar **project**
-(`project.project`) aangemaakt met een eigen analytische rekening — of het
+(`project.project`) aangemaakt, genoemd naar de klant en de gemeente van de
+werf (*Data Forge — Wortegem*), met een eigen analytische rekening — of het
 project dat Odoo zelf al maakte voor diensten met projectopvolging wordt
 overgenomen. Dit project is de basis van de **nacalculatie**: de order krijgt
 het als `project_id` (zodat Odoo de analytische distributie op elke orderlijn
