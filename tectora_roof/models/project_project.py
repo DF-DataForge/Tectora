@@ -455,7 +455,9 @@ class ProjectProject(models.Model):
             return self.roof_project_id
         order = self.tectora_sale_order_id
         if order:
-            roof = order.roof_project_id or order._tectora_create_roof_project()
+            roof = order.roof_project_id or order._tectora_create_roof_project(
+                raise_if_failed=True
+            )
         else:
             roof = self.env["tectora.roof.project"].with_context(
                 tectora_sync=True

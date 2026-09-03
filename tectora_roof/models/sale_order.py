@@ -161,9 +161,14 @@ class SaleOrder(models.Model):
         )
         return candidates.sorted("id")[:1] or None
 
-    def _tectora_create_roof_project(self):
+    def _tectora_create_roof_project(self, raise_if_failed=False):
         """Every order gets its own roof project: the one its opportunity
-        prepared, or a new one made from the order."""
+        prepared, or a new one made from the order.
+
+        Called from create() and confirmation the failure is logged and the
+        order goes on without a roof project; called from a button
+        (``raise_if_failed``) the real error reaches the user.
+        """
         Roof = self.env["tectora.roof.project"].with_context(tectora_sync=True)
         for order in self:
             try:
@@ -194,6 +199,8 @@ class SaleOrder(models.Model):
                         )
                     )
             except Exception:
+                if raise_if_failed:
+                    raise
                 _logger.exception(
                     "Could not create the roof project of order %s", order.name
                 )
@@ -358,9 +365,14 @@ class SaleOrder(models.Model):
         was made without one)."""
         self.ensure_one()
         if not self.roof_project_id:
-            self._tectora_create_roof_project()
+            self._tectora_create_roof_project(raise_if_failed=True)
         if not self.roof_project_id:
-            raise UserError(_("Het dakproject kon niet aangemaakt worden."))
+            raise UserError(
+                _(
+                    "Het dakproject kon niet aangemaakt worden; kijk in de "
+                    "serverlog voor de oorzaak."
+                )
+            )
         return {
             "type": "ir.actions.act_window",
             "res_model": "tectora.roof.project",
@@ -385,7 +397,7 @@ class SaleOrder(models.Model):
                     )
                 )
             if not self.roof_project_id:
-                self._tectora_create_roof_project()
+                self._tectora_create_roof_project(raise_if_failed=True)
             project = self.roof_project_id._ensure_project()
         return project.action_open_dashboard()
 
