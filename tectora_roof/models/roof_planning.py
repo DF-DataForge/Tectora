@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 
 import pytz
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class TectoraRoofPlanning(models.Model):
@@ -12,6 +12,7 @@ class TectoraRoofPlanning(models.Model):
     _order = "start_datetime, id"
 
     name = fields.Char(string="Werkblok", compute="_compute_name", store=True)
+    project_name = fields.Char(related="project_id.name", string="Project")
     project_id = fields.Many2one(
         "tectora.roof.project",
         string="Dakproject",
@@ -61,6 +62,16 @@ class TectoraRoofPlanning(models.Model):
             project = item.project_id
             item.name = " — ".join(filter(None, [project.code, project.name]))
 
+    @api.depends("project_id.name", "project_id.address")
+    def _compute_display_name(self):
+        """The block as the planner shows it: the project and the site
+        address, so a bar in the team planner reads at a glance."""
+        for item in self:
+            project = item.project_id
+            item.display_name = " · ".join(
+                filter(None, [project.name or item.name, project.address])
+            ) or item.name or _("Werkblok")
+
     def _compute_employee_count(self):
         for item in self:
             item.employee_count = len(item.employee_ids)
@@ -94,10 +105,33 @@ class TectoraRoofPlanning(models.Model):
         return items
 
     def write(self, vals):
+        if "team_id" in vals and "employee_ids" not in vals:
+            # A block dragged onto another team row in the planner takes that
+            # team's members along.
+            team = self.env["tectora.roof.team"].browse(vals["team_id"])
+            if team:
+                vals = dict(vals, employee_ids=[(6, 0, team.member_ids.ids)])
         result = super().write(vals)
         if {"employee_ids", "start_datetime", "end_datetime", "state", "project_id"} & set(vals):
             self._sync_employee_items()
         return result
+
+    # ------------------------------------------------------------- shortcuts
+    def action_open_project_dashboard(self):
+        """The project dashboard behind this block (created if the order was
+        not confirmed yet)."""
+        self.ensure_one()
+        return self.project_id.action_open_project()
+
+    def action_open_roof_project(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "tectora.roof.project",
+            "res_id": self.project_id.id,
+            "view_mode": "form",
+            "target": "current",
+        }
 
     # --------------------------------------------------------------- states
     def action_publish(self):

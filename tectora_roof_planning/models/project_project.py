@@ -30,20 +30,20 @@ class ProjectProject(models.Model):
             project.tectora_slot_count = len(slots)
 
     def action_view_tectora_planning(self):
-        """The shifts of this project in the standard resource planner."""
+        """This project's blocks in the team planner (one project block per
+        ploeg; the individual shifts are a click further)."""
         self.ensure_one()
         roof = self._tectora_ensure_roof_project()
         if not roof:
             return super().action_view_tectora_planning()
         action = self.env["ir.actions.act_window"]._for_xml_id(
-            "tectora_roof_planning.action_planning_slot_by_resource"
+            "tectora_roof_planning.action_tectora_roof_planning_by_team"
         )
-        action["domain"] = [("roof_project_id", "=", roof.id)]
+        action["domain"] = [("project_id", "=", roof.id)]
         action["context"] = {
-            "search_default_group_resource": 1,
-            "default_roof_project_id": roof.id,
-            "default_roof_team_id": roof.team_id.id,
+            "default_project_id": roof.id,
+            "default_team_id": roof.team_id.id,
+            "default_start_datetime": roof.planned_date_begin,
+            "default_end_datetime": roof.planned_date_end,
         }
-        if "project_id" in self.env["planning.slot"]._fields:
-            action["context"]["default_project_id"] = self.id
         return self.env["tectora.roof.planning"]._drop_unavailable_views(action)

@@ -2,3 +2,4 @@
 from . import planning_slot
 from . import roof_planning
 from . import project_project
+from . import roof_project

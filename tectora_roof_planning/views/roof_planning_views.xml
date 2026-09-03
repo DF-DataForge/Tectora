@@ -1,6 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- The team planner: one row per ploeg, one project block per work block
+         (project name and site address on the bar). Dragging or resizing a
+         block moves the shifts of every employee on it; the block's summary
+         form lists those employees and lets one be taken off. -->
+    <record id="view_tectora_roof_planning_gantt_team" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.gantt.team</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="arch" type="xml">
+            <gantt string="Planning per ploeg"
+                   date_start="start_datetime"
+                   date_stop="end_datetime"
+                   default_group_by="team_id"
+                   default_scale="week"
+                   scales="day,week,month"
+                   precision="{'day': 'hour:full', 'week': 'day:half', 'month': 'day:full'}"
+                   color="color"
+                   form_view_id="%(tectora_roof.view_tectora_roof_planning_form_summary)d"
+                   decoration-muted="state == 'done'"
+                   decoration-info="state == 'draft'"
+                   sample="0">
+                <field name="project_id"/>
+                <field name="address"/>
+                <field name="partner_id"/>
+                <field name="employee_ids"/>
+                <field name="state"/>
+            </gantt>
+        </field>
+    </record>
+
+    <!-- The blocks' own list, for the planner's list view. -->
+    <record id="action_tectora_roof_planning_by_team" model="ir.actions.act_window">
+        <field name="name">Planning per ploeg</field>
+        <field name="res_model">tectora.roof.planning</field>
+        <field name="view_mode">gantt,list,form</field>
+        <field name="search_view_id" ref="tectora_roof.view_tectora_roof_planning_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog niets ingepland</p>
+            <p>Plan een ploeg in: kies een dakproject en een ploeg, en elk
+               ploeglid krijgt een shift voor die periode. Het blok toont het
+               project en het werfadres; verplaats het en alle shifts volgen.</p>
+        </field>
+    </record>
+    <record id="action_tectora_roof_planning_by_team_gantt" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">gantt</field>
+        <field name="view_id" ref="view_tectora_roof_planning_gantt_team"/>
+        <field name="act_window_id" ref="action_tectora_roof_planning_by_team"/>
+    </record>
+    <record id="action_tectora_roof_planning_by_team_list" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="tectora_roof.view_tectora_roof_planning_list"/>
+        <field name="act_window_id" ref="action_tectora_roof_planning_by_team"/>
+    </record>
+    <record id="action_tectora_roof_planning_by_team_form" model="ir.actions.act_window.view">
+        <field name="sequence">3</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="act_window_id" ref="action_tectora_roof_planning_by_team"/>
+    </record>
+
+    <!-- The Planning app's "Per ploeg" planner (installed by hooks.py under
+         its Inplannen menu and as the app's default) now shows the project
+         blocks rather than the individual shifts. -->
+    <record id="action_planning_slot_by_roof_team" model="ir.actions.act_window">
+        <field name="name">Planning per ploeg</field>
+        <field name="res_model">tectora.roof.planning</field>
+        <field name="view_mode">gantt,list,form</field>
+        <field name="search_view_id" ref="tectora_roof.view_tectora_roof_planning_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog niets ingepland</p>
+            <p>Plan een ploeg in: kies een dakproject en een ploeg, en elk
+               ploeglid krijgt een shift voor die periode. Het blok toont het
+               project en het werfadres; verplaats het en alle shifts volgen.</p>
+        </field>
+    </record>
+    <record id="action_planning_slot_by_roof_team_gantt" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">gantt</field>
+        <field name="view_id" ref="view_tectora_roof_planning_gantt_team"/>
+        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
+    </record>
+    <record id="action_planning_slot_by_roof_team_list" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="tectora_roof.view_tectora_roof_planning_list"/>
+        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
+    </record>
+    <record id="action_planning_slot_by_roof_team_form" model="ir.actions.act_window.view">
+        <field name="sequence">3</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
+    </record>
+
+    <!-- From the block's summary to the individual shifts. -->
+    <record id="view_tectora_roof_planning_form_summary_slots" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.summary.slots</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_in_planner" type="object"
+                        class="oe_stat_button" icon="fa-users"
+                        string="Per medewerker"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_tectora_roof_planning_form_slots" model="ir.ui.view">
         <field name="name">tectora.roof.planning.form.slots</field>
         <field name="model">tectora.roof.planning</field>

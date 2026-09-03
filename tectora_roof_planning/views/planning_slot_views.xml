@@ -113,41 +113,9 @@
         </field>
     </record>
 
-    <!-- The default planner: one row per ploeg. Hooked into the Planning app's
-         "Inplannen" menu at install/upgrade (see hooks.py), because Planning is
-         Enterprise and its menu external ids cannot be relied on. -->
-    <record id="action_planning_slot_by_roof_team" model="ir.actions.act_window">
-        <field name="name">Planning per ploeg</field>
-        <field name="res_model">planning.slot</field>
-        <field name="view_mode">gantt,list,form</field>
-        <field name="search_view_id" ref="view_planning_slot_search_roof"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Nog niets ingepland</p>
-            <p>Plan een ploeg in: kies een dakproject en een ploeg, en elk
-               ploeglid krijgt een shift voor die periode.</p>
-        </field>
-    </record>
-
-    <record id="action_planning_slot_by_roof_team_gantt" model="ir.actions.act_window.view">
-        <field name="sequence">1</field>
-        <field name="view_mode">gantt</field>
-        <field name="view_id" ref="view_planning_slot_gantt_roof_team"/>
-        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
-    </record>
-
-    <record id="action_planning_slot_by_roof_team_list" model="ir.actions.act_window.view">
-        <field name="sequence">2</field>
-        <field name="view_mode">list</field>
-        <field name="view_id" ref="view_planning_slot_list_roof"/>
-        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
-    </record>
-
-    <record id="action_planning_slot_by_roof_team_form" model="ir.actions.act_window.view">
-        <field name="sequence">3</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_planning_slot_form_roof_team"/>
-        <field name="act_window_id" ref="action_planning_slot_by_roof_team"/>
-    </record>
+    <!-- The "Per ploeg" planner (action_planning_slot_by_roof_team) is defined
+         in roof_planning_views.xml: it shows the work blocks as project blocks
+         per team. -->
 
     <record id="action_planning_slot_by_roof_project" model="ir.actions.act_window">
         <field name="name">Planning per dakproject</field>

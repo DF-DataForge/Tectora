@@ -235,7 +235,13 @@ toegewezen medewerkers, en is te bekijken in kalender- of lijstweergave
 Het aparte bridge-moduletje **tectora_roof_planning** installeert zichzelf
 zodra zowel Dakmeting als de Odoo **Planning**-app aanwezig zijn. Dan wordt
 elke toegewezen medewerker een echte planning-shift (`planning.slot`), zichtbaar
-in de Planning-app en in de eigen planning van de medewerker. De shifts volgen
+in de Planning-app en in de eigen planning van de medewerker. De planner
+**Per ploeg** (de standaardweergave van de Planning-app, en de knop Planning
+op dakproject en projectdashboard) toont per ploeg één **projectblok** per
+werkblok met projectnaam en werfadres, niet de losse medewerkers. Verplaats of
+verleng het blok en alle shifts volgen; klik erop voor de samenvatting met de
+ingeplande medewerkers (verwijder er een om zijn shift eruit te halen) en de
+knoppen **Projectoverzicht**, **Dakproject** en **Per medewerker**. De shifts volgen
 het werkblok: data, medewerkers en status worden gesynchroniseerd, splitsen
 splitst de shifts mee en het verwijderen van een blok verwijdert zijn shifts.
 Zonder de Planning-app blijven de werkblokken met hun medewerkerslijst gewoon
