@@ -18,7 +18,7 @@
                    precision="{'day': 'hour:full', 'week': 'day:half', 'month': 'day:full'}"
                    color="color"
                    form_view_id="%(tectora_roof.view_tectora_roof_planning_form_summary)d"
-                   decoration-muted="state == 'done'"
+                   decoration-secondary="state == 'done'"
                    decoration-info="state == 'draft'"
                    sample="0">
                 <field name="project_id"/>
