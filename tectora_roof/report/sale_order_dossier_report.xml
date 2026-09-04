@@ -29,6 +29,7 @@
             .tq table.tq-lines tr.tq-section td { background: #eef7f8; color: #008b93; font-weight: 700; border-bottom: 1px solid #b9dfe2; padding-top: 8px; }
             .tq table.tq-lines tr.tq-subtotal td { border-bottom: 2px solid #008b93; font-weight: 600; color: #1d1d1b; }
             .tq table.tq-lines tr.tq-note td { font-style: italic; color: #6c757d; }
+            .tq table.tq-lines tr.tq-subsection td { font-weight: 600; color: #1d1d1b; background: #f6fafa; padding-left: 16px; }
             .tq table.tq-totals { width: 45%; float: right; border-collapse: collapse; margin-top: 10px; }
             .tq table.tq-totals td { padding: 5px 8px; border-bottom: 1px solid #e3e7e9; }
             .tq table.tq-totals tr.tq-grand td { background: #008b93; color: #fff; font-weight: 700; font-size: 13px; border: 0; }
@@ -282,6 +283,9 @@
                             <tr t-if="line.display_type == 'line_note'" class="tq-note">
                                 <td colspan="6"><span t-field="line.name"/></td>
                             </tr>
+                            <tr t-elif="line.display_type == 'line_subsection'" class="tq-subsection">
+                                <td colspan="6"><span t-field="line.name"/></td>
+                            </tr>
                             <tr t-elif="not line.display_type">
                                 <td><span t-field="line.name"/></td>
                                 <td class="text-end"><t t-out="'%g' % line.product_uom_qty"/></td>
@@ -323,28 +327,43 @@
                 </table>
             </div>
 
-            <t t-set="options" t-value="doc.sale_order_option_ids.filtered(lambda option: not option.is_present)"/>
-            <div t-if="options" class="tq-avoid" style="margin-top: 14px;">
+            <t t-set="optional_sections" t-value="doc._tectora_report_sections(optional=True)"/>
+            <div t-if="optional_sections" class="tq-avoid" style="margin-top: 14px;">
                 <h3>Optioneel — op aanvraag toe te voegen</h3>
+                <p class="tq-muted" style="font-size: 9.5px;">Deze onderdelen zitten niet in het totaal; laat ons weten welke u wenst.</p>
                 <table class="tq-lines">
                     <thead>
                         <tr>
-                            <th style="width: 62%;">Omschrijving</th>
+                            <th style="width: 50%;">Omschrijving</th>
                             <th class="text-end" style="width: 11%;">Aantal</th>
                             <th style="width: 9%;">Eenheid</th>
-                            <th class="text-end" style="width: 18%;">Eenheidsprijs</th>
+                            <th class="text-end" style="width: 12%;">Eenheidsprijs</th>
+                            <th class="text-end" style="width: 6%;">Btw</th>
+                            <th class="text-end" style="width: 12%;">Totaal</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr t-foreach="options" t-as="option">
-                            <td><span t-field="option.name"/></td>
-                            <td class="text-end"><t t-out="'%g' % option.quantity"/></td>
-                            <td><t t-out="option.uom_id.name or ''"/></td>
-                            <td class="text-end">
-                                <span t-field="option.price_unit"
-                                      t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                            </td>
-                        </tr>
+                        <t t-foreach="optional_sections" t-as="section">
+                            <tr t-if="section['name']" class="tq-section">
+                                <td colspan="6"><t t-out="section['name']"/></td>
+                            </tr>
+                            <t t-foreach="section['lines']" t-as="line">
+                                <tr t-if="line.display_type in ('line_note', 'line_subsection')" t-attf-class="#{'tq-note' if line.display_type == 'line_note' else 'tq-subsection'}">
+                                    <td colspan="6"><span t-field="line.name"/></td>
+                                </tr>
+                                <tr t-elif="not line.display_type">
+                                    <td><span t-field="line.name"/></td>
+                                    <td class="text-end"><t t-out="'%g' % line.product_uom_qty"/></td>
+                                    <td><t t-out="line.product_uom_id.name or ''"/></td>
+                                    <td class="text-end">
+                                        <span t-field="line.price_unit"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                    <td class="text-end"><t t-out="doc._tectora_report_tax_label(line)"/></td>
+                                    <td class="text-end"><span t-field="line.price_subtotal"/></td>
+                                </tr>
+                            </t>
+                        </t>
                     </tbody>
                 </table>
             </div>

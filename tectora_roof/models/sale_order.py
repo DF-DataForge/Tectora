@@ -464,13 +464,19 @@ class SaleOrder(models.Model):
         return local.astimezone(pytz.utc).replace(tzinfo=None)
 
     # ---------------------------------------------------------------- report
-    def _tectora_report_sections(self):
+    def _tectora_report_sections(self, optional=False):
         """The order lines grouped under their section headers, with a
         subtotal per section, for the dossier PDF. Lines before the first
-        header form a nameless first group."""
+        header form a nameless first group. Subsections and notes stay in
+        the group as lines (their display_type tells them apart).
+
+        Odoo 19 marks optional products as sections flagged ``is_optional``:
+        ``optional=False`` returns the ordinary sections, ``optional=True``
+        the optional ones (offered separately, outside the totals).
+        """
         self.ensure_one()
         sections = []
-        current = {"name": False, "lines": [], "subtotal": 0.0, "measurement": False}
+        current = {"name": False, "lines": [], "subtotal": 0.0, "measurement": False, "optional": False}
         for line in self.order_line:
             if line.display_type == "line_section":
                 if current["lines"] or current["name"]:
@@ -480,6 +486,7 @@ class SaleOrder(models.Model):
                     "lines": [],
                     "subtotal": 0.0,
                     "measurement": bool(line.roof_measurement_line),
+                    "optional": bool(getattr(line, "is_optional", False)),
                 }
                 continue
             current["lines"].append(line)
@@ -487,7 +494,7 @@ class SaleOrder(models.Model):
                 current["subtotal"] += line.price_subtotal
         if current["lines"] or current["name"]:
             sections.append(current)
-        return sections
+        return [section for section in sections if section["optional"] == optional]
 
     def _tectora_report_tax_label(self, line):
         """"21%" for a line's taxes, the way a customer reads them."""
