@@ -77,9 +77,9 @@ class SaleOrder(models.Model):
         domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]",
         check_company=True,
         help="Eén btw-tarief voor de hele offerte, bv. 6% bij renovatie van een "
-        "woning ouder dan 10 jaar. Het vervangt de btw van elke productregel, "
-        "ook van regels die later uit de dakmeting bijkomen. Leeg: de btw van "
-        "de producten en de fiscale positie.",
+        "woning ouder dan 10 jaar. Kies het tarief en klik op 'Toepassen op "
+        "alle regels': elke productregel krijgt dan dit tarief. Regels die "
+        "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
     )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
@@ -493,8 +493,8 @@ class SaleOrder(models.Model):
 
     # ------------------------------------------------------------------- btw
     def action_apply_tectora_tax(self):
-        """Put the order's tax on every product line (the lines follow it
-        automatically; this re-applies it after manual changes)."""
+        """Put the chosen tax on every product line. Deliberately a button,
+        not an automatism: the user decides when the whole order switches."""
         for order in self:
             lines = order.order_line.filtered(lambda line: not line.display_type)
             if not lines:
@@ -504,7 +504,8 @@ class SaleOrder(models.Model):
                     {"tax_ids": [(6, 0, order.tectora_tax_id.ids)]}
                 )
             else:
-                # Back to the taxes of the products and the fiscal position.
+                # No tax chosen: back to the taxes of the products and the
+                # fiscal position.
                 lines.with_context(tectora_sync=True)._compute_tax_ids()
         return True
 
