@@ -335,10 +335,28 @@ export class RoofCanvasField extends Component {
             window.addEventListener("resize", this.onWindowResize);
             window.addEventListener("keyup", this.onWindowKeyUp);
             window.addEventListener("pointerdown", this.onWindowPointerDown, true);
+            // The main column changes size when the side panel opens or the
+            // form gets narrower; follow it, not only the window.
+            if (window.ResizeObserver && this.mainRef.el) {
+                this._resizeObserver = new ResizeObserver(() => {
+                    if (this._destroyed) {
+                        return;
+                    }
+                    const canvas = this.canvasRef.el;
+                    const main = this.mainRef.el;
+                    if (canvas && main && Math.abs(canvas.width - main.clientWidth) > 1) {
+                        this.resizeCanvas();
+                    }
+                });
+                this._resizeObserver.observe(this.mainRef.el);
+            }
         });
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
+            if (this._resizeObserver) {
+                this._resizeObserver.disconnect();
+            }
             window.removeEventListener("resize", this.onWindowResize);
             window.removeEventListener("keyup", this.onWindowKeyUp);
             window.removeEventListener("pointerdown", this.onWindowPointerDown, true);
@@ -469,16 +487,26 @@ export class RoofCanvasField extends Component {
         if (!canvas || !wrapper) {
             return;
         }
-        canvas.width = Math.max(wrapper.clientWidth - 2, 600);
-        canvas.height = this.state.fullscreen
-            ? Math.max(
-                  window.innerHeight -
-                      (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) -
-                      (this.statusRef.el ? this.statusRef.el.offsetHeight : 0) -
-                      6,
-                  320
-              )
-            : DEFAULT_CANVAS_HEIGHT;
+        const chrome =
+            (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) +
+            (this.statusRef.el ? this.statusRef.el.offsetHeight : 0);
+        // Fill the space the drawing has: the whole main column in fullscreen,
+        // otherwise as much of the window as the form leaves it.
+        const width = Math.max(wrapper.clientWidth, 600);
+        const height = this.state.fullscreen
+            ? Math.max((wrapper.clientHeight || window.innerHeight) - chrome - 2, 320)
+            : Math.min(Math.max(window.innerHeight - 300, DEFAULT_CANVAS_HEIGHT), 1400);
+        canvas.width = width;
+        canvas.height = height;
+        // The bitmap is drawn at exactly this size: a CSS width that differs
+        // from the pixel width would stretch it and cut the bottom off.
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        // Without a background photo the drawing space is the canvas itself,
+        // so the grid fills the screen instead of a letterboxed default.
+        if (!this.backgroundImage) {
+            this.world = { w: width, h: height };
+        }
         this.fitView();
         this.draw();
     }
@@ -577,7 +605,10 @@ export class RoofCanvasField extends Component {
         let url = this.backgroundUrl;
         if (!url) {
             this.backgroundImage = null;
-            this.world = { ...DEFAULT_WORLD };
+            const canvas = this.canvasRef.el;
+            this.world = canvas && canvas.width
+                ? { w: canvas.width, h: canvas.height }
+                : { ...DEFAULT_WORLD };
             this.fitView();
             this.draw();
             return;

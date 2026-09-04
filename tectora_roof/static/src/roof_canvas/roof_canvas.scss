@@ -18,6 +18,16 @@
         .o_roof_canvas_body {
             height: 100%;
         }
+
+        .o_roof_canvas_main {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            canvas {
+                flex: 1 1 auto;
+            }
+        }
     }
 
     .o_roof_canvas_ctxmenu {
@@ -55,8 +65,10 @@
     }
 
     canvas {
+        // Sized in pixels by the widget (style width/height match the bitmap),
+        // so it is never stretched by CSS.
         display: block;
-        width: 100%;
+        max-width: 100%;
         cursor: crosshair;
         touch-action: none;
     }
