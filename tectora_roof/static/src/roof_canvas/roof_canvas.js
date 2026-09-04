@@ -85,6 +85,118 @@ function distanceToPolyline([px, py], points) {
     return best;
 }
 
+// Intersection of segments a-b and c-d: {point, t (along a-b), u (along c-d)}
+// or null when they do not cross.
+function segmentIntersection(a, b, c, d) {
+    const r = [b[0] - a[0], b[1] - a[1]];
+    const s = [d[0] - c[0], d[1] - c[1]];
+    const denom = r[0] * s[1] - r[1] * s[0];
+    if (Math.abs(denom) < 1e-9) {
+        return null;
+    }
+    const q = [c[0] - a[0], c[1] - a[1]];
+    const t = (q[0] * s[1] - q[1] * s[0]) / denom;
+    const u = (q[0] * r[1] - q[1] * r[0]) / denom;
+    const eps = 1e-7;
+    if (t < -eps || t > 1 + eps || u < -eps || u > 1 + eps) {
+        return null;
+    }
+    return { point: [a[0] + r[0] * t, a[1] + r[1] * t], t, u };
+}
+
+// Split a polygon along an open polyline (a seam) into the two surfaces on
+// either side. Seam ends that stop inside the polygon are extended along
+// their last segment to the outline, so a seam drawn "roughly across" splits
+// as well. Returns [polygonA, polygonB] or null when the seam does not cross
+// the polygon cleanly (fewer than two crossings, or a degenerate part).
+function splitPolygonByPolyline(polygon, polyline) {
+    const n = polygon.length;
+    if (n < 3 || polyline.length < 2) {
+        return null;
+    }
+    const box = boundingBox(polygon);
+    const reach = (box.w + box.h) * 4 + 10;
+    const line = polyline.map((p) => [...p]);
+    const extend = (from, to) => {
+        // Point far beyond `to`, coming from `from`.
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        return [to[0] + (dx / length) * reach, to[1] + (dy / length) * reach];
+    };
+    if (pointInPolygon(line[0], polygon)) {
+        line[0] = extend(line[1], line[0]);
+    }
+    if (pointInPolygon(line[line.length - 1], polygon)) {
+        line[line.length - 1] = extend(line[line.length - 2], line[line.length - 1]);
+    }
+    const crossings = [];
+    for (let k = 0; k < line.length - 1; k++) {
+        for (let i = 0; i < n; i++) {
+            const hit = segmentIntersection(line[k], line[k + 1], polygon[i], polygon[(i + 1) % n]);
+            if (hit) {
+                crossings.push({ seg: k, t: hit.t, edge: i, u: hit.u, point: hit.point });
+            }
+        }
+    }
+    if (crossings.length < 2) {
+        return null;
+    }
+    crossings.sort((a, b) => a.seg - b.seg || a.t - b.t);
+    const entry = crossings[0];
+    const exit = crossings[crossings.length - 1];
+    if (entry.seg === exit.seg && Math.abs(entry.t - exit.t) < 1e-6) {
+        return null;
+    }
+    // Seam vertices strictly between the two crossings.
+    const inside = [];
+    for (let k = entry.seg + 1; k <= exit.seg; k++) {
+        inside.push(line[k]);
+    }
+    const walk = (fromEdge, toEdge, fromU, toU) => {
+        // Polygon vertices after the crossing on fromEdge up to and including
+        // the start of the crossing on toEdge, going forward.
+        let count = (toEdge - fromEdge + n) % n;
+        if (fromEdge === toEdge && toU < fromU) {
+            count = n;
+        }
+        const out = [];
+        for (let step = 1; step <= count; step++) {
+            out.push(polygon[(fromEdge + step) % n]);
+        }
+        return out;
+    };
+    const partA = [entry.point, ...walk(entry.edge, exit.edge, entry.u, exit.u), exit.point, ...[...inside].reverse()];
+    const partB = [exit.point, ...walk(exit.edge, entry.edge, exit.u, entry.u), entry.point, ...inside];
+    const total = polygonArea(polygon);
+    const clean = (part) => {
+        const out = [];
+        for (const p of part) {
+            const last = out[out.length - 1];
+            if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > 0.5) {
+                out.push(p);
+            }
+        }
+        if (out.length > 2) {
+            const first = out[0];
+            const last = out[out.length - 1];
+            if (Math.hypot(first[0] - last[0], first[1] - last[1]) <= 0.5) {
+                out.pop();
+            }
+        }
+        return out;
+    };
+    const a = clean(partA);
+    const b = clean(partB);
+    if (a.length < 3 || b.length < 3) {
+        return null;
+    }
+    if (polygonArea(a) < total * 0.01 || polygonArea(b) < total * 0.01) {
+        return null;
+    }
+    return [a, b];
+}
+
 // Point halfway along an open polyline, for its label.
 function polylineMidpoint(points) {
     const total = polygonPerimeter(points, false);
@@ -1043,9 +1155,12 @@ export class RoofCanvasField extends Component {
 
     closePolygon() {
         if (this.state.tool === "seam") {
-            // An open line: two points make a seam.
+            // An open line: two points make a seam, and the surfaces on either
+            // side of it become separate sections.
             if (this.draftPolygon && this.draftPolygon.length >= 2) {
                 this.addShape(this.draftPolygon, "seam");
+                const seam = this._shapes[this._shapes.length - 1];
+                this.splitSectionsBySeam(seam);
             }
         } else if (this.draftPolygon && this.draftPolygon.length >= 3) {
             this.addShape(this.draftPolygon);
@@ -1074,6 +1189,47 @@ export class RoofCanvasField extends Component {
         this.state.selectedId = this._shapes[this._shapes.length - 1].id;
         this.updateStatus();
         this.commit();
+    }
+
+    // A seam marks separate surfaces: every section it crosses is cut in two
+    // along it. The halves are new shapes that remember the section they came
+    // from, so the server copies its whole-surface products onto both.
+    splitSectionsBySeam(seam) {
+        if (!seam || !isSeam(seam)) {
+            return;
+        }
+        const shapes = [...this.shapes];
+        let split = 0;
+        for (const section of this.shapes) {
+            if ((section.kind || "section") !== "section" || section.shape === "circle") {
+                continue;
+            }
+            const parts = splitPolygonByPolyline(section.points, seam.points);
+            if (!parts) {
+                continue;
+            }
+            const baseName = section.name || KIND_NAMES.section;
+            const make = (points, suffix) => ({
+                id: makeId(),
+                kind: "section",
+                name: `${baseName} ${suffix}`,
+                points: points.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
+                splitFrom: section.id,
+            });
+            const index = shapes.indexOf(section);
+            shapes.splice(index, 1, make(parts[0], "A"), make(parts[1], "B"));
+            split += 1;
+        }
+        if (!split) {
+            return;
+        }
+        this._shapes = shapes;
+        this.state.selectedId = seam.id;
+        this.commit();
+        this.state.status = _t(
+            "%(count)s sectie(s) gesplitst langs %(seam)s: de dakvlakken aan weerszijden zijn nu aparte secties. De producten van het oppervlak zijn overgenomen op beide delen.",
+            { count: split, seam: seam.name || KIND_NAMES.seam }
+        );
     }
 
     hitTest(point) {

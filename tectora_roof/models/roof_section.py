@@ -76,6 +76,24 @@ class TectoraRoofSection(models.Model):
                 section.product_line_ids.mapped("price_subtotal")
             )
 
+    # ------------------------------------------------------------ seam split
+    def _copy_whole_surface_lines(self, origin):
+        """Take over the product lines of ``origin`` that apply to the whole
+        surface (no side number): surface, edge, corner and drainage products.
+        Quantities follow this section's own measurement."""
+        self.ensure_one()
+        Line = self.env["tectora.roof.section.product"].with_context(tectora_sync=True)
+        values = []
+        for line in origin.product_line_ids.filtered(lambda l: not l.edge_index):
+            values.append({
+                "section_id": self.id,
+                "product_id": line.product_id.id,
+                "coverage": line.coverage,
+                "quantity": line.quantity,
+                "edge_index": 0,
+            })
+        return Line.create(values) if values else Line
+
     # --------------------------------------------------- convert to roof object
     def action_convert_to_chimney(self):
         return self._convert_to_object("chimney")

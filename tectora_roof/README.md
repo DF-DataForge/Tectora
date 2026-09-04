@@ -55,7 +55,11 @@ install on Odoo 17 or earlier without adjustments.
    double-click to rename, Delete to remove.
    A **naad** (seam) marks that two roof surfaces are separate: draw it with
    the *Naad* tool as an open dotted line (click points, double-click to
-   finish). It is stored as a roof object of type *Naad* with its length;
+   finish). Every section the seam crosses is cut in two along it (the halves
+   are named "Sectie 1 A" and "Sectie 1 B" and take over the products of the
+   whole surface; per-side products are not carried over). A seam ending
+   inside a section is extended to its outline. It is stored as a roof
+   object of type *Naad* with its length;
    clicking its label assigns products from categories whose *Kan gebruikt
    worden voor* includes **Naden**, measured by the seam length.
 4. Click **Meting bijwerken uit tekening**: sections and roof objects are

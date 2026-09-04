@@ -1004,11 +1004,14 @@ class TectoraRoofProject(models.Model):
                 shapes.append(
                     {
                         "id": str(shape["id"]),
-                        "kind": shape.get("kind") or "section",
+                        "kind": kind,
                         "name": shape.get("name") or "",
                         "points": points,
                         "edge_widths": _per_edge(shape.get("edgeWidths")),
                         "edge_upstands": _per_edge(shape.get("edgeUpstands")),
+                        # A half of a section that was cut by a seam: the
+                        # canvas id of the section it came from.
+                        "split_from": str(shape["splitFrom"]) if shape.get("splitFrom") else None,
                     }
                 )
         return shapes
@@ -1112,7 +1115,13 @@ class TectoraRoofProject(models.Model):
                 existing.write(values)
             else:
                 values.update({"project_id": self.id, "canvas_ref": shape["id"]})
-                self.env["tectora.roof.section"].create(values)
+                section = self.env["tectora.roof.section"].create(values)
+                origin = sections_by_ref.get(shape.get("split_from") or "")
+                if origin:
+                    # Both halves of a split section inherit the products that
+                    # applied to the whole surface; per-side products cannot
+                    # be mapped onto the new sides and are left behind.
+                    section._copy_whole_surface_lines(origin)
             section_count += 1
 
         object_count = 0
