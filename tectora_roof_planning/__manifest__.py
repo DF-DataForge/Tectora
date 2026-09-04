@@ -35,7 +35,7 @@ Planning tab and its planning card opens the resource planner on them.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "19.0.1.7.0",
+    "version": "19.0.1.8.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -49,6 +49,7 @@ installed.
     "assets": {
         "web.assets_backend": [
             "tectora_roof_planning/static/src/team_gantt/team_gantt.scss",
+            "tectora_roof_planning/static/src/team_gantt/team_gantt.js",
         ],
     },
     "post_init_hook": "post_init_hook",

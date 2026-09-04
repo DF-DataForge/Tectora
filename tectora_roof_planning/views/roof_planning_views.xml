@@ -10,6 +10,7 @@
         <field name="model">tectora.roof.planning</field>
         <field name="arch" type="xml">
             <gantt string="Planning per ploeg"
+                   js_class="tectora_team_gantt"
                    class="o_tectora_team_gantt"
                    date_start="start_datetime"
                    date_stop="end_datetime"
