@@ -7,7 +7,7 @@ def migrate(cr, version):
     cr.execute(
         """
         UPDATE tectora_roof_project
-        SET color = (id %% 11) + 1
+        SET color = mod(id, 11) + 1
         WHERE color IS NULL OR color = 0
         """
     )
