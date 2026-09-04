@@ -1,34 +1,11 @@
 // The team planner: project blocks carry the key data of the site (customer,
-// project, address, roof area, type, crew size), so give them the height for
-// two lines instead of one truncated line.
+// project, address, roof area, type, crew size). The gantt computes its row
+// heights itself, so the blocks keep the standard height; the label is set a
+// little smaller to fit more of the data on the bar.
 .o_tectora_team_gantt {
-    // The gantt lays its rows out from these variables; a taller pill needs a
-    // taller row so the blocks of one team do not overlap.
-    --Gantt__Pill-height: 3.4rem;
-    --Gantt__Row-height: 4rem;
-    --Gantt__RowHeader-height: 4rem;
-
-    .o_gantt_pill {
-        height: auto !important;
-        min-height: 3.2rem;
-        align-items: flex-start;
-        padding-top: 0.25rem;
-        padding-bottom: 0.25rem;
-    }
-
     .o_gantt_pill_title,
     .o_gantt_pill .o_gantt_pill_content {
-        white-space: normal !important;
-        line-height: 1.25;
         font-size: 0.8rem;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-
-    .o_gantt_row_header,
-    .o_gantt_cell {
-        min-height: 4rem;
+        letter-spacing: -0.01em;
     }
 }
