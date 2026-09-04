@@ -133,8 +133,21 @@
     </template>
 
     <template id="report_saleorder_document_dispatch">
-        <t t-if="doc.tectora_dossier_layout">
-            <t t-call="tectora_roof.report_tectora_quotation_document"/>
+        <t t-set="style" t-value="doc.tectora_quotation_style or 'dossier'"/>
+        <t t-if="style == 'dossier'">
+            <t t-call="tectora_roof.report_tq_dossier"/>
+        </t>
+        <t t-elif="style == 'compact'">
+            <t t-call="tectora_roof.report_tq_compact"/>
+        </t>
+        <t t-elif="style == 'classic'">
+            <t t-call="tectora_roof.report_tq_classic"/>
+        </t>
+        <t t-elif="style == 'visual'">
+            <t t-call="tectora_roof.report_tq_visual"/>
+        </t>
+        <t t-elif="style == 'minimal'">
+            <t t-call="tectora_roof.report_tq_minimal"/>
         </t>
         <t t-else="">
             <t t-call="sale.report_saleorder_document"/>

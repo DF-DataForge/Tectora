@@ -107,10 +107,23 @@ in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
 5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
    EPC-attest (tectora.be/service), kwaliteitspunten en contact.
 
-Op de verkooporder staan twee schakelaars naast het dakproject: **Offerte als
-projectdossier** (uit: het standaard Odoo-document) en **Dakplan toevoegen**.
-De teksten staan in `report/sale_order_dossier_report.xml` en zijn per
-template aan te passen.
+Op de verkooporder kies je naast het dakproject de **Offertestijl** en of het
+**Dakplan** meegaat. Er zijn vijf stijlen, opgebouwd uit dezelfde blokken
+(partijen, dak in één oogopslag, aanpak, diensten, offerte, opties,
+voorwaarden en akkoord, dakplan, service en garantie):
+
+| Stijl | Voor wie | Opbouw |
+|---|---|---|
+| **Projectdossier** | particulieren, volledig verhaal | voorblad in teal, aanpak en diensten, offerte, dakplan, service en contact |
+| **Compact** | aannemers, architecten, snelle beslissers | offerte voorop met totaal in beeld, korte servicestrook, dakplan achteraan |
+| **Klassiek** | formele briefwisseling | briefhoofd en aanhef, begeleidende tekst, monochrome tabel in serif, bijlage service |
+| **Visueel** | wie het dakplan wil zien | tekening groot voorop met kerncijfers, offerte per onderdeel, aanpak en service |
+| **Minimalistisch** | rustige, moderne uitstraling | veel wit, dunne lijnen, teal alleen op het totaal, servicestrook |
+
+De standaardstijl voor nieuwe offertes staat in *Instellingen → Tectora
+Dakmeting → Offerte-pdf*; *Standaard Odoo-document* blijft beschikbaar. De
+teksten staan in `report/sale_order_dossier_report.xml` (blokken
+`report_tq_block_*`) en zijn per blok aan te passen.
 
 ## Dakproject ↔ verkooporder (1 op 1)
 

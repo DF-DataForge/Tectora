@@ -22,6 +22,16 @@ SYNC_PAIRS = [
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
 
+# The looks the quotation PDF can take (see report/sale_order_dossier_report.xml).
+QUOTATION_STYLES = [
+    ("dossier", "Projectdossier — voorblad, aanpak, offerte, dakplan, service"),
+    ("compact", "Compact — offerte voorop, kort en zakelijk"),
+    ("classic", "Klassiek — briefstijl met begeleidende tekst"),
+    ("visual", "Visueel — dakplan en kerncijfers voorop"),
+    ("minimal", "Minimalistisch — rustig, veel wit"),
+    ("standard", "Standaard Odoo-document"),
+]
+
 
 def _differs(record, field_name, value):
     """Whether writing ``value`` (an id for relational fields) would change
@@ -53,12 +63,13 @@ class SaleOrder(models.Model):
     roof_total_area = fields.Float(
         related="roof_project_id.total_area", string="Dakoppervlakte (m²)"
     )
-    tectora_dossier_layout = fields.Boolean(
-        string="Offerte als projectdossier",
-        default=True,
-        help="Print en verstuur de offerte als Tectora-projectdossier: "
-        "voorblad, aanpak, de offerte zelf, service en garantie. Uit: het "
-        "standaard Odoo-offertedocument.",
+    tectora_quotation_style = fields.Selection(
+        QUOTATION_STYLES,
+        string="Offertestijl",
+        default=lambda self: self._default_tectora_quotation_style(),
+        required=True,
+        help="De opmaak van de offerte-pdf (afdrukken, e-mail, klantenportaal). "
+        "De standaardstijl staat in Instellingen → Tectora Dakmeting.",
     )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
@@ -66,6 +77,13 @@ class SaleOrder(models.Model):
         help="Neem het dakplan (tekening, maten en producten per daksectie) "
         "op in de offerte-pdf.",
     )
+
+    @api.model
+    def _default_tectora_quotation_style(self):
+        style = self.env["ir.config_parameter"].sudo().get_param(
+            "tectora_roof.quotation_style"
+        )
+        return style if style in dict(QUOTATION_STYLES) else "dossier"
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi
