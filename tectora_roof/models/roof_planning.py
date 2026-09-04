@@ -62,15 +62,31 @@ class TectoraRoofPlanning(models.Model):
             project = item.project_id
             item.name = " — ".join(filter(None, [project.code, project.name]))
 
-    @api.depends("project_id.name", "project_id.address")
+    @api.depends(
+        "project_id.name", "project_id.address", "project_id.partner_id",
+        "project_id.total_area", "project_id.project_type", "employee_ids",
+    )
     def _compute_display_name(self):
-        """The block as the planner shows it: the project and the site
-        address, so a bar in the team planner reads at a glance."""
+        """The block as the planner shows it: the key data of the site --
+        customer and project, address, roof area, project type and how many
+        people are on it -- so a bar in the team planner reads at a glance."""
+        types = dict(self.env["tectora.roof.project"]._fields["project_type"].selection)
         for item in self:
             project = item.project_id
-            item.display_name = " · ".join(
-                filter(None, [project.name or item.name, project.address])
-            ) or item.name or _("Werkblok")
+            customer = project.partner_id.name
+            title = project.name or item.name or _("Werkblok")
+            if customer and customer.lower() not in (title or "").lower():
+                title = "%s — %s" % (customer, title)
+            details = []
+            if project.address:
+                details.append(project.address)
+            if project.total_area:
+                details.append(_("%s m²") % ("%.0f" % project.total_area))
+            if project.project_type:
+                details.append(types.get(project.project_type, project.project_type))
+            if item.employee_ids:
+                details.append(_("%s pers.") % len(item.employee_ids))
+            item.display_name = " · ".join([title] + details)
 
     def _compute_employee_count(self):
         for item in self:
