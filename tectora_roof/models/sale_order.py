@@ -53,6 +53,19 @@ class SaleOrder(models.Model):
     roof_total_area = fields.Float(
         related="roof_project_id.total_area", string="Dakoppervlakte (m²)"
     )
+    tectora_dossier_layout = fields.Boolean(
+        string="Offerte als projectdossier",
+        default=True,
+        help="Print en verstuur de offerte als Tectora-projectdossier: "
+        "voorblad, aanpak, de offerte zelf, service en garantie. Uit: het "
+        "standaard Odoo-offertedocument.",
+    )
+    tectora_include_roof_plan = fields.Boolean(
+        string="Dakplan toevoegen",
+        default=True,
+        help="Neem het dakplan (tekening, maten en producten per daksectie) "
+        "op in de offerte-pdf.",
+    )
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi
@@ -449,6 +462,40 @@ class SaleOrder(models.Model):
         tz = pytz.timezone(self.env.user.tz or "UTC")
         local = tz.localize(datetime.combine(deadline, time(hour=8)))
         return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+    # ---------------------------------------------------------------- report
+    def _tectora_report_sections(self):
+        """The order lines grouped under their section headers, with a
+        subtotal per section, for the dossier PDF. Lines before the first
+        header form a nameless first group."""
+        self.ensure_one()
+        sections = []
+        current = {"name": False, "lines": [], "subtotal": 0.0, "measurement": False}
+        for line in self.order_line:
+            if line.display_type == "line_section":
+                if current["lines"] or current["name"]:
+                    sections.append(current)
+                current = {
+                    "name": line.name,
+                    "lines": [],
+                    "subtotal": 0.0,
+                    "measurement": bool(line.roof_measurement_line),
+                }
+                continue
+            current["lines"].append(line)
+            if not line.display_type:
+                current["subtotal"] += line.price_subtotal
+        if current["lines"] or current["name"]:
+            sections.append(current)
+        return sections
+
+    def _tectora_report_tax_label(self, line):
+        """"21%" for a line's taxes, the way a customer reads them."""
+        labels = []
+        for tax in line.tax_ids:
+            amount = ("%g" % tax.amount) if tax.amount_type == "percent" else tax.name
+            labels.append("%s%%" % amount if tax.amount_type == "percent" else amount)
+        return ", ".join(labels)
 
     # ---------------------------------------------------------- smart buttons
     def action_view_roof_project(self):

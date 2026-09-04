@@ -14,8 +14,16 @@
 
     <!-- One meetblad page; expects `roof_doc` (tectora.roof.project) to be
          set. Reused by the standalone report and inside the quotation PDF. -->
+    <!-- The meetblad inside the standard document layout. -->
     <template id="report_roof_project_page">
         <t t-call="web.external_layout">
+            <t t-call="tectora_roof.report_roof_project_content"/>
+        </t>
+    </template>
+
+    <!-- The meetblad itself, without layout, so the quotation dossier can
+         embed it as one of its pages. Expects `roof_doc`. -->
+    <template id="report_roof_project_content">
             <div class="page">
                 <h3 class="mb-1">
                     Meetblad <t t-out="roof_doc.code"/> — <t t-out="roof_doc.name"/>
@@ -103,7 +111,6 @@
                           t-options="{'widget': 'monetary', 'display_currency': roof_doc.currency_id}"/>
                 </div>
             </div>
-        </t>
     </template>
 
     <template id="report_roof_project">
@@ -115,16 +122,27 @@
         </t>
     </template>
 
-    <!-- Append the meetblad to the quotation PDF for orders created from a
-         roof project. In Odoo 19 the per-document loop lives in
-         sale.report_saleorder_raw (report_saleorder merely calls it). -->
+    <!-- The quotation PDF: the Tectora project dossier when the order asks for
+         it (the default), otherwise Odoo's standard document, followed by the
+         meetblad when the order includes the roof plan. In Odoo 19 the
+         per-document loop lives in sale.report_saleorder_raw. -->
     <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder_raw">
-        <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="after">
-            <t t-if="doc.roof_project_id">
+        <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="attributes">
+            <attribute name="t-call">tectora_roof.report_saleorder_document_dispatch</attribute>
+        </xpath>
+    </template>
+
+    <template id="report_saleorder_document_dispatch">
+        <t t-if="doc.tectora_dossier_layout">
+            <t t-call="tectora_roof.report_tectora_quotation_document"/>
+        </t>
+        <t t-else="">
+            <t t-call="sale.report_saleorder_document"/>
+            <t t-if="doc.roof_project_id and doc.tectora_include_roof_plan">
                 <t t-set="roof_doc" t-value="doc.roof_project_id"/>
                 <t t-call="tectora_roof.report_roof_project_page"/>
             </t>
-        </xpath>
+        </t>
     </template>
 
 </odoo>

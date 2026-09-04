@@ -90,6 +90,28 @@ install on Odoo 17 or earlier without adjustments.
 - Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
   accounts for the retina factor by measuring the actual stored image width.
 
+## Offerte als Tectora-projectdossier
+
+De offerte-pdf (afdrukken, e-mailen, klantenportaal) is een **projectdossier**
+in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
+
+1. **Voorblad** met klant, werfadres, contactpersoon, kerncijfers en, bij een
+   dakproject, het dak in één oogopslag (oppervlakte, omtrek, dakvlakken,
+   dakobjecten) met de tekening;
+2. **Onze aanpak**: de vijf stappen van kennismaking tot nazorg, waarom Tectora
+   en het dienstenaanbod (tectora.be/diensten);
+3. **De offerte**: lijnen gegroepeerd per hoofdstuk en daksectie met subtotalen,
+   totalen, opties, betalingsvoorwaarden, opmerkingen en het akkoordvak (met de
+   digitale handtekening zodra getekend);
+4. **Dakplan** (optioneel): het meetblad met tekening, maten en producten;
+5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
+   EPC-attest (tectora.be/service), kwaliteitspunten en contact.
+
+Op de verkooporder staan twee schakelaars naast het dakproject: **Offerte als
+projectdossier** (uit: het standaard Odoo-document) en **Dakplan toevoegen**.
+De teksten staan in `report/sale_order_dossier_report.xml` en zijn per
+template aan te passen.
+
 ## Dakproject ↔ verkooporder (1 op 1)
 
 Eén dakproject staat tegenover één offerte/order, in beide richtingen:

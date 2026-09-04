@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The quotation as a Tectora project dossier: cover, the project at a
+         glance and Tectora's way of working, the offer itself, the roof plan
+         (optional, per order), then service, guarantee and quality. Replaces
+         the standard quotation document (see report_saleorder_document_dispatch)
+         wherever the quotation is printed, e-mailed or shown on the portal. -->
+
+    <template id="report_tectora_quotation_styles">
+        <style>
+            .tq { color: #1d1d1b; font-size: 10.5px; line-height: 1.45; }
+            .tq h1, .tq h2, .tq h3, .tq h4 { color: #1d1d1b; font-weight: 700; }
+            .tq h2 { font-size: 20px; margin: 0 0 6px 0; }
+            .tq h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #008b93; margin: 18px 0 6px 0; }
+            .tq .tq-teal { color: #008b93; }
+            .tq .tq-muted { color: #6c757d; }
+            .tq .tq-band { background: #008b93; color: #fff; padding: 26px 28px; border-radius: 6px; }
+            .tq .tq-band h1 { color: #fff; font-size: 30px; margin: 0 0 4px 0; }
+            .tq .tq-band .tq-sub { color: #d6eff0; font-size: 13px; }
+            .tq .tq-card { background: #eef7f8; border-left: 4px solid #008b93; padding: 10px 14px; border-radius: 4px; margin-bottom: 10px; }
+            .tq .tq-card .tq-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #008b93; }
+            .tq .tq-card .tq-value { font-size: 15px; font-weight: 700; }
+            .tq .tq-step { border-top: 2px solid #008b93; padding-top: 6px; }
+            .tq .tq-step .tq-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: #008b93; color: #fff; font-weight: 700; margin-right: 6px; }
+            .tq table.tq-lines { width: 100%; border-collapse: collapse; }
+            .tq table.tq-lines th { background: #1d1d1b; color: #fff; font-weight: 600; padding: 6px 8px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+            .tq table.tq-lines td { padding: 5px 8px; border-bottom: 1px solid #e3e7e9; vertical-align: top; }
+            .tq table.tq-lines tr.tq-section td { background: #eef7f8; color: #008b93; font-weight: 700; border-bottom: 1px solid #b9dfe2; padding-top: 8px; }
+            .tq table.tq-lines tr.tq-subtotal td { border-bottom: 2px solid #008b93; font-weight: 600; color: #1d1d1b; }
+            .tq table.tq-lines tr.tq-note td { font-style: italic; color: #6c757d; }
+            .tq table.tq-totals { width: 45%; float: right; border-collapse: collapse; margin-top: 10px; }
+            .tq table.tq-totals td { padding: 5px 8px; border-bottom: 1px solid #e3e7e9; }
+            .tq table.tq-totals tr.tq-grand td { background: #008b93; color: #fff; font-weight: 700; font-size: 13px; border: 0; }
+            .tq .tq-check li { margin-bottom: 3px; }
+            .tq .tq-sign { border: 1px solid #b9dfe2; border-radius: 4px; height: 90px; padding: 6px 10px; }
+            .tq .tq-footer { font-size: 8.5px; color: #6c757d; border-top: 1px solid #b9dfe2; padding-top: 4px; }
+            .tq .tq-logo { max-height: 42px; }
+            .tq .tq-logo-cover { max-height: 60px; }
+            .tq .tq-page-break { page-break-before: always; }
+            .tq .tq-avoid { page-break-inside: avoid; }
+        </style>
+    </template>
+
+    <!-- The company logo, or Tectora's own when none is configured. -->
+    <template id="report_tectora_logo">
+        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
+             t-attf-class="tq-logo #{extra_class or ''}" alt="Logo"/>
+        <img t-else="" t-attf-src="/tectora_roof/static/src/img/#{'tectora-logo-white.svg' if white else 'tectora-logo-color.svg'}"
+             t-attf-class="tq-logo #{extra_class or ''}" alt="Tectora"/>
+    </template>
+
+    <template id="report_tectora_quotation_document">
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+
+        <div class="header tq">
+            <div class="row" style="margin-top: 4px;">
+                <div class="col-6">
+                    <t t-call="tectora_roof.report_tectora_logo">
+                        <t t-set="white" t-value="False"/>
+                    </t>
+                </div>
+                <div class="col-6 text-end tq-muted" style="padding-top: 8px;">
+                    <strong class="tq-teal"><t t-out="doc_label"/> <t t-out="doc.name"/></strong><br/>
+                    <t t-out="doc.partner_id.name"/>
+                    <t t-if="roof and roof.address"> · <t t-out="roof.address"/></t>
+                </div>
+            </div>
+            <div style="border-bottom: 2px solid #008b93; margin: 4px 0 8px 0;"/>
+        </div>
+
+        <div class="article tq o_report_layout_standard"
+             t-att-data-oe-model="doc and doc._name"
+             t-att-data-oe-id="doc and doc.id"
+             t-att-data-oe-lang="doc and doc.env.context.get('lang')">
+            <t t-call="tectora_roof.report_tectora_quotation_styles"/>
+
+            <!-- ============================== 1. Voorblad -->
+            <div class="tq-band" style="margin-top: 6px;">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="tq-sub">Projectdossier</div>
+                        <h1><t t-out="doc_label"/> plat dak</h1>
+                        <div class="tq-sub">
+                            <t t-out="doc.name"/> ·
+                            <span t-field="doc.date_order" t-options='{"widget": "date"}'/>
+                            <t t-if="roof"> · <t t-out="roof._project_type_label()"/></t>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <t t-call="tectora_roof.report_tectora_logo">
+                            <t t-set="white" t-value="True"/>
+                            <t t-set="extra_class" t-value="'tq-logo-cover'"/>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 18px;">
+                <div class="col-6">
+                    <h3>Opgemaakt voor</h3>
+                    <div t-field="doc.partner_id"
+                         t-options='{"widget": "contact", "fields": ["address", "name", "phone", "email", "vat"], "no_marker": True}'/>
+                    <t t-if="roof and roof.address">
+                        <h3>Werfadres</h3>
+                        <div><t t-out="roof.address"/></div>
+                    </t>
+                    <t t-elif="doc.partner_shipping_id and doc.partner_shipping_id != doc.partner_id">
+                        <h3>Werfadres</h3>
+                        <div t-field="doc.partner_shipping_id"
+                             t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                    </t>
+                </div>
+                <div class="col-6">
+                    <h3>Uw contactpersoon</h3>
+                    <div t-if="doc.user_id">
+                        <strong><t t-out="doc.user_id.name"/></strong><br/>
+                        <t t-if="doc.user_id.phone"><t t-out="doc.user_id.phone"/><br/></t>
+                        <t t-if="doc.user_id.email"><t t-out="doc.user_id.email"/></t>
+                    </div>
+                    <div t-else="">
+                        <strong><t t-out="company.name"/></strong><br/>
+                        <t t-if="company.phone"><t t-out="company.phone"/><br/></t>
+                        <t t-if="company.email"><t t-out="company.email"/></t>
+                    </div>
+                    <h3>Kerncijfers</h3>
+                    <table class="table table-sm table-borderless" style="margin-bottom: 0;">
+                        <tr t-if="doc.validity_date and not is_order">
+                            <td class="tq-muted">Geldig tot</td>
+                            <td class="text-end"><span t-field="doc.validity_date" t-options='{"widget": "date"}'/></td>
+                        </tr>
+                        <tr t-if="doc.client_order_ref">
+                            <td class="tq-muted">Uw referentie</td>
+                            <td class="text-end"><t t-out="doc.client_order_ref"/></td>
+                        </tr>
+                        <tr t-if="roof">
+                            <td class="tq-muted">Dakproject</td>
+                            <td class="text-end"><t t-out="roof.code"/></td>
+                        </tr>
+                        <tr>
+                            <td class="tq-muted">Totaal excl. btw</td>
+                            <td class="text-end"><span t-field="doc.amount_untaxed"/></td>
+                        </tr>
+                        <tr>
+                            <td class="tq-muted"><strong>Totaal incl. btw</strong></td>
+                            <td class="text-end"><strong><span t-field="doc.amount_total"/></strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <t t-if="roof">
+                <h3>Uw dak in één oogopslag</h3>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="tq-card">
+                            <div class="tq-label">Dakoppervlakte</div>
+                            <div class="tq-value"><t t-out="'%.1f m²' % roof.total_area"/></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="tq-card">
+                            <div class="tq-label">Omtrek dakranden</div>
+                            <div class="tq-value"><t t-out="'%.1f m' % roof.total_perimeter"/></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="tq-card">
+                            <div class="tq-label">Dakvlakken</div>
+                            <div class="tq-value"><t t-out="roof.section_count"/></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="tq-card">
+                            <div class="tq-label">Dakobjecten</div>
+                            <div class="tq-value"><t t-out="roof.roof_object_count"/></div>
+                        </div>
+                    </div>
+                </div>
+                <t t-set="cover_drawing" t-value="doc.tectora_include_roof_plan and roof._get_drawing_b64()"/>
+                <div t-if="cover_drawing" class="text-center tq-avoid" style="margin-top: 4px;">
+                    <img t-att-src="image_data_uri(cover_drawing)"
+                         style="max-width: 100%; max-height: 80mm; border: 1px solid #e3e7e9; border-radius: 4px;"
+                         alt="Dakplan"/>
+                    <div class="tq-muted" style="font-size: 9px;">Opmeting van uw dak — het volledige dakplan vindt u verder in dit dossier.</div>
+                </div>
+            </t>
+
+            <!-- ============================== 2. Aanpak -->
+            <div class="tq-page-break"/>
+            <h2>Onze aanpak: een plat dak zonder zorgen</h2>
+            <p>
+                Bij Tectora begint elk project met écht luisteren naar uw wensen, plannen en noden.
+                Transparantie en technische knowhow vormen de basis van elk geslaagd project, van
+                plaatsbezoek tot oplevering. Uw dossier volgt deze vijf stappen:
+            </p>
+            <div class="row" style="margin-top: 8px;">
+                <div class="col-4 tq-step">
+                    <span class="tq-num">1</span><strong>Kennismaking &amp; plaatsbezoek</strong>
+                    <p class="tq-muted">Onze adviseur inspecteert uw plat dak, meet het op en bespreekt uw wensen. Bij nieuwbouw werken we op basis van uw bouwplannen.</p>
+                </div>
+                <div class="col-4 tq-step">
+                    <span class="tq-num">2</span><strong>Duidelijk voorstel</strong>
+                    <p class="tq-muted">U ontvangt dit transparante voorstel, afgestemd op uw budget, de dakstructuur en de input van uw architect. De hoeveelheden volgen rechtstreeks uit de opmeting.</p>
+                </div>
+                <div class="col-4 tq-step">
+                    <span class="tq-num">3</span><strong>Planning &amp; materiaal</strong>
+                    <p class="tq-muted">Na uw akkoord plannen we de werken in, bestellen we het juiste materiaal en stellen we het ideale team samen voor uw project.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 tq-step">
+                    <span class="tq-num">4</span><strong>Uitvoering</strong>
+                    <p class="tq-muted">Op de afgesproken datum starten we met de plaatsing. Ons team werkt vakkundig, proper en met respect voor uw woning of werf, onder leiding van een vaste werfleider.</p>
+                </div>
+                <div class="col-4 tq-step">
+                    <span class="tq-num">5</span><strong>Oplevering &amp; nazorg</strong>
+                    <p class="tq-muted">Na controle leveren we uw dak netjes op. Uw werfleider blijft uw aanspreekpunt, ook na oplevering, voor onderhoud of bijkomende vragen.</p>
+                </div>
+                <div class="col-4 tq-step">
+                    <span class="tq-num">✓</span><strong>Waarom Tectora</strong>
+                    <ul class="tq-check tq-muted" style="padding-left: 16px; margin-top: 4px;">
+                        <li>Familiaal bedrijf met persoonlijke aanpak en directe service</li>
+                        <li>Correcte planning en constante opvolging door een vaste werfleider</li>
+                        <li>Vakmanschap, nette afwerking en respect voor uw woning</li>
+                        <li>Kwaliteitsvolle materialen met lange levensduur</li>
+                        <li>Eerlijk advies voor particulieren, aannemers, architecten en syndici</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Wat wij voor uw plat dak doen</h3>
+            <div class="row">
+                <div class="col-6">
+                    <ul class="tq-check" style="padding-left: 16px;">
+                        <li><strong>EPDM-daken</strong> — naadloos en brandvrij geplaatst, met een levensduur tot 50 jaar</li>
+                        <li><strong>Roofing (bitumen)</strong> — de klassieke, versterkte afdichting</li>
+                        <li><strong>Dakisolatie</strong> — energiezuinig en volgens de geldende technische richtlijnen</li>
+                        <li><strong>Dakranden &amp; oversteken</strong> — waterdicht en esthetisch afgewerkt</li>
+                        <li><strong>Lichtkoepels &amp; platdakramen</strong></li>
+                    </ul>
+                </div>
+                <div class="col-6">
+                    <ul class="tq-check" style="padding-left: 16px;">
+                        <li><strong>Groen- en grinddaken</strong></li>
+                        <li><strong>Dakterrassen</strong></li>
+                        <li><strong>Lekdetectie &amp; onderhoud</strong> — preventief onderhoud en gerichte herstellingen</li>
+                        <li><strong>Dakherstellingen</strong> — snel en betrouwbaar bij schade of slijtage</li>
+                    </ul>
+                    <p class="tq-muted" style="font-size: 9.5px;">Meer over onze diensten: www.tectora.be/diensten</p>
+                </div>
+            </div>
+
+            <!-- ============================== 3. De offerte -->
+            <div class="tq-page-break"/>
+            <h2><t t-out="doc_label"/> <t t-out="doc.name"/></h2>
+            <p class="tq-muted">
+                Alle prijzen zijn in <t t-out="doc.currency_id.name"/> en exclusief btw, tenzij anders vermeld.
+                <t t-if="roof">De hoeveelheden volgen uit de opmeting van uw dak (dakproject <t t-out="roof.code"/>).</t>
+                <t t-if="doc.validity_date and not is_order">Deze offerte is geldig tot <span t-field="doc.validity_date" t-options='{"widget": "date"}'/>.</t>
+            </p>
+            <table class="tq-lines">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Omschrijving</th>
+                        <th class="text-end" style="width: 11%;">Aantal</th>
+                        <th style="width: 9%;">Eenheid</th>
+                        <th class="text-end" style="width: 12%;">Eenheidsprijs</th>
+                        <th class="text-end" style="width: 6%;">Btw</th>
+                        <th class="text-end" style="width: 12%;">Totaal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="doc._tectora_report_sections()" t-as="section">
+                        <tr t-if="section['name']" class="tq-section">
+                            <td colspan="6"><t t-out="section['name']"/></td>
+                        </tr>
+                        <t t-foreach="section['lines']" t-as="line">
+                            <tr t-if="line.display_type == 'line_note'" class="tq-note">
+                                <td colspan="6"><span t-field="line.name"/></td>
+                            </tr>
+                            <tr t-elif="not line.display_type">
+                                <td><span t-field="line.name"/></td>
+                                <td class="text-end"><t t-out="'%g' % line.product_uom_qty"/></td>
+                                <td><t t-out="line.product_uom_id.name or ''"/></td>
+                                <td class="text-end">
+                                    <span t-field="line.price_unit"
+                                          t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    <t t-if="line.discount"><br/><span class="tq-muted" style="font-size: 9px;">-<t t-out="'%g' % line.discount"/>%</span></t>
+                                </td>
+                                <td class="text-end"><t t-out="doc._tectora_report_tax_label(line)"/></td>
+                                <td class="text-end"><span t-field="line.price_subtotal"/></td>
+                            </tr>
+                        </t>
+                        <tr t-if="section['name'] and len(section['lines']) &gt; 1" class="tq-subtotal">
+                            <td colspan="5" class="text-end">Subtotaal <t t-out="section['name']"/></td>
+                            <td class="text-end">
+                                <span t-out="section['subtotal']"
+                                      t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+
+            <div class="clearfix tq-avoid">
+                <table class="tq-totals">
+                    <tr>
+                        <td>Totaal excl. btw</td>
+                        <td class="text-end"><span t-field="doc.amount_untaxed"/></td>
+                    </tr>
+                    <tr>
+                        <td>Btw</td>
+                        <td class="text-end"><span t-field="doc.amount_tax"/></td>
+                    </tr>
+                    <tr class="tq-grand">
+                        <td>Totaal incl. btw</td>
+                        <td class="text-end"><span t-field="doc.amount_total"/></td>
+                    </tr>
+                </table>
+            </div>
+
+            <t t-set="options" t-value="doc.sale_order_option_ids.filtered(lambda option: not option.is_present)"/>
+            <div t-if="options" class="tq-avoid" style="margin-top: 14px;">
+                <h3>Optioneel — op aanvraag toe te voegen</h3>
+                <table class="tq-lines">
+                    <thead>
+                        <tr>
+                            <th style="width: 62%;">Omschrijving</th>
+                            <th class="text-end" style="width: 11%;">Aantal</th>
+                            <th style="width: 9%;">Eenheid</th>
+                            <th class="text-end" style="width: 18%;">Eenheidsprijs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="options" t-as="option">
+                            <td><span t-field="option.name"/></td>
+                            <td class="text-end"><t t-out="'%g' % option.quantity"/></td>
+                            <td><t t-out="option.uom_id.name or ''"/></td>
+                            <td class="text-end">
+                                <span t-field="option.price_unit"
+                                      t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row" style="margin-top: 14px;">
+                <div class="col-7">
+                    <t t-if="doc.payment_term_id">
+                        <h3>Betaling</h3>
+                        <div><t t-out="doc.payment_term_id.name"/></div>
+                        <div t-if="doc.payment_term_id.note" t-field="doc.payment_term_id.note" class="tq-muted"/>
+                    </t>
+                    <t t-if="doc.note">
+                        <h3>Voorwaarden &amp; opmerkingen</h3>
+                        <div t-field="doc.note" class="tq-muted"/>
+                    </t>
+                    <t t-if="company.invoice_terms and not company.terms_type == 'html'">
+                        <div t-field="company.invoice_terms" class="tq-muted" style="font-size: 9px; margin-top: 6px;"/>
+                    </t>
+                </div>
+                <div class="col-5 tq-avoid">
+                    <h3>Voor akkoord</h3>
+                    <div t-if="doc.signature" class="tq-sign">
+                        <img t-att-src="image_data_uri(doc.signature)" style="max-height: 60px; max-width: 100%;" alt="Handtekening"/>
+                        <div class="tq-muted" style="font-size: 9px;">
+                            <t t-out="doc.signed_by"/>
+                            <t t-if="doc.signed_on"> — <span t-field="doc.signed_on" t-options='{"widget": "date"}'/></t>
+                        </div>
+                    </div>
+                    <div t-else="" class="tq-sign tq-muted">
+                        Naam, datum en handtekening<br/>
+                        <span style="font-size: 9px;">"Gelezen en goedgekeurd"</span>
+                    </div>
+                    <p class="tq-muted" style="font-size: 9px; margin-top: 6px;">
+                        Door deze <t t-out="doc_label.lower()"/> te ondertekenen gaat u akkoord met de
+                        omschreven werken, hoeveelheden en prijzen en met de voorwaarden van
+                        <t t-out="company.name"/>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ============================== 4. Dakplan -->
+            <t t-if="roof and doc.tectora_include_roof_plan">
+                <div class="tq-page-break"/>
+                <h2>Dakplan</h2>
+                <p class="tq-muted">
+                    De opmeting waarop deze <t t-out="doc_label.lower()"/> gebaseerd is: de dakvlakken,
+                    dakobjecten en naden met hun afmetingen, en de producten per onderdeel.
+                </p>
+                <t t-set="roof_doc" t-value="roof"/>
+                <t t-call="tectora_roof.report_roof_project_content"/>
+            </t>
+
+            <!-- ============================== 5. Service, garantie, kwaliteit -->
+            <div class="tq-page-break"/>
+            <h2>Service, garantie en kwaliteit</h2>
+            <p>
+                Onze dienstverlening stopt niet na het plaatsen van uw plat dak. Zo haalt u het maximale
+                uit uw investering, technisch én administratief.
+            </p>
+            <div class="row" style="margin-top: 8px;">
+                <div class="col-4">
+                    <div class="tq-card" style="min-height: 150px;">
+                        <div class="tq-label">Garantie</div>
+                        <div class="tq-value">12 jaar</div>
+                        <p style="margin-bottom: 0;">
+                            Op al onze dakwerken geniet u van 12 jaar garantie, ruimschoots meer dan de
+                            wettelijke verplichting. De garantie geldt op door Tectora uitgevoerde platte
+                            daken volgens de geldende technische richtlijnen; uitzonderingen worden steeds
+                            vooraf transparant toegelicht.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="tq-card" style="min-height: 150px;">
+                        <div class="tq-label">Premies</div>
+                        <div class="tq-value">Begeleiding</div>
+                        <p style="margin-bottom: 0;">
+                            De Vlaamse overheid voorziet financiële tegemoetkomingen voor wie investeert in
+                            dakisolatie of asbest laat verwijderen. Wij brengen uw mogelijkheden in kaart,
+                            begeleiden de premieaanvraag en bezorgen de nodige documenten en attesten.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="tq-card" style="min-height: 150px;">
+                        <div class="tq-label">EPC-attest</div>
+                        <div class="tq-value">Betere score</div>
+                        <p style="margin-bottom: 0;">
+                            Na het isoleren en vernieuwen van uw dakbedekking kan de EPC-score van uw
+                            woning aanzienlijk verbeteren. Wilt u nadien een nieuw EPC laten opmaken, dan
+                            verwijzen wij u graag door naar een betrouwbare partner voor een correcte keuring.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Kwaliteit die u ziet en voelt</h3>
+            <div class="row">
+                <div class="col-6">
+                    <ul class="tq-check" style="padding-left: 16px;">
+                        <li><strong>Hoogwaardige materialen</strong> met lange levensduur: EPDM tot 50 jaar, moderne versterkte roofing 25 tot 30 jaar.</li>
+                        <li><strong>Ervaren dakwerkers</strong> en een vaste werfleider die uw werf van start tot oplevering opvolgt.</li>
+                        <li><strong>Veilige werf</strong> en een nette afwerking, met respect voor uw woning of gebouw.</li>
+                    </ul>
+                </div>
+                <div class="col-6">
+                    <ul class="tq-check" style="padding-left: 16px;">
+                        <li><strong>Duidelijke afspraken</strong> zonder verrassingen: de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</li>
+                        <li><strong>Onderhoud en nazorg</strong>: lekdetectie, onderhoud en herstellingen door hetzelfde team dat uw dak kent.</li>
+                        <li><strong>Meer dan 10 jaar ervaring</strong> met platte daken van woningen, nieuwbouw, renovaties en bedrijven in Vlaanderen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tq-band tq-avoid" style="margin-top: 16px; padding: 16px 22px;">
+                <div class="row">
+                    <div class="col-8">
+                        <strong style="font-size: 14px;">Vragen over dit dossier?</strong><br/>
+                        <span class="tq-sub">
+                            <t t-if="doc.user_id"><t t-out="doc.user_id.name"/> helpt u graag verder
+                                <t t-if="doc.user_id.phone"> · <t t-out="doc.user_id.phone"/></t>
+                                <t t-if="doc.user_id.email"> · <t t-out="doc.user_id.email"/></t>
+                            </t>
+                            <t t-else=""><t t-out="company.name"/>
+                                <t t-if="company.phone"> · <t t-out="company.phone"/></t>
+                                <t t-if="company.email"> · <t t-out="company.email"/></t>
+                            </t>
+                        </span>
+                    </div>
+                    <div class="col-4 text-end tq-sub">
+                        <t t-out="company.website or 'www.tectora.be'"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer tq">
+            <div class="tq-footer row">
+                <div class="col-9">
+                    <strong><t t-out="company.name"/></strong>
+                    <t t-if="company.street"> · <t t-out="company.street"/><t t-if="company.zip or company.city">, <t t-out="company.zip or ''"/> <t t-out="company.city or ''"/></t></t>
+                    <t t-if="company.vat"> · <t t-out="company.vat"/></t>
+                    <t t-if="company.phone"> · <t t-out="company.phone"/></t>
+                    <t t-if="company.email"> · <t t-out="company.email"/></t>
+                    <t t-if="company.website"> · <t t-out="company.website"/></t>
+                </div>
+                <div class="col-3 text-end">
+                    <t t-out="doc_label"/> <t t-out="doc.name"/> · pagina <span class="page"/> / <span class="topage"/>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</odoo>
