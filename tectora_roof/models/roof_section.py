@@ -3,6 +3,7 @@ import json
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_compare
 
 COVERAGE_SELECTION = [
     ("surface", "Oppervlak"),
@@ -75,6 +76,24 @@ class TectoraRoofSection(models.Model):
                 section.product_line_ids.mapped("price_subtotal")
             )
 
+    # ------------------------------------------------------------ seam split
+    def _copy_whole_surface_lines(self, origin):
+        """Take over the product lines of ``origin`` that apply to the whole
+        surface (no side number): surface, edge, corner and drainage products.
+        Quantities follow this section's own measurement."""
+        self.ensure_one()
+        Line = self.env["tectora.roof.section.product"].with_context(tectora_sync=True)
+        values = []
+        for line in origin.product_line_ids.filtered(lambda l: not l.edge_index):
+            values.append({
+                "section_id": self.id,
+                "product_id": line.product_id.id,
+                "coverage": line.coverage,
+                "quantity": line.quantity,
+                "edge_index": 0,
+            })
+        return Line.create(values) if values else Line
+
     # --------------------------------------------------- convert to roof object
     def action_convert_to_chimney(self):
         return self._convert_to_object("chimney")
@@ -129,6 +148,14 @@ class TectoraRoofSection(models.Model):
 
 
 class TectoraRoofSectionProduct(models.Model):
+    """A product on a roof section, a roof object or the project as a whole.
+
+    The quantity follows the measurement: a surface product takes the area,
+    an edge product the perimeter -- of the section, or of the whole roof for
+    a project-level (chapter) line. Every line is mirrored on the open
+    quotation of the roof project, so the order follows the drawing.
+    """
+
     _name = "tectora.roof.section.product"
     _description = "Roof Section Product Line"
 
@@ -177,7 +204,20 @@ class TectoraRoofSectionProduct(models.Model):
         "(m²), edges use the perimeter (m), corners default to 4 pieces and "
         "drainage to 1 piece.",
     )
-    quantity = fields.Float(string="Hoeveelheid", digits="Product Unit of Measure", default=1.0)
+    quantity = fields.Float(
+        string="Hoeveelheid",
+        digits="Product Unit of Measure",
+        compute="_compute_quantity",
+        store=True,
+        readonly=False,
+        help="Volgt de meting: oppervlakte (m²) of omtrek (m) van de sectie, "
+        "of van het hele dak voor een projectlijn. Een ingevoerde waarde "
+        "blijft staan tot de tekening verandert.",
+    )
+    sale_line_ids = fields.One2many(
+        "sale.order.line", "roof_line_id", string="Offertelijnen",
+        help="Lijnen op de offerte die deze projectlijn spiegelen.",
+    )
     uom_id = fields.Many2one(related="product_id.uom_id", string="Eenheid")
     price_unit = fields.Float(
         related="product_id.lst_price", string="Eenheidsprijs"
@@ -229,17 +269,120 @@ class TectoraRoofSectionProduct(models.Model):
         for line in self:
             line.price_subtotal = line.quantity * line.product_id.lst_price
 
-    @api.onchange("coverage", "product_id")
-    def _onchange_coverage(self):
+    @api.depends(
+        "coverage", "edge_index",
+        "section_id.area", "section_id.perimeter",
+        "object_id.area", "object_id.perimeter",
+        "project_direct_id.total_area", "project_direct_id.total_perimeter",
+    )
+    def _compute_quantity(self):
+        """Quantity from the measurement. Per-side lines keep the length the
+        drawing gave them; corners, drainage and general lines keep what was
+        entered (defaults 4 and 1)."""
         for line in self:
-            target = line.section_id or line.object_id
-            if not target:
+            if line.edge_index:
+                line.quantity = line.quantity or 1.0
                 continue
-            if line.coverage == "surface":
+            if line.project_direct_id:
+                project = line.project_direct_id
+                if line.coverage == "surface":
+                    line.quantity = project.total_area
+                elif line.coverage == "edges":
+                    line.quantity = project.total_perimeter
+                else:
+                    line.quantity = line.quantity or 1.0
+                continue
+            target = line.section_id or line.object_id
+            if target and line.coverage == "surface":
                 line.quantity = target.area
-            elif line.coverage == "edges":
+            elif target and line.coverage == "edges":
                 line.quantity = target.perimeter
             elif line.coverage == "corners":
-                line.quantity = 4.0
-            else:  # drainage
-                line.quantity = 1.0
+                line.quantity = line.quantity or 4.0
+            else:
+                line.quantity = line.quantity or 1.0
+
+    @api.onchange("product_id")
+    def _onchange_product_id(self):
+        """A chapter line picked in one of the project tabs is measured by
+        the unit of its product (m² -> surface, m -> edges, else counted)."""
+        for line in self:
+            if line.product_id and (line.project_direct_id or not (line.section_id or line.object_id)):
+                line.coverage = self._coverage_from_product(line.product_id)
+
+    # ----------------------------------------------------------- unit -> use
+    @api.model
+    def _coverage_from_product(self, product):
+        """How a product is measured, read off its unit: m² -> surface,
+        m -> edges, anything else is counted (general)."""
+        uom = product.uom_id
+        if not uom:
+            return "general"
+        root = uom
+        seen = set()
+        while (
+            "relative_uom_id" in root._fields
+            and root.relative_uom_id
+            and root.id not in seen
+        ):
+            seen.add(root.id)
+            root = root.relative_uom_id
+        square = self.env.ref("uom.product_uom_square_meter", raise_if_not_found=False)
+        meter = self.env.ref("uom.product_uom_meter", raise_if_not_found=False)
+        if square and (uom == square or root == square):
+            return "surface"
+        if meter and (uom == meter or root == meter):
+            return "edges"
+        if "category_id" in uom._fields and uom.category_id:
+            for candidate, coverage in ((square, "surface"), (meter, "edges")):
+                if candidate and uom.category_id == candidate.category_id:
+                    return coverage
+        name = (uom.name or "").strip().lower()
+        if name in ("m²", "m2", "m^2", "vierkante meter"):
+            return "surface"
+        if name in ("m", "lm", "meter", "lopende meter"):
+            return "edges"
+        return "general"
+
+    # ------------------------------------------------------ order mirroring
+    @api.model_create_multi
+    def create(self, vals_list):
+        Product = self.env["product.product"]
+        for vals in vals_list:
+            # A chapter line (project level) is measured by its unit unless
+            # the caller said otherwise.
+            if vals.get("project_direct_id") and not vals.get("coverage") and vals.get("product_id"):
+                vals["coverage"] = self._coverage_from_product(
+                    Product.browse(vals["product_id"])
+                )
+        lines = super().create(vals_list)
+        if not self.env.context.get("tectora_sync"):
+            lines.project_id._tectora_mirror_to_order()
+        return lines
+
+    def write(self, vals):
+        result = super().write(vals)
+        if not self.env.context.get("tectora_sync") and (
+            {"quantity", "product_id", "coverage", "edge_index"} & set(vals)
+        ):
+            self.project_id._tectora_mirror_to_order()
+        return result
+
+    def unlink(self):
+        """A removed line leaves the open quotation as well; the measurement
+        lines of the quotation are rebuilt afterwards."""
+        projects = self.project_id
+        order_lines = self.sale_line_ids.filtered(
+            lambda line: line.order_id.state in ("draft", "sent")
+        )
+        if order_lines:
+            order_lines.with_context(tectora_sync=True).unlink()
+        result = super().unlink()
+        if not self.env.context.get("tectora_sync"):
+            projects.exists()._tectora_mirror_to_order()
+        return result
+
+    def _quantity_differs(self, quantity):
+        self.ensure_one()
+        rounding = self.product_id.uom_id.rounding or 0.01
+        return float_compare(self.quantity, quantity, precision_rounding=rounding) != 0

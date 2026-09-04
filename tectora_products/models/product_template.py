@@ -123,7 +123,9 @@ class ProductTemplate(models.Model):
         """
         options = options or {}
         root_name = options.get("root_category") or DEFAULT_ROOT_CATEGORY
-        sale_ok_goods = options.get("sale_ok_goods", True)
+        # A raw material is bought, not sold; only the works items are
+        # quoted. The wizard can override this per import.
+        sale_ok_goods = options.get("sale_ok_goods", False)
         Product = self.env["product.template"]
         SupplierInfo = self.env["product.supplierinfo"]
 
@@ -134,7 +136,9 @@ class ProductTemplate(models.Model):
         counters = {"created": 0, "updated": 0, "vendor_lines": 0}
 
         for entry in entries:
-            path = entry["category_path"]
+            path = catalog_rules.branch_path(
+                entry["category_path"], entry["is_service"]
+            )
             if path not in categories:
                 categories[path] = self._tectora_resolve_category(path, root_name)
             key = entry["uom"]
@@ -226,10 +230,15 @@ class ProductTemplate(models.Model):
         cannot be filed into by hand either. Idempotent.
         """
         root_name = root_name or DEFAULT_ROOT_CATEGORY
-        created = 0
         before = self.env["product.category"].search_count([])
         for path in catalog_rules.CATEGORY_PATHS.values():
+            # Both branches: the chapters themselves hold the works items that
+            # can be sold, the same chapters under Grondstoffen hold the raw
+            # materials that cannot.
             self._tectora_resolve_category(path, root_name)
+            self._tectora_resolve_category(
+                catalog_rules.branch_path(path, False), root_name
+            )
         created = self.env["product.category"].search_count([]) - before
         _logger.info("tectora_products: %s categories added to the tree", created)
         return created
@@ -260,12 +269,15 @@ class ProductTemplate(models.Model):
                     key = catalog_rules.refine(entry["category"], entry["name"])
                     path = catalog_rules.CATEGORY_PATHS.get(key)
                     if path and entry.get("code"):
+                        # Price-book items are the works items: always sold.
                         wanted[entry["code"]] = path
         for entry in entries:
             code = (entry.get("code") or "").strip()
             path = entry.get("category_path")
             if code and path:
-                wanted[code] = path
+                wanted[code] = catalog_rules.branch_path(
+                    path, entry.get("is_service", True)
+                )
         if not wanted:
             return 0
         Product = self.env["product.template"].with_context(active_test=False)
@@ -290,6 +302,68 @@ class ProductTemplate(models.Model):
                 moved += 1
         _logger.info("tectora_products: %s products re-categorised", moved)
         return moved
+
+    @api.model
+    def _tectora_enforce_goods_not_sellable(self):
+        """Take the raw materials out of the sales catalogue.
+
+        Only the works items are quoted; a raw material is bought. Which is
+        which comes from the shipped catalogue, so a product somebody made
+        sellable that the catalogue does not know about is left alone.
+        """
+        if not PRODUCT_CATALOG.exists():
+            return 0
+        entries = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))[
+            "products"
+        ]
+        codes = [
+            entry["code"]
+            for entry in entries
+            if entry.get("code") and not entry.get("is_service")
+        ]
+        if not codes:
+            return 0
+        goods = self.env["product.template"].with_context(active_test=False).search(
+            [("default_code", "in", codes), ("sale_ok", "=", True)]
+        )
+        if goods:
+            goods.write({"sale_ok": False})
+        _logger.info("tectora_products: %s raw materials set to not sellable", len(goods))
+        return len(goods)
+
+    def _tectora_enforce_works_sellable(self):
+        """Put the works items back in the sales catalogue.
+
+        The counterpart of ``_tectora_enforce_goods_not_sellable``: the export
+        names the vendor a works item's material comes from ("Leveren en
+        plaatsen van de koepelschaal type: Skylux", vendor Cintralux), which
+        used to file the item itself as stock -- and a raw material is not
+        sellable, so a dome could not be quoted at all. Which is which comes
+        from the shipped catalogue.
+        """
+        if not PRODUCT_CATALOG.exists():
+            return 0
+        entries = json.loads(PRODUCT_CATALOG.read_text(encoding="utf-8"))[
+            "products"
+        ]
+        codes = [
+            entry["code"]
+            for entry in entries
+            if entry.get("code") and entry.get("is_service")
+        ]
+        if not codes:
+            return 0
+        works = self.env["product.template"].with_context(active_test=False).search(
+            ["&", ("default_code", "in", codes),
+             "|", ("type", "!=", "service"), ("sale_ok", "=", False)]
+        )
+        if works:
+            values = {"type": "service", "sale_ok": True, "purchase_ok": False}
+            if "is_storable" in self.env["product.template"]._fields:
+                values["is_storable"] = False
+            works.write(values)
+        _logger.info("tectora_products: %s works items back on sale", len(works))
+        return len(works)
 
     def _tectora_in_tree(self, category, root_name):
         node = category

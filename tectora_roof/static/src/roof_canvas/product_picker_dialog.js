@@ -29,10 +29,13 @@ export class RoofProductPickerDialog extends Component {
         // Other items of the same type in the drawing, each
         // {key, label, detail, quantity}. Empty or absent hides the option.
         targets: { type: Array, optional: true },
-        // "Andere zijden in de tekening", "Andere oppervlaktes", ...
-        targetsLabel: { type: String, optional: true },
         // Unit the quantities are in ("m", "m²", ""), for the totals line.
         quantityUnit: { type: String, optional: true },
+        // Target keys ticked from the start: the other sides the user
+        // Ctrl-selected on the drawing.
+        preselectedTargets: { type: Array, optional: true },
+        // How the clicked item is named in the list of what gets the products.
+        baseLabel: { type: String, optional: true },
     };
 
     setup() {
@@ -43,8 +46,12 @@ export class RoofProductPickerDialog extends Component {
             activeCategory: null, // false = zonder categorie, null = alle
             search: "",
             selected: {},
-            multi: false,
-            selectedTargets: {}, // target key -> true
+            // A Ctrl-selection arrives with its extra targets already picked,
+            // so the list of what gets the products is open and complete.
+            multi: (this.props.preselectedTargets || []).length > 0,
+            selectedTargets: Object.fromEntries(
+                (this.props.preselectedTargets || []).map((key) => [key, true])
+            ),
         });
         onWillStart(async () => {
             this.state.products = await this.orm.searchRead(
@@ -179,6 +186,10 @@ export class RoofProductPickerDialog extends Component {
         if (!checked) {
             this.state.selectedTargets = {};
         }
+    }
+
+    get baseLabel() {
+        return this.props.baseLabel || "Het aangeklikte item";
     }
 
     toggleTarget(target) {

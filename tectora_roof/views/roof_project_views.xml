@@ -5,30 +5,39 @@
         <field name="name">tectora.roof.project.form</field>
         <field name="model">tectora.roof.project</field>
         <field name="arch" type="xml">
-            <form string="Dakproject">
+            <form string="Dakproject" class="o_tectora_chatter_bottom">
                 <header>
-                    <button name="action_fetch_satellite" type="object"
-                            string="Satellietbeeld ophalen" class="btn-secondary"
-                            help="Geocode the site address and fetch a satellite photo as drawing background."/>
                     <button name="action_sync_from_canvas" type="object"
                             string="Meting bijwerken uit tekening" class="btn-secondary"
                             help="Create or update the roof sections and roof objects from the shapes on the canvas."/>
                     <button name="action_create_sale_order" type="object"
                             string="Offerte maken" class="btn-primary"
-                            invisible="not section_ids"/>
-                    <button name="action_generate_planning" type="object"
-                            string="Planning aanmaken" class="btn-secondary"
-                            invisible="not team_id or not planned_date_begin"
-                            help="Maakt een werkblok voor de ploeg met planning-items voor elke medewerker."/>
+                            invisible="not section_ids or (sale_order_id and sale_order_state != 'cancel')"
+                            help="Maakt de offerte van dit dakproject uit de meting."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte bijwerken uit meting" class="btn-primary"
+                            invisible="not section_ids or not sale_order_id or sale_order_state not in ('draft', 'sent')"
+                            confirm="De lijnen van de openstaande offerte worden vervangen door de meting. Doorgaan?"
+                            help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,measured,quoted"/>
+                           statusbar_visible="draft,measured,quoted,confirmed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_sale_orders" type="object"
-                                class="oe_stat_button" icon="fa-file-text-o"
-                                invisible="sale_order_count == 0">
-                            <field name="sale_order_count" widget="statinfo" string="Offertes"/>
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="sale_order_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not sale_order_id"/>
+                                    <span invisible="sale_order_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Offerte / Order</span>
+                                <span class="o_stat_text" invisible="sale_order_count &lt; 2">
+                                    (<field name="sale_order_count" readonly="1"/> in historiek)
+                                </span>
+                            </div>
                         </button>
                         <button name="action_view_materials" type="object"
                                 class="oe_stat_button" icon="fa-cubes"
@@ -50,14 +59,19 @@
                                 invisible="invoice_count == 0">
                             <field name="invoice_count" widget="statinfo" string="Facturen"/>
                         </button>
-                        <button name="action_view_planning" type="object"
-                                class="oe_stat_button" icon="fa-calendar"
-                                invisible="planning_count == 0">
-                            <field name="planning_count" widget="statinfo" string="Werkblokken"/>
-                        </button>
                         <button name="action_open_project" type="object"
-                                class="oe_stat_button" icon="fa-tasks"
-                                string="Projectdossier"/>
+                                class="oe_stat_button" icon="fa-tachometer"
+                                help="Het planbare project achter dit dakproject, met het dashboard van omzet, kosten, leveringen, taken en planning.">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="project_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not project_id"/>
+                                    <span invisible="project_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Project</span>
+                            </div>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
@@ -118,17 +132,14 @@
                         <group>
                             <field name="partner_id"/>
                             <field name="project_type"/>
-                            <field name="team_id"/>
-                            <label for="planned_date_begin" string="Gepland"/>
-                            <div class="o_row">
-                                <field name="planned_date_begin" nolabel="1"/>
-                                <span class="mx-1"> → </span>
-                                <field name="planned_date_end" nolabel="1"/>
-                            </div>
+                            <field name="color" widget="color_picker"/>
                         </group>
                         <group>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>
                             <field name="opportunity_id"/>
+                            <field name="sale_order_id"
+                                   context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>
+                            <field name="sale_order_state" invisible="1"/>
                             <field name="project_id" readonly="1"
                                    invisible="not project_id"/>
                             <field name="analytic_account_id" readonly="1"
@@ -142,6 +153,8 @@
                             <field name="scale_m_per_px" invisible="1"/>
                             <field name="has_background_image" invisible="1"/>
                             <field name="canvas_snapshot" invisible="1"/>
+                            <field name="canvas_icons" invisible="1"/>
+                            <field name="address" invisible="1"/>
                             <field name="canvas_data" widget="roof_canvas" nolabel="1"/>
                         </page>
                         <page string="Daksecties" name="sections">
@@ -231,23 +244,71 @@
                             <field name="safety_line_ids" widget="roof_checklist"
                                    options="{'category': 'veiligheid'}" nolabel="1"/>
                         </page>
-                        <page string="Achtergrond &amp; schaal" name="background">
-                            <group>
-                                <group>
-                                    <field name="background_image" widget="image" class="oe_avatar" options="{'size': [300, 300]}"/>
-                                </group>
-                                <group>
-                                    <field name="scale_m_per_px"/>
-                                    <field name="bg_lat"/>
-                                    <field name="bg_lng"/>
-                                    <field name="bg_north" string="Noordgrens"/>
-                                    <field name="bg_south" string="Zuidgrens"/>
-                                    <field name="bg_east" string="Oostgrens"/>
-                                    <field name="bg_west" string="Westgrens"/>
-                                </group>
-                            </group>
+                        <page string="Afbraak" name="demolition">
+                            <field name="demolition_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'ilike', 'afbraak')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De afbraaklijnen van de offerte. Voeg hier een product toe om het
+                                op de offerte te zetten; m²- en m-hoeveelheden volgen de meting
+                                (oppervlakte en omtrek van het dak).
+                            </div>
                         </page>
-                        <page string="Projectinformatie" name="project_info">
+                        <page string="Opbouw" name="buildup">
+                            <field name="buildup_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'ilike', 'opbouw')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De opbouwlijnen van de offerte. Voeg hier een product toe om het
+                                op de offerte te zetten; m²- en m-hoeveelheden volgen de meting.
+                                Producten die op een daksectie of dakobject van de tekening staan,
+                                worden daar geprijsd en staan hier niet.
+                            </div>
+                        </page>
+                        <page string="Overige" name="other_lines">
+                            <field name="other_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'not ilike', 'algemene werken'), ('categ_id.complete_name', 'not ilike', 'veiligheid'), ('categ_id.complete_name', 'not ilike', 'afbraak'), ('categ_id.complete_name', 'not ilike', 'opbouw')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                Offertelijnen buiten de vier hoofdstukken (dakranden,
+                                regenwaterafvoer, opties…). Voeg hier een product toe om het op
+                                de offerte te zetten; oppervlak- en randlijnen volgen de meting.
+                            </div>
+                        </page>
+                        <page string="Werf" name="project_info">
                             <group>
                                 <group string="Projectleiding">
                                     <field name="project_manager_id"/>
@@ -278,7 +339,7 @@
                                     <field name="material_via_side"/>
                                     <field name="aerial_lift_needed"/>
                                     <field name="aerial_lift_type"
-                                           invisible="aerial_lift_needed != 'yes'"/>
+                                           invisible="not aerial_lift_needed"/>
                                 </group>
                                 <group string="Transport">
                                     <field name="material_transport"/>
@@ -380,10 +441,12 @@
                 <field name="total_perimeter" optional="hide"/>
                 <field name="estimated_total"/>
                 <field name="currency_id" column_invisible="1"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="project_id" optional="hide"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-warning="state == 'measured'"
-                       decoration-success="state in ('quoted', 'done')"/>
+                       decoration-success="state in ('quoted', 'confirmed', 'done')"/>
             </list>
         </field>
     </record>
@@ -400,6 +463,7 @@
                 <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
                 <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
+                <filter string="Order bevestigd" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <group>
                     <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>

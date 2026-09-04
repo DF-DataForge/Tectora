@@ -79,7 +79,8 @@
                             <field name="end_datetime"/>
                             <field name="duration_hours" readonly="1"/>
                             <field name="team_id"/>
-                            <field name="color" widget="color_picker" readonly="1"/>
+                            <field name="color" widget="color_picker" readonly="1"
+                                   help="Kleur van het project."/>
                             <field name="company_id" groups="base.group_multi_company"
                                    readonly="1"/>
                         </group>
@@ -93,6 +94,68 @@
                     </div>
                     <separator string="Werfinstructies"/>
                     <field name="notes" nolabel="1" placeholder="Instructies voor de ploeg…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- The summary the team planner opens on a project block: which
+         employees are on it (remove one to take their shift out), when, and
+         the way to the project overview and the roof project. -->
+    <record id="view_tectora_roof_planning_form_summary" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.summary</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="priority">50</field>
+        <field name="arch" type="xml">
+            <form string="Projectblok">
+                <header>
+                    <button name="action_publish" type="object" string="Inplannen"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_set_done" type="object" string="Uitgevoerd"
+                            class="btn-primary" invisible="state != 'published'"/>
+                    <button name="action_split" type="object" string="Splits per dag"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_project_dashboard" type="object"
+                                class="oe_stat_button" icon="fa-tachometer"
+                                string="Projectoverzicht"/>
+                        <button name="action_open_roof_project" type="object"
+                                class="oe_stat_button" icon="fa-home"
+                                string="Dakproject"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="project_name" readonly="1" placeholder="Project"/></h1>
+                        <div class="text-muted">
+                            <i class="fa fa-map-marker me-1"/><field name="address" readonly="1"/>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Werf">
+                            <field name="project_id" options="{'no_create': True}"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="project_type" readonly="1"/>
+                            <field name="total_area" readonly="1"/>
+                        </group>
+                        <group string="Wanneer">
+                            <field name="start_datetime"/>
+                            <field name="end_datetime"/>
+                            <field name="duration_hours" readonly="1"/>
+                            <field name="team_id"/>
+                            <field name="color" invisible="1"/>
+                        </group>
+                    </group>
+                    <separator string="Ploeg op dit blok"/>
+                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                    <div class="text-muted small">
+                        Deze medewerkers zijn ingepland voor dit blok. Verwijder er een om
+                        zijn shift uit het blok te halen, voeg er een toe om hem mee in te
+                        plannen. Verplaats of verleng het blok in de planner en alle shifts
+                        volgen.
+                    </div>
+                    <field name="notes" placeholder="Werfinstructies voor de ploeg…"/>
                 </sheet>
             </form>
         </field>

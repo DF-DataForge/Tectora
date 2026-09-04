@@ -42,10 +42,15 @@
                     </group>
                     <notebook>
                         <page string="Ploegleden" name="members">
-                            <field name="employee_ids" widget="many2many_avatar_employee"/>
+                            <field name="employee_ids" widget="many2many_tags_avatar"
+                                   options="{'no_create': True}"
+                                   context="{'default_roof_team_id': id}"
+                                   domain="['|', ('roof_team_id', '=', False), ('roof_team_id', '=', id)]"/>
                             <div class="text-muted small mt-2">
-                                Laat leeg om automatisch de medewerkers van de gekozen
-                                afdeling te gebruiken.
+                                Een medewerker hoort bij één ploeg: de ploeg staat op de
+                                werknemersfiche (tab Werk) en in de Werknemers-app, die per
+                                ploeg georganiseerd is. Laat leeg om automatisch de medewerkers
+                                van de gekozen afdeling te gebruiken.
                             </div>
                             <separator string="Effectieve ploeg"/>
                             <field name="member_ids" widget="many2many_avatar_employee"

@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Werkvoorbereiding: the fields of the paper "Projectinformatie" sheet.
-
-The sheet distinguishes three answers — JA, NEE and "/" (not applicable or
-not yet known) — so those questions are three-state selections rather than
-booleans: a blank answer must not read as "no".
+"""Werkvoorbereiding: the fields of the paper "Projectinformatie" sheet (the
+Werf tab). The yes/no questions of the sheet are checkboxes: ticked is "Ja",
+unticked "Nee".
 """
 from odoo import api, fields, models
-
-TRISTATE = [("yes", "Ja"), ("no", "Nee"), ("na", "/")]
 
 
 class TectoraRoofProject(models.Model):
@@ -29,13 +25,11 @@ class TectoraRoofProject(models.Model):
     site_contact_email = fields.Char(related="site_contact_id.email")
 
     # --- voorbereiding -------------------------------------------------------
-    checkin_at_work = fields.Selection(
-        TRISTATE, string="Checkin@work", default="na",
+    checkin_at_work = fields.Boolean(
+        string="Checkin@work",
         help="Verplichte aanwezigheidsregistratie op de werf.",
     )
-    asbestos_present = fields.Selection(
-        TRISTATE, string="Asbesthoudende materialen", default="na"
-    )
+    asbestos_present = fields.Boolean(string="Asbesthoudende materialen")
     roof_height = fields.Float(string="Hoogte dak(en) (m)", digits=(16, 2))
     roof_substrate = fields.Selection(
         [
@@ -51,18 +45,10 @@ class TectoraRoofProject(models.Model):
     roof_substrate_note = fields.Char(string="Ondergrond (toelichting)")
 
     # --- bereikbaarheid materiaal -------------------------------------------
-    material_direct_roof = fields.Selection(
-        TRISTATE, string="Materiaal rechtstreeks op het dak", default="na"
-    )
-    material_through_building = fields.Selection(
-        TRISTATE, string="Materiaal moet doorheen het gebouw", default="na"
-    )
-    material_via_side = fields.Selection(
-        TRISTATE, string="Materiaal kan via zijkant van het gebouw", default="na"
-    )
-    aerial_lift_needed = fields.Selection(
-        TRISTATE, string="Hoogwerker nodig", default="na"
-    )
+    material_direct_roof = fields.Boolean(string="Materiaal rechtstreeks op het dak")
+    material_through_building = fields.Boolean(string="Materiaal moet doorheen het gebouw")
+    material_via_side = fields.Boolean(string="Materiaal kan via zijkant van het gebouw")
+    aerial_lift_needed = fields.Boolean(string="Hoogwerker nodig")
     aerial_lift_type = fields.Char(string="Hoogwerker (type)")
 
     # --- transport -----------------------------------------------------------
@@ -76,41 +62,23 @@ class TectoraRoofProject(models.Model):
         help="Geschat uur voor levering/ophaling door de leverancier, indien "
         "het afval mee teruggaat.",
     )
-    transport_over_building = fields.Selection(
-        TRISTATE, string="Transport overheen gebouw nodig", default="na"
-    )
+    transport_over_building = fields.Boolean(string="Transport overheen gebouw nodig")
 
     # --- extra's te voorzien -------------------------------------------------
-    scaffolding_needed = fields.Selection(
-        TRISTATE, string="Stelling nodig", default="na"
-    )
-    mobile_scaffolding_needed = fields.Selection(
-        TRISTATE, string="Rolstelling nodig", default="na"
-    )
-    concrete_drilling_needed = fields.Selection(
-        TRISTATE, string="Betonboring nodig", default="na"
-    )
-    hvac_contractor_needed = fields.Selection(
-        TRISTATE, string="Aannemer HVAC nodig", default="na"
-    )
-    precautions_needed = fields.Selection(
-        TRISTATE, string="Specifieke voorzorgsmaatregelen nodig", default="na"
-    )
+    scaffolding_needed = fields.Boolean(string="Stelling nodig")
+    mobile_scaffolding_needed = fields.Boolean(string="Rolstelling nodig")
+    concrete_drilling_needed = fields.Boolean(string="Betonboring nodig")
+    hvac_contractor_needed = fields.Boolean(string="Aannemer HVAC nodig")
+    precautions_needed = fields.Boolean(string="Specifieke voorzorgsmaatregelen nodig")
     precautions_note = fields.Text(
         string="Voorzorgsmaatregelen",
         help="bv. PE-folie en schilderskarton (zie offerte).",
     )
 
     # --- te voorzien ter plaatse --------------------------------------------
-    generator_needed = fields.Selection(
-        TRISTATE, string="Stroomgenerator nodig", default="na"
-    )
-    site_toilet_needed = fields.Selection(
-        TRISTATE, string="Werftoilet nodig", default="na"
-    )
-    site_hut_needed = fields.Selection(
-        TRISTATE, string="Werfkeet nodig", default="na"
-    )
+    generator_needed = fields.Boolean(string="Stroomgenerator nodig")
+    site_toilet_needed = fields.Boolean(string="Werftoilet nodig")
+    site_hut_needed = fields.Boolean(string="Werfkeet nodig")
 
     # --- EPDM ----------------------------------------------------------------
     epdm_thickness = fields.Float(
@@ -130,15 +98,9 @@ class TectoraRoofProject(models.Model):
     roof_edge_colors = fields.Char(string="Kleur(en) dakranden")
 
     # --- bereikbaarheid werf -------------------------------------------------
-    easy_parking = fields.Selection(
-        TRISTATE, string="Makkelijk parkeren", default="na"
-    )
-    parking_ban_needed = fields.Selection(
-        TRISTATE, string="Parkeerverbod", default="na"
-    )
-    driveway_paved = fields.Selection(
-        TRISTATE, string="Oprit verhard", default="na"
-    )
+    easy_parking = fields.Boolean(string="Makkelijk parkeren")
+    parking_ban_needed = fields.Boolean(string="Parkeerverbod")
+    driveway_paved = fields.Boolean(string="Oprit verhard")
 
     # --- andere werken -------------------------------------------------------
     other_works = fields.Text(

@@ -18,11 +18,31 @@
         .o_roof_canvas_body {
             height: 100%;
         }
+
+        .o_roof_canvas_main {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            canvas {
+                flex: 1 1 auto;
+            }
+        }
     }
 
     .o_roof_canvas_ctxmenu {
         position: absolute;
         z-index: 100;
+    }
+
+    // The background menu hangs under its toolbar icon.
+    .o_roof_canvas_bgmenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 100;
+        min-width: 20rem;
+        margin-top: 0.15rem;
     }
 
     .o_roof_canvas_sidebar {
@@ -45,8 +65,10 @@
     }
 
     canvas {
+        // Sized in pixels by the widget (style width/height match the bitmap),
+        // so it is never stretched by CSS.
         display: block;
-        width: 100%;
+        max-width: 100%;
         cursor: crosshair;
         touch-action: none;
     }
@@ -119,14 +141,49 @@
     }
 }
 
-// Forms containing the roof canvas: give the sheet the full width, so the
-// drawing plus its product sidebar get the space. The chatter is kept below
-// the form by asking the renderer for its bottom layout (see
-// roof_form/chatter_bottom.js) rather than by overriding the flex layout of
-// the container it shares with the sheet -- doing that once collapsed the
-// whole form.
+// Forms of the roof project and the project dashboard: give the sheet the
+// full width on every tab (the drawing plus its product sidebar need it, and
+// the other tabs should not jump back to the narrow sheet when the drawing is
+// not the active tab). The <form> class ends up on the .o_form_view root
+// (form_controller's className), so it is there whatever tab is open; the
+// canvas selector is kept for forms that embed the drawing without the class.
+.o_form_view.o_tectora_chatter_bottom,
 .o_form_view:has(.o_roof_canvas) {
     .o_form_sheet_bg .o_form_sheet {
         max-width: 100%;
+    }
+}
+
+// Keeping the chatter under the form takes two things, and the direction is
+// the one that decides.
+//
+// form_compiler.js gives the renderer "flex-nowrap h-100" from XXL up and
+// "flex-column" below it -- read off uiService.size, not off the chatter's
+// layout. So dropping the o-aside class (roof_form/chatter_bottom.js) is not
+// enough on a wide screen: without it the chatter is still a flex item in a
+// nowrap row, and it just becomes a wide panel beside the sheet instead of a
+// narrow column beside it.
+//
+// This puts that one container back in the layout Odoo itself uses below XXL.
+// Scoped to .o_form_renderer on purpose: the same override on .o_form_view
+// once collapsed the whole form, because that wrapper holds many other flex
+// containers.
+//
+// The leading .o_form_view is there for weight, not for reach: the rules being
+// undone live under .o_form_view.o_xxl_form_view, and a tie would be settled by
+// bundle order alone.
+.o_form_view.o_tectora_chatter_bottom .o_form_renderer,
+.o_form_view .o_form_renderer:has(.o_roof_canvas) {
+    flex-direction: column !important;
+    // h-100 is a Bootstrap utility, so it needs the same weight to undo.
+    height: auto !important;
+
+    // At XXL the sheet is "flex: 2 1 <min-width>; overflow: auto" so it can
+    // scroll on its own next to the chatter. In a column that basis becomes a
+    // height and the sheet keeps its own scrollbar, with the chatter pinned
+    // under it. Let it take its natural height and scroll the page instead.
+    > .o_form_sheet_bg {
+        flex: 0 0 auto;
+        overflow: visible;
     }
 }

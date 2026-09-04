@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The ploeg is configured on the employee, in the Work tab. -->
+    <record id="view_employee_form_inherit_tectora" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.tectora.roof</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='work_information']//field[@name='parent_id']" position="after">
+                <field name="roof_team_id"/>
+                <field name="roof_team_leader_id" readonly="1"
+                       invisible="not roof_team_id"
+                       widget="many2one_avatar_employee"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search: find and group employees per ploeg. -->
+    <record id="view_employee_filter_inherit_tectora" model="ir.ui.view">
+        <field name="name">hr.employee.search.inherit.tectora.roof</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id'][1]" position="after">
+                <field name="roof_team_id"/>
+            </xpath>
+            <xpath expr="//filter[@name='group_department']" position="before">
+                <filter name="group_roof_team" string="Ploeg" domain="[]"
+                        context="{'group_by': 'roof_team_id'}"/>
+            </xpath>
+            <xpath expr="//filter[@name='group_department']" position="after">
+                <separator/>
+                <filter name="filter_roof_team_members" string="In een ploeg"
+                        domain="[('roof_team_id', '!=', False)]"/>
+                <filter name="filter_roof_team_leaders" string="Ploegbazen"
+                        domain="[('is_roof_team_leader', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List and kanban show the ploeg; the kanban card carries it so the
+         grouped view reads at a glance. -->
+    <record id="view_employee_tree_inherit_tectora" model="ir.ui.view">
+        <field name="name">hr.employee.list.inherit.tectora.roof</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id']" position="after">
+                <field name="roof_team_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="hr_kanban_view_employees_inherit_tectora" model="ir.ui.view">
+        <field name="name">hr.employee.kanban.inherit.tectora.roof</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.hr_kanban_view_employees"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="inside">
+                <field name="roof_team_id"/>
+                <field name="is_roof_team_leader"/>
+            </xpath>
+            <xpath expr="//field[@name='job_title']/.." position="after">
+                <div t-if="record.roof_team_id.raw_value" class="text-truncate">
+                    <i class="fa fa-fw me-2 fa-users text-primary" title="Ploeg"/>
+                    <field name="roof_team_id"/>
+                    <span t-if="record.is_roof_team_leader.raw_value"
+                          class="badge rounded-pill text-bg-primary ms-1">ploegbaas</span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- The Employees app opens grouped per ploeg: one column per team, with
+         the employees without a team in their own column. -->
+    <record id="hr.open_view_employee_list_my" model="ir.actions.act_window">
+        <field name="context">{'chat_icon': True, 'searchpanel_default_company_id': allowed_company_ids[0], 'search_default_group_roof_team': 1}</field>
+    </record>
+
+    <!-- Ploegen are configured under Employees -> Configuration. -->
+    <menuitem id="menu_hr_config_roof_teams"
+              name="Ploegen"
+              parent="hr.menu_config_employee"
+              action="action_tectora_roof_team"
+              sequence="15"/>
+
+</odoo>

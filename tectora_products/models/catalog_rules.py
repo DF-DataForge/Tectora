@@ -44,6 +44,34 @@ COLUMN_ALIASES = OrderedDict([
     ("type", ["product type", "producttype", "soort", "type"]),
 ])
 
+# Raw materials get the same chapter structure, but under their own branch:
+# a service can be sold, a raw material cannot, and mixing the two in one
+# category makes that impossible to see (and impossible to whitelist per
+# category for the drawing's product picker).
+GOODS_BRANCH = "Grondstoffen"
+
+
+def branch_path(path, is_service):
+    """The full category path of a product: services keep the chapter path,
+    raw materials get the same path under the Grondstoffen branch."""
+    path = str(path or "").strip().strip("/")
+    if is_service or not path:
+        return path
+    if path == GOODS_BRANCH or path.startswith(GOODS_BRANCH + "/"):
+        return path  # already branched
+    return "%s/%s" % (GOODS_BRANCH, path)
+
+
+def chapter_path(path):
+    """The chapter path without the Grondstoffen branch, for comparisons."""
+    path = str(path or "").strip().strip("/")
+    if path == GOODS_BRANCH:
+        return ""
+    if path.startswith(GOODS_BRANCH + "/"):
+        return path[len(GOODS_BRANCH) + 1:]
+    return path
+
+
 # Category paths under the root category. Existing works categories are
 # reused; material families become sub-categories of the build-up chapter.
 CATEGORY_PATHS = OrderedDict([
@@ -272,7 +300,13 @@ def classify(name, group, supplier):
     return "andere", "restcategorie"
 
 
-def is_service_row(row_type, supplier, type_mode):
+def is_works_code(code):
+    """The export numbers its two price lists apart: S0001... are the works
+    items that are quoted, P0001... the articles that are purchased."""
+    return bool(re.match(r"^S\d+$", clean(code), re.IGNORECASE))
+
+
+def is_service_row(row_type, supplier, type_mode, code=""):
     """Services are the sales/works items, goods the purchasable materials."""
     if type_mode == "service":
         return True
@@ -285,6 +319,12 @@ def is_service_row(row_type, supplier, type_mode):
                 return True
             if any(word in value for word in GOODS_WORDS):
                 return False
+    # The reference beats the supplier: a works item names the vendor its
+    # material comes from ("Leveren en plaatsen van de koepelschaal type:
+    # Skylux", supplier Cintralux) and would otherwise be filed as stock --
+    # and a raw material is not sellable, so the item could never be quoted.
+    if is_works_code(code):
+        return True
     # Automatic: everything that can be purchased carries a supplier.
     return not clean(supplier)
 
@@ -353,7 +393,7 @@ def parse_rows(header, rows, options=None):
             else:
                 price_source = "geen"
 
-        is_service = is_service_row(cell(row, "type"), supplier, type_mode)
+        is_service = is_service_row(cell(row, "type"), supplier, type_mode, code)
         stats["services" if is_service else "goods"] += 1
         stats["signals"][signal] = stats["signals"].get(signal, 0) + 1
         if supplier:

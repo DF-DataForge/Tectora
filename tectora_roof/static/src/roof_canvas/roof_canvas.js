@@ -36,6 +36,11 @@ const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
+// Ctrl-selected targets waiting for products.
+// How much of a dakobject the category icon is allowed to fill.
+const ICON_FILL_RATIO = 0.7;
+const MULTI_SELECT_STROKE = "#6c3fa4";
+const MULTI_SELECT_FILL = "rgba(108, 63, 164, 0.92)";
 
 function circlePoints(cx, cy, radius) {
     const points = [];
@@ -48,13 +53,166 @@ function circlePoints(cx, cy, radius) {
     }
     return points;
 }
-const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel" };
+const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
 
 const KIND_STYLES = {
     section: { fill: "rgba(10, 116, 131, 0.28)", stroke: "#0a7483", label: "" },
     chimney: { fill: "rgba(217, 119, 6, 0.35)", stroke: "#b45309", label: "Schoorsteen" },
     skylight: { fill: "rgba(37, 99, 235, 0.30)", stroke: "#1d4ed8", label: "Koepel" },
+    // A seam (naad) is an open dotted line between two roof surfaces.
+    seam: { fill: "rgba(0, 0, 0, 0)", stroke: "#374151", label: "Naad", dashed: true },
 };
+
+// How close (screen px) a click must come to a seam to select it.
+const SEAM_HIT_SCREEN_PX = 8;
+
+function isSeam(shape) {
+    return (shape && shape.kind) === "seam";
+}
+
+// Distance from a point to an open polyline (world units).
+function distanceToPolyline([px, py], points) {
+    let best = Infinity;
+    for (let i = 0; i < points.length - 1; i++) {
+        const [ax, ay] = points[i];
+        const [bx, by] = points[i + 1];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const lengthSq = dx * dx + dy * dy || 1;
+        const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lengthSq));
+        best = Math.min(best, Math.hypot(px - (ax + dx * t), py - (ay + dy * t)));
+    }
+    return best;
+}
+
+// Intersection of segments a-b and c-d: {point, t (along a-b), u (along c-d)}
+// or null when they do not cross.
+function segmentIntersection(a, b, c, d) {
+    const r = [b[0] - a[0], b[1] - a[1]];
+    const s = [d[0] - c[0], d[1] - c[1]];
+    const denom = r[0] * s[1] - r[1] * s[0];
+    if (Math.abs(denom) < 1e-9) {
+        return null;
+    }
+    const q = [c[0] - a[0], c[1] - a[1]];
+    const t = (q[0] * s[1] - q[1] * s[0]) / denom;
+    const u = (q[0] * r[1] - q[1] * r[0]) / denom;
+    const eps = 1e-7;
+    if (t < -eps || t > 1 + eps || u < -eps || u > 1 + eps) {
+        return null;
+    }
+    return { point: [a[0] + r[0] * t, a[1] + r[1] * t], t, u };
+}
+
+// Split a polygon along an open polyline (a seam) into the two surfaces on
+// either side. Seam ends that stop inside the polygon are extended along
+// their last segment to the outline, so a seam drawn "roughly across" splits
+// as well. Returns [polygonA, polygonB] or null when the seam does not cross
+// the polygon cleanly (fewer than two crossings, or a degenerate part).
+function splitPolygonByPolyline(polygon, polyline) {
+    const n = polygon.length;
+    if (n < 3 || polyline.length < 2) {
+        return null;
+    }
+    const box = boundingBox(polygon);
+    const reach = (box.w + box.h) * 4 + 10;
+    const line = polyline.map((p) => [...p]);
+    const extend = (from, to) => {
+        // Point far beyond `to`, coming from `from`.
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        return [to[0] + (dx / length) * reach, to[1] + (dy / length) * reach];
+    };
+    if (pointInPolygon(line[0], polygon)) {
+        line[0] = extend(line[1], line[0]);
+    }
+    if (pointInPolygon(line[line.length - 1], polygon)) {
+        line[line.length - 1] = extend(line[line.length - 2], line[line.length - 1]);
+    }
+    const crossings = [];
+    for (let k = 0; k < line.length - 1; k++) {
+        for (let i = 0; i < n; i++) {
+            const hit = segmentIntersection(line[k], line[k + 1], polygon[i], polygon[(i + 1) % n]);
+            if (hit) {
+                crossings.push({ seg: k, t: hit.t, edge: i, u: hit.u, point: hit.point });
+            }
+        }
+    }
+    if (crossings.length < 2) {
+        return null;
+    }
+    crossings.sort((a, b) => a.seg - b.seg || a.t - b.t);
+    const entry = crossings[0];
+    const exit = crossings[crossings.length - 1];
+    if (entry.seg === exit.seg && Math.abs(entry.t - exit.t) < 1e-6) {
+        return null;
+    }
+    // Seam vertices strictly between the two crossings.
+    const inside = [];
+    for (let k = entry.seg + 1; k <= exit.seg; k++) {
+        inside.push(line[k]);
+    }
+    const walk = (fromEdge, toEdge, fromU, toU) => {
+        // Polygon vertices after the crossing on fromEdge up to and including
+        // the start of the crossing on toEdge, going forward.
+        let count = (toEdge - fromEdge + n) % n;
+        if (fromEdge === toEdge && toU < fromU) {
+            count = n;
+        }
+        const out = [];
+        for (let step = 1; step <= count; step++) {
+            out.push(polygon[(fromEdge + step) % n]);
+        }
+        return out;
+    };
+    const partA = [entry.point, ...walk(entry.edge, exit.edge, entry.u, exit.u), exit.point, ...[...inside].reverse()];
+    const partB = [exit.point, ...walk(exit.edge, entry.edge, exit.u, entry.u), entry.point, ...inside];
+    const total = polygonArea(polygon);
+    const clean = (part) => {
+        const out = [];
+        for (const p of part) {
+            const last = out[out.length - 1];
+            if (!last || Math.hypot(p[0] - last[0], p[1] - last[1]) > 0.5) {
+                out.push(p);
+            }
+        }
+        if (out.length > 2) {
+            const first = out[0];
+            const last = out[out.length - 1];
+            if (Math.hypot(first[0] - last[0], first[1] - last[1]) <= 0.5) {
+                out.pop();
+            }
+        }
+        return out;
+    };
+    const a = clean(partA);
+    const b = clean(partB);
+    if (a.length < 3 || b.length < 3) {
+        return null;
+    }
+    if (polygonArea(a) < total * 0.01 || polygonArea(b) < total * 0.01) {
+        return null;
+    }
+    return [a, b];
+}
+
+// Point halfway along an open polyline, for its label.
+function polylineMidpoint(points) {
+    const total = polygonPerimeter(points, false);
+    let remaining = total / 2;
+    for (let i = 0; i < points.length - 1; i++) {
+        const [ax, ay] = points[i];
+        const [bx, by] = points[i + 1];
+        const length = Math.hypot(bx - ax, by - ay);
+        if (remaining <= length || i === points.length - 2) {
+            const t = length ? Math.min(1, remaining / length) : 0;
+            return [ax + (bx - ax) * t, ay + (by - ay) * t];
+        }
+        remaining -= length;
+    }
+    return points[0];
+}
 
 function polygonSignedArea(points) {
     let total = 0;
@@ -232,6 +390,8 @@ export class RoofCanvasField extends Component {
         this.mainRef = useRef("main");
         this.toolbarRef = useRef("toolbar");
         this.statusRef = useRef("status");
+        this.bgMenuRef = useRef("bgmenu");
+        this.bgFileRef = useRef("bgfile");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
@@ -246,6 +406,11 @@ export class RoofCanvasField extends Component {
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
             panel: null, // product card for the selected shape
             fullscreen: false,
+            bgMenu: false, // the background menu (satellite, plan) is open
+            bgBusy: false, // a background fetch/upload is running
+            // Ctrl-clicked sides, surfaces or corners waiting for Ctrl to be
+            // released; they then all get the same products at once.
+            multiSelect: [],
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -255,8 +420,24 @@ export class RoofCanvasField extends Component {
         this._rawCache = undefined;
         this._shapes = [];
         this.labelHits = []; // clickable measurement boxes, in world coordinates
+        this.iconImages = {}; // product category id -> loaded icon (or null)
+        this._iconRaw = undefined;
+        this._iconMap = {};
 
         this.onWindowResize = () => this.resizeCanvas();
+        // On window rather than on the canvas: the picker has to open when Ctrl
+        // is released even if the focus moved to the panel in between.
+        this.onWindowKeyUp = (ev) => {
+            if (ev.key === "Control" || ev.key === "Meta") {
+                this.flushMultiSelect();
+            }
+        };
+        // A click anywhere outside the background menu closes it.
+        this.onWindowPointerDown = (ev) => {
+            if (this.state.bgMenu && this.bgMenuRef.el && !this.bgMenuRef.el.contains(ev.target)) {
+                this.state.bgMenu = false;
+            }
+        };
         this._destroyed = false;
         this._autoSyncTimer = null;
 
@@ -264,11 +445,33 @@ export class RoofCanvasField extends Component {
             this.resizeCanvas();
             this.loadBackground();
             window.addEventListener("resize", this.onWindowResize);
+            window.addEventListener("keyup", this.onWindowKeyUp);
+            window.addEventListener("pointerdown", this.onWindowPointerDown, true);
+            // The main column changes size when the side panel opens or the
+            // form gets narrower; follow it, not only the window.
+            if (window.ResizeObserver && this.mainRef.el) {
+                this._resizeObserver = new ResizeObserver(() => {
+                    if (this._destroyed) {
+                        return;
+                    }
+                    const canvas = this.canvasRef.el;
+                    const main = this.mainRef.el;
+                    if (canvas && main && Math.abs(canvas.width - main.clientWidth) > 1) {
+                        this.resizeCanvas();
+                    }
+                });
+                this._resizeObserver.observe(this.mainRef.el);
+            }
         });
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
+            if (this._resizeObserver) {
+                this._resizeObserver.disconnect();
+            }
             window.removeEventListener("resize", this.onWindowResize);
+            window.removeEventListener("keyup", this.onWindowKeyUp);
+            window.removeEventListener("pointerdown", this.onWindowPointerDown, true);
         });
     }
 
@@ -396,16 +599,26 @@ export class RoofCanvasField extends Component {
         if (!canvas || !wrapper) {
             return;
         }
-        canvas.width = Math.max(wrapper.clientWidth - 2, 600);
-        canvas.height = this.state.fullscreen
-            ? Math.max(
-                  window.innerHeight -
-                      (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) -
-                      (this.statusRef.el ? this.statusRef.el.offsetHeight : 0) -
-                      6,
-                  320
-              )
-            : DEFAULT_CANVAS_HEIGHT;
+        const chrome =
+            (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) +
+            (this.statusRef.el ? this.statusRef.el.offsetHeight : 0);
+        // Fill the space the drawing has: the whole main column in fullscreen,
+        // otherwise as much of the window as the form leaves it.
+        const width = Math.max(wrapper.clientWidth, 600);
+        const height = this.state.fullscreen
+            ? Math.max((wrapper.clientHeight || window.innerHeight) - chrome - 2, 320)
+            : Math.min(Math.max(window.innerHeight - 300, DEFAULT_CANVAS_HEIGHT), 1400);
+        canvas.width = width;
+        canvas.height = height;
+        // The bitmap is drawn at exactly this size: a CSS width that differs
+        // from the pixel width would stretch it and cut the bottom off.
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        // Without a background photo the drawing space is the canvas itself,
+        // so the grid fills the screen instead of a letterboxed default.
+        if (!this.backgroundImage) {
+            this.world = { w: width, h: height };
+        }
         this.fitView();
         this.draw();
     }
@@ -417,13 +630,103 @@ export class RoofCanvasField extends Component {
         requestAnimationFrame(() => this.resizeCanvas());
     }
 
-    loadBackground() {
-        const url = this.backgroundUrl;
+    // ------------------------------------------------------------ background
+    toggleBackgroundMenu() {
+        this.state.bgMenu = !this.state.bgMenu;
+    }
+
+    /**
+     * Run a server-side change of the background: the record is saved first
+     * (the address may have just been typed), then reloaded so the widget
+     * sees the new image, scale and bounds, and the drawing is refitted.
+     */
+    async _withBackgroundChange(label, action) {
+        const record = this.props.record;
+        if (this.state.bgBusy) {
+            return;
+        }
+        this.state.bgBusy = true;
+        this.state.bgMenu = false;
+        try {
+            if (!(await record.save())) {
+                return;
+            }
+            if (!record.resId) {
+                this.notification.add(
+                    _t("Sla het dakproject eerst op."), { type: "warning" }
+                );
+                return;
+            }
+            await action(record.resId);
+            if (this._destroyed) {
+                return;
+            }
+            await record.load();
+            // The stored image changed but its URL did not: reload it for real.
+            this.backgroundImage = null;
+            this.loadBackground(true);
+            this.state.showBackground = true;
+            if (label) {
+                this.state.status = label;
+            }
+        } catch (error) {
+            const message =
+                error?.data?.message || error?.message?.message || error?.message || String(error);
+            this.notification.add(message, { type: "danger", title: _t("Achtergrond") });
+        } finally {
+            this.state.bgBusy = false;
+        }
+    }
+
+    async fetchSatellite() {
+        await this._withBackgroundChange(_t("Satellietbeeld opgehaald."), (resId) =>
+            this.orm.call("tectora.roof.project", "action_fetch_satellite", [resId])
+        );
+    }
+
+    chooseUpload() {
+        this.bgFileRef.el?.click();
+    }
+
+    async uploadPlan(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        ev.target.value = "";
+        if (!file) {
+            return;
+        }
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+        await this._withBackgroundChange(
+            _t("Plan geladen als achtergrond. Kalibreer de schaal via rechtsklik op een zijdelengte."),
+            (resId) =>
+                this.orm.write("tectora.roof.project", [resId], { background_image: base64 })
+        );
+    }
+
+    async clearBackground() {
+        await this._withBackgroundChange(_t("Achtergrond verwijderd."), (resId) =>
+            this.orm.write("tectora.roof.project", [resId], { background_image: false })
+        );
+    }
+
+    loadBackground(bustCache = false) {
+        let url = this.backgroundUrl;
         if (!url) {
-            this.world = { ...DEFAULT_WORLD };
+            this.backgroundImage = null;
+            const canvas = this.canvasRef.el;
+            this.world = canvas && canvas.width
+                ? { w: canvas.width, h: canvas.height }
+                : { ...DEFAULT_WORLD };
             this.fitView();
             this.draw();
             return;
+        }
+        if (bustCache) {
+            url += `?t=${Date.now()}`;
         }
         const image = new Image();
         image.onload = () => {
@@ -565,9 +868,19 @@ export class RoofCanvasField extends Component {
             return;
         }
         const point = this.toWorld(ev);
+        // Ctrl (Cmd on a Mac) gathers targets instead of acting on one: no
+        // drag, no picker, until Ctrl is released.
+        if ((ev.ctrlKey || ev.metaKey) && this.state.tool === "select") {
+            ev.preventDefault();
+            const hit = this.labelHitTest(point);
+            if (hit) {
+                this.toggleMultiSelect(hit);
+            }
+            return;
+        }
         if (this.state.tool === "rect") {
             this.drag = { mode: "rect", start: point, current: point };
-        } else if (this.state.tool === "polygon") {
+        } else if (this.state.tool === "polygon" || this.state.tool === "seam") {
             this.addPolygonPoint(point);
         } else if (this.state.tool === "select") {
             const labelHit = this.labelHitTest(point);
@@ -722,7 +1035,7 @@ export class RoofCanvasField extends Component {
     }
 
     onDblClick(ev) {
-        if (this.state.tool === "polygon" && this.draftPolygon) {
+        if ((this.state.tool === "polygon" || this.state.tool === "seam") && this.draftPolygon) {
             this.closePolygon();
         } else if (this.state.tool === "select") {
             const hit = this.hitTest(this.toWorld(ev));
@@ -741,8 +1054,14 @@ export class RoofCanvasField extends Component {
             }
         } else if (ev.key === "Escape") {
             // Cancel the most local thing first, leave fullscreen last.
+            if (this.state.bgMenu) {
+                this.state.bgMenu = false;
+                return;
+            }
             if (this.state.contextMenu) {
                 this.state.contextMenu = null;
+            } else if (this.state.multiSelect.length) {
+                this.clearMultiSelect();
             } else if (this.draftPolygon) {
                 this.draftPolygon = null;
             } else if (this.state.fullscreen) {
@@ -766,6 +1085,9 @@ export class RoofCanvasField extends Component {
 
     onContextMenu(ev) {
         ev.preventDefault();
+        if (ev.ctrlKey || ev.metaKey) {
+            return; // Ctrl-click is the multi-select gesture, not a menu
+        }
         const wrapper = this.wrapperRef.el;
         if (!wrapper) {
             return;
@@ -818,6 +1140,7 @@ export class RoofCanvasField extends Component {
             const first = this.draftPolygon[0];
             const snap = CLOSE_SNAP_PX / this.view.zoom;
             if (
+                this.state.tool !== "seam" &&
                 this.draftPolygon.length >= 3 &&
                 Math.hypot(point[0] - first[0], point[1] - first[1]) <= snap
             ) {
@@ -831,7 +1154,15 @@ export class RoofCanvasField extends Component {
     }
 
     closePolygon() {
-        if (this.draftPolygon && this.draftPolygon.length >= 3) {
+        if (this.state.tool === "seam") {
+            // An open line: two points make a seam, and the surfaces on either
+            // side of it become separate sections.
+            if (this.draftPolygon && this.draftPolygon.length >= 2) {
+                this.addShape(this.draftPolygon, "seam");
+                const seam = this._shapes[this._shapes.length - 1];
+                this.splitSectionsBySeam(seam);
+            }
+        } else if (this.draftPolygon && this.draftPolygon.length >= 3) {
             this.addShape(this.draftPolygon);
         }
         this.draftPolygon = null;
@@ -860,10 +1191,58 @@ export class RoofCanvasField extends Component {
         this.commit();
     }
 
+    // A seam marks separate surfaces: every section it crosses is cut in two
+    // along it. The halves are new shapes that remember the section they came
+    // from, so the server copies its whole-surface products onto both.
+    splitSectionsBySeam(seam) {
+        if (!seam || !isSeam(seam)) {
+            return;
+        }
+        const shapes = [...this.shapes];
+        let split = 0;
+        for (const section of this.shapes) {
+            if ((section.kind || "section") !== "section" || section.shape === "circle") {
+                continue;
+            }
+            const parts = splitPolygonByPolyline(section.points, seam.points);
+            if (!parts) {
+                continue;
+            }
+            const baseName = section.name || KIND_NAMES.section;
+            const make = (points, suffix) => ({
+                id: makeId(),
+                kind: "section",
+                name: `${baseName} ${suffix}`,
+                points: points.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
+                splitFrom: section.id,
+            });
+            const index = shapes.indexOf(section);
+            shapes.splice(index, 1, make(parts[0], "A"), make(parts[1], "B"));
+            split += 1;
+        }
+        if (!split) {
+            return;
+        }
+        this._shapes = shapes;
+        this.state.selectedId = seam.id;
+        this.commit();
+        this.state.status = _t(
+            "%(count)s sectie(s) gesplitst langs %(seam)s: de dakvlakken aan weerszijden zijn nu aparte secties. De producten van het oppervlak zijn overgenomen op beide delen.",
+            { count: split, seam: seam.name || KIND_NAMES.seam }
+        );
+    }
+
     hitTest(point) {
         const shapes = this.shapes;
+        const seamTolerance = SEAM_HIT_SCREEN_PX / this.view.zoom;
+        // Seams first: a thin line inside a section must stay selectable.
         for (let i = shapes.length - 1; i >= 0; i--) {
-            if (pointInPolygon(point, shapes[i].points)) {
+            if (isSeam(shapes[i]) && distanceToPolyline(point, shapes[i].points) <= seamTolerance) {
+                return shapes[i];
+            }
+        }
+        for (let i = shapes.length - 1; i >= 0; i--) {
+            if (!isSeam(shapes[i]) && pointInPolygon(point, shapes[i].points)) {
                 return shapes[i];
             }
         }
@@ -899,7 +1278,7 @@ export class RoofCanvasField extends Component {
     }
 
     panelGeometry(shape) {
-        if (shape.shape === "circle") {
+        if (shape.shape === "circle" || isSeam(shape)) {
             return { edges: [], inner: null };
         }
         const scale = this.scaleMPerPx;
@@ -944,6 +1323,70 @@ export class RoofCanvasField extends Component {
 
     setEdgeUpstand(edge, ev) {
         this.setEdgeValue("edgeUpstands", edge, ev);
+    }
+
+    // Copy one side's rand and opstand to every side of the shape. Only the
+    // values that are filled in are copied: a side with no width must not
+    // wipe the widths of the others, which is what makes this safe to click.
+    applyEdgeValuesToAll(edge) {
+        const shape = this.selectedShape;
+        if (!shape || !shape.points) {
+            return;
+        }
+        const width = this.edgeWidth(shape, edge.index);
+        const upstand = this.edgeUpstand(shape, edge.index);
+        if (!width && !upstand) {
+            return;
+        }
+        const count = shape.points.length;
+        for (const [key, value] of [
+            ["edgeWidths", width],
+            ["edgeUpstands", upstand],
+        ]) {
+            if (!value) {
+                continue;
+            }
+            const values = { ...(shape[key] || {}) };
+            for (let i = 0; i < count; i++) {
+                values[i] = value;
+            }
+            shape[key] = values;
+        }
+        this.updateStatus();
+        this.commit();
+        this.refreshPanel();
+        const parts = [];
+        if (width) {
+            parts.push(_t("breedte %s m", width.toFixed(2)));
+        }
+        if (upstand) {
+            parts.push(_t("opstand %s m", upstand.toFixed(2)));
+        }
+        this.notification.add(
+            _t("%(values)s toegepast op alle %(count)s zijden.",
+               { values: parts.join(" en "), count }),
+            { type: "success" }
+        );
+    }
+
+    applyEverywhereTitle(edge) {
+        const shape = this.selectedShape;
+        const count = shape && shape.points ? shape.points.length : 0;
+        if (!edge.width && !edge.upstand) {
+            return _t("Vul eerst een breedte of opstand in op deze zijde.");
+        }
+        const parts = [];
+        if (edge.width) {
+            parts.push(_t("breedte %s m", edge.width.toFixed(2)));
+        }
+        if (edge.upstand) {
+            parts.push(_t("opstand %s m", edge.upstand.toFixed(2)));
+        }
+        return _t(
+            "Overal toepassen: %(values)s op alle %(count)s zijden. Wat hier " +
+                "leeg staat, blijft op de andere zijden ongewijzigd.",
+            { values: parts.join(" en "), count }
+        );
     }
 
     setEdgeValue(key, edge, ev) {
@@ -1139,6 +1582,95 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
     }
 
+    // ------------------------------------------------- multiple sides at once
+    // Ctrl-click gathers sides (or surfaces, or corners); releasing Ctrl opens
+    // the picker once for all of them.
+    hitTargetKey(hit) {
+        const side =
+            hit.type === "surface" || hit.type === "seam" ? 0 : (hit.edgeIndex || 0) + 1;
+        return `${hit.shapeId}|${hit.type}|${side}`;
+    }
+
+    // Two hits can share a selection only if the same product categories apply
+    // to both: type, section-or-dakobject, and for corners inner-or-outer.
+    sameFamily(a, b) {
+        return (
+            a.type === b.type &&
+            (a.kind || "section") === (b.kind || "section") &&
+            (a.type !== "corner" || a.cornerType === b.cornerType)
+        );
+    }
+
+    toggleMultiSelect(hit) {
+        if (!["edge", "surface", "corner", "seam"].includes(hit.type)) {
+            return;
+        }
+        if (hit.type === "corner" && (hit.kind || "section") !== "section") {
+            return; // corner products only apply to roof sections
+        }
+        const key = this.hitTargetKey(hit);
+        const current = this.state.multiSelect;
+        const existing = current.findIndex((item) => this.hitTargetKey(item) === key);
+        if (existing >= 0) {
+            this.state.multiSelect = current.filter((_, i) => i !== existing);
+        } else if (current.length && !this.sameFamily(current[0], hit)) {
+            // A different kind of target starts a new selection: mixing them
+            // would mean mixing product categories.
+            this.state.multiSelect = [hit];
+        } else {
+            this.state.multiSelect = [...current, hit];
+        }
+        this.state.selectedId = hit.shapeId;
+        this.updateStatus();
+        this.draw();
+    }
+
+    // "Sectie 1 — zijde 2", the way the picker and the status bar name a target.
+    multiSelectLabel(hit) {
+        const name = hit.name || KIND_NAMES[hit.kind || "section"] || "Naamloos";
+        if (hit.type === "surface") {
+            return name;
+        }
+        if (hit.type === "seam") {
+            return `${name} — naad`;
+        }
+        if (hit.type === "corner") {
+            const kind = hit.cornerType === "inner" ? "binnenhoek" : "buitenhoek";
+            return `${name} — ${kind} ${hit.edgeIndex + 1}`;
+        }
+        if (hit.edgeIndex < 0) {
+            return `${name} — omtrek`;
+        }
+        return `${name} — zijde ${hit.edgeIndex + 1}`;
+    }
+
+    isMultiSelected(hit) {
+        const key = this.hitTargetKey(hit);
+        return this.state.multiSelect.some(
+            (item) => this.hitTargetKey(item) === key
+        );
+    }
+
+    clearMultiSelect() {
+        if (this.state.multiSelect.length) {
+            this.state.multiSelect = [];
+            this.updateStatus();
+            this.draw();
+        }
+    }
+
+    flushMultiSelect() {
+        const hits = this.state.multiSelect;
+        if (!hits.length || this._destroyed) {
+            return;
+        }
+        this.state.multiSelect = [];
+        this.updateStatus();
+        this.draw();
+        const [base, ...extra] = hits;
+        this.openProducts(base, extra);
+    }
+
     labelHitTest([px, py]) {
         for (let i = this.labelHits.length - 1; i >= 0; i--) {
             const hit = this.labelHits[i];
@@ -1158,13 +1690,29 @@ export class RoofCanvasField extends Component {
     // must still be selectable.
     sameTypeTargets(hit) {
         const type = hit.type;
-        if (!["surface", "edge", "corner"].includes(type)) {
+        if (!["surface", "edge", "corner", "seam"].includes(type)) {
             return [];
         }
         const isObject = (hit.kind || "section") !== "section";
         const wantsInner = hit.cornerType === "inner";
         const targets = [];
         for (const shape of this.shapes) {
+            if (isSeam(shape) !== (type === "seam")) {
+                continue; // seams take their own products
+            }
+            if (type === "seam") {
+                const length = polygonPerimeter(shape.points || [], false) * this.scaleMPerPx;
+                targets.push({
+                    shapeId: shape.id,
+                    kind: "seam",
+                    key: `${shape.id}|seam|0`,
+                    sideNumber: 0,
+                    quantity: Math.round(length * 100) / 100,
+                    label: shape.name || KIND_NAMES.seam,
+                    detail: `${length.toFixed(2)} m`,
+                });
+                continue;
+            }
             if (((shape.kind || "section") !== "section") !== isObject) {
                 continue; // dakobjecten and daksecties take different products
             }
@@ -1232,7 +1780,10 @@ export class RoofCanvasField extends Component {
     }
 
     // ---------------------------------------------------- products via labels
-    async openProducts(hit) {
+    // `extraHits` are the other Ctrl-selected targets: they arrive pre-ticked
+    // in the picker's "meerdere items" list, so one confirmation covers them
+    // all.
+    async openProducts(hit, extraHits = []) {
         if (hit.type === "corner" && (hit.kind || "section") !== "section") {
             return; // corner products only apply to roof sections
         }
@@ -1297,13 +1848,19 @@ export class RoofCanvasField extends Component {
         }
         const isSurface = hit.type === "surface";
         const isCorner = hit.type === "corner";
-        const sideNumber = isSurface ? 0 : hit.edgeIndex + 1;
+        const isSeamHit = hit.type === "seam";
+        const sideNumber = isSurface || isSeamHit ? 0 : hit.edgeIndex + 1;
         const quantity = isCorner
             ? 1
             : Math.round((isSurface ? hit.areaM2 : hit.lengthM) * 100) / 100;
         const shapeName = hit.name || _t("Naamloos");
         let target;
-        if (isSurface) {
+        if (isSeamHit) {
+            target = _t("%(shape)s — naad (%(qty)s m)", {
+                shape: shapeName,
+                qty: quantity.toFixed(2),
+            });
+        } else if (isSurface) {
             target = _t("%(shape)s — oppervlak (%(qty)s m²)", {
                 shape: shapeName,
                 qty: quantity.toFixed(2),
@@ -1331,7 +1888,9 @@ export class RoofCanvasField extends Component {
         // in its 'Kan gebruikt worden voor'; categories without any usage
         // never appear in the canvas assignment dialog.
         let usages;
-        if (isObject) {
+        if (isSeamHit) {
+            usages = ["seam"];
+        } else if (isObject) {
             usages = ["object"];
         } else if (isCorner) {
             usages = [
@@ -1351,6 +1910,10 @@ export class RoofCanvasField extends Component {
         const others = this.sameTypeTargets(hit).filter(
             (item) => item.key !== clickedKey && recordByShape[item.shapeId]
         );
+        const available = new Set(others.map((item) => item.key));
+        const preselected = extraHits
+            .map((extra) => this.hitTargetKey(extra))
+            .filter((key) => key !== clickedKey && available.has(key));
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -1362,7 +1925,9 @@ export class RoofCanvasField extends Component {
                 ["coverage", "=", coverage],
                 ["edge_index", "=", sideNumber],
             ],
-            assignedLabel: isSurface
+            assignedLabel: isSeamHit
+                ? _t("Reeds toegewezen aan deze naad")
+                : isSurface
                 ? _t("Reeds toegewezen aan dit oppervlak")
                 : isCorner
                 ? _t("Reeds toegewezen aan deze hoek")
@@ -1371,13 +1936,8 @@ export class RoofCanvasField extends Component {
                 : _t("Reeds toegewezen aan deze omtrek"),
             quantity,
             targets: others,
-            targetsLabel: isSurface
-                ? _t("Andere oppervlaktes in de tekening")
-                : isCorner
-                ? hit.cornerType === "inner"
-                    ? _t("Andere binnenhoeken in de tekening")
-                    : _t("Andere buitenhoeken in de tekening")
-                : _t("Andere zijden in de tekening"),
+            preselectedTargets: preselected,
+            baseLabel: this.multiSelectLabel(hit),
             quantityUnit: isSurface ? " m²" : isCorner ? "" : " m",
             onConfirm: async (productIds, targetKeys) => {
                 const picked = new Set(targetKeys || []);
@@ -1513,12 +2073,29 @@ export class RoofCanvasField extends Component {
     }
 
     updateStatus() {
+        const pending = this.state.multiSelect;
+        if (pending.length) {
+            const labels = pending.map((hit) => this.multiSelectLabel(hit));
+            this.state.status =
+                `${pending.length} geselecteerd: ${labels.join(", ")} — laat ` +
+                `Ctrl los om producten toe te wijzen, Esc om te annuleren`;
+            return;
+        }
         if (this.draftPolygon) {
-            this.state.status = `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
+            this.state.status =
+                this.state.tool === "seam"
+                    ? `Naad: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om af te sluiten, Esc om te annuleren`
+                    : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
             return;
         }
         const shape = this.selectedShape;
-        if (shape) {
+        if (shape && isSeam(shape)) {
+            const length = polygonPerimeter(shape.points, false) * this.scaleMPerPx;
+            this.state.status =
+                `${shape.name || "Naad"} — naad van ${length.toFixed(2)} m · ` +
+                `geselecteerd: sleep om te verplaatsen, versleep een punt om de ` +
+                `lijn aan te passen, klik op het label om naadproducten toe te wijzen`;
+        } else if (shape) {
             const m = this.measurements(shape.points);
             this.state.status =
                 `${shape.name || "Naamloos"} — ${m.width.toFixed(2)} × ` +
@@ -1536,7 +2113,8 @@ export class RoofCanvasField extends Component {
                 "oranje = binnenhoek). Rechtsklik op een lengtelabel om de " +
                 "werkelijke maat in te geven en de tekening te kalibreren; " +
                 "rechtsklik op de tekening om een dakobject toe te voegen. " +
-                "Scroll om te zoomen, F voor volledig scherm.";
+                "Teken een naad (stippellijn tussen twee dakvlakken) met de " +
+                "naadtool. Scroll om te zoomen, F voor volledig scherm.";
         }
     }
 
@@ -1662,6 +2240,12 @@ export class RoofCanvasField extends Component {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
+        if (isSeam(shape)) {
+            this.drawSeamLabels(ctx, shape, { zoom, scale, fontSize, boxHeight, padX, style });
+            ctx.textBaseline = "alphabetic";
+            return;
+        }
+
         // Clickable name box at the shape's center (assigns surface
         // products), with only the area as plain text underneath.
         const m = this.measurements(points);
@@ -1677,7 +2261,12 @@ export class RoofCanvasField extends Component {
             const cy = bbox.y + bbox.h / 2 - boxHeight * 0.2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            this.drawLabelBox(ctx, title, x, y, width, boxHeight, style.stroke);
+            this.drawLabelBox(
+                ctx, title, x, y, width, boxHeight, style.stroke,
+                this.isMultiSelected({
+                    type: "surface", shapeId: shape.id, kind: shape.kind || "section",
+                })
+            );
             this.labelHits.push({
                 type: "surface",
                 shapeId: shape.id,
@@ -1709,7 +2298,12 @@ export class RoofCanvasField extends Component {
             const cx = bbox.x + bbox.w / 2;
             const x = cx - width / 2;
             const y = bbox.y - boxHeight / 2;
-            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            this.drawLabelBox(
+                ctx, label, x, y, width, boxHeight, style.stroke,
+                this.isMultiSelected({
+                    type: "edge", shapeId: shape.id, kind: shape.kind || "section", edgeIndex: -1,
+                })
+            );
             this.labelHits.push({
                 type: "edge",
                 shapeId: shape.id,
@@ -1768,7 +2362,24 @@ export class RoofCanvasField extends Component {
             const cy = (y1 + y2) / 2;
             const x = cx - width / 2;
             const y = cy - boxHeight / 2;
-            this.drawLabelBox(ctx, label, x, y, width, boxHeight, style.stroke);
+            const picked = this.isMultiSelected({
+                type: "edge", shapeId: shape.id, kind: shape.kind || "section", edgeIndex: i,
+            });
+            if (picked) {
+                // Trace the side too: the label alone is easy to lose on a
+                // drawing with many of them.
+                ctx.save();
+                ctx.strokeStyle = MULTI_SELECT_STROKE;
+                ctx.lineWidth = 4 / zoom;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.restore();
+            }
+            this.drawLabelBox(
+                ctx, label, x, y, width, boxHeight, style.stroke, picked
+            );
             this.labelHits.push({
                 type: "edge",
                 shapeId: shape.id,
@@ -1790,12 +2401,26 @@ export class RoofCanvasField extends Component {
         for (let i = 0; i < n; i++) {
             const [px, py] = points[i];
             const inner = isInnerCorner(points, i);
+            const pickedCorner = this.isMultiSelected({
+                type: "corner",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                edgeIndex: i,
+                cornerType: inner ? "inner" : "outer",
+            });
             ctx.beginPath();
-            ctx.arc(px, py, cornerRadius, 0, Math.PI * 2);
-            ctx.fillStyle = inner ? "#d97706" : "#ffffff";
+            ctx.arc(
+                px, py, pickedCorner ? cornerRadius * 1.4 : cornerRadius,
+                0, Math.PI * 2
+            );
+            ctx.fillStyle = pickedCorner
+                ? MULTI_SELECT_FILL
+                : inner ? "#d97706" : "#ffffff";
             ctx.fill();
-            ctx.strokeStyle = inner ? "#92400e" : style.stroke;
-            ctx.lineWidth = 1.5 / zoom;
+            ctx.strokeStyle = pickedCorner
+                ? MULTI_SELECT_STROKE
+                : inner ? "#92400e" : style.stroke;
+            ctx.lineWidth = (pickedCorner ? 2.5 : 1.5) / zoom;
             ctx.stroke();
             const hitRadius = cornerRadius * 1.5;
             this.labelHits.push({
@@ -1813,7 +2438,58 @@ export class RoofCanvasField extends Component {
         }
     }
 
-    drawLabelBox(ctx, label, x, y, width, height, strokeColor) {
+    // A seam gets one clickable label halfway along it (assigns seam
+    // products) and drag handles on its points.
+    drawSeamLabels(ctx, shape, { zoom, scale, fontSize, boxHeight, padX, style }) {
+        const points = shape.points;
+        const lengthM = polygonPerimeter(points, false) * scale;
+        const title = `${style.label}: ${shape.name || ""} · ${lengthM.toFixed(2)} m`.trim();
+        const width = ctx.measureText(title).width + padX * 2;
+        const [mx, my] = polylineMidpoint(points);
+        const x = mx - width / 2;
+        const y = my - boxHeight * 1.3;
+        const picked = this.isMultiSelected({ type: "seam", shapeId: shape.id, kind: "seam" });
+        this.drawLabelBox(ctx, title, x, y, width, boxHeight, style.stroke, picked);
+        this.labelHits.push({
+            type: "seam",
+            shapeId: shape.id,
+            kind: "seam",
+            name: shape.name || "",
+            edgeIndex: 0,
+            x,
+            y,
+            w: width,
+            h: boxHeight,
+            lengthM,
+        });
+        const handleRadius = 5 / zoom;
+        for (let i = 0; i < points.length; i++) {
+            const [px, py] = points[i];
+            ctx.beginPath();
+            ctx.arc(px, py, handleRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.strokeStyle = style.stroke;
+            ctx.lineWidth = 1.5 / zoom;
+            ctx.stroke();
+            const hitRadius = handleRadius * 1.5;
+            this.labelHits.push({
+                type: "corner",
+                cornerType: "outer",
+                shapeId: shape.id,
+                kind: "seam",
+                name: shape.name || "",
+                edgeIndex: i,
+                x: px - hitRadius,
+                y: py - hitRadius,
+                w: hitRadius * 2,
+                h: hitRadius * 2,
+            });
+        }
+        ctx.font = `${fontSize}px sans-serif`;
+    }
+
+    drawLabelBox(ctx, label, x, y, width, height, strokeColor, selected = false) {
         const zoom = this.view.zoom;
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -1821,19 +2497,110 @@ export class RoofCanvasField extends Component {
         } else {
             ctx.rect(x, y, width, height);
         }
-        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+        ctx.fillStyle = selected
+            ? MULTI_SELECT_FILL
+            : "rgba(255, 255, 255, 0.92)";
         ctx.fill();
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 1 / zoom;
+        ctx.strokeStyle = selected ? MULTI_SELECT_STROKE : strokeColor;
+        ctx.lineWidth = (selected ? 2 : 1) / zoom;
         ctx.stroke();
-        ctx.fillStyle = "#0b1f24";
+        ctx.fillStyle = selected ? "#ffffff" : "#0b1f24";
         ctx.fillText(label, x + width / 2, y + height / 2);
+    }
+
+    // ------------------------------------------------------ dakobject iconen
+    // A product category that can be used for dakobjecten may carry an icon;
+    // the server says which category each dakobject takes it from
+    // (project.canvas_icons), because the shapes themselves know nothing about
+    // products.
+    get iconCategories() {
+        const raw = this.props.record.data.canvas_icons || "";
+        if (raw !== this._iconRaw) {
+            this._iconRaw = raw;
+            try {
+                this._iconMap = JSON.parse(raw || "{}") || {};
+            } catch {
+                this._iconMap = {};
+            }
+        }
+        return this._iconMap;
+    }
+
+    iconImage(categoryId) {
+        const cached = this.iconImages[categoryId];
+        if (cached !== undefined) {
+            return cached || null; // null: tried and failed, do not retry
+        }
+        this.iconImages[categoryId] = null;
+        const image = new Image();
+        image.onload = () => {
+            if (this._destroyed) {
+                return;
+            }
+            this.iconImages[categoryId] = image;
+            this.draw();
+        };
+        image.onerror = () => {
+            this.iconImages[categoryId] = null;
+        };
+        image.src = `/web/image/product.category/${categoryId}/tectora_canvas_icon`;
+        return null;
+    }
+
+    drawShapeIcon(ctx, shape) {
+        if ((shape.kind || "section") === "section") {
+            return; // only dakobjecten carry an icon
+        }
+        const categoryId = this.iconCategories[shape.id];
+        if (!categoryId) {
+            return;
+        }
+        const image = this.iconImage(categoryId);
+        if (!image || !image.naturalWidth) {
+            return;
+        }
+        const box = boundingBox(shape.points);
+        // Fit inside the shape, aspect kept, with room left for its outline.
+        const room = Math.min(box.w, box.h) * ICON_FILL_RATIO;
+        const scale = room / Math.max(image.naturalWidth, image.naturalHeight);
+        const width = image.naturalWidth * scale;
+        const height = image.naturalHeight * scale;
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        try {
+            ctx.drawImage(
+                image,
+                box.x + (box.w - width) / 2,
+                box.y + (box.h - height) / 2,
+                width,
+                height
+            );
+        } catch (error) {
+            console.warn("Roof canvas: could not draw the icon", error);
+        }
+        ctx.restore();
     }
 
     drawShape(ctx, shape, selected) {
         const style = KIND_STYLES[shape.kind] || KIND_STYLES.section;
         const points = shape.points;
         const isCircle = shape.shape === "circle";
+        if (isSeam(shape)) {
+            // Open dotted line: the two surfaces on either side are separate.
+            ctx.beginPath();
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i][0], points[i][1]);
+            }
+            ctx.setLineDash([3 / this.view.zoom, 5 / this.view.zoom]);
+            ctx.lineCap = "round";
+            ctx.strokeStyle = selected ? "#111827" : style.stroke;
+            ctx.lineWidth = (selected ? 4 : 3) / this.view.zoom;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.lineCap = "butt";
+            return;
+        }
         ctx.beginPath();
         if (isCircle) {
             const box = boundingBox(points);
@@ -1856,6 +2623,8 @@ export class RoofCanvasField extends Component {
         ctx.strokeStyle = selected ? "#111827" : style.stroke;
         ctx.lineWidth = (selected ? 3 : 2) / this.view.zoom;
         ctx.stroke();
+
+        this.drawShapeIcon(ctx, shape);
 
         // Sides with an upstand (opstand) get a heavier accented outline.
         if (!isCircle && shape.edgeUpstands) {

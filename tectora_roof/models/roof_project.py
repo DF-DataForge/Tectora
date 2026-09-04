@@ -137,6 +137,7 @@ class TectoraRoofProject(models.Model):
     _description = "Roof Measurement Project"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
+    _rec_names_search = ["name", "code", "partner_id.name"]
 
     name = fields.Char(string="Projectnaam", required=True, tracking=True)
     code = fields.Char(
@@ -155,6 +156,7 @@ class TectoraRoofProject(models.Model):
             ("draft", "Concept"),
             ("measured", "Opgemeten"),
             ("quoted", "Offerte gemaakt"),
+            ("confirmed", "Order bevestigd"),
             ("done", "Afgerond"),
         ],
         default="draft",
@@ -176,6 +178,11 @@ class TectoraRoofProject(models.Model):
         "res.company", string="Bedrijf", default=lambda self: self.env.company
     )
     currency_id = fields.Many2one(related="company_id.currency_id")
+    color = fields.Integer(
+        string="Kleur",
+        help="Kleur van dit project in de planner: elk blok van het project "
+        "krijgt ze. Wordt automatisch gekozen en kan hier aangepast worden.",
+    )
 
     # --- Satellite background -------------------------------------------------
     background_image = fields.Image(string="Satellietbeeld", max_width=2560, max_height=2560)
@@ -212,6 +219,13 @@ class TectoraRoofProject(models.Model):
         help="PNG snapshot of the drawing, stored by the canvas widget on "
         "every change and used on the measurement sheet PDF.",
     )
+    canvas_icons = fields.Text(
+        string="Iconen op de tekening (JSON)",
+        compute="_compute_canvas_icons",
+        help="Canvas-id van elk dakobject met de productcategorie waarvan het "
+        "icoon getoond wordt. De tekening leest dit; het staat hier omdat de "
+        "vormen in canvas_data zelf geen producten kennen.",
+    )
 
     section_ids = fields.One2many(
         "tectora.roof.section", "project_id", string="Daksecties"
@@ -223,30 +237,74 @@ class TectoraRoofProject(models.Model):
     general_line_ids = fields.One2many(
         "tectora.roof.section.product", "project_direct_id",
         string="Algemene werken",
-        domain=[("product_id.categ_id.name", "ilike", "algemene werken")],
+        domain=[("product_id.categ_id.complete_name", "ilike", "algemene werken")],
     )
     safety_line_ids = fields.One2many(
         "tectora.roof.section.product", "project_direct_id",
         string="Veiligheid",
-        domain=[("product_id.categ_id.name", "ilike", "veiligheid")],
+        domain=[("product_id.categ_id.complete_name", "ilike", "veiligheid")],
+    )
+    demolition_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Afbraak",
+        domain=[("product_id.categ_id.complete_name", "ilike", "afbraak")],
+    )
+    buildup_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Opbouw",
+        domain=[("product_id.categ_id.complete_name", "ilike", "opbouw")],
+    )
+    other_line_ids = fields.One2many(
+        "tectora.roof.section.product", "project_direct_id",
+        string="Overige projectlijnen",
+        domain=[
+            ("product_id.categ_id.complete_name", "not ilike", "algemene werken"),
+            ("product_id.categ_id.complete_name", "not ilike", "veiligheid"),
+            ("product_id.categ_id.complete_name", "not ilike", "afbraak"),
+            ("product_id.categ_id.complete_name", "not ilike", "opbouw"),
+        ],
+        help="Lijnen van de offerte buiten de vier hoofdstukken (dakranden, "
+        "regenwaterafvoer, opties...), gespiegeld op het dakproject.",
     )
     roof_object_ids = fields.One2many(
         "tectora.roof.object", "project_id", string="Dakobjecten"
     )
     sale_order_ids = fields.One2many(
-        "sale.order", "roof_project_id", string="Offertes / Orders"
+        "sale.order", "roof_project_id", string="Offertes / Orders",
+        help="Alle offertes en orders die ooit aan dit dakproject hingen; "
+        "de actieve staat in Offerte / Order.",
     )
     sale_order_count = fields.Integer(compute="_compute_sale_order_count")
+    sale_order_id = fields.Many2one(
+        "sale.order",
+        string="Offerte / Order",
+        compute="_compute_sale_order_id",
+        inverse="_inverse_sale_order_id",
+        store=True,
+        readonly=False,
+        copy=False,
+        index=True,
+        help="De verkooporder van dit dakproject: één dakproject staat "
+        "tegenover één offerte/order. Klant, opportuniteit, verkoper, "
+        "leverdatum en prijslijst/projecttype worden in beide richtingen "
+        "gelijk gehouden. Een geannuleerde order blijft in de historiek "
+        "(Offertes / Orders) en maakt plaats voor een nieuwe.",
+    )
+    sale_order_state = fields.Selection(
+        related="sale_order_id.state", string="Orderstatus", readonly=True
+    )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
     project_id = fields.Many2one(
         "project.project",
-        string="Projectdossier",
+        string="Project",
         copy=False,
         ondelete="set null",
-        help="Odoo-project achter dit dakproject: draagt de analytische "
-        "rekening waarop omzet en kosten (verkooporders, facturen, "
-        "inkooporders, leveringen) samenkomen.",
+        index=True,
+        help="Planbaar Odoo-project achter dit dakproject, aangemaakt bij het "
+        "bevestigen van de order. Het draagt de analytische rekening waarop "
+        "omzet en kosten (order, facturen, inkoop, leveringen, urenstaten) "
+        "samenkomen en toont het projectdashboard.",
     )
     analytic_account_id = fields.Many2one(
         related="project_id.account_id", string="Analytische rekening", readonly=True
@@ -330,9 +388,71 @@ class TectoraRoofProject(models.Model):
         for project in self:
             project.has_background_image = bool(project.background_image)
 
+    @api.depends(
+        "roof_object_ids.canvas_ref",
+        "roof_object_ids.product_line_ids.product_id",
+    )
+    def _compute_canvas_icons(self):
+        """Which category's icon each dakobject shows on the drawing.
+
+        The shapes in canvas_data know nothing about products, so the link runs
+        the other way: a dakobject's assigned products name a category, and a
+        category that can be used for dakobjecten may carry an icon. The first
+        assigned product that has one wins, in line order.
+        """
+        for project in self:
+            icons = {}
+            for roof_object in project.roof_object_ids:
+                if not roof_object.canvas_ref:
+                    continue
+                for line in roof_object.product_line_ids:
+                    category = line.product_id.categ_id
+                    if category.tectora_allows_objects and category.tectora_canvas_icon:
+                        icons[roof_object.canvas_ref] = category.id
+                        break
+            project.canvas_icons = json.dumps(icons)
+
     def _compute_sale_order_count(self):
         for project in self:
             project.sale_order_count = len(project.sale_order_ids)
+
+    @api.depends("code", "name")
+    def _compute_display_name(self):
+        for project in self:
+            code = project.code if project.code and project.code != _("New") else ""
+            project.display_name = " — ".join(filter(None, [code, project.name]))
+
+    @api.depends("sale_order_ids", "sale_order_ids.state")
+    def _compute_sale_order_id(self):
+        """The one order that stands against this roof project: the most
+        recent one that is not cancelled, or -- when every order was
+        cancelled -- the most recent one, so the history stays reachable."""
+        for project in self:
+            orders = project.sale_order_ids.sorted("id", reverse=True)
+            current = project.sale_order_id
+            if current and current in orders and current.state != "cancel":
+                continue
+            active = orders.filtered(lambda order: order.state != "cancel")
+            project.sale_order_id = (active or orders)[:1]
+
+    def _inverse_sale_order_id(self):
+        """Linking an order from the roof project side: the order points back
+        at this roof project and any other open order of the project is let
+        go, so the pair stays one-to-one. Cancelled orders stay as history."""
+        for project in self:
+            order = project.sale_order_id
+            others = project.sale_order_ids.filtered(
+                lambda o: o != order and o.state != "cancel"
+            )
+            if others:
+                others.with_context(tectora_sync=True).write(
+                    {"roof_project_id": False}
+                )
+            if order and order.roof_project_id != project:
+                order.with_context(tectora_sync=True).write(
+                    {"roof_project_id": project.id}
+                )
+                order._tectora_sync_pair(project, master="roof")
 
     @api.depends("planning_ids")
     def _compute_planning_count(self):
@@ -398,44 +518,105 @@ class TectoraRoofProject(models.Model):
     def _prepare_project_values(self):
         self.ensure_one()
         values = {
-            "name": "%s — %s" % (self.code, self.name),
+            "name": self._project_name(),
             "partner_id": self.partner_id.id or False,
             "company_id": self.company_id.id or self.env.company.id,
+            "allow_billable": True,
         }
+        if self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        values.update(
+            self._tectora_project_sync_values(
+                {"planned_date_begin", "planned_date_end"}
+            )
+        )
         Project = self.env["project.project"]
-        if "allow_billable" in Project._fields:
-            values["allow_billable"] = True
+        if "allow_timesheets" in Project._fields:
+            values["allow_timesheets"] = True
         return values
 
     def _ensure_project(self):
-        """Create (or complete) the project.project dossier and its analytic
-        account, so revenue, costs, POs, deliveries and invoices aggregate."""
+        """Create (or complete) the plannable project and its analytic
+        account, so revenue, costs, POs, deliveries, invoices and timesheets
+        aggregate on it. Links the project to the order as well."""
+        Project = self.env["project.project"].with_context(tectora_sync=True)
         for roof_project in self:
             project = roof_project.project_id
             if not project:
-                project = self.env["project.project"].create(
-                    roof_project._prepare_project_values()
-                )
-                roof_project.project_id = project
+                # An order confirmed with project-generating services may
+                # already have had its project created by Odoo: adopt it.
+                order = roof_project.sale_order_id
+                candidates = order.project_id if order else Project
+                if order and not candidates and "project_ids" in order._fields:
+                    candidates = order.sudo().project_ids.filtered(
+                        lambda p: p.active and not p.roof_project_id
+                    )
+                project = candidates[:1]
+                if project:
+                    project.write(
+                        {
+                            key: value
+                            for key, value in roof_project._prepare_project_values().items()
+                            if key in ("allow_billable", "date_start", "date")
+                            or not project[key]
+                        }
+                    )
+                else:
+                    project = Project.create(roof_project._prepare_project_values())
+                roof_project.with_context(tectora_sync=True).project_id = project
             elif not project.partner_id and roof_project.partner_id:
                 project.partner_id = roof_project.partner_id
             # sale.order.project_id only accepts billable projects.
-            if "allow_billable" in project._fields and not project.allow_billable:
+            if not project.allow_billable:
                 project.allow_billable = True
             if not project.account_id:
                 project._create_analytic_account()
+            roof_project._tectora_link_order_to_project(project)
         return self.mapped("project_id")
 
+    def _tectora_link_order_to_project(self, project):
+        """Point the order and the project at each other, the way Odoo's own
+        sale/project bridge expects it (so its smart buttons and its
+        profitability report pick the order up too)."""
+        self.ensure_one()
+        order = self.sale_order_id
+        if not order:
+            return
+        order_values = {}
+        if order.project_id != project:
+            order_values["project_id"] = project.id
+        if order_values:
+            order.with_context(tectora_sync=True).write(order_values)
+            # Re-trigger the analytic distribution now the project is known.
+            order.order_line._compute_analytic_distribution()
+        project_values = {}
+        if (
+            "reinvoiced_sale_order_id" in project._fields
+            and not project.sudo().reinvoiced_sale_order_id
+        ):
+            project_values["reinvoiced_sale_order_id"] = order.id
+        if "sale_line_id" in project._fields and not project.sale_line_id:
+            # Not a line invoiced on timesheets: hours logged on the project
+            # must not become invoiceable quantities by accident.
+            service_line = order.order_line.filtered(
+                lambda line: not line.display_type
+                and line.product_id
+                and line.product_id.type == "service"
+                and not line.is_downpayment
+                and getattr(line.product_id, "service_policy", None)
+                != "delivered_timesheet"
+            )[:1]
+            if service_line and order.state == "sale":
+                project_values["sale_line_id"] = service_line.id
+        if project_values:
+            project.sudo().with_context(tectora_sync=True).write(project_values)
+
     def action_open_project(self):
+        """Open the project dashboard; a roof project without a project yet
+        gets one (the button is the manual counterpart of the confirmation)."""
         self.ensure_one()
         self._ensure_project()
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "project.project",
-            "res_id": self.project_id.id,
-            "view_mode": "form",
-            "target": "current",
-        }
+        return self.project_id.action_open_dashboard()
 
     def action_view_materials(self):
         self.ensure_one()
@@ -516,6 +697,9 @@ class TectoraRoofProject(models.Model):
                     or _("New")
                 )
         projects = super().create(vals_list)
+        # Every project its own planner colour, spread over the palette.
+        for project in projects.filtered(lambda p: not p.color):
+            project.color = (project.id % 11) + 1
         projects._autogenerate_planning()
         return projects
 
@@ -523,7 +707,84 @@ class TectoraRoofProject(models.Model):
         result = super().write(vals)
         if {"team_id", "planned_date_begin", "planned_date_end"} & set(vals):
             self._autogenerate_planning()
+        if not self.env.context.get("tectora_sync"):
+            self._tectora_push_sync(vals)
         return result
+
+    # ------------------------------------------------ sale order / project sync
+    def _tectora_push_sync(self, vals):
+        """Mirror the fields shared with the order and the project onto them.
+
+        The roof project is the master here: whatever was just written on it
+        goes to its order (customer, opportunity, salesperson/project manager,
+        deadline, project type as pricelist) and to its project (customer,
+        planned dates, project manager). The context flag stops the write from
+        coming straight back.
+        """
+        SaleOrder = self.env["sale.order"]
+        order_fields = set(SaleOrder._tectora_roof_to_order_fields())
+        project_fields = {
+            "partner_id", "planned_date_begin", "planned_date_end",
+            "project_manager_id", "name", "code", "address",
+        }
+        touched = set(vals)
+        for project in self:
+            order = project.sale_order_id
+            if order and touched & order_fields:
+                order._tectora_sync_pair(project, master="roof", changed=touched)
+            dossier = project.project_id
+            if dossier and touched & project_fields:
+                dossier.with_context(tectora_sync=True).write(
+                    project._tectora_project_sync_values(touched)
+                )
+
+    def _tectora_project_sync_values(self, fields_changed=None):
+        """Values of the project (project.project) that follow this roof
+        project; restricted to the roof fields in ``fields_changed``."""
+        self.ensure_one()
+        values = {}
+        changed = fields_changed or {
+            "partner_id", "planned_date_begin", "planned_date_end",
+            "project_manager_id", "name", "code", "address",
+        }
+        if "partner_id" in changed and self.partner_id:
+            values["partner_id"] = self.partner_id.id
+        if {"planned_date_begin", "planned_date_end"} & changed:
+            begin = self.planned_date_begin
+            end = self.planned_date_end
+            if begin:
+                values["date_start"] = fields.Datetime.context_timestamp(
+                    self, begin
+                ).date()
+            if end:
+                values["date"] = fields.Datetime.context_timestamp(self, end).date()
+        if "project_manager_id" in changed and self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        if {"name", "code", "partner_id", "address"} & changed:
+            values["name"] = self._project_name()
+        return values
+
+    def _site_city(self):
+        """Municipality of the site: the order's delivery address, else the
+        customer's, else the last part of the free-text site address
+        ("Straat 1, 9790 Wortegem" -> "Wortegem")."""
+        self.ensure_one()
+        order = self.sale_order_id
+        for partner in (order.partner_shipping_id if order else None, self.partner_id):
+            if partner and partner.city:
+                return partner.city.strip()
+        match = re.search(r"\b\d{4,5}\s+([^,]+?)\s*$", self.address or "")
+        if match:
+            return match.group(1).strip()
+        return ""
+
+    def _project_name(self):
+        """Name of the project: the customer and the municipality of the site
+        ("Data Forge — Wortegem"); the roof project's own name as fallback."""
+        self.ensure_one()
+        customer = self.partner_id.name or ""
+        name = " — ".join(filter(None, [customer, self._site_city()]))
+        return name or self.name
 
     # ---------------------------------------------------------- team planning
     def _autogenerate_planning(self):
@@ -734,7 +995,11 @@ class TectoraRoofProject(models.Model):
                 for p in shape.get("points", [])
                 if isinstance(p, (list, tuple)) and len(p) >= 2
             ]
-            if len(points) >= 3 and shape.get("id"):
+            kind = shape.get("kind") or "section"
+            # A seam (naad) is an open line between two roof surfaces: two
+            # points are enough; everything else is a polygon.
+            minimum = 2 if kind == "seam" else 3
+            if len(points) >= minimum and shape.get("id"):
                 def _per_edge(raw):
                     result = {}
                     for key, value in (raw or {}).items():
@@ -747,11 +1012,14 @@ class TectoraRoofProject(models.Model):
                 shapes.append(
                     {
                         "id": str(shape["id"]),
-                        "kind": shape.get("kind") or "section",
+                        "kind": kind,
                         "name": shape.get("name") or "",
                         "points": points,
                         "edge_widths": _per_edge(shape.get("edgeWidths")),
                         "edge_upstands": _per_edge(shape.get("edgeUpstands")),
+                        # A half of a section that was cut by a seam: the
+                        # canvas id of the section it came from.
+                        "split_from": str(shape["splitFrom"]) if shape.get("splitFrom") else None,
                     }
                 )
         return shapes
@@ -765,6 +1033,17 @@ class TectoraRoofProject(models.Model):
             "area": round(_polygon_area_px(points) * scale * scale, 2),
             "perimeter": round(_polygon_perimeter_px(points) * scale, 2),
         }
+
+    def _seam_measurements(self, points):
+        """A seam has a length only; it is stored as the object's length and
+        perimeter, so edge products on it take the seam length."""
+        scale = self.scale_m_per_px or DEFAULT_SCALE_M_PER_PX
+        length_px = sum(
+            math.hypot(points[i + 1][0] - points[i][0], points[i + 1][1] - points[i][1])
+            for i in range(len(points) - 1)
+        )
+        length = round(length_px * scale, 2)
+        return {"width": 0.0, "length": length, "area": 0.0, "perimeter": length}
 
     def _shape_inner_measurements(self, points, edge_widths):
         """Inner area/perimeter derived from per-side widths (m); zeros when
@@ -844,14 +1123,26 @@ class TectoraRoofProject(models.Model):
                 existing.write(values)
             else:
                 values.update({"project_id": self.id, "canvas_ref": shape["id"]})
-                self.env["tectora.roof.section"].create(values)
+                section = self.env["tectora.roof.section"].create(values)
+                origin = sections_by_ref.get(shape.get("split_from") or "")
+                if origin:
+                    # Both halves of a split section inherit the products that
+                    # applied to the whole surface; per-side products cannot
+                    # be mapped onto the new sides and are left behind.
+                    section._copy_whole_surface_lines(origin)
             section_count += 1
 
         object_count = 0
         for index, shape in enumerate(object_shapes, start=1):
-            values = self._shape_measurements(shape["points"])
+            if shape["kind"] == "seam":
+                values = self._seam_measurements(shape["points"])
+                values["height"] = 0.0
+            else:
+                values = self._shape_measurements(shape["points"])
             values["object_type"] = shape["kind"]
-            values["name"] = shape["name"] or _("Object %s") % index
+            values["name"] = shape["name"] or (
+                _("Naad %s") if shape["kind"] == "seam" else _("Object %s")
+            ) % index
             existing = objects_by_ref.pop(shape["id"], None)
             if existing:
                 existing.write(values)
@@ -874,6 +1165,8 @@ class TectoraRoofProject(models.Model):
 
         if self.state == "draft" and (section_count or object_count):
             self.state = "measured"
+        # The quotation follows the drawing.
+        self._tectora_mirror_to_order()
         # Automatic syncs from the canvas widget run on every drawing change;
         # they pass this flag so the chatter is not flooded.
         if not self.env.context.get("tectora_quiet_sync"):
@@ -943,12 +1236,36 @@ class TectoraRoofProject(models.Model):
             font = ImageFont.load_default()
         for shape in shapes:
             points = [tuple(p) for p in shape["points"]]
+            cx = sum(p[0] for p in points) / len(points)
+            cy = sum(p[1] for p in points) / len(points)
+            if shape["kind"] == "seam":
+                # Dotted line: PIL has no dash pattern, so draw the dashes.
+                seam_color = (55, 65, 81, 255)
+                for (ax, ay), (bx, by) in zip(points, points[1:]):
+                    total = math.hypot(bx - ax, by - ay) or 1.0
+                    dash, gap, pos = 8.0, 6.0, 0.0
+                    while pos < total:
+                        end = min(pos + dash, total)
+                        draw.line(
+                            [
+                                (ax + (bx - ax) * pos / total, ay + (by - ay) * pos / total),
+                                (ax + (bx - ax) * end / total, ay + (by - ay) * end / total),
+                            ],
+                            fill=seam_color,
+                            width=3,
+                        )
+                        pos += dash + gap
+                measures = self._seam_measurements(shape["points"])
+                label = "%s\nnaad %.1f m" % (shape["name"] or "", measures["length"])
+                draw.multiline_text(
+                    (cx, cy), label.strip(), fill=(11, 31, 36, 255),
+                    font=font, anchor="mm", align="center",
+                )
+                continue
             kind = shape["kind"] if shape["kind"] in fills else "section"
             draw.polygon(points, fill=fills[kind])
             draw.line(points + [points[0]], fill=strokes[kind], width=3)
             measures = self._shape_measurements(shape["points"])
-            cx = sum(p[0] for p in points) / len(points)
-            cy = sum(p[1] for p in points) / len(points)
             label = "%s\n%.1f × %.1f m — %.1f m²" % (
                 shape["name"] or "",
                 measures["width"],
@@ -965,25 +1282,16 @@ class TectoraRoofProject(models.Model):
         return base64.b64encode(buffer.getvalue())
 
     # ------------------------------------------------------------- quotation
-    def action_create_sale_order(self):
-        """Generate a native quotation from the measured sections."""
+    def _measurement_order_lines(self):
+        """The measurement part of the quotation: per roof section and roof
+        object a header and the assigned products, one line per (product,
+        coverage) with the quantities summed over the sides.
+
+        Returns a list of (header name, [line values]).
+        """
         self.ensure_one()
-        if not self.partner_id:
-            raise UserError(_("Set a customer on the project first."))
-        sections = self.section_ids.filtered("product_line_ids")
-        roof_objects = self.roof_object_ids.filtered("product_line_ids")
-        direct_lines = self.direct_line_ids
-        if not sections and not roof_objects and not direct_lines:
-            raise UserError(
-                _(
-                    "No products are assigned to any roof section, roof "
-                    "object or project tab yet. Add product lines first."
-                )
-            )
 
         def aggregated_order_lines(lines):
-            """One order line per (product, coverage), quantities summed over
-            the sides/corners; the covered sides are listed in the label."""
             grouped = {}
             for line in lines:
                 key = (line.product_id.id, line.coverage)
@@ -1011,91 +1319,265 @@ class TectoraRoofProject(models.Model):
                             label, position, ", ".join(str(s) for s in sides),
                         )
                     name = "%s (%s)" % (name, label)
-                values.append((0, 0, {
+                values.append({
                     "product_id": first.product_id.id,
                     "product_uom_qty": entry["quantity"],
                     "name": name,
-                }))
+                })
             return values
 
-        order_lines = []
-        # Project-wide chapters (Algemene werken, Veiligheid, ...) first,
-        # grouped per product category like the price book.
-        direct_categories = sorted(
-            set(direct_lines.mapped("product_id.categ_id")),
-            key=lambda category: category.name,
-        )
-        for category in direct_categories:
-            order_lines.append(
-                (0, 0, {
-                    "display_type": "line_section",
-                    "name": re.sub(r"^\d+\.\s*", "", category.name),
-                })
-            )
-            order_lines.extend(
-                aggregated_order_lines(
-                    direct_lines.filtered(
-                        lambda line: line.product_id.categ_id == category
-                    )
+        blocks = []
+        for target in self.section_ids.filtered("product_line_ids"):
+            blocks.append((
+                "%s — %.2f m², omtrek %.2f m" % (
+                    target.name, target.area, target.perimeter,
+                ),
+                aggregated_order_lines(target.product_line_ids),
+            ))
+        for target in self.roof_object_ids.filtered("product_line_ids"):
+            if target.object_type == "seam":
+                header = "%s — naad %.2f m" % (target.name, target.perimeter)
+            else:
+                header = "%s — %.2f m², omtrek %.2f m" % (
+                    target.name, target.area, target.perimeter,
                 )
-            )
-        for section in sections:
-            order_lines.append(
-                (0, 0, {
-                    "display_type": "line_section",
-                    "name": "%s — %.2f m², omtrek %.2f m" % (
-                        section.name, section.area, section.perimeter,
-                    ),
-                })
-            )
-            order_lines.extend(aggregated_order_lines(section.product_line_ids))
-        for roof_object in roof_objects:
-            order_lines.append(
-                (0, 0, {
-                    "display_type": "line_section",
-                    "name": "%s — %.2f m², omtrek %.2f m" % (
-                        roof_object.name, roof_object.area, roof_object.perimeter,
-                    ),
-                })
-            )
-            order_lines.extend(
-                aggregated_order_lines(roof_object.product_line_ids)
-            )
+            blocks.append((header, aggregated_order_lines(target.product_line_ids)))
+        return blocks
 
-        # The project dossier carries the analytic account: linking it on the
-        # order makes Odoo apply the analytic distribution to every line, so
-        # revenue and costs aggregate on the project.
-        self._ensure_project()
-        order_vals = {
+    # ------------------------------------------------- quotation mirroring
+    @api.model
+    def _chapter_of(self, category):
+        """The chapter (top category under the root, "04. Opbouwwerken plat
+        dak") a category belongs to, and its label without the number."""
+        chapter = category
+        while chapter.parent_id and chapter.parent_id.parent_id:
+            chapter = chapter.parent_id
+        if not re.match(r"^\d+\.", chapter.name or "") and category.name:
+            chapter = category
+        label = re.sub(r"^\d+\.\s*", "", chapter.name or _("Overige"))
+        return chapter, label
+
+    @api.model
+    def _header_matches(self, header_name, label):
+        """Whether an existing section header on the quotation is the
+        chapter ``label``: equal names, or a shared stem ("Dakopbouw" for
+        "Opbouwwerken plat dak", "Veiligheid" for "Verplichte
+        veiligheidsvoorzieningen")."""
+        header = (header_name or "").strip().lower()
+        wanted = label.strip().lower()
+        if not header or not wanted:
+            return False
+        if header == wanted:
+            return True
+        stop = {"werken", "plat", "dak", "en", "van", "de", "het", "verplichte"}
+        for token in re.findall(r"[a-zà-ÿ]+", wanted):
+            if len(token) >= 5 and token not in stop:
+                stem = token[:6]
+                if stem in header:
+                    return True
+        return False
+
+    def _tectora_mirror_to_order(self, order=None):
+        """Roof project -> open quotation.
+
+        Chapter lines (project level) each keep one order line under the
+        header of their chapter, with the quantity of the roof project; the
+        measurement lines (sections, objects) are rebuilt from the drawing.
+        Lines the user added to the quotation by hand are left alone. A
+        chapter line for a product the drawing now prices is dropped, so
+        nothing is counted twice.
+        """
+        Line = self.env["sale.order.line"].with_context(tectora_sync=True)
+        for project in self:
+            target = order or project.sale_order_id
+            if not target or target.state not in ("draft", "sent"):
+                continue
+            target = target.with_context(tectora_sync=True)
+            measured_products = (
+                project.section_ids.product_line_ids
+                | project.roof_object_ids.product_line_ids
+            ).product_id
+            superseded = project.direct_line_ids.filtered(
+                lambda line: line.product_id in measured_products
+            )
+            if superseded:
+                superseded.with_context(tectora_sync=True).unlink()
+
+            lines = target.order_line.sorted(lambda l: (l.sequence, l.id))
+            by_roof_line = {}
+            for line in lines:
+                if line.roof_line_id:
+                    by_roof_line.setdefault(line.roof_line_id, line)
+
+            # Chapter lines.
+            for roof_line in project.direct_line_ids:
+                line = by_roof_line.get(roof_line)
+                if line:
+                    values = {}
+                    if line.product_id != roof_line.product_id:
+                        values["product_id"] = roof_line.product_id.id
+                    if roof_line._quantity_differs(line.product_uom_qty):
+                        values["product_uom_qty"] = roof_line.quantity
+                    if values:
+                        line.with_context(tectora_sync=True).write(values)
+                    continue
+                _chapter, label = self._chapter_of(roof_line.product_id.categ_id)
+                header = lines.filtered(
+                    lambda l: l.display_type == "line_section"
+                    and self._header_matches(l.name, label)
+                )[:1]
+                if not header:
+                    header = Line.create({
+                        "order_id": target.id,
+                        "display_type": "line_section",
+                        "name": label,
+                        "sequence": (max(lines.mapped("sequence")) if lines else 0) + 10,
+                    })
+                    lines |= header
+                # Right behind the last line of that chapter block.
+                block_end = header
+                for line in lines.sorted(lambda l: (l.sequence, l.id)):
+                    if (line.sequence, line.id) <= (header.sequence, header.id):
+                        continue
+                    if line.display_type == "line_section":
+                        break
+                    block_end = line
+                new_line = Line.create({
+                    "order_id": target.id,
+                    "product_id": roof_line.product_id.id,
+                    "product_uom_qty": roof_line.quantity,
+                    "roof_line_id": roof_line.id,
+                    "sequence": block_end.sequence,
+                })
+                # Keep it after block_end when sequences tie: resequenced below.
+                lines = self._insert_after(lines, block_end, new_line)
+
+            # Measurement lines: rebuilt every time.
+            stale = lines.filtered("roof_measurement_line")
+            lines -= stale
+            if stale:
+                stale.unlink()
+            ordered = list(lines.sorted(lambda l: (l.sequence, l.id)))
+            for header_name, values_list in project._measurement_order_lines():
+                ordered.append(Line.create({
+                    "order_id": target.id,
+                    "display_type": "line_section",
+                    "name": header_name,
+                    "roof_measurement_line": True,
+                }))
+                for values in values_list:
+                    values.update({"order_id": target.id, "roof_measurement_line": True})
+                    ordered.append(Line.create(values))
+            # One clean sequence for the whole quotation.
+            for index, line in enumerate(ordered, start=1):
+                if line.sequence != index * 10:
+                    line.with_context(tectora_sync=True).write({"sequence": index * 10})
+        return True
+
+    @api.model
+    def _insert_after(self, lines, anchor, new_line):
+        """Recordset ``lines`` with ``new_line`` placed right after ``anchor``
+        (order carried by the recordset itself, sequences set afterwards)."""
+        result = self.env["sale.order.line"]
+        inserted = False
+        for line in lines:
+            result |= line
+            if line == anchor:
+                result |= new_line
+                inserted = True
+        if not inserted:
+            result |= new_line
+        return result
+
+    def _find_pricelist(self):
+        """Pricelist named after the project type, if the company has one."""
+        self.ensure_one()
+        if not self.project_type:
+            return self.env["product.pricelist"]
+        type_label = dict(self._fields["project_type"].selection)[self.project_type]
+        return self.env["product.pricelist"].search(
+            [
+                ("name", "=ilike", type_label),
+                ("company_id", "in", [False, self.company_id.id]),
+            ],
+            limit=1,
+        )
+
+    def _prepare_sale_order_values(self):
+        self.ensure_one()
+        values = {
             "partner_id": self.partner_id.id,
             "opportunity_id": self.opportunity_id.id or False,
             "origin": self.code,
             "roof_project_id": self.id,
-            "order_line": order_lines,
+            "company_id": self.company_id.id or self.env.company.id,
         }
-        SaleOrder = self.env["sale.order"]
-        if self.project_id and "project_id" in SaleOrder._fields:
-            order_vals["project_id"] = self.project_id.id
-        if self.project_type:
-            type_label = dict(self._fields["project_type"].selection)[
-                self.project_type
-            ]
-            pricelist = self.env["product.pricelist"].search(
-                [("name", "=ilike", type_label)], limit=1
+        if self.project_manager_id:
+            values["user_id"] = self.project_manager_id.id
+        if self.project_id:
+            values["project_id"] = self.project_id.id
+        pricelist = self._find_pricelist()
+        if pricelist:
+            values["pricelist_id"] = pricelist.id
+        return values
+
+    def action_create_sale_order(self):
+        """Create the quotation of the roof project, or bring it in line with
+        the measurement.
+
+        One roof project stands against one order: an open quotation is
+        aligned (chapter lines and measurement lines follow the roof project,
+        manual lines stay), a confirmed order is left alone, and only when
+        there is no open order a new quotation is created.
+        """
+        self.ensure_one()
+        if not self.partner_id:
+            raise UserError(_("Set a customer on the project first."))
+        order = self.sale_order_id
+        if order and order.state == "cancel":
+            order = self.env["sale.order"]
+        if order and order.state not in ("draft", "sent"):
+            raise UserError(
+                _(
+                    "Order %(order)s van dit dakproject is al bevestigd. Pas de "
+                    "order zelf aan, of annuleer ze en maak een nieuwe offerte.",
+                    order=order.name,
+                )
             )
-            if pricelist:
-                order_vals["pricelist_id"] = pricelist.id
-        order = self.env["sale.order"].create(order_vals)
+        if not order:
+            if not (
+                self.direct_line_ids
+                or self.section_ids.product_line_ids
+                or self.roof_object_ids.product_line_ids
+            ):
+                raise UserError(
+                    _(
+                        "No products are assigned to any roof section, roof "
+                        "object or project tab yet. Add product lines first."
+                    )
+                )
+            order = self.env["sale.order"].with_context(tectora_sync=True).create(
+                self._prepare_sale_order_values()
+            )
+            self.message_post(
+                body=_(
+                    "Quotation %s created from the roof measurement.",
+                    order._get_html_link(),
+                )
+            )
+        else:
+            self.message_post(
+                body=_(
+                    "Quotation %s refreshed from the roof measurement.",
+                    order._get_html_link(),
+                )
+            )
+        self._tectora_mirror_to_order(order)
         # The meetblad is rendered as an extra page inside the quotation PDF
         # itself (see report_saleorder_inherit_tectora), so no separate
-        # attachment is created here anymore.
-        self.state = "quoted"
-        self.message_post(
-            body=_(
-                "Quotation %s created from the roof measurement.",
-                order._get_html_link(),
-            )
-        )
+        # attachment is created here.
+        if self.state in ("draft", "measured"):
+            self.with_context(tectora_sync=True).state = "quoted"
         return {
             "type": "ir.actions.act_window",
             "res_model": "sale.order",
@@ -1104,8 +1586,37 @@ class TectoraRoofProject(models.Model):
             "target": "current",
         }
 
-    def action_view_sale_orders(self):
+    def action_view_sale_order(self):
+        """The order of this roof project; a new quotation when there is
+        none yet (the smart button is always there)."""
         self.ensure_one()
+        order = self.sale_order_id
+        if order:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "sale.order",
+                "res_id": order.id,
+                "view_mode": "form",
+                "target": "current",
+            }
+        context = {
+            "default_%s" % key: value
+            for key, value in self._prepare_sale_order_values().items()
+        }
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Offerte"),
+            "res_model": "sale.order",
+            "view_mode": "form",
+            "target": "current",
+            "context": context,
+        }
+
+    def action_view_sale_orders(self):
+        """History of every quotation/order of this roof project."""
+        self.ensure_one()
+        if len(self.sale_order_ids) <= 1:
+            return self.action_view_sale_order()
         return {
             "type": "ir.actions.act_window",
             "name": _("Offertes / Orders"),

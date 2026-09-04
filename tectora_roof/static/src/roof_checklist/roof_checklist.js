@@ -49,7 +49,7 @@ export class RoofChecklistField extends Component {
             "product.product",
             [
                 ["sale_ok", "=", true],
-                ["categ_id.name", "ilike", this.props.category],
+                ["categ_id.complete_name", "ilike", this.props.category],
             ],
             ["default_code", "name", "list_price", "uom_id"],
             { order: "default_code, name", limit: 500 }
@@ -63,9 +63,9 @@ export class RoofChecklistField extends Component {
                 this.lineModel,
                 [
                     ["project_direct_id", "=", this.resId],
-                    ["product_id.categ_id.name", "ilike", this.props.category],
+                    ["product_id.categ_id.complete_name", "ilike", this.props.category],
                 ],
-                ["product_id", "quantity", "price_subtotal"]
+                ["product_id", "quantity", "price_subtotal", "coverage"]
             );
             for (const record of records) {
                 lines[record.product_id[0]] = record;
@@ -127,12 +127,13 @@ export class RoofChecklistField extends Component {
             if (line) {
                 await this.orm.unlink(this.lineModel, [line.id]);
             } else {
+                // Coverage and quantity are decided server-side from the
+                // product's unit: m² lines take the roof area, m lines the
+                // perimeter, counted lines start at 1.
                 await this.orm.create(this.lineModel, [
                     {
                         project_direct_id: this.resId,
                         product_id: product.id,
-                        coverage: "general",
-                        quantity: 1,
                     },
                 ]);
             }

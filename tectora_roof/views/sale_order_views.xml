@@ -7,6 +7,40 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='origin']" position="after">
+                <field name="roof_project_id"
+                       context="{'default_partner_id': partner_id}"/>
+                <field name="roof_project_state" invisible="1"/>
+            </xpath>
+            <!-- The roof project and the project are always one click away:
+                 an order without a roof project gets one when the button is
+                 used; the project exists once the order is confirmed. -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_roof_project" type="object"
+                        class="oe_stat_button" icon="fa-home">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="roof_total_area" readonly="1"
+                                   invisible="not roof_project_id"/>
+                            <span invisible="not roof_project_id"> m²</span>
+                            <span invisible="roof_project_id">Nieuw</span>
+                        </span>
+                        <span class="o_stat_text">Dakproject</span>
+                    </div>
+                </button>
+                <button name="action_open_project_dashboard" type="object"
+                        class="oe_stat_button" icon="fa-tachometer"
+                        invisible="state not in ('sale', 'done')"
+                        string="Projectdashboard"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sales_order_filter_inherit_tectora" model="ir.ui.view">
+        <field name="name">sale.order.search.inherit.tectora.roof</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="roof_project_id"/>
             </xpath>
         </field>

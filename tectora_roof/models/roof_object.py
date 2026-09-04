@@ -4,7 +4,7 @@ from odoo import api, fields, models
 
 class TectoraRoofObject(models.Model):
     _name = "tectora.roof.object"
-    _description = "Roof Object (Chimney/Skylight)"
+    _description = "Roof Object (Chimney/Skylight/Seam)"
     _order = "project_id, id"
 
     name = fields.Char(string="Naam", required=True)
@@ -22,6 +22,7 @@ class TectoraRoofObject(models.Model):
             ("chimney", "Schoorsteen"),
             ("skylight", "Koepel / lichtstraat"),
             ("hvac", "HVAC-unit"),
+            ("seam", "Naad"),
             ("other", "Overig"),
         ],
         string="Type",
