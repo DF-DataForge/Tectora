@@ -178,6 +178,11 @@ class TectoraRoofProject(models.Model):
         "res.company", string="Bedrijf", default=lambda self: self.env.company
     )
     currency_id = fields.Many2one(related="company_id.currency_id")
+    color = fields.Integer(
+        string="Kleur",
+        help="Kleur van dit project in de planner: elk blok van het project "
+        "krijgt ze. Wordt automatisch gekozen en kan hier aangepast worden.",
+    )
 
     # --- Satellite background -------------------------------------------------
     background_image = fields.Image(string="Satellietbeeld", max_width=2560, max_height=2560)
@@ -692,6 +697,9 @@ class TectoraRoofProject(models.Model):
                     or _("New")
                 )
         projects = super().create(vals_list)
+        # Every project its own planner colour, spread over the palette.
+        for project in projects.filtered(lambda p: not p.color):
+            project.color = (project.id % 11) + 1
         projects._autogenerate_planning()
         return projects
 

@@ -44,7 +44,10 @@ class TectoraRoofPlanning(models.Model):
         default="draft",
         required=True,
     )
-    color = fields.Integer(related="team_id.color", store=True)
+    color = fields.Integer(
+        related="project_id.color", store=True, string="Kleur",
+        help="Kleur van het project: alle blokken van een project delen ze.",
+    )
     notes = fields.Text(string="Werfinstructies")
 
     # --- basic project information shown on the planning item -------------

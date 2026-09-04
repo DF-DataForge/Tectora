@@ -132,6 +132,7 @@
                         <group>
                             <field name="partner_id"/>
                             <field name="project_type"/>
+                            <field name="color" widget="color_picker"/>
                         </group>
                         <group>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>
