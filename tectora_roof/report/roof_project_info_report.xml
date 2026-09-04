@@ -13,278 +13,183 @@
     </record>
 
     <!-- Werfblad voor de ploeg: dezelfde structuur als het papieren
-         "Projectinformatie"-blad. -->
+         "Projectinformatie"-blad, gezet als kaarten in twee kolommen. -->
+    <template id="report_roof_info_card">
+        <div class="ris-card">
+            <div class="ris-card-title"><t t-out="title"/></div>
+            <table class="ris-rows">
+                <t t-foreach="rows" t-as="row">
+                    <tr t-if="row[1] == 'note'">
+                        <td colspan="2" class="ris-note"><t t-out="row[2]"/></td>
+                    </tr>
+                    <tr t-else="">
+                        <td class="ris-label"><t t-out="row[0]"/></td>
+                        <td class="ris-value">
+                            <t t-if="row[1] == 'bool'">
+                                <span t-if="row[2]" class="ris-yes">Ja</span>
+                                <span t-else="" class="ris-no">Nee</span>
+                            </t>
+                            <t t-else=""><t t-out="row[2]"/></t>
+                        </td>
+                    </tr>
+                </t>
+            </table>
+        </div>
+    </template>
+
     <template id="report_roof_project_info_document">
         <t t-call="web.external_layout">
-            <div class="page o_roof_info_sheet">
-                <h3 class="mb-2">Projectinformatie</h3>
+            <div class="page o_roof_info_sheet ris">
+                <style>
+                    .ris { font-size: 10px; color: #1d1d1b; line-height: 1.4; }
+                    .ris .ris-title { border-bottom: 2px solid #008b93; padding-bottom: 4px; margin-bottom: 10px; }
+                    .ris .ris-title h2 { margin: 0; font-size: 18px; font-weight: 700; color: #1d1d1b; }
+                    .ris .ris-title .ris-meta { color: #6c757d; font-size: 10px; }
+                    .ris .ris-state { display: inline-block; background: #008b93; color: #fff; border-radius: 10px; padding: 1px 9px; font-size: 9px; font-weight: 600; }
+                    .ris .ris-col-l { padding-right: 6px; }
+                    .ris .ris-col-r { padding-left: 6px; }
+                    .ris .ris-card { border: 1px solid #cfe3e5; border-radius: 5px; margin-bottom: 8px; page-break-inside: avoid; overflow: hidden; }
+                    .ris .ris-card-title { background: #008b93; color: #fff; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 8px; }
+                    .ris .ris-card-title.ris-dark { background: #1d1d1b; }
+                    .ris table.ris-rows { width: 100%; border-collapse: collapse; }
+                    .ris table.ris-rows td { padding: 3px 8px; border-top: 1px solid #e6eef0; vertical-align: top; }
+                    .ris table.ris-rows tr:first-child td { border-top: 0; }
+                    .ris table.ris-rows td.ris-label { width: 64%; color: #1d1d1b; }
+                    .ris table.ris-rows td.ris-value { text-align: right; font-weight: 600; }
+                    .ris table.ris-rows td.ris-note { font-style: italic; color: #495057; background: #f6fafa; }
+                    .ris .ris-yes { display: inline-block; min-width: 30px; text-align: center; background: #008b93; color: #fff; border-radius: 3px; padding: 0 6px; font-size: 9px; }
+                    .ris .ris-no { display: inline-block; min-width: 30px; text-align: center; background: #eceff1; color: #6c757d; border-radius: 3px; padding: 0 6px; font-size: 9px; }
+                    .ris table.ris-info { width: 100%; border-collapse: collapse; }
+                    .ris table.ris-info td { padding: 2px 8px; vertical-align: top; }
+                    .ris table.ris-info td.ris-k { width: 36%; color: #6c757d; }
+                    .ris table.ris-info td.ris-v { font-weight: 600; }
+                    .ris table.ris-epdm { width: 100%; border-collapse: collapse; }
+                    .ris table.ris-epdm th { text-align: left; font-weight: 600; color: #6c757d; padding: 3px 8px; border-bottom: 1px solid #cfe3e5; font-size: 9px; }
+                    .ris table.ris-epdm td { padding: 3px 8px; border-top: 1px solid #e6eef0; }
+                    .ris table.ris-epdm tr.ris-total td { border-top: 2px solid #008b93; font-weight: 700; }
+                    .ris .ris-free { min-height: 44px; padding: 6px 8px; white-space: pre-line; }
+                </style>
 
-                <table class="table table-sm table-borderless small mb-3">
-                    <tr>
-                        <td style="width:22%"><strong>Naam</strong></td>
-                        <td style="width:28%"><t t-out="doc.name"/></td>
-                        <td style="width:22%"><strong>Projectnummer</strong></td>
-                        <td style="width:28%"><t t-out="doc.code or '/'"/></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Startdatum</strong></td>
-                        <td><t t-out="doc.planned_date_begin" t-options='{"widget": "datetime"}'/></td>
-                        <td><strong>Deadline</strong></td>
-                        <td><t t-out="doc.date_deadline" t-options='{"widget": "date"}'/></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Projectleider</strong></td>
-                        <td><t t-out="doc.project_manager_id.display_name or '/'"/></td>
-                        <td><strong>E-mail / GSM</strong></td>
-                        <td>
-                            <t t-out="doc.project_manager_email or '/'"/>
-                            <t t-if="doc.project_manager_phone"> — <t t-out="doc.project_manager_phone"/></t>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Klant</strong></td>
-                        <td><t t-out="doc.partner_id.display_name or '/'"/></td>
-                        <td><strong>Werfadres</strong></td>
-                        <td><t t-out="doc.address or '/'"/></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Contactpersoon werf</strong></td>
-                        <td><t t-out="doc.site_contact_id.display_name or '/'"/></td>
-                        <td><strong>Tel. / e-mail</strong></td>
-                        <td>
-                            <t t-out="doc.site_contact_phone or '/'"/>
-                            <t t-if="doc.site_contact_email"> — <t t-out="doc.site_contact_email"/></t>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Huidige status</strong></td>
-                        <td colspan="3"><t t-out="doc._info_label('state')"/></td>
-                    </tr>
-                </table>
-
-                <div class="row">
-                    <div class="col-6">
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Voorbereiding</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Checkin@work</td>
-                                    <td class="text-end"><t t-out="doc._info_label('checkin_at_work')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Asbesthoudende materialen</td>
-                                    <td class="text-end"><t t-out="doc._info_label('asbestos_present')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Hoogte dak(en)</td>
-                                    <td class="text-end">
-                                        <t t-if="doc.roof_height">
-                                            <t t-out="'%.2f m' % doc.roof_height"/>
-                                        </t>
-                                        <t t-else="">/</t>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ondergrond dak(en)</td>
-                                    <td class="text-end">
-                                        <t t-out="doc._info_label('roof_substrate')"/>
-                                        <t t-if="doc.roof_substrate_note">
-                                            (<t t-out="doc.roof_substrate_note"/>)
-                                        </t>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Bereikbaarheid materiaal</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Materiaal rechtstreeks op het dak</td>
-                                    <td class="text-end"><t t-out="doc._info_label('material_direct_roof')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Materiaal doorheen het gebouw</td>
-                                    <td class="text-end"><t t-out="doc._info_label('material_through_building')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Materiaal via zijkant gebouw</td>
-                                    <td class="text-end"><t t-out="doc._info_label('material_via_side')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Hoogwerker nodig</td>
-                                    <td class="text-end">
-                                        <t t-out="doc._info_label('aerial_lift_needed')"/>
-                                        <t t-if="doc.aerial_lift_type">
-                                            (<t t-out="doc.aerial_lift_type"/>)
-                                        </t>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Transport</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Transport materialen naar werf</td>
-                                    <td class="text-end"><t t-out="doc.material_transport or '/'"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Afval afvoer via</td>
-                                    <td class="text-end"><t t-out="doc.waste_disposal or '/'"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Geschat uur levering/ophaling</td>
-                                    <td class="text-end"><t t-out="doc.supplier_pickup_time or '/'"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Transport overheen gebouw</td>
-                                    <td class="text-end"><t t-out="doc._info_label('transport_over_building')"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Bereikbaarheid werf</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Makkelijk parkeren</td>
-                                    <td class="text-end"><t t-out="doc._info_label('easy_parking')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Parkeerverbod nodig</td>
-                                    <td class="text-end"><t t-out="doc._info_label('parking_ban_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Oprit verhard</td>
-                                    <td class="text-end"><t t-out="doc._info_label('driveway_paved')"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="col-6">
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Extra's te voorzien</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Stelling</td>
-                                    <td class="text-end"><t t-out="doc._info_label('scaffolding_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Rolstelling</td>
-                                    <td class="text-end"><t t-out="doc._info_label('mobile_scaffolding_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Betonboring</td>
-                                    <td class="text-end"><t t-out="doc._info_label('concrete_drilling_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Aannemer HVAC</td>
-                                    <td class="text-end"><t t-out="doc._info_label('hvac_contractor_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Specifieke voorzorgsmaatregelen</td>
-                                    <td class="text-end"><t t-out="doc._info_label('precautions_needed')"/></td>
-                                </tr>
-                                <tr t-if="doc.precautions_note">
-                                    <td colspan="2"><t t-out="doc.precautions_note"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Te voorzien ter plaatse</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Stroomgenerator</td>
-                                    <td class="text-end"><t t-out="doc._info_label('generator_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Werftoilet</td>
-                                    <td class="text-end"><t t-out="doc._info_label('site_toilet_needed')"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Werfkeet</td>
-                                    <td class="text-end"><t t-out="doc._info_label('site_hut_needed')"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr>
-                                    <th class="bg-200">
-                                        EPDM doeken
-                                        <t t-if="doc.epdm_thickness">
-                                            <t t-out="'%.2f mm' % doc.epdm_thickness"/>
-                                        </t>
-                                    </th>
-                                    <th class="bg-200 text-end">Afmeting</th>
-                                    <th class="bg-200 text-end">m²</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr t-foreach="doc.epdm_sheet_ids" t-as="sheet">
-                                    <td><t t-out="sheet.name"/></td>
-                                    <td class="text-end"><t t-out="sheet.dimensions or '/'"/></td>
-                                    <td class="text-end"><t t-out="'%.2f' % sheet.area"/></td>
-                                </tr>
-                                <tr t-if="not doc.epdm_sheet_ids">
-                                    <td colspan="3">/</td>
-                                </tr>
-                            </tbody>
-                            <tfoot t-if="doc.epdm_sheet_ids">
-                                <tr>
-                                    <td colspan="2"><strong>Totaal</strong></td>
-                                    <td class="text-end">
-                                        <strong><t t-out="'%.2f' % doc.epdm_total_area"/></strong>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-
-                        <table class="table table-sm small">
-                            <thead>
-                                <tr><th colspan="2" class="bg-200">Afwijking dakranden</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Type(s)</td>
-                                    <td class="text-end"><t t-out="doc.roof_edge_types or '/'"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Kleur(en)</td>
-                                    <td class="text-end"><t t-out="doc.roof_edge_colors or '/'"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div class="ris-title">
+                    <div class="row">
+                        <div class="col-8">
+                            <h2>Werfblad — Projectinformatie</h2>
+                            <div class="ris-meta">
+                                <t t-out="doc.code or ''"/> · <t t-out="doc.name"/>
+                                <t t-if="doc.partner_id"> · <t t-out="doc.partner_id.display_name"/></t>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end" style="padding-top: 4px;">
+                            <span class="ris-state"><t t-out="doc._info_label('state')"/></span>
+                            <div class="ris-meta" t-if="doc.project_type">
+                                <t t-out="doc._project_type_label()"/>
+                                <t t-if="doc.total_area"> · <t t-out="'%.1f m²' % doc.total_area"/></t>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <table class="table table-sm small">
-                    <thead>
-                        <tr><th class="bg-200">Andere werken / extra's</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><t t-out="doc.other_works or '/'"/></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="row">
+                    <div class="col-6 ris-col-l">
+                        <div class="ris-card">
+                            <div class="ris-card-title ris-dark">Project</div>
+                            <table class="ris-info">
+                                <tr><td class="ris-k">Projectnummer</td><td class="ris-v"><t t-out="doc.code or '/'"/></td></tr>
+                                <tr><td class="ris-k">Projectleider</td><td class="ris-v"><t t-out="doc.project_manager_id.display_name or '/'"/></td></tr>
+                                <tr><td class="ris-k">E-mail / GSM</td><td class="ris-v">
+                                    <t t-out="doc.project_manager_email or '/'"/>
+                                    <t t-if="doc.project_manager_phone"><br/><t t-out="doc.project_manager_phone"/></t>
+                                </td></tr>
+                                <tr><td class="ris-k">Geplande start</td><td class="ris-v">
+                                    <t t-if="doc.planned_date_begin"><t t-out="doc.planned_date_begin" t-options='{"widget": "datetime"}'/></t>
+                                    <t t-else="">/</t>
+                                </td></tr>
+                                <tr><td class="ris-k">Gepland einde</td><td class="ris-v">
+                                    <t t-if="doc.planned_date_end"><t t-out="doc.planned_date_end" t-options='{"widget": "datetime"}'/></t>
+                                    <t t-else="">/</t>
+                                </td></tr>
+                                <tr><td class="ris-k">Deadline</td><td class="ris-v">
+                                    <t t-if="doc.date_deadline"><t t-out="doc.date_deadline" t-options='{"widget": "date"}'/></t>
+                                    <t t-else="">/</t>
+                                </td></tr>
+                                <tr t-if="doc.team_id"><td class="ris-k">Ploeg</td><td class="ris-v"><t t-out="doc.team_id.name"/></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-6 ris-col-r">
+                        <div class="ris-card">
+                            <div class="ris-card-title ris-dark">Werf &amp; contacten</div>
+                            <table class="ris-info">
+                                <tr><td class="ris-k">Klant</td><td class="ris-v"><t t-out="doc.partner_id.display_name or '/'"/></td></tr>
+                                <tr><td class="ris-k">Werfadres</td><td class="ris-v"><t t-out="doc.address or '/'"/></td></tr>
+                                <tr><td class="ris-k">Contactpersoon werf</td><td class="ris-v"><t t-out="doc.site_contact_id.display_name or '/'"/></td></tr>
+                                <tr><td class="ris-k">Tel. / e-mail</td><td class="ris-v">
+                                    <t t-out="doc.site_contact_phone or '/'"/>
+                                    <t t-if="doc.site_contact_email"><br/><t t-out="doc.site_contact_email"/></t>
+                                </td></tr>
+                                <tr t-if="doc.sale_order_id"><td class="ris-k">Order</td><td class="ris-v"><t t-out="doc.sale_order_id.name"/></td></tr>
+                                <tr><td class="ris-k">Dak</td><td class="ris-v">
+                                    <t t-out="'%.1f m²' % doc.total_area"/> · omtrek <t t-out="'%.1f m' % doc.total_perimeter"/>
+                                    <t t-if="doc.section_count"> · <t t-out="doc.section_count"/> dakvlak(ken)</t>
+                                </td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <t t-set="columns" t-value="doc._info_sheet_sections()"/>
+                <div class="row">
+                    <div class="col-6 ris-col-l">
+                        <t t-foreach="columns[0]" t-as="section">
+                            <t t-call="tectora_roof.report_roof_info_card">
+                                <t t-set="title" t-value="section[0]"/>
+                                <t t-set="rows" t-value="section[1]"/>
+                            </t>
+                        </t>
+                    </div>
+                    <div class="col-6 ris-col-r">
+                        <t t-foreach="columns[1]" t-as="section">
+                            <t t-call="tectora_roof.report_roof_info_card">
+                                <t t-set="title" t-value="section[0]"/>
+                                <t t-set="rows" t-value="section[1]"/>
+                            </t>
+                        </t>
+                        <div class="ris-card">
+                            <div class="ris-card-title">
+                                EPDM-doeken
+                                <t t-if="doc.epdm_thickness"> · <t t-out="'%.2f mm' % doc.epdm_thickness"/></t>
+                            </div>
+                            <table class="ris-epdm">
+                                <thead>
+                                    <tr>
+                                        <th>Doek</th>
+                                        <th class="text-end">Afmeting</th>
+                                        <th class="text-end">m²</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="doc.epdm_sheet_ids" t-as="sheet">
+                                        <td><t t-out="sheet.name"/></td>
+                                        <td class="text-end"><t t-out="sheet.dimensions or '/'"/></td>
+                                        <td class="text-end"><t t-out="'%.2f' % sheet.area"/></td>
+                                    </tr>
+                                    <tr t-if="not doc.epdm_sheet_ids">
+                                        <td colspan="3" class="text-muted">Geen doeken ingegeven</td>
+                                    </tr>
+                                    <tr t-if="doc.epdm_sheet_ids" class="ris-total">
+                                        <td colspan="2">Totaal</td>
+                                        <td class="text-end"><t t-out="'%.2f' % doc.epdm_total_area"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ris-card">
+                    <div class="ris-card-title">Andere werken / extra's</div>
+                    <div class="ris-free"><t t-out="doc.other_works or ''"/></div>
+                </div>
             </div>
         </t>
     </template>
