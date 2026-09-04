@@ -105,15 +105,6 @@
              t-attf-class="tq-logo #{extra_class or ''}" alt="Tectora"/>
     </template>
 
-    <!-- Common variables every layout needs. -->
-    <template id="report_tq_vars">
-        <t t-set="company" t-value="doc.company_id"/>
-        <t t-set="roof" t-value="doc.roof_project_id"/>
-        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
-        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
-        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
-    </template>
-
     <template id="report_tq_header">
         <div t-attf-class="header tq #{style_class}">
             <div class="row" style="margin-top: 4px;">
@@ -586,7 +577,11 @@
 
     <!-- ===================================================== 1. Dossier -->
     <template id="report_tq_dossier">
-        <t t-call="tectora_roof.report_tq_vars"/>
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
         <t t-set="style_class" t-value="'tq-dossier'"/>
         <t t-call="tectora_roof.report_tq_header"/>
         <div class="article tq tq-dossier o_report_layout_standard"
@@ -641,7 +636,11 @@
 
     <!-- ===================================================== 2. Compact -->
     <template id="report_tq_compact">
-        <t t-call="tectora_roof.report_tq_vars"/>
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
         <t t-set="style_class" t-value="'tq-compact'"/>
         <t t-call="tectora_roof.report_tq_header"/>
         <div class="article tq tq-compact o_report_layout_standard"
@@ -702,7 +701,11 @@
 
     <!-- ===================================================== 3. Classic -->
     <template id="report_tq_classic">
-        <t t-call="tectora_roof.report_tq_vars"/>
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
         <t t-set="style_class" t-value="'tq-classic'"/>
         <t t-call="tectora_roof.report_tq_header"/>
         <div class="article tq tq-classic o_report_layout_standard"
@@ -766,7 +769,11 @@
 
     <!-- ===================================================== 4. Visual -->
     <template id="report_tq_visual">
-        <t t-call="tectora_roof.report_tq_vars"/>
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
         <t t-set="style_class" t-value="'tq-visual'"/>
         <t t-call="tectora_roof.report_tq_header"/>
         <div class="article tq tq-visual o_report_layout_standard"
@@ -825,7 +832,11 @@
 
     <!-- ===================================================== 5. Minimal -->
     <template id="report_tq_minimal">
-        <t t-call="tectora_roof.report_tq_vars"/>
+        <t t-set="company" t-value="doc.company_id"/>
+        <t t-set="roof" t-value="doc.roof_project_id"/>
+        <t t-set="is_order" t-value="doc.state in ('sale', 'done')"/>
+        <t t-set="doc_label" t-value="'Orderbevestiging' if is_order else 'Offerte'"/>
+        <t t-set="with_plan" t-value="bool(roof) and doc.tectora_include_roof_plan"/>
         <t t-set="style_class" t-value="'tq-minimal'"/>
         <t t-call="tectora_roof.report_tq_header"/>
         <div class="article tq tq-minimal o_report_layout_standard"
