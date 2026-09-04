@@ -19,10 +19,6 @@
                             invisible="not section_ids or not sale_order_id or sale_order_state not in ('draft', 'sent')"
                             confirm="De lijnen van de openstaande offerte worden vervangen door de meting. Doorgaan?"
                             help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
-                    <button name="action_generate_planning" type="object"
-                            string="Planning aanmaken" class="btn-secondary"
-                            invisible="not team_id or not planned_date_begin"
-                            help="Maakt een werkblok voor de ploeg met planning-items voor elke medewerker."/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,measured,quoted,confirmed"/>
                 </header>
@@ -62,11 +58,6 @@
                                 class="oe_stat_button" icon="fa-money"
                                 invisible="invoice_count == 0">
                             <field name="invoice_count" widget="statinfo" string="Facturen"/>
-                        </button>
-                        <button name="action_view_planning" type="object"
-                                class="oe_stat_button" icon="fa-calendar"
-                                invisible="planning_count == 0">
-                            <field name="planning_count" widget="statinfo" string="Werkblokken"/>
                         </button>
                         <button name="action_open_project" type="object"
                                 class="oe_stat_button" icon="fa-tachometer"
@@ -141,13 +132,6 @@
                         <group>
                             <field name="partner_id"/>
                             <field name="project_type"/>
-                            <field name="team_id"/>
-                            <label for="planned_date_begin" string="Gepland"/>
-                            <div class="o_row">
-                                <field name="planned_date_begin" nolabel="1"/>
-                                <span class="mx-1"> → </span>
-                                <field name="planned_date_end" nolabel="1"/>
-                            </div>
                         </group>
                         <group>
                             <field name="address" placeholder="Straat nr, postcode gemeente"/>

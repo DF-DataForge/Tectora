@@ -215,8 +215,10 @@ ploegbaas. Een ploeg zonder eigen leden gebruikt de medewerkers van een
 gekozen afdeling, telkens samen met de ploegbaas. Zo blijft het model
 configureerbaar zonder de HR-structuur te dupliceren.
 
-Op een dakproject kies je een **ploeg** en de **geplande start/einde**. Zodra
-beide ingevuld zijn, maakt het systeem automatisch een **werkblok**
+De planning staat niet op het dakmetingformulier zelf (dat toont alleen de
+meting) maar in de planner **Per ploeg** en op het **projectdashboard**. Krijgt
+een dakproject een ploeg en een geplande periode (bv. via de planner of het
+project), dan maakt het systeem automatisch een **werkblok**
 (`tectora.roof.planning`) aan met alle leden van de ploeg. Een werkblok is het
 planning-item van de werf: het toont de basisinformatie van het project
 (referentie, klant, werfadres, projecttype, oppervlakte en omtrek) plus de
