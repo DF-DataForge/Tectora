@@ -125,6 +125,15 @@ Dakmeting → Offerte-pdf*; *Standaard Odoo-document* blijft beschikbaar. De
 teksten staan in `report/sale_order_dossier_report.xml` (blokken
 `report_tq_block_*`) en zijn per blok aan te passen.
 
+## Eén btw-tarief voor de hele offerte
+
+Op de tab *Overige info* van de order staat naast de fiscale positie het veld
+**Btw-tarief voor alle regels**. Kies er bv. het 6%-tarief bij renovatie van
+een woning ouder dan 10 jaar: elke productregel neemt dat tarief, ook de
+regels die later uit de dakmeting of een offertesjabloon bijkomen. De knop
+**Toepassen op alle regels** zet het opnieuw na handmatige wijzigingen; leeg
+maken geeft de btw van de producten en de fiscale positie terug.
+
 ## Dakproject ↔ verkooporder (1 op 1)
 
 Eén dakproject staat tegenover één offerte/order, in beide richtingen:

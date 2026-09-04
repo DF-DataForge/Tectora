@@ -71,6 +71,16 @@ class SaleOrder(models.Model):
         help="De opmaak van de offerte-pdf (afdrukken, e-mail, klantenportaal). "
         "De standaardstijl staat in Instellingen → Tectora Dakmeting.",
     )
+    tectora_tax_id = fields.Many2one(
+        "account.tax",
+        string="Btw-tarief voor alle regels",
+        domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]",
+        check_company=True,
+        help="Eén btw-tarief voor de hele offerte, bv. 6% bij renovatie van een "
+        "woning ouder dan 10 jaar. Het vervangt de btw van elke productregel, "
+        "ook van regels die later uit de dakmeting bijkomen. Leeg: de btw van "
+        "de producten en de fiscale positie.",
+    )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
         default=True,
@@ -480,6 +490,23 @@ class SaleOrder(models.Model):
         tz = pytz.timezone(self.env.user.tz or "UTC")
         local = tz.localize(datetime.combine(deadline, time(hour=8)))
         return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+    # ------------------------------------------------------------------- btw
+    def action_apply_tectora_tax(self):
+        """Put the order's tax on every product line (the lines follow it
+        automatically; this re-applies it after manual changes)."""
+        for order in self:
+            lines = order.order_line.filtered(lambda line: not line.display_type)
+            if not lines:
+                continue
+            if order.tectora_tax_id:
+                lines.with_context(tectora_sync=True).write(
+                    {"tax_ids": [(6, 0, order.tectora_tax_id.ids)]}
+                )
+            else:
+                # Back to the taxes of the products and the fiscal position.
+                lines.with_context(tectora_sync=True)._compute_tax_ids()
+        return True
 
     # ---------------------------------------------------------------- report
     def _tectora_report_sections(self, optional=False):

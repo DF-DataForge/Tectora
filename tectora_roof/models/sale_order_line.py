@@ -30,6 +30,17 @@ class SaleOrderLine(models.Model):
         "herbouwd zodra de tekening verandert.",
     )
 
+    @api.depends("order_id.tectora_tax_id")
+    def _compute_tax_ids(self):
+        """One tax for the whole order when the order asks for it: every
+        product line, including the ones the roof project adds later, takes
+        the order's tax instead of the product's."""
+        super()._compute_tax_ids()
+        for line in self:
+            tax = line.order_id.tectora_tax_id
+            if tax and not line.display_type and line.product_id:
+                line.tax_ids = tax
+
     def _tectora_mirrorable(self):
         """Lines the roof project should know about: real product lines of an
         open quotation with a roof project, other than the measurement lines."""
