@@ -62,10 +62,15 @@ class SaleOrderLine(models.Model):
     def unlink(self):
         """Removing a chapter line from the quotation removes it from the roof
         project too (measurement lines come back from the drawing)."""
+        roof_lines = self.env["tectora.roof.section.product"]
         if not self.env.context.get("tectora_sync"):
             roof_lines = self._tectora_mirrorable().roof_line_id.filtered(
                 "project_direct_id"
             )
-            if roof_lines:
-                roof_lines.with_context(tectora_sync=True).unlink()
-        return super().unlink()
+        result = super().unlink()
+        # After the order lines are gone: a roof line's own unlink removes
+        # its order lines, which would take these out from under us.
+        roof_lines = roof_lines.exists()
+        if roof_lines:
+            roof_lines.with_context(tectora_sync=True).unlink()
+        return result

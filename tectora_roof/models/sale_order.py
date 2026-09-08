@@ -279,16 +279,23 @@ class SaleOrder(models.Model):
         """Order lines -> roof project.
 
         A product line without a roof counterpart becomes a project-level
-        (chapter) line of the roof project, measured by its unit: m² lines
-        take the roof area, m lines the perimeter, counted lines the quantity
-        of the order. A line that already has its counterpart pushes an
-        edited count onto it; for measured lines the roof project decides, so
-        the order quantity is put back.
+        (chapter) line of the roof project, measured by its unit (m² ->
+        surface, m -> edges, else counted) and starting with the quantity of
+        the order; the drawing takes over the measured ones as soon as it
+        changes.
+
+        ``lines`` given means the user just edited those order lines: their
+        quantity is pushed onto the roof line whatever its coverage, the way a
+        quantity typed on the roof project is pushed onto the order. Without
+        ``lines`` (aligning a whole order) counted lines follow the order and
+        measured lines follow the roof project, so the order quantity is put
+        back.
         """
         self.ensure_one()
         roof = self.roof_project_id
         if not roof or self.state not in ("draft", "sent"):
             return
+        order_is_master = lines is not None
         RoofLine = self.env["tectora.roof.section.product"].with_context(
             tectora_sync=True
         )
@@ -318,14 +325,15 @@ class SaleOrder(models.Model):
                     roof_line = self.env["tectora.roof.section.product"]
                 if not roof_line:
                     coverage = RoofLine._coverage_from_product(line.product_id)
-                    values = {
+                    # The order's quantity is kept, also on a measured line:
+                    # without it a roof project without drawing would zero
+                    # the line. The drawing overrides it when it changes.
+                    roof_line = RoofLine.create({
                         "project_direct_id": roof.id,
                         "product_id": line.product_id.id,
                         "coverage": coverage,
-                    }
-                    if coverage == "general":
-                        values["quantity"] = line.product_uom_qty
-                    roof_line = RoofLine.create(values)
+                        "quantity": line.product_uom_qty,
+                    })
                     direct_by_product[line.product_id] = roof_line
                 line.with_context(tectora_sync=True).write(
                     {"roof_line_id": roof_line.id}
@@ -337,9 +345,11 @@ class SaleOrder(models.Model):
                         "coverage": RoofLine._coverage_from_product(line.product_id),
                     }
                 )
-            # Quantities: counted chapter lines follow the order, measured
-            # lines follow the roof project.
-            if roof_line.project_direct_id and roof_line.coverage == "general":
+            # Quantities: an edited order line wins; otherwise counted chapter
+            # lines follow the order and measured lines the roof project.
+            if order_is_master or (
+                roof_line.project_direct_id and roof_line.coverage == "general"
+            ):
                 if roof_line._quantity_differs(line.product_uom_qty):
                     roof_line.with_context(tectora_sync=True).write(
                         {"quantity": line.product_uom_qty}

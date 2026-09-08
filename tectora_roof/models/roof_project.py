@@ -370,7 +370,7 @@ class TectoraRoofProject(models.Model):
     )
     estimated_total = fields.Monetary(
         string="Geschat totaal (excl. btw)",
-        compute="_compute_totals",
+        compute="_compute_estimated_total",
         store=True,
         currency_field="currency_id",
     )
@@ -670,18 +670,26 @@ class TectoraRoofProject(models.Model):
             project.section_count = len(project.section_ids)
             project.roof_object_count = len(project.roof_object_ids)
 
-    @api.depends(
-        "section_ids.area",
-        "section_ids.perimeter",
-        "section_ids.product_line_ids.price_subtotal",
-        "roof_object_ids.product_line_ids.price_subtotal",
-        "direct_line_ids.price_subtotal",
-    )
+    @api.depends("section_ids.area", "section_ids.perimeter")
     def _compute_totals(self):
+        """Area and perimeter of the roof. Kept apart from the estimated total
+        on purpose: the measured quantities of the product lines follow these
+        two, so they must only be marked as changed when the drawing changes
+        -- not whenever a quantity (and with it a subtotal) is edited, or
+        every other edited quantity would snap back to the measurement."""
         for project in self:
             sections = project.section_ids
             project.total_area = sum(sections.mapped("area"))
             project.total_perimeter = sum(sections.mapped("perimeter"))
+
+    @api.depends(
+        "section_ids.product_line_ids.price_subtotal",
+        "roof_object_ids.product_line_ids.price_subtotal",
+        "direct_line_ids.price_subtotal",
+    )
+    def _compute_estimated_total(self):
+        for project in self:
+            sections = project.section_ids
             project.estimated_total = sum(
                 sections.product_line_ids.mapped("price_subtotal")
             ) + sum(
