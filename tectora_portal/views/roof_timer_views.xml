@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_timer_list" model="ir.ui.view">
+        <field name="name">tectora.roof.timer.list</field>
+        <field name="model">tectora.roof.timer</field>
+        <field name="arch" type="xml">
+            <list string="Urenregistraties" decoration-success="state == 'running'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="start_datetime"/>
+                <field name="end_datetime"/>
+                <field name="duration_hours" widget="float_time" sum="Totaal"/>
+                <field name="project_id"/>
+                <field name="partner_id" optional="show"/>
+                <field name="address" optional="hide"/>
+                <field name="employee_ids" widget="many2many_avatar_employee"/>
+                <field name="timesheet_hours" widget="float_time" sum="Geboekt" optional="show"/>
+                <field name="started_by_id" optional="hide"/>
+                <field name="stopped_by_id" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'running'"
+                       decoration-info="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_timer_form" model="ir.ui.view">
+        <field name="name">tectora.roof.timer.form</field>
+        <field name="model">tectora.roof.timer</field>
+        <field name="arch" type="xml">
+            <form string="Urenregistratie">
+                <header>
+                    <button name="action_stop" type="object" string="Stoppen en uren boeken"
+                            class="btn-primary" invisible="state != 'running'"
+                            help="Stopt de registratie nu en boekt één urenstaatlijn per aanwezige medewerker."/>
+                    <button name="action_cancel" type="object" string="Annuleren"
+                            invisible="state == 'cancelled'"
+                            confirm="De registratie wordt geannuleerd en haar urenstaatlijnen worden verwijderd. Doorgaan?"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_timesheets" type="object" class="oe_stat_button"
+                                icon="fa-clock-o" invisible="not timesheet_count">
+                            <field name="timesheet_count" widget="statinfo" string="Urenstaatlijnen"/>
+                        </button>
+                        <button name="action_open_roof_project" type="object" class="oe_stat_button"
+                                icon="fa-home" string="Dakproject"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Werf">
+                            <field name="project_id" readonly="state != 'running'"/>
+                            <field name="partner_id"/>
+                            <field name="address"/>
+                            <field name="dossier_project_id"/>
+                            <field name="planning_id"/>
+                        </group>
+                        <group string="Tijd">
+                            <field name="start_datetime"/>
+                            <field name="end_datetime"/>
+                            <field name="duration_hours" widget="float_time"/>
+                            <field name="timesheet_hours" widget="float_time"/>
+                            <field name="started_by_id"/>
+                            <field name="stopped_by_id"/>
+                        </group>
+                    </group>
+                    <group string="Aanwezige medewerkers">
+                        <field name="employee_ids" nolabel="1" widget="many2many_tags"
+                               options="{'no_create': True}"/>
+                    </group>
+                    <group string="Werknota">
+                        <field name="notes" nolabel="1" placeholder="Nota bij het starten of stoppen…"/>
+                    </group>
+                    <notebook>
+                        <page string="Urenstaatlijnen" name="timesheets">
+                            <field name="timesheet_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="employee_id"/>
+                                    <field name="name"/>
+                                    <field name="unit_amount" widget="float_time" sum="Totaal"/>
+                                    <field name="amount" sum="Loonkost" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_timer_search" model="ir.ui.view">
+        <field name="name">tectora.roof.timer.search</field>
+        <field name="model">tectora.roof.timer</field>
+        <field name="arch" type="xml">
+            <search string="Urenregistraties">
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="employee_ids"/>
+                <filter name="running" string="Lopend" domain="[('state', '=', 'running')]"/>
+                <filter name="done" string="Gestopt" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter name="today" string="Vandaag" date="start_datetime"/>
+                <group expand="0" string="Groeperen">
+                    <filter name="group_project" string="Dakproject" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_day" string="Dag" context="{'group_by': 'start_datetime:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_timer" model="ir.actions.act_window">
+        <field name="name">Urenregistraties</field>
+        <field name="res_model">tectora.roof.timer</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen urenregistraties</p>
+            <p>
+                De dakwerkers starten en stoppen hun uren op een werf via het
+                medewerkersportaal (Mijn werven). Elke registratie boekt bij het
+                stoppen één urenstaatlijn per aanwezige medewerker op het project.
+            </p>
+        </field>
+    </record>
+
+</odoo>
