@@ -105,7 +105,7 @@
                 <filter name="finished" string="Afgewerkt" domain="[('progress', '=', 'finished')]"/>
                 <separator/>
                 <filter name="date" string="Datum" date="date"/>
-                <group expand="0" string="Groeperen">
+                <group>
                     <filter name="group_project" string="Dakproject" context="{'group_by': 'project_id'}"/>
                     <filter name="group_employee" string="Opgesteld door" context="{'group_by': 'employee_id'}"/>
                     <filter name="group_date" string="Datum" context="{'group_by': 'date:day'}"/>

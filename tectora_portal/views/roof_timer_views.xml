@@ -104,7 +104,7 @@
                 <filter name="done" string="Gestopt" domain="[('state', '=', 'done')]"/>
                 <separator/>
                 <filter name="today" string="Vandaag" date="start_datetime"/>
-                <group expand="0" string="Groeperen">
+                <group>
                     <filter name="group_project" string="Dakproject" context="{'group_by': 'project_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_day" string="Dag" context="{'group_by': 'start_datetime:day'}"/>
