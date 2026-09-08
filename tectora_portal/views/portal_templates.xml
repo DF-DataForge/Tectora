@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================ home -->
+    <template id="portal_my_home_tectora" name="Portaal: Mijn werven"
+              inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_service_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_service_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/tectora_portal/static/description/icon.png'"/>
+                <t t-set="title">Mijn werven</t>
+                <t t-set="text">Je werven met planning, materialen, dakplan en urenregistratie</t>
+                <t t-set="url" t-value="'/my/werven'"/>
+                <t t-set="placeholder_count" t-value="'tectora_site_count'"/>
+                <t t-set="config_card" t-value="tectora_employee"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_breadcrumbs_tectora" name="Portaal: kruimelpad werven"
+              inherit_id="portal.portal_breadcrumbs" priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'tectora_sites'" class="breadcrumb-item active">Mijn werven</li>
+            <li t-if="page_name == 'tectora_site'" class="breadcrumb-item">
+                <a href="/my/werven">Mijn werven</a>
+            </li>
+            <li t-if="page_name == 'tectora_site' and site" class="breadcrumb-item active">
+                <t t-out="site.code or ''"/>
+                <t t-if="site.code and site.name"> — </t>
+                <t t-out="site.name or ''"/>
+            </li>
+        </xpath>
+    </template>
+
+    <!-- ========================================================= no employee -->
+    <template id="portal_no_employee" name="Portaal: geen medewerkersfiche">
+        <t t-call="portal.portal_layout">
+            <div class="o_tectora_portal">
+                <h3 class="mb-3">Mijn werven</h3>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Er is geen medewerkersfiche gekoppeld aan deze login.</strong><br/>
+                    De werven worden getoond aan de medewerkers die erop ingepland zijn.
+                    Vraag de planning om je login (<t t-out="user_id.login"/>) aan je
+                    medewerkersfiche te koppelen.
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================ list -->
+    <template id="portal_my_sites" name="Portaal: Mijn werven">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <div class="o_tectora_portal">
+                <t t-call="portal.portal_searchbar">
+                    <t t-set="title">Mijn werven</t>
+                </t>
+                <t t-if="not projects">
+                    <div class="alert alert-info" role="status">
+                        <t t-if="filterby == 'today'">Vandaag staat er geen werf voor je ingepland.</t>
+                        <t t-elif="filterby == 'running'">Er loopt nergens een urenregistratie.</t>
+                        <t t-elif="search">Geen werf gevonden voor "<t t-out="search"/>".</t>
+                        <t t-else="">Er zijn nog geen werven waarop je ingepland bent.</t>
+                    </div>
+                </t>
+                <t t-else="" t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>Werf</th>
+                            <th class="d-none d-md-table-cell">Werfadres</th>
+                            <th>Volgende werkdag</th>
+                            <th class="d-none d-lg-table-cell">Ploeg</th>
+                            <th class="text-end">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="projects" t-as="site" class="o_tectora_site_row">
+                            <t t-set="next_block" t-value="next_blocks.get(site.id)"/>
+                            <td>
+                                <a t-attf-href="/my/werven/#{site.id}" class="fw-bold text-decoration-none">
+                                    <t t-out="site.code or ''"/>
+                                    <t t-if="site.code and site.name"> — </t>
+                                    <t t-out="site.name or ''"/>
+                                </a>
+                                <div class="small text-muted" t-if="site.partner_id">
+                                    <i class="fa fa-user me-1" title="Klant"/><t t-out="site.partner_id.name"/>
+                                </div>
+                                <div class="small text-muted d-md-none" t-if="site.address">
+                                    <i class="fa fa-map-marker me-1" title="Werfadres"/><t t-out="site.address"/>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <t t-out="site.address or '—'"/>
+                            </td>
+                            <td>
+                                <t t-if="next_block">
+                                    <span t-field="next_block.start_datetime"
+                                          t-options='{"widget": "datetime", "format": "EEE d MMM HH:mm"}'/>
+                                    <div class="small text-muted">
+                                        tot <span t-field="next_block.end_datetime"
+                                                  t-options='{"widget": "datetime", "format": "EEE d MMM HH:mm"}'/>
+                                        · <t t-out="len(next_block.employee_ids)"/> pers.
+                                    </div>
+                                </t>
+                                <span t-else="" class="text-muted">Niet ingepland</span>
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                <t t-out="site.team_id.name or '—'"/>
+                            </td>
+                            <td class="text-end">
+                                <span t-if="site.running_timer_id"
+                                      class="badge rounded-pill text-bg-success me-1" title="Er loopt een urenregistratie">
+                                    <i class="fa fa-clock-o me-1"/>Uren lopen
+                                </span>
+                                <span class="badge rounded-pill text-bg-light border" t-field="site.state"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================ site -->
+    <template id="portal_site_page" name="Portaal: werf">
+        <t t-call="portal.portal_layout">
+            <div class="o_tectora_portal">
+                <div t-if="message" class="alert alert-success alert-dismissible" role="status">
+                    <t t-out="message"/>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Sluiten"/>
+                </div>
+                <div t-if="error" class="alert alert-danger alert-dismissible" role="alert">
+                    <t t-out="error"/>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Sluiten"/>
+                </div>
+
+                <!-- header -->
+                <div class="card o_tectora_site_header mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-8">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                    <h3 class="mb-0">
+                                        <t t-out="site.code or ''"/>
+                                        <t t-if="site.code and site.name"> — </t>
+                                        <t t-out="site.name or ''"/>
+                                    </h3>
+                                    <span class="badge rounded-pill text-bg-light border" t-field="site.state"/>
+                                    <span t-if="site.project_type" class="badge rounded-pill text-bg-secondary"
+                                          t-field="site.project_type"/>
+                                </div>
+                                <div t-if="site.partner_id" class="mb-1">
+                                    <i class="fa fa-fw fa-user text-muted me-1" title="Klant"/>
+                                    <t t-out="site.partner_id.name"/>
+                                </div>
+                                <div t-if="site.address" class="mb-1">
+                                    <i class="fa fa-fw fa-map-marker text-muted me-1" title="Werfadres"/>
+                                    <a t-att-href="maps_url"
+                                       target="_blank" rel="noopener" class="text-decoration-none">
+                                        <t t-out="site.address"/>
+                                        <i class="fa fa-external-link small ms-1"/>
+                                    </a>
+                                </div>
+                                <div class="text-muted small">
+                                    <t t-if="next_block">
+                                        <i class="fa fa-fw fa-calendar me-1"/>
+                                        Volgende werkdag:
+                                        <span t-field="next_block.start_datetime"
+                                              t-options='{"widget": "datetime", "format": "EEEE d MMMM HH:mm"}'/>
+                                        – <span t-field="next_block.end_datetime"
+                                                t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                                    </t>
+                                    <t t-else="">
+                                        <i class="fa fa-fw fa-calendar-o me-1"/>Geen werkdag ingepland.
+                                    </t>
+                                    <t t-if="site.team_id">
+                                        · <i class="fa fa-fw fa-users me-1"/><t t-out="site.team_id.name"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-4">
+                                <t t-call="tectora_portal.portal_site_timer_card"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- tabs -->
+                <ul class="nav nav-tabs o_tectora_tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a t-attf-class="nav-link #{'active' if tab == 'overview' else ''}" data-bs-toggle="tab"
+                           data-tab="overview" href="#tab-overview" role="tab">
+                            <i class="fa fa-info-circle me-1"/>Overzicht
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a t-attf-class="nav-link #{'active' if tab == 'materials' else ''}" data-bs-toggle="tab"
+                           data-tab="materials" href="#tab-materials" role="tab">
+                            <i class="fa fa-cubes me-1"/>Materialen
+                            <span class="badge rounded-pill text-bg-light border ms-1" t-out="len(materials)"/>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a t-attf-class="nav-link #{'active' if tab == 'plan' else ''}" data-bs-toggle="tab"
+                           data-tab="plan" href="#tab-plan" role="tab">
+                            <i class="fa fa-map-o me-1"/>Plan
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a t-attf-class="nav-link #{'active' if tab == 'report' else ''}" data-bs-toggle="tab"
+                           data-tab="report" href="#tab-report" role="tab">
+                            <i class="fa fa-file-text-o me-1"/>Uitvoeringsverslag
+                            <span class="badge rounded-pill text-bg-light border ms-1" t-out="len(reports)"/>
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'overview' else ''}" id="tab-overview" role="tabpanel">
+                        <t t-call="tectora_portal.portal_site_tab_overview"/>
+                    </div>
+                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'materials' else ''}" id="tab-materials" role="tabpanel">
+                        <t t-call="tectora_portal.portal_site_tab_materials"/>
+                    </div>
+                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'plan' else ''}" id="tab-plan" role="tabpanel">
+                        <t t-call="tectora_portal.portal_site_tab_plan"/>
+                    </div>
+                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'report' else ''}" id="tab-report" role="tabpanel">
+                        <t t-call="tectora_portal.portal_site_tab_report"/>
+                    </div>
+                </div>
+
+                <t t-if="running_timer" t-call="tectora_portal.portal_site_stop_modal"/>
+            </div>
+        </t>
+    </template>
+
+    <!-- ========================================================== timer card -->
+    <template id="portal_site_timer_card" name="Portaal: urenregistratie start/stop">
+        <div t-attf-class="card o_tectora_timer_card h-100 #{'o_tectora_running' if running_timer else ''}">
+            <div class="card-body d-flex flex-column">
+                <t t-if="running_timer">
+                    <div class="small text-uppercase text-success fw-bold">
+                        <i class="fa fa-circle me-1 small"/>Uren lopen
+                    </div>
+                    <div class="o_tectora_elapsed my-2"
+                         t-att-data-start="running_timer.start_datetime.isoformat() + 'Z'"
+                         t-out="running_timer._elapsed_display()"/>
+                    <div class="small text-muted mb-2">
+                        Gestart om <span t-field="running_timer.start_datetime"
+                                         t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                        <t t-if="running_timer.started_by_id"> door <t t-out="running_timer.started_by_id.name"/></t>
+                        <br/>
+                        Voor: <t t-out="', '.join(running_timer.employee_ids.mapped('name')) or '—'"/>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-lg o_tectora_btn_timer mt-auto"
+                            data-bs-toggle="modal" data-bs-target="#tectoraStopModal">
+                        <i class="fa fa-stop me-1"/>Stop
+                    </button>
+                </t>
+                <t t-else="">
+                    <div class="small text-uppercase text-muted fw-bold">Urenregistratie</div>
+                    <div class="small text-muted my-2">
+                        <t t-if="today_employees">
+                            De uren worden geboekt voor de ploeg van vandaag:
+                            <strong t-out="', '.join(today_employees.mapped('name'))"/>.
+                            Bij het stoppen bevestig je wie aanwezig was.
+                        </t>
+                        <t t-else="">
+                            Er is niemand ingepland op deze werf; de uren worden op jouw naam geboekt.
+                        </t>
+                    </div>
+                    <form method="post" t-attf-action="/my/werven/#{site.id}/uren/start" class="mt-auto">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
+                        <button type="submit" class="btn btn-success btn-lg o_tectora_btn_timer w-100">
+                            <i class="fa fa-play me-1"/>Start
+                        </button>
+                    </form>
+                </t>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========================================================== stop modal -->
+    <template id="portal_site_stop_modal" name="Portaal: uren stoppen">
+        <div class="modal fade" id="tectoraStopModal" tabindex="-1" aria-labelledby="tectoraStopModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" class="modal-content o_tectora_stop_form"
+                      t-attf-action="/my/werven/#{site.id}/uren/#{running_timer.id}/stop">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tectoraStopModalLabel">Uren stoppen en boeken</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"/>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">
+                            Gestart om <span t-field="running_timer.start_datetime"
+                                             t-options='{"widget": "datetime", "format": "EEEE d MMMM HH:mm"}'/>,
+                            tot nu <strong class="o_tectora_elapsed fs-6"
+                                           t-att-data-start="running_timer.start_datetime.isoformat() + 'Z'"
+                                           t-out="running_timer._elapsed_display()"/>.
+                        </p>
+                        <label class="form-label fw-bold">Wie was aanwezig?</label>
+                        <div class="o_tectora_stop_warning alert alert-warning py-1 px-2 small d-none">
+                            Kies minstens één medewerker.
+                        </div>
+                        <div t-foreach="stop_employees" t-as="present" class="form-check">
+                            <input class="form-check-input" type="checkbox" name="employee_ids"
+                                   t-att-value="present.id" t-attf-id="tectora_present_#{present.id}"
+                                   t-att-checked="'checked' if present in running_timer.employee_ids or not running_timer.employee_ids else None"/>
+                            <label class="form-check-label" t-attf-for="tectora_present_#{present.id}">
+                                <t t-out="present.name"/>
+                                <span t-if="present == employee" class="text-muted small">(ik)</span>
+                            </label>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label" for="tectora_stop_notes">Nota (optioneel)</label>
+                            <textarea class="form-control" id="tectora_stop_notes" name="notes" rows="2"
+                                      placeholder="Bv. vroeger gestopt door regen"/>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa fa-stop me-1"/>Stoppen en uren boeken
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- ============================================================ overview -->
+    <template id="portal_site_tab_overview" name="Portaal: werf overzicht">
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header fw-bold"><i class="fa fa-home me-2 text-muted"/>Werf</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr><th class="text-muted fw-normal w-25">Klant</th>
+                                <td t-out="site.partner_id.name or '—'"/></tr>
+                            <tr><th class="text-muted fw-normal">Werfadres</th>
+                                <td t-out="site.address or '—'"/></tr>
+                            <tr><th class="text-muted fw-normal">Projecttype</th>
+                                <td><span t-field="site.project_type"/></td></tr>
+                            <tr><th class="text-muted fw-normal">Status</th>
+                                <td><span t-field="site.state"/></td></tr>
+                            <tr t-if="site.date_deadline"><th class="text-muted fw-normal">Deadline</th>
+                                <td><span t-field="site.date_deadline"/></td></tr>
+                            <tr t-if="site.site_contact_id"><th class="text-muted fw-normal">Contact werf</th>
+                                <td>
+                                    <t t-out="site.site_contact_id.name"/>
+                                    <a t-if="site.site_contact_phone" t-attf-href="tel:#{site.site_contact_phone}"
+                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.site_contact_phone"/></a>
+                                </td></tr>
+                            <tr t-if="site.project_manager_id"><th class="text-muted fw-normal">Projectleider</th>
+                                <td>
+                                    <t t-out="site.project_manager_id.name"/>
+                                    <a t-if="site.project_manager_phone" t-attf-href="tel:#{site.project_manager_phone}"
+                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.project_manager_phone"/></a>
+                                </td></tr>
+                        </table>
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/werfblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="fa fa-file-pdf-o me-1"/>Werfblad (pdf)
+                            </a>
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header fw-bold"><i class="fa fa-users me-2 text-muted"/>Ploeg en planning</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr><th class="text-muted fw-normal w-25">Ploeg</th>
+                                <td>
+                                    <t t-out="site.team_id.name or '—'"/>
+                                    <span t-if="site.team_id.leader_id" class="text-muted small">
+                                        · ploegbaas <t t-out="site.team_id.leader_id.name"/>
+                                    </span>
+                                </td></tr>
+                            <tr><th class="text-muted fw-normal">Gepland</th>
+                                <td>
+                                    <t t-if="site.planned_date_begin">
+                                        <span t-field="site.planned_date_begin" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
+                                        <t t-if="site.planned_date_end">
+                                            – <span t-field="site.planned_date_end" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
+                                        </t>
+                                    </t>
+                                    <t t-else="">—</t>
+                                </td></tr>
+                            <tr><th class="text-muted fw-normal">Werkdagen</th>
+                                <td><t t-out="len(blocks)"/></td></tr>
+                            <tr><th class="text-muted fw-normal">Medewerkers</th>
+                                <td>
+                                    <span t-foreach="planned_employees" t-as="planned"
+                                          t-attf-class="badge rounded-pill me-1 mb-1 #{'text-bg-primary' if planned == employee else 'text-bg-light border'}"
+                                          t-out="planned.name"/>
+                                    <t t-if="not planned_employees">—</t>
+                                </td></tr>
+                        </table>
+                        <t t-set="instructions" t-value="[note for note in blocks.mapped('notes') if note]"/>
+                        <div t-if="instructions" class="mt-3">
+                            <div class="fw-bold small text-uppercase text-muted">Werfinstructies</div>
+                            <div t-foreach="instructions" t-as="note" class="o_tectora_report_text" t-out="note"/>
+                        </div>
+                        <div t-if="site.description" class="mt-3">
+                            <div class="fw-bold small text-uppercase text-muted">Notities</div>
+                            <div class="o_tectora_report_text" t-out="site.description"/>
+                        </div>
+                        <div t-if="site.other_works" class="mt-3">
+                            <div class="fw-bold small text-uppercase text-muted">Andere werken / extra's</div>
+                            <div class="o_tectora_report_text" t-out="site.other_works"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- the site sheet (werfblad) -->
+            <div class="col-12">
+                <h5 class="mt-2 mb-2"><i class="fa fa-clipboard me-2 text-muted"/>Werfblad</h5>
+            </div>
+            <t t-foreach="info_sheet" t-as="column">
+                <div class="col-12 col-lg-6">
+                    <div t-foreach="column" t-as="card" class="card o_tectora_sheet_card mb-3">
+                        <div class="card-header py-1 fw-bold" t-out="card[0]"/>
+                        <table class="table table-sm mb-0">
+                            <tr t-foreach="card[1]" t-as="row">
+                                <td t-out="row[0]"/>
+                                <td class="text-end">
+                                    <t t-if="row[1] == 'bool'">
+                                        <span t-if="row[2]" class="badge text-bg-success">Ja</span>
+                                        <span t-else="" class="badge text-bg-light border">Nee</span>
+                                    </t>
+                                    <t t-elif="row[1] == 'note'">
+                                        <span class="o_tectora_report_text text-start d-block" t-out="row[2]"/>
+                                    </t>
+                                    <t t-else=""><t t-out="row[2]"/></t>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </t>
+            <div class="col-12" t-if="site.epdm_sheet_ids or site.epdm_thickness">
+                <div class="card o_tectora_sheet_card mb-3">
+                    <div class="card-header py-1 fw-bold">EPDM</div>
+                    <div class="card-body py-2">
+                        <span t-if="site.epdm_thickness">Dikte <t t-out="'%.2f' % site.epdm_thickness"/> mm · </span>
+                        <t t-out="site.epdm_sheet_count"/> doek(en),
+                        <t t-out="'%.2f' % site.epdm_total_area"/> m² in totaal
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- =========================================================== materials -->
+    <template id="portal_site_tab_materials" name="Portaal: werf materialen">
+        <t t-if="not materials">
+            <div class="alert alert-info" role="status">
+                Er staat nog geen materiaallijst op deze werf: ze wordt opgebouwd bij het
+                bevestigen van de order.
+            </div>
+        </t>
+        <t t-else="">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Materiaal</th>
+                            <th class="text-end">Hoeveelheid</th>
+                            <th>Eenheid</th>
+                            <th class="d-none d-md-table-cell">Uit</th>
+                            <th class="d-none d-md-table-cell">Notities</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="materials" t-as="line">
+                            <td>
+                                <t t-out="line.product_id.display_name"/>
+                            </td>
+                            <td class="text-end fw-bold">
+                                <span t-field="line.quantity"/>
+                            </td>
+                            <td t-out="line.product_uom_id.name or line.product_id.uom_id.name or ''"/>
+                            <td class="d-none d-md-table-cell text-muted small">
+                                <t t-if="line.bom_name"><t t-out="line.bom_name"/></t>
+                                <t t-elif="line.source_product_id and line.source_product_id != line.product_id">
+                                    <t t-out="line.source_product_id.display_name"/>
+                                </t>
+                            </td>
+                            <td class="d-none d-md-table-cell text-muted small" t-out="line.notes or ''"/>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th><t t-out="len(materials)"/> materialen</th>
+                            <th colspan="4"/>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================ plan -->
+    <template id="portal_site_tab_plan" name="Portaal: werf plan">
+        <div class="row g-3">
+            <div class="col-12 col-xl-8">
+                <div class="card">
+                    <div class="card-header fw-bold"><i class="fa fa-map-o me-2 text-muted"/>Dakplan</div>
+                    <div class="card-body">
+                        <div class="row g-2 mb-3 text-center">
+                            <div class="col-6 col-md-3">
+                                <div class="o_tectora_kpi"><t t-out="'%.0f' % site.total_area"/> m²</div>
+                                <div class="small text-muted">Dakoppervlakte</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="o_tectora_kpi"><t t-out="'%.0f' % site.total_perimeter"/> m</div>
+                                <div class="small text-muted">Omtrek</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="o_tectora_kpi" t-out="len(sections)"/>
+                                <div class="small text-muted">Daksecties</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="o_tectora_kpi" t-out="len(roof_objects)"/>
+                                <div class="small text-muted">Dakobjecten</div>
+                            </div>
+                        </div>
+                        <div t-if="drawing_src" class="text-center">
+                            <img class="o_tectora_drawing w-100" t-att-src="drawing_src" alt="Dakplan"/>
+                        </div>
+                        <div t-else="" class="text-muted text-center py-4">
+                            Er is nog geen tekening van dit dak.
+                        </div>
+                        <div class="table-responsive mt-3" t-if="sections or roof_objects">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Onderdeel</th>
+                                        <th class="text-end">Breedte (m)</th>
+                                        <th class="text-end">Lengte (m)</th>
+                                        <th class="text-end">Opp. (m²)</th>
+                                        <th class="text-end">Omtrek (m)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="sections" t-as="section">
+                                        <td t-out="section.name"/>
+                                        <td class="text-end" t-out="'%.2f' % section.width"/>
+                                        <td class="text-end" t-out="'%.2f' % section.length"/>
+                                        <td class="text-end" t-out="'%.2f' % section.area"/>
+                                        <td class="text-end" t-out="'%.2f' % section.perimeter"/>
+                                    </tr>
+                                    <tr t-foreach="roof_objects" t-as="roof_object" class="text-muted">
+                                        <td>
+                                            <t t-out="roof_object.name"/>
+                                            <span class="small">(<span t-field="roof_object.object_type"/>)</span>
+                                        </td>
+                                        <td class="text-end" t-out="'%.2f' % roof_object.width"/>
+                                        <td class="text-end" t-out="'%.2f' % roof_object.length"/>
+                                        <td class="text-end" t-out="'%.2f' % roof_object.area"/>
+                                        <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card">
+                    <div class="card-header fw-bold"><i class="fa fa-calendar me-2 text-muted"/>Werkdagen</div>
+                    <div class="list-group list-group-flush" t-if="blocks">
+                        <div t-foreach="blocks" t-as="block"
+                             t-attf-class="list-group-item #{'text-muted' if block.state == 'done' else ''} #{'border-start border-3 border-primary' if block == next_block else ''}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong t-field="block.start_datetime"
+                                            t-options='{"widget": "datetime", "format": "EEE d MMM yyyy"}'/>
+                                    <div class="small">
+                                        <span t-field="block.start_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                                        – <span t-field="block.end_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                                        <t t-if="block.end_datetime.date() != block.start_datetime.date()">
+                                            (tot <span t-field="block.end_datetime" t-options='{"widget": "datetime", "format": "EEE d MMM"}'/>)
+                                        </t>
+                                        · <span t-field="block.duration_hours" t-options='{"widget": "float_time"}'/> u
+                                    </div>
+                                </div>
+                                <span t-attf-class="badge rounded-pill #{'text-bg-success' if block.state == 'published' else 'text-bg-light border'}"
+                                      t-field="block.state"/>
+                            </div>
+                            <div class="small mt-1">
+                                <span t-if="block.team_id" class="text-muted me-1"><t t-out="block.team_id.name"/>:</span>
+                                <span t-foreach="block.employee_ids" t-as="member"
+                                      t-attf-class="badge rounded-pill me-1 #{'text-bg-primary' if member == employee else 'text-bg-light border'}"
+                                      t-out="member.name"/>
+                            </div>
+                            <div t-if="block.notes" class="small o_tectora_report_text mt-1" t-out="block.notes"/>
+                        </div>
+                    </div>
+                    <div t-else="" class="card-body text-muted">Nog geen werkdagen ingepland.</div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ============================================================== report -->
+    <template id="portal_site_tab_report" name="Portaal: uitvoeringsverslag">
+        <div class="row g-3">
+            <div class="col-12 col-xl-7">
+                <!-- new report -->
+                <div class="card mb-3">
+                    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                        <span><i class="fa fa-pencil me-2 text-muted"/>Nieuw verslag</span>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#tectoraReportForm" aria-expanded="false" aria-controls="tectoraReportForm">
+                            Tonen / verbergen
+                        </button>
+                    </div>
+                    <div t-attf-class="collapse #{'show' if not reports else ''}" id="tectoraReportForm">
+                        <form method="post" enctype="multipart/form-data" class="card-body"
+                              t-attf-action="/my/werven/#{site.id}/verslag">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label" for="tectora_report_date">Datum</label>
+                                    <input type="date" class="form-control" id="tectora_report_date" name="date"
+                                           t-att-value="today.isoformat()" required="required"/>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label" for="tectora_report_progress">Stand van zaken</label>
+                                    <select class="form-select" id="tectora_report_progress" name="progress">
+                                        <option value="started">Gestart</option>
+                                        <option value="in_progress" selected="selected">In uitvoering</option>
+                                        <option value="finished">Afgewerkt</option>
+                                        <option value="blocked">Geblokkeerd</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="tectora_report_work_done">Uitgevoerde werken <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="tectora_report_work_done" name="work_done" rows="3"
+                                              required="required" placeholder="Wat is er vandaag gedaan?"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="tectora_report_materials">Gebruikte materialen</label>
+                                    <textarea class="form-control" id="tectora_report_materials" name="materials_used" rows="2"
+                                              placeholder="Bv. 3 rollen EPDM 1,5 mm, 20 l lijm"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="tectora_report_remarks">Opmerkingen / problemen</label>
+                                    <textarea class="form-control" id="tectora_report_remarks" name="remarks" rows="2"
+                                              placeholder="Bv. ondergrond nat, extra afvoer nodig"/>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="tectora_report_photos">Foto's</label>
+                                    <input type="file" class="form-control" id="tectora_report_photos" name="photos"
+                                           accept="image/*" multiple="multiple" capture="environment"/>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-check me-1"/>Verslag opslaan
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- reports -->
+                <t t-if="not reports">
+                    <div class="text-muted">Nog geen uitvoeringsverslagen op deze werf.</div>
+                </t>
+                <div t-foreach="reports" t-as="report" class="card mb-3">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <strong t-field="report.date" t-options='{"widget": "date", "format": "EEEE d MMMM yyyy"}'/>
+                            <span class="text-muted small ms-2" t-if="report.employee_id">
+                                door <t t-out="report.employee_id.name"/>
+                            </span>
+                        </div>
+                        <span t-attf-class="badge rounded-pill #{'text-bg-success' if report.progress == 'finished' else 'text-bg-danger' if report.progress == 'blocked' else 'text-bg-info'}"
+                              t-out="report._progress_label()"/>
+                    </div>
+                    <div class="card-body">
+                        <div class="fw-bold small text-uppercase text-muted">Uitgevoerde werken</div>
+                        <div class="o_tectora_report_text mb-2" t-out="report.work_done"/>
+                        <div t-if="report.materials_used" class="mb-2">
+                            <div class="fw-bold small text-uppercase text-muted">Gebruikte materialen</div>
+                            <div class="o_tectora_report_text" t-out="report.materials_used"/>
+                        </div>
+                        <div t-if="report.remarks" class="mb-2">
+                            <div class="fw-bold small text-uppercase text-muted">Opmerkingen / problemen</div>
+                            <div class="o_tectora_report_text" t-out="report.remarks"/>
+                        </div>
+                        <div t-if="report.image_ids" class="d-flex flex-wrap gap-2 mt-2">
+                            <a t-foreach="report.image_ids" t-as="photo" target="_blank"
+                               t-attf-href="/my/werven/#{site.id}/foto/#{photo.id}">
+                                <img class="o_tectora_photo" t-att-alt="photo.name"
+                                     t-attf-src="/my/werven/#{site.id}/foto/#{photo.id}?width=256&amp;height=256"/>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- hours -->
+            <div class="col-12 col-xl-5">
+                <div class="card mb-3">
+                    <div class="card-header fw-bold"><i class="fa fa-clock-o me-2 text-muted"/>Uren op deze werf</div>
+                    <div class="card-body">
+                        <div class="row g-2 text-center mb-2">
+                            <div class="col-6">
+                                <div class="o_tectora_kpi">
+                                    <span t-field="site.portal_hours" t-options='{"widget": "float_time"}'/>
+                                </div>
+                                <div class="small text-muted">geboekt via het portaal (ploeg)</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="o_tectora_kpi">
+                                    <span t-out="my_hours_display"/>
+                                </div>
+                                <div class="small text-muted">mijn uren op deze werf</div>
+                            </div>
+                        </div>
+                        <t t-if="timers">
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Dag</th>
+                                            <th>Van – tot</th>
+                                            <th class="text-end">Uren</th>
+                                            <th>Wie</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="timers" t-as="timer"
+                                            t-attf-class="#{'table-success' if timer.state == 'running' else ''}">
+                                            <td><span t-field="timer.start_datetime" t-options='{"widget": "datetime", "format": "EEE d MMM"}'/></td>
+                                            <td>
+                                                <span t-field="timer.start_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                                                –
+                                                <t t-if="timer.end_datetime">
+                                                    <span t-field="timer.end_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                                                </t>
+                                                <span t-else="" class="text-success">loopt</span>
+                                            </td>
+                                            <td class="text-end" t-out="timer._elapsed_display()"/>
+                                            <td class="small">
+                                                <t t-out="', '.join(timer.employee_ids.mapped('name'))"/>
+                                                <span t-if="timer.notes" class="text-muted d-block" t-out="timer.notes"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                        <div t-else="" class="text-muted">Nog geen uren geregistreerd op deze werf.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</odoo>

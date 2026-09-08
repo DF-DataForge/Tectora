@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portal access is granted on the employee: one button creates the
+         portal user on the work contact and sends the invitation. -->
+    <record id="view_employee_form_inherit_tectora_portal" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.tectora.portal</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="tectora_portal_state" invisible="1"/>
+                <button name="action_tectora_grant_portal_access" type="object"
+                        class="oe_stat_button" icon="fa-globe"
+                        invisible="tectora_portal_state != 'none'"
+                        groups="hr.group_hr_user"
+                        confirm="Er wordt een portaallogin aangemaakt op het werk-e-mailadres van de medewerker en een uitnodiging verstuurd. Doorgaan?"
+                        string="Portaaltoegang geven"
+                        help="Maakt een portaalgebruiker (externe gebruiker) voor deze medewerker en stuurt de uitnodiging om een wachtwoord te kiezen. De medewerker vindt zijn werven daarna op /my/werven."/>
+                <button name="action_tectora_open_portal_user" type="object"
+                        class="oe_stat_button" icon="fa-globe"
+                        invisible="tectora_portal_state != 'portal'"
+                        groups="hr.group_hr_user">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text text-success">Portaal actief</span>
+                        <span class="o_stat_text">Medewerkersportaal</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_employee_tree_inherit_tectora_portal" model="ir.ui.view">
+        <field name="name">hr.employee.list.inherit.tectora.portal</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tectora_roof.view_employee_tree_inherit_tectora"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='roof_team_id']" position="after">
+                <field name="tectora_portal_access" optional="hide" widget="boolean_toggle" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_employee_filter_inherit_tectora_portal" model="ir.ui.view">
+        <field name="name">hr.employee.search.inherit.tectora.portal</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="tectora_roof.view_employee_filter_inherit_tectora"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_roof_team_leaders']" position="after">
+                <filter name="filter_tectora_portal" string="Met portaaltoegang"
+                        domain="[('user_id.share', '=', True), ('user_id.active', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

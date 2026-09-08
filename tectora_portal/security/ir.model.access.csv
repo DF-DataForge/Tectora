@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tectora_roof_timer_user,tectora.roof.timer user,model_tectora_roof_timer,base.group_user,1,0,0,0
+access_tectora_roof_timer_sales,tectora.roof.timer sales,model_tectora_roof_timer,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_timer_timesheet_approver,tectora.roof.timer timesheet approver,model_tectora_roof_timer,hr_timesheet.group_hr_timesheet_approver,1,1,1,1
+access_tectora_roof_execution_report_user,tectora.roof.execution.report user,model_tectora_roof_execution_report,base.group_user,1,0,0,0
+access_tectora_roof_execution_report_sales,tectora.roof.execution.report sales,model_tectora_roof_execution_report,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_roof_execution_report_project_user,tectora.roof.execution.report project user,model_tectora_roof_execution_report,project.group_project_user,1,1,1,1
