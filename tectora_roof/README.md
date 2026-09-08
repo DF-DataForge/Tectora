@@ -178,8 +178,13 @@ De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
   productcategorie.
 * **Hoeveelheden volgen de meting**: een m²-product neemt de dakoppervlakte,
   een m-product de omtrek (uit de tekening); getelde producten (stuks, forfait,
-  dagen) nemen het aantal van de offerte over en zijn op beide kanten te
-  wijzigen. Op een daksectie of dakobject volgt een oppervlakteproduct de
+  dagen) nemen het aantal van de offerte over. Elke hoeveelheid is op **beide
+  kanten** te wijzigen: wat je op het dakproject intikt komt op de offerte,
+  wat je op de offerte intikt komt op het dakproject — ook voor m² en m. Zo'n
+  ingevoerde hoeveelheid blijft staan (ook als je daarna andere lijnen
+  wijzigt) tot de tekening of de opgemeten oppervlakte/omtrek verandert; dan
+  neemt de meting het weer over. Een m²- of m-lijn die op een offerte
+  bijkomt, houdt de hoeveelheid van de offerte tot er een meting is. Op een daksectie of dakobject volgt een oppervlakteproduct de
   oppervlakte en een randproduct de omtrek van die vorm.
 * De **meetlijnen** (per daksectie en dakobject, uit het tekenen en de
   productkiezer) worden bij elke wijziging van de tekening herbouwd op de
