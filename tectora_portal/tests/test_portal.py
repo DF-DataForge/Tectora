@@ -16,15 +16,15 @@ class TectoraPortalCase(TransactionCase):
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True, tz="Europe/Brussels"))
         cls.company = cls.env.company
         cls.leader = cls.env["hr.employee"].create({
-            "name": "Piet Ploegbaas", "work_email": "piet.ploegbaas@example.com",
+            "name": "Piet Ploegbaas", "work_email": "piet.ploegbaas.test@example.com",
             "company_id": cls.company.id,
         })
         cls.mate = cls.env["hr.employee"].create({
-            "name": "Mia Maat", "work_email": "mia.maat@example.com",
+            "name": "Mia Maat", "work_email": "mia.maat.test@example.com",
             "company_id": cls.company.id,
         })
         cls.outsider = cls.env["hr.employee"].create({
-            "name": "Otto Outsider", "work_email": "otto@example.com",
+            "name": "Otto Outsider", "work_email": "otto.test@example.com",
             "company_id": cls.company.id,
         })
         cls.team = cls.env["tectora.roof.team"].create({
@@ -62,7 +62,7 @@ class TestPortalAccess(TectoraPortalCase):
     def test_grant_portal_access(self):
         self.assertTrue(self.portal_user)
         self.assertTrue(self.portal_user.share, "the employee gets an external (portal) user")
-        self.assertEqual(self.portal_user.login, "piet.ploegbaas@example.com")
+        self.assertEqual(self.portal_user.login, "piet.ploegbaas.test@example.com")
         self.assertEqual(self.portal_user.partner_id, self.leader.work_contact_id)
         self.assertEqual(self.leader.tectora_portal_state, "portal")
         self.assertTrue(self.leader.tectora_portal_access)

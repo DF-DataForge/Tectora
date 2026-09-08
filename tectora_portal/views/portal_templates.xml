@@ -26,10 +26,10 @@
             <li t-if="page_name == 'tectora_site'" class="breadcrumb-item">
                 <a href="/my/werven">Mijn werven</a>
             </li>
-            <li t-if="page_name == 'tectora_site' and project" class="breadcrumb-item active">
-                <t t-out="project.code or ''"/>
-                <t t-if="project.code and project.name"> — </t>
-                <t t-out="project.name or ''"/>
+            <li t-if="page_name == 'tectora_site' and site" class="breadcrumb-item active">
+                <t t-out="site.code or ''"/>
+                <t t-if="site.code and site.name"> — </t>
+                <t t-out="site.name or ''"/>
             </li>
         </xpath>
     </template>
@@ -76,23 +76,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr t-foreach="projects" t-as="project" class="o_tectora_site_row">
-                            <t t-set="next_block" t-value="next_blocks.get(project.id)"/>
+                        <tr t-foreach="projects" t-as="site" class="o_tectora_site_row">
+                            <t t-set="next_block" t-value="next_blocks.get(site.id)"/>
                             <td>
-                                <a t-attf-href="/my/werven/#{project.id}" class="fw-bold text-decoration-none">
-                                    <t t-out="project.code or ''"/>
-                                    <t t-if="project.code and project.name"> — </t>
-                                    <t t-out="project.name or ''"/>
+                                <a t-attf-href="/my/werven/#{site.id}" class="fw-bold text-decoration-none">
+                                    <t t-out="site.code or ''"/>
+                                    <t t-if="site.code and site.name"> — </t>
+                                    <t t-out="site.name or ''"/>
                                 </a>
-                                <div class="small text-muted" t-if="project.partner_id">
-                                    <i class="fa fa-user me-1" title="Klant"/><t t-out="project.partner_id.name"/>
+                                <div class="small text-muted" t-if="site.partner_id">
+                                    <i class="fa fa-user me-1" title="Klant"/><t t-out="site.partner_id.name"/>
                                 </div>
-                                <div class="small text-muted d-md-none" t-if="project.address">
-                                    <i class="fa fa-map-marker me-1" title="Werfadres"/><t t-out="project.address"/>
+                                <div class="small text-muted d-md-none" t-if="site.address">
+                                    <i class="fa fa-map-marker me-1" title="Werfadres"/><t t-out="site.address"/>
                                 </div>
                             </td>
                             <td class="d-none d-md-table-cell">
-                                <t t-out="project.address or '—'"/>
+                                <t t-out="site.address or '—'"/>
                             </td>
                             <td>
                                 <t t-if="next_block">
@@ -107,14 +107,14 @@
                                 <span t-else="" class="text-muted">Niet ingepland</span>
                             </td>
                             <td class="d-none d-lg-table-cell">
-                                <t t-out="project.team_id.name or '—'"/>
+                                <t t-out="site.team_id.name or '—'"/>
                             </td>
                             <td class="text-end">
-                                <span t-if="project.running_timer_id"
+                                <span t-if="site.running_timer_id"
                                       class="badge rounded-pill text-bg-success me-1" title="Er loopt een urenregistratie">
                                     <i class="fa fa-clock-o me-1"/>Uren lopen
                                 </span>
-                                <span class="badge rounded-pill text-bg-light border" t-field="project.state"/>
+                                <span class="badge rounded-pill text-bg-light border" t-field="site.state"/>
                             </td>
                         </tr>
                     </tbody>
@@ -143,23 +143,23 @@
                             <div class="col-12 col-lg-8">
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                     <h3 class="mb-0">
-                                        <t t-out="project.code or ''"/>
-                                        <t t-if="project.code and project.name"> — </t>
-                                        <t t-out="project.name or ''"/>
+                                        <t t-out="site.code or ''"/>
+                                        <t t-if="site.code and site.name"> — </t>
+                                        <t t-out="site.name or ''"/>
                                     </h3>
-                                    <span class="badge rounded-pill text-bg-light border" t-field="project.state"/>
-                                    <span t-if="project.project_type" class="badge rounded-pill text-bg-secondary"
-                                          t-field="project.project_type"/>
+                                    <span class="badge rounded-pill text-bg-light border" t-field="site.state"/>
+                                    <span t-if="site.project_type" class="badge rounded-pill text-bg-secondary"
+                                          t-field="site.project_type"/>
                                 </div>
-                                <div t-if="project.partner_id" class="mb-1">
+                                <div t-if="site.partner_id" class="mb-1">
                                     <i class="fa fa-fw fa-user text-muted me-1" title="Klant"/>
-                                    <t t-out="project.partner_id.name"/>
+                                    <t t-out="site.partner_id.name"/>
                                 </div>
-                                <div t-if="project.address" class="mb-1">
+                                <div t-if="site.address" class="mb-1">
                                     <i class="fa fa-fw fa-map-marker text-muted me-1" title="Werfadres"/>
                                     <a t-att-href="maps_url"
                                        target="_blank" rel="noopener" class="text-decoration-none">
-                                        <t t-out="project.address"/>
+                                        <t t-out="site.address"/>
                                         <i class="fa fa-external-link small ms-1"/>
                                     </a>
                                 </div>
@@ -175,8 +175,8 @@
                                     <t t-else="">
                                         <i class="fa fa-fw fa-calendar-o me-1"/>Geen werkdag ingepland.
                                     </t>
-                                    <t t-if="project.team_id">
-                                        · <i class="fa fa-fw fa-users me-1"/><t t-out="project.team_id.name"/>
+                                    <t t-if="site.team_id">
+                                        · <i class="fa fa-fw fa-users me-1"/><t t-out="site.team_id.name"/>
                                     </t>
                                 </div>
                             </div>
@@ -271,7 +271,7 @@
                             Er is niemand ingepland op deze werf; de uren worden op jouw naam geboekt.
                         </t>
                     </div>
-                    <form method="post" t-attf-action="/my/werven/#{project.id}/uren/start" class="mt-auto">
+                    <form method="post" t-attf-action="/my/werven/#{site.id}/uren/start" class="mt-auto">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
                         <button type="submit" class="btn btn-success btn-lg o_tectora_btn_timer w-100">
@@ -288,7 +288,7 @@
         <div class="modal fade" id="tectoraStopModal" tabindex="-1" aria-labelledby="tectoraStopModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form method="post" class="modal-content o_tectora_stop_form"
-                      t-attf-action="/my/werven/#{project.id}/uren/#{running_timer.id}/stop">
+                      t-attf-action="/my/werven/#{site.id}/uren/#{running_timer.id}/stop">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                     <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
                     <div class="modal-header">
@@ -342,33 +342,33 @@
                     <div class="card-body">
                         <table class="table table-sm table-borderless mb-0">
                             <tr><th class="text-muted fw-normal w-25">Klant</th>
-                                <td t-out="project.partner_id.name or '—'"/></tr>
+                                <td t-out="site.partner_id.name or '—'"/></tr>
                             <tr><th class="text-muted fw-normal">Werfadres</th>
-                                <td t-out="project.address or '—'"/></tr>
+                                <td t-out="site.address or '—'"/></tr>
                             <tr><th class="text-muted fw-normal">Projecttype</th>
-                                <td><span t-field="project.project_type"/></td></tr>
+                                <td><span t-field="site.project_type"/></td></tr>
                             <tr><th class="text-muted fw-normal">Status</th>
-                                <td><span t-field="project.state"/></td></tr>
-                            <tr t-if="project.date_deadline"><th class="text-muted fw-normal">Deadline</th>
-                                <td><span t-field="project.date_deadline"/></td></tr>
-                            <tr t-if="project.site_contact_id"><th class="text-muted fw-normal">Contact werf</th>
+                                <td><span t-field="site.state"/></td></tr>
+                            <tr t-if="site.date_deadline"><th class="text-muted fw-normal">Deadline</th>
+                                <td><span t-field="site.date_deadline"/></td></tr>
+                            <tr t-if="site.site_contact_id"><th class="text-muted fw-normal">Contact werf</th>
                                 <td>
-                                    <t t-out="project.site_contact_id.name"/>
-                                    <a t-if="project.site_contact_phone" t-attf-href="tel:#{project.site_contact_phone}"
-                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="project.site_contact_phone"/></a>
+                                    <t t-out="site.site_contact_id.name"/>
+                                    <a t-if="site.site_contact_phone" t-attf-href="tel:#{site.site_contact_phone}"
+                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.site_contact_phone"/></a>
                                 </td></tr>
-                            <tr t-if="project.project_manager_id"><th class="text-muted fw-normal">Projectleider</th>
+                            <tr t-if="site.project_manager_id"><th class="text-muted fw-normal">Projectleider</th>
                                 <td>
-                                    <t t-out="project.project_manager_id.name"/>
-                                    <a t-if="project.project_manager_phone" t-attf-href="tel:#{project.project_manager_phone}"
-                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="project.project_manager_phone"/></a>
+                                    <t t-out="site.project_manager_id.name"/>
+                                    <a t-if="site.project_manager_phone" t-attf-href="tel:#{site.project_manager_phone}"
+                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.project_manager_phone"/></a>
                                 </td></tr>
                         </table>
                         <div class="mt-3 d-flex flex-wrap gap-2">
-                            <a t-attf-href="/my/werven/#{project.id}/pdf/werfblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/werfblad" class="btn btn-sm btn-outline-secondary" target="_blank">
                                 <i class="fa fa-file-pdf-o me-1"/>Werfblad (pdf)
                             </a>
-                            <a t-attf-href="/my/werven/#{project.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
                                 <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
                             </a>
                         </div>
@@ -382,17 +382,17 @@
                         <table class="table table-sm table-borderless mb-0">
                             <tr><th class="text-muted fw-normal w-25">Ploeg</th>
                                 <td>
-                                    <t t-out="project.team_id.name or '—'"/>
-                                    <span t-if="project.team_id.leader_id" class="text-muted small">
-                                        · ploegbaas <t t-out="project.team_id.leader_id.name"/>
+                                    <t t-out="site.team_id.name or '—'"/>
+                                    <span t-if="site.team_id.leader_id" class="text-muted small">
+                                        · ploegbaas <t t-out="site.team_id.leader_id.name"/>
                                     </span>
                                 </td></tr>
                             <tr><th class="text-muted fw-normal">Gepland</th>
                                 <td>
-                                    <t t-if="project.planned_date_begin">
-                                        <span t-field="project.planned_date_begin" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
-                                        <t t-if="project.planned_date_end">
-                                            – <span t-field="project.planned_date_end" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
+                                    <t t-if="site.planned_date_begin">
+                                        <span t-field="site.planned_date_begin" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
+                                        <t t-if="site.planned_date_end">
+                                            – <span t-field="site.planned_date_end" t-options='{"widget": "datetime", "format": "EEE d MMM yyyy HH:mm"}'/>
                                         </t>
                                     </t>
                                     <t t-else="">—</t>
@@ -412,13 +412,13 @@
                             <div class="fw-bold small text-uppercase text-muted">Werfinstructies</div>
                             <div t-foreach="instructions" t-as="note" class="o_tectora_report_text" t-out="note"/>
                         </div>
-                        <div t-if="project.description" class="mt-3">
+                        <div t-if="site.description" class="mt-3">
                             <div class="fw-bold small text-uppercase text-muted">Notities</div>
-                            <div class="o_tectora_report_text" t-out="project.description"/>
+                            <div class="o_tectora_report_text" t-out="site.description"/>
                         </div>
-                        <div t-if="project.other_works" class="mt-3">
+                        <div t-if="site.other_works" class="mt-3">
                             <div class="fw-bold small text-uppercase text-muted">Andere werken / extra's</div>
-                            <div class="o_tectora_report_text" t-out="project.other_works"/>
+                            <div class="o_tectora_report_text" t-out="site.other_works"/>
                         </div>
                     </div>
                 </div>
@@ -450,13 +450,13 @@
                     </div>
                 </div>
             </t>
-            <div class="col-12" t-if="project.epdm_sheet_ids or project.epdm_thickness">
+            <div class="col-12" t-if="site.epdm_sheet_ids or site.epdm_thickness">
                 <div class="card o_tectora_sheet_card mb-3">
                     <div class="card-header py-1 fw-bold">EPDM</div>
                     <div class="card-body py-2">
-                        <span t-if="project.epdm_thickness">Dikte <t t-out="'%.2f' % project.epdm_thickness"/> mm · </span>
-                        <t t-out="project.epdm_sheet_count"/> doek(en),
-                        <t t-out="'%.2f' % project.epdm_total_area"/> m² in totaal
+                        <span t-if="site.epdm_thickness">Dikte <t t-out="'%.2f' % site.epdm_thickness"/> mm · </span>
+                        <t t-out="site.epdm_sheet_count"/> doek(en),
+                        <t t-out="'%.2f' % site.epdm_total_area"/> m² in totaal
                     </div>
                 </div>
             </div>
@@ -521,11 +521,11 @@
                     <div class="card-body">
                         <div class="row g-2 mb-3 text-center">
                             <div class="col-6 col-md-3">
-                                <div class="o_tectora_kpi"><t t-out="'%.0f' % project.total_area"/> m²</div>
+                                <div class="o_tectora_kpi"><t t-out="'%.0f' % site.total_area"/> m²</div>
                                 <div class="small text-muted">Dakoppervlakte</div>
                             </div>
                             <div class="col-6 col-md-3">
-                                <div class="o_tectora_kpi"><t t-out="'%.0f' % project.total_perimeter"/> m</div>
+                                <div class="o_tectora_kpi"><t t-out="'%.0f' % site.total_perimeter"/> m</div>
                                 <div class="small text-muted">Omtrek</div>
                             </div>
                             <div class="col-6 col-md-3">
@@ -576,7 +576,7 @@
                             </table>
                         </div>
                         <div class="mt-3">
-                            <a t-attf-href="/my/werven/#{project.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
+                            <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
                                 <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
                             </a>
                         </div>
@@ -635,7 +635,7 @@
                     </div>
                     <div t-attf-class="collapse #{'show' if not reports else ''}" id="tectoraReportForm">
                         <form method="post" enctype="multipart/form-data" class="card-body"
-                              t-attf-action="/my/werven/#{project.id}/verslag">
+                              t-attf-action="/my/werven/#{site.id}/verslag">
                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                             <div class="row g-2">
                                 <div class="col-6">
@@ -710,9 +710,9 @@
                         </div>
                         <div t-if="report.image_ids" class="d-flex flex-wrap gap-2 mt-2">
                             <a t-foreach="report.image_ids" t-as="photo" target="_blank"
-                               t-attf-href="/my/werven/#{project.id}/foto/#{photo.id}">
+                               t-attf-href="/my/werven/#{site.id}/foto/#{photo.id}">
                                 <img class="o_tectora_photo" t-att-alt="photo.name"
-                                     t-attf-src="/my/werven/#{project.id}/foto/#{photo.id}?width=256&amp;height=256"/>
+                                     t-attf-src="/my/werven/#{site.id}/foto/#{photo.id}?width=256&amp;height=256"/>
                             </a>
                         </div>
                     </div>
@@ -727,7 +727,7 @@
                         <div class="row g-2 text-center mb-2">
                             <div class="col-6">
                                 <div class="o_tectora_kpi">
-                                    <span t-field="project.portal_hours" t-options='{"widget": "float_time"}'/>
+                                    <span t-field="site.portal_hours" t-options='{"widget": "float_time"}'/>
                                 </div>
                                 <div class="small text-muted">geboekt via het portaal (ploeg)</div>
                             </div>

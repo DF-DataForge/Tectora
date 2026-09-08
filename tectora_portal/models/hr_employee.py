@@ -130,6 +130,9 @@ class HrEmployee(models.Model):
                     "company_id": company.id,
                     "company_ids": [(4, company.id)],
                     "group_ids": [(4, group_portal.id), (3, group_public.id)],
+                    # the site works in the employee's timezone and language
+                    "tz": employee.tz or company.partner_id.tz or user.tz,
+                    "lang": company.partner_id.lang or self.env.user.lang or user.lang,
                 }
             )
             employee.sudo().write({"user_id": user.id})

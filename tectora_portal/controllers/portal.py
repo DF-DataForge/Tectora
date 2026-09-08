@@ -207,7 +207,10 @@ class TectoraEmployeePortal(CustomerPortal):
                 ("project_id", "=", dossier.id), ("employee_id", "=", employee.id),
             ])
         my_hours = sum(my_lines.mapped("unit_amount"))
-        drawing_b64 = project._get_drawing_b64()
+        drawing_b64 = (
+            project._get_drawing_b64()
+            if project.canvas_snapshot or project.canvas_data else False
+        )
         history = request.session.get("tectora_sites_history", [])
         prev_record = next_record = False
         if project.id in history:
@@ -218,7 +221,7 @@ class TectoraEmployeePortal(CustomerPortal):
                 next_record = "/my/werven/%d" % history[index + 1]
         values.update({
             "page_name": "tectora_site",
-            "project": project,
+            "site": project,
             "employee": employee,
             "tab": tab if tab in TABS else "overview",
             "now": now,
