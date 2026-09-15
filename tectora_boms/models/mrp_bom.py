@@ -4,13 +4,20 @@ import logging
 import re
 from pathlib import Path
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 from . import bom_rules
 
 _logger = logging.getLogger(__name__)
 
 BOM_CATALOG = Path(__file__).parent.parent / "data" / "bom_catalog.json"
+DEMO_BOMS = Path(__file__).parent.parent / "data" / "demo_boms.json"
+
+# The import key of a demo bill of materials: the works item's code behind a
+# prefix, so the whole set can be recognised, refreshed and removed as one.
+DEMO_KEY = "demo:%s"
+DEMO_KEY_PATTERN = "demo:%"
+DEMO_REFERENCE = "Demo"
 
 # More bills of materials than this on one product is reported: a variant range
 # can legitimately be long, but it is also what a run of false product matches
@@ -309,6 +316,145 @@ class MrpBom(models.Model):
             len(report.get("uom_skipped") or []),
         )
         return report
+
+    # ------------------------------------------------------------- demo set
+    @api.model
+    def _tectora_import_demo_boms(self):
+        """Load data/demo_boms.json: one complete bill of materials per works
+        item, keyed on product codes.
+
+        The real export matches on names and loads mostly labour; the demo set
+        is what shows the material list doing its job. Parents and components
+        are looked up on their internal reference (``S…`` works items,
+        ``P…`` raw materials), so nothing is guessed. The demo BoMs get
+        sequence 0, ahead of the imported export (sequence 1 and up), so the
+        material list picks them; they carry the reference "Demo" and the key
+        ``demo:<code>``, so they can be told apart, refreshed idempotently and
+        removed again with ``_tectora_remove_demo_boms``.
+        """
+        if not DEMO_BOMS.exists():
+            _logger.warning("tectora_boms: %s missing, no demo BoMs loaded", DEMO_BOMS)
+            return {}
+        data = json.loads(DEMO_BOMS.read_text(encoding="utf-8"))
+        boms = data.get("boms") or []
+        reference = data.get("reference") or DEMO_REFERENCE
+        codes = {bom["code"] for bom in boms}
+        codes.update(line["code"] for bom in boms for line in bom["lines"])
+        # An archived product keeps its code; prefer the active one.
+        products = self.env["product.product"].with_context(active_test=False).search(
+            [("default_code", "in", list(codes))], order="active desc, id"
+        )
+        by_code = {}
+        for product in products:
+            by_code.setdefault(product.default_code, product)
+
+        plan = []
+        report = {
+            "boms": len(boms),
+            "lines": sum(len(bom["lines"]) for bom in boms),
+            "planned": 0,
+            "planned_lines": 0,
+            "no_product": [],
+            "no_component": [],
+        }
+        for bom in boms:
+            parent = by_code.get(bom["code"])
+            if not parent:
+                report["no_product"].append(bom["code"])
+                continue
+            lines = []
+            for line in bom["lines"]:
+                component = by_code.get(line["code"])
+                if not component:
+                    report["no_component"].append((line["code"], bom["code"]))
+                    continue
+                if line["qty"] <= 0:
+                    continue
+                lines.append({
+                    "product_id": component.id,
+                    "product_qty": line["qty"],
+                    # The norm is written in the catalogue unit of the material.
+                    "product_uom_id": component.uom_id.id,
+                    "sequence": len(lines) + 1,
+                })
+            if not lines:
+                continue
+            plan.append({
+                "key": DEMO_KEY % bom["code"],
+                "product": {
+                    "id": parent.id,
+                    "tmpl_id": parent.product_tmpl_id.id,
+                    "uom_id": parent.uom_id.id,
+                    "code": parent.default_code,
+                    "name": parent.name,
+                },
+                "source_product": bom.get("product"),
+                "code": reference,
+                "type": bom.get("type") or "phantom",
+                "sequence": 0,
+                "lines": lines,
+            })
+            report["planned"] += 1
+            report["planned_lines"] += len(lines)
+        report.update(self._tectora_apply_plan(plan))
+        _logger.info(
+            "tectora_boms: demo: %(planned)s of %(boms)s bills of materials "
+            "loaded (%(created)s created, %(updated)s updated, %(planned_lines)s "
+            "lines); %(missing_products)s works items and %(missing_components)s "
+            "component lines not found in the catalogue",
+            dict(report, missing_products=len(report["no_product"]),
+                 missing_components=len(report["no_component"])),
+        )
+        return report
+
+    @api.model
+    def _tectora_remove_demo_boms(self):
+        """Delete every demo bill of materials. Returns how many went."""
+        boms = self.with_context(active_test=False).search(
+            [("tectora_bom_key", "=like", DEMO_KEY_PATTERN)]
+        )
+        count = len(boms)
+        boms.unlink()
+        _logger.info("tectora_boms: %s demo bills of materials removed", count)
+        return count
+
+    @api.model
+    def _tectora_demo_boms_action(self, remove=False):
+        """Load or remove the demo set from a menu, and say what happened."""
+        if remove:
+            count = self._tectora_remove_demo_boms()
+            message = _("%s demo-stuklijsten verwijderd.", count)
+        else:
+            report = self._tectora_import_demo_boms()
+            message = _(
+                "%(created)s demo-stuklijsten aangemaakt, %(updated)s bijgewerkt, "
+                "%(lines)s regels.",
+                created=report.get("created", 0),
+                updated=report.get("updated", 0),
+                lines=report.get("planned_lines", 0),
+            )
+            missing = len(report.get("no_product") or [])
+            if missing:
+                message += " " + _(
+                    "%s verkoopproducten uit het bestand staan niet in de "
+                    "catalogus en zijn overgeslagen.", missing
+                )
+            lines_missing = len(report.get("no_component") or [])
+            if lines_missing:
+                message += " " + _(
+                    "%s regels overgeslagen: grondstof niet gevonden.", lines_missing
+                )
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Demo-stuklijsten"),
+                "message": message,
+                "type": "success",
+                "sticky": False,
+                "next": {"type": "ir.actions.act_window_close"},
+            },
+        }
 
     @api.model
     def _tectora_import_boms(self, boms, options=None):
