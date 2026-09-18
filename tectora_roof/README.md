@@ -293,7 +293,9 @@ krijgt geen taak.
 Manufacturing (`mrp`), Inkoop (`purchase`), Voorraad (`stock`) en Urenstaten
 (`hr_timesheet`) zijn optioneel: zonder Manufacturing bevat de materiaallijst
 de verkochte producten zelf, zonder Inkoop/Voorraad/Urenstaten blijven de
-overeenkomstige kaarten leeg.
+overeenkomstige kaarten leeg. Met Voorraad zet de brug `tectora_roof_stock`
+de materiaallijst klaar als **uitgaande levering** (knop *Levering
+klaarzetten*), telkens voor wat nog niet op een levering staat.
 
 ## Planning op ploegen
 
