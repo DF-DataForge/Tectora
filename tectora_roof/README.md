@@ -270,7 +270,9 @@ volgt:
   werksoort als **toegewezen tijd**, de leverdatum van de order (of het
   geplande einde van het dakproject) als deadline en in de omschrijving de
   opsplitsing per werkpost. Uren worden op die taken gelogd, zodat afbraak en
-  uitvoering in de urenstaten uit elkaar te houden zijn. Verandert nadien een
+  uitvoering in de urenstaten uit elkaar te houden zijn; het medewerkersportaal
+  (`tectora_portal`) laat de ploeg daarvoor kiezen tussen *Start uitvoering*
+  en *Start afbraak*. Verandert nadien een
   hoeveelheid op de bevestigde order, dan volgt de toegewezen tijd; de rest van
   de taak (toewijzing, fase, omschrijving) blijft van wie het werk plant. De
   taken zijn herkenbaar aan het veld *Werksoort (Tectora)*; er is er één per

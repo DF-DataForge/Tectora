@@ -130,6 +130,10 @@ class TestTimer(TectoraPortalCase):
         self.assertTrue(dossier, "the plannable project is created to book the hours on")
         self.assertTrue(dossier.allow_timesheets)
         self.assertEqual(lines.project_id, dossier)
+        # Without a choice the hours are execution hours, on that task.
+        self.assertEqual(timer.work_kind, "uitvoering")
+        self.assertEqual(lines.task_id.tectora_work_kind, "uitvoering")
+        self.assertEqual(lines.task_id.project_id, dossier)
         for line in lines:
             self.assertAlmostEqual(line.unit_amount, 2.5, places=1)
             self.assertIn("Regen", line.name)
@@ -139,11 +143,24 @@ class TestTimer(TectoraPortalCase):
             timer.action_stop()
 
     def test_stop_with_confirmed_crew(self):
-        timer = self.env["tectora.roof.timer"]._start(self.project, self.leader)
+        timer = self.env["tectora.roof.timer"]._start(
+            self.project, self.leader, work_kind="afbraak"
+        )
         timer.start_datetime = fields.Datetime.now() - timedelta(hours=1)
         timer.action_stop(employee_ids=[self.leader.id], stopped_by=self.leader)
         self.assertEqual(timer.employee_ids, self.leader)
         self.assertEqual(len(timer.timesheet_ids), 1)
+        # Demolition hours go on the task Afbraakwerken, kept apart from the
+        # execution hours of the other registrations.
+        task = timer.timesheet_ids.task_id
+        self.assertEqual(task.tectora_work_kind, "afbraak")
+        self.assertEqual(task.name, "Afbraakwerken")
+        self.assertIn("Afbraakwerken", timer.timesheet_ids.name)
+        other = self.env["tectora.roof.timer"]._start(self.project, self.leader)
+        other.start_datetime = fields.Datetime.now() - timedelta(hours=1)
+        other.action_stop(employee_ids=[self.leader.id])
+        self.assertNotEqual(other.timesheet_ids.task_id, task)
+        self.assertEqual(other.timesheet_ids.task_id.tectora_work_kind, "uitvoering")
         self.assertEqual(timer.timesheet_ids.employee_id, self.leader)
 
     def test_cancel_removes_timesheets(self):

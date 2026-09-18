@@ -47,6 +47,7 @@
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
                             <field name="duration_hours" widget="float_time" sum="Totaal"/>
+                            <field name="work_kind"/>
                             <field name="employee_ids" widget="many2many_avatar_employee"/>
                             <field name="timesheet_hours" widget="float_time" sum="Geboekt"/>
                             <field name="state" widget="badge"

@@ -33,7 +33,11 @@ werf opent op vier tabs:
 
 Bovenaan elke werf staat de urenregistratie:
 
-* **Start** opent één registratie per werf (`tectora.roof.timer`). De ploeg
+* **Start uitvoering** of **Start afbraak** opent één registratie per werf
+  (`tectora.roof.timer`) met die **werksoort**; de uren komen op de taak
+  *Uitvoeringswerken* of *Afbraakwerken* van het project (aangemaakt als ze er
+  nog niet is), zodat afbraak en uitvoering in de urenstaten uit elkaar te
+  houden zijn en naast de geschatte tijd van de order staan. De ploeg
   van die dag wordt uit de planner gehaald: de medewerkers op het werkblok
   van vandaag, anders die van het dichtstbijzijnde werkblok, anders de leden
   van de ploeg. Wie start staat er altijd bij.

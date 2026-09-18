@@ -26,7 +26,10 @@ timer runs per site; whoever stops it confirms the crew that was present
 (pre-filled from the planner: the employees of the work block(s) of that day)
 and one timesheet line per employee is written on the project, so the hours
 and the labour cost show up in the project dashboard and in the standard
-Timesheets reports.
+Timesheets reports. Start comes in two: *Start uitvoering* and *Start
+afbraak*, and the hours land on the project's task Uitvoeringswerken or
+Afbraakwerken -- the tasks the confirmed order sizes with its estimate -- so
+demolition and execution stay apart in the timesheets.
 
 Portal access is granted on the employee form (button *Portaaltoegang
 geven*): a portal user is created on the employee's work contact and the
@@ -34,7 +37,7 @@ invitation e-mail is sent. The reports and the hour registrations are also
 visible in the back office, under Dakmeting and on the project dashboard's
 *Uitvoering* tab.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

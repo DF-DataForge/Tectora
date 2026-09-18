@@ -270,8 +270,6 @@ class SaleOrder(models.Model):
         allocated time is touched on an existing task; the rest belongs to
         whoever plans the work.
         """
-        Task = self.env["project.task"].sudo()
-        labels = dict(WORK_KINDS)
         for order in self:
             if order.state != "sale":
                 continue
@@ -279,28 +277,23 @@ class SaleOrder(models.Model):
             if not project:
                 continue
             hours_by_kind = order._tectora_hours_by_kind()
-            tasks = Task.search(
-                [("project_id", "=", project.id), ("tectora_work_kind", "!=", False)]
-            )
             deadline = order.commitment_date or order.roof_project_id.planned_date_end
             for kind, _label in WORK_KINDS:
                 hours = hours_by_kind[kind]
-                task = tasks.filtered(lambda task: task.tectora_work_kind == kind)[:1]
+                task = project._tectora_work_task(kind)
                 if task:
                     if float_compare(task.allocated_hours, hours, precision_digits=2):
                         task.write({"allocated_hours": hours})
                     continue
                 if not hours:
                     continue  # nothing estimated for this kind: no task to size
-                Task.create({
-                    "name": labels[kind],
-                    "project_id": project.id,
-                    "partner_id": order.partner_id.id,
-                    "tectora_work_kind": kind,
-                    "allocated_hours": hours,
-                    "date_deadline": deadline or False,
-                    "description": order._tectora_execution_task_description(kind),
-                })
+                project._tectora_work_task(
+                    kind,
+                    create=True,
+                    allocated_hours=hours,
+                    date_deadline=deadline or False,
+                    description=order._tectora_execution_task_description(kind),
+                )
 
     def _tectora_execution_task_description(self, kind):
         """The estimate per works item of one work kind, so the task says
