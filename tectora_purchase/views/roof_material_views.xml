@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Materiaalbehoefte overview: select lines, create the purchase orders. -->
+    <record id="view_tectora_roof_material_list_purchase" model="ir.ui.view">
+        <field name="name">tectora.roof.material.list.purchase</field>
+        <field name="model">tectora.roof.material</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_material_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-muted">purchase_state == 'received'</attribute>
+            </xpath>
+            <xpath expr="//list/field[@name='project_id']" position="before">
+                <header>
+                    <button name="action_create_purchase_orders" type="object"
+                            string="Inkooporders aanmaken" class="btn-primary"
+                            groups="purchase.group_purchase_user"
+                            help="Maakt per leverancier, per logistieke route en per dakproject een inkooporder voor de geselecteerde lijnen."/>
+                </header>
+            </xpath>
+            <xpath expr="//list/field[@name='product_uom_id']" position="after">
+                <field name="vendor_id" optional="show"/>
+                <field name="vendor_price" optional="hide"/>
+                <field name="logistics_route_id" optional="show"/>
+            </xpath>
+            <xpath expr="//list/field[@name='sale_order_id']" position="after">
+                <field name="purchase_order_id" optional="show"/>
+                <field name="purchase_state" optional="show" widget="badge"
+                       decoration-muted="purchase_state == 'to_order'"
+                       decoration-info="purchase_state == 'rfq'"
+                       decoration-warning="purchase_state == 'ordered'"
+                       decoration-success="purchase_state == 'received'"/>
+                <field name="qty_received" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_material_form_purchase" model="ir.ui.view">
+        <field name="name">tectora.roof.material.form.purchase</field>
+        <field name="model">tectora.roof.material</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_material_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="after">
+                <group string="Inkoop">
+                    <group>
+                        <field name="vendor_id"/>
+                        <field name="vendor_price"/>
+                        <field name="logistics_route_id"/>
+                    </group>
+                    <group>
+                        <field name="purchase_state" widget="badge"
+                               decoration-muted="purchase_state == 'to_order'"
+                               decoration-info="purchase_state == 'rfq'"
+                               decoration-warning="purchase_state == 'ordered'"
+                               decoration-success="purchase_state == 'received'"/>
+                        <field name="purchase_order_id"/>
+                        <field name="purchase_line_id" invisible="not purchase_line_id"/>
+                        <field name="qty_received" invisible="not purchase_line_id"/>
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_create_purchase_orders" type="object"
+                            string="Inkooporder aanmaken" class="btn-primary"
+                            groups="purchase.group_purchase_user"
+                            invisible="purchase_state != 'to_order'"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_material_search_purchase" model="ir.ui.view">
+        <field name="name">tectora.roof.material.search.purchase</field>
+        <field name="model">tectora.roof.material</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_material_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='sale_order_id']" position="after">
+                <field name="vendor_id"/>
+                <field name="purchase_order_id"/>
+                <filter string="Te bestellen" name="to_order"
+                        domain="[('purchase_state', '=', 'to_order'), ('product_id.type', '=', 'consu')]"/>
+                <filter string="In offerteaanvraag" name="rfq"
+                        domain="[('purchase_state', '=', 'rfq')]"/>
+                <filter string="Besteld" name="ordered"
+                        domain="[('purchase_state', '=', 'ordered')]"/>
+                <filter string="Ontvangen" name="received"
+                        domain="[('purchase_state', '=', 'received')]"/>
+                <separator/>
+                <filter string="Dropship" name="dropship"
+                        domain="[('logistics_route_id.delivery_type', '=', 'dropship')]"/>
+                <filter string="Levering aan magazijn" name="warehouse"
+                        domain="[('logistics_route_id.delivery_type', '=', 'warehouse')]"/>
+            </xpath>
+            <xpath expr="//filter[@name='group_product']" position="after">
+                <filter string="Leverancier" name="group_vendor"
+                        context="{'group_by': 'vendor_id'}"/>
+                <filter string="Logistieke route" name="group_route"
+                        context="{'group_by': 'logistics_route_id'}"/>
+                <filter string="Inkoopstatus" name="group_purchase_state"
+                        context="{'group_by': 'purchase_state'}"/>
+                <filter string="Inkooporder" name="group_purchase_order"
+                        context="{'group_by': 'purchase_order_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- The same action in the list's Actie menu, for selections made from
+         a grouped list. -->
+    <record id="action_server_tectora_material_purchase" model="ir.actions.server">
+        <field name="name">Inkooporders aanmaken</field>
+        <field name="model_id" ref="tectora_roof.model_tectora_roof_material"/>
+        <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_material"/>
+        <field name="binding_view_types">list</field>
+        <field name="group_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_create_purchase_orders()</field>
+    </record>
+
+</odoo>

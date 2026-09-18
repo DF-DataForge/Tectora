@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_project_form_purchase" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form.purchase</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state']" position="before">
+                <field name="material_to_order_count" invisible="1"/>
+                <button name="action_create_purchase_orders" type="object"
+                        string="Inkooporders aanmaken" class="btn-secondary"
+                        groups="purchase.group_purchase_user"
+                        invisible="material_to_order_count == 0"
+                        help="Bestelt de nog niet bestelde materiaallijnen bij hun leveranciers: één inkooporder per leverancier en per logistieke route."/>
+            </xpath>
+            <xpath expr="//page[@name='materials']//list/field[@name='product_uom_id']" position="after">
+                <field name="vendor_id" optional="show"/>
+                <field name="logistics_route_id" optional="show"/>
+            </xpath>
+            <xpath expr="//page[@name='materials']//list/field[@name='sale_order_id']" position="after">
+                <field name="purchase_order_id" optional="show" readonly="1"/>
+                <field name="purchase_state" optional="show" widget="badge"
+                       decoration-muted="purchase_state == 'to_order'"
+                       decoration-info="purchase_state == 'rfq'"
+                       decoration-warning="purchase_state == 'ordered'"
+                       decoration-success="purchase_state == 'received'"/>
+            </xpath>
+            <xpath expr="//page[@name='materials']/div[hasclass('text-muted')]" position="inside">
+                Elke lijn heeft een leverancier en een logistieke route (dropship
+                naar de werf of levering aan het magazijn); <b>Inkooporders
+                aanmaken</b> bestelt de te bestellen lijnen bij die leveranciers.
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

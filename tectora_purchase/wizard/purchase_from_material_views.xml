@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_purchase_from_material_form" model="ir.ui.view">
+        <field name="name">tectora.purchase.from.material.form</field>
+        <field name="model">tectora.purchase.from.material</field>
+        <field name="arch" type="xml">
+            <form string="Inkooporders aanmaken">
+                <div class="alert alert-info" role="alert">
+                    <field name="orderable_count" class="oe_inline fw-bold"/> van de
+                    <field name="line_count" class="oe_inline"/> geselecteerde
+                    materiaallijnen worden besteld: één inkooporder per
+                    leverancier, per logistieke route en per dakproject, aan de
+                    prijzen van de inkoopprijslijst. De lijnen onthouden hun
+                    inkooporder.
+                    <span invisible="skipped_count == 0">
+                        <br/><field name="skipped_count" class="oe_inline"/> lijn(en)
+                        worden overgeslagen: al besteld, of geen goederen (arbeid).
+                    </span>
+                </div>
+                <div class="alert alert-warning" role="alert" invisible="not missing_vendor">
+                    <b>Geen leverancier voor:</b> <field name="missing_vendor" class="oe_inline"/>.
+                    Zet een leverancier op de materiaallijn of op het product
+                    (tab Inkoop), of kies hieronder één leverancier voor de
+                    hele selectie.
+                </div>
+                <group>
+                    <group string="Overschrijven (optioneel)">
+                        <field name="logistics_route_id" options="{'no_create': True}"
+                               placeholder="route van elke lijn"/>
+                        <field name="vendor_id" options="{'no_create': True}"
+                               placeholder="leverancier van elke lijn"/>
+                    </group>
+                    <group string="Orders">
+                        <field name="one_order_per_project"/>
+                        <field name="date_planned"/>
+                        <field name="confirm"/>
+                    </group>
+                </group>
+                <field name="group_ids" nolabel="1" readonly="1">
+                    <list string="Inkooporders" create="0" delete="0" no_open="1">
+                        <field name="vendor_id"/>
+                        <field name="logistics_route_id"/>
+                        <field name="project_id"/>
+                        <field name="line_count"/>
+                        <field name="product_count"/>
+                        <field name="amount_estimate" sum="Totaal"/>
+                        <field name="currency_id" column_invisible="1"/>
+                    </list>
+                </field>
+                <field name="material_line_ids" invisible="1"/>
+                <footer>
+                    <button name="action_create_purchase_orders" type="object"
+                            string="Inkooporders aanmaken" class="btn-primary"
+                            invisible="orderable_count == 0"
+                            data-hotkey="q"/>
+                    <button string="Annuleren" special="cancel" class="btn-secondary"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_purchase_from_material" model="ir.actions.act_window">
+        <field name="name">Inkooporders aanmaken</field>
+        <field name="res_model">tectora.purchase.from.material</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_tectora_purchase_from_material_form"/>
+    </record>
+
+</odoo>
