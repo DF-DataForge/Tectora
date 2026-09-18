@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 350" preserveAspectRatio="none" fill="none">
+  <!-- Reference drawing of the Tectora roof-edge header, in Tectora teal.
+       The report template inlines the same shapes in the company's colour. -->
+  <defs>
+    <linearGradient id="sky" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#008B93" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#008B93" stop-opacity=".03"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 0H1000V118L777 24L0 192Z" fill="url(#sky)"/>
+  <path d="M0 192L777 24L1000 118V142L777 48L0 216Z" fill="#ffffff" fill-opacity=".85"/>
+  <path d="M0 216L777 48L1000 142V168L777 74L0 242Z" fill="#008B93" fill-opacity=".12"/>
+  <path d="M0 192L777 24L1000 118" stroke="#008B93" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+</svg>

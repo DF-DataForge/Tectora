@@ -13,4 +13,6 @@ from . import project_project
 from . import res_config_settings
 from . import roof_usage
 from . import product_category
+from . import product_template
+from . import project_task
 from . import crm_lead

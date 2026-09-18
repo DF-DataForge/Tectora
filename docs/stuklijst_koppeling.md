@@ -182,6 +182,15 @@ alleen diensten *zonder* stuklijst over — dat is uurloon, geen materiaal.
 `explode()` zelf kijkt niet naar het type van het bovenliggende product en
 werkt dus gewoon.
 
+## Demo-stuklijsten
+
+Omdat de export op naam koppelt en vooral werkurenregels oplevert, levert de
+module daarnaast een **demo-set** op productcode: één volledige stuklijst per
+verkoopproduct dat een tegenhanger heeft bij de grondstoffen (373 stuklijsten,
+1.196 regels), met de gebruikelijke verbruiksnormen van de dakwerker. Die set
+wordt vóór de export gezet en kan opnieuw geladen of verwijderd worden vanuit
+*Verkoop → Configuratie*. Zie [`demo_stuklijsten.md`](demo_stuklijsten.md).
+
 ## Volgorde van werken
 
 1. **Producten bevestigen** (188 rijen, blad `Producten`). Kleinste stap, en

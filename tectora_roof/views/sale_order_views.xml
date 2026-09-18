@@ -6,10 +6,27 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='fiscal_position_id']/.." position="after">
+                <label for="tectora_tax_id"/>
+                <div class="o_row">
+                    <field name="tectora_tax_id" options="{'no_create': True}"/>
+                    <button string="Toepassen op alle regels"
+                            name="action_apply_tectora_tax" type="object"
+                            class="btn-link mb-1 px-0"
+                            invisible="state not in ('draft', 'sent')"
+                            confirm="Het gekozen btw-tarief wordt op alle productregels gezet (zonder tarief: de btw van de producten en de fiscale positie). Doorgaan?"
+                            help="Zet het gekozen btw-tarief op elke productregel van deze offerte."/>
+                </div>
+            </xpath>
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="roof_project_id"
                        context="{'default_partner_id': partner_id}"/>
                 <field name="roof_project_state" invisible="1"/>
+                <field name="tectora_standard_quotation"/>
+                <field name="tectora_quotation_style"
+                       invisible="tectora_standard_quotation"/>
+                <field name="tectora_include_roof_plan"
+                       invisible="not roof_project_id"/>
             </xpath>
             <!-- The roof project and the project are always one click away:
                  an order without a roof project gets one when the button is
@@ -31,6 +48,48 @@
                         class="oe_stat_button" icon="fa-tachometer"
                         invisible="state not in ('sale', 'done')"
                         string="Projectdashboard"/>
+            </xpath>
+            <!-- The estimate per line, hours of demolition and of execution
+                 (quantity x the product's hours per unit, shown as hh:mm),
+                 each with its column total. -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']"
+                   position="before">
+                <field name="tectora_demolition_hours" widget="float_time"
+                       string="Uren afbraak" sum="Totaal afbraak" optional="show"
+                       invisible="display_type or is_downpayment" width="90px"/>
+                <field name="tectora_execution_hours" widget="float_time"
+                       string="Uren opbouw" sum="Totaal opbouw" optional="show"
+                       invisible="display_type or is_downpayment" width="90px"/>
+                <field name="tectora_estimated_hours" widget="float_time"
+                       string="Uren totaal" sum="Totaal" optional="hide"
+                       invisible="display_type or is_downpayment" width="90px"/>
+            </xpath>
+            <!-- The totals of the estimate under the amounts. -->
+            <xpath expr="//group[@name='sale_total']" position="inside">
+                <div class="mt-2" invisible="not tectora_estimated_hours">
+                    <div class="d-flex justify-content-between">
+                        <span>Geschatte uren afbraak</span>
+                        <span><field name="tectora_demolition_hours" widget="float_time"
+                                     class="oe_inline" nolabel="1"/> u</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Geschatte uren opbouw</span>
+                        <span><field name="tectora_execution_hours" widget="float_time"
+                                     class="oe_inline" nolabel="1"/> u</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-1 mt-1">
+                        <label for="tectora_estimated_hours" class="fw-bold"/>
+                        <div class="text-end">
+                            <field name="tectora_estimated_hours" widget="float_time"
+                                   class="oe_inline fw-bold" nolabel="1"/>
+                            <span class="fw-bold"> u</span>
+                            <div class="text-muted small">
+                                ± <field name="tectora_estimated_days" class="oe_inline"
+                                         nolabel="1"/> werkdagen
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>

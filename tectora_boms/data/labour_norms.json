@@ -1,0 +1,5491 @@
+{
+ "source": "Stuklijst_Tectora.xlsx, werkurenregels (via tools/build_labour_norms.py)",
+ "norms": [
+  {
+   "code": "S00011",
+   "product": "Leveren en plaatsen ankerpunt Wallfix EN-795:2012 type A",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00012",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B EPDM",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00013",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock-T-21 EPDM",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00014",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock X-H-16 EPDM",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00016",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock Loop",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00017",
+   "product": "Gebruik van tijdelijke balustrades Securilisse EVO",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Collectieve beschermingsmiddelen type Balustrades",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00019",
+   "product": "Plaatsen van de rolstelling",
+   "uom": "forfait",
+   "hours_execution": 1.5,
+   "hours_demolition": 0.0,
+   "source": "Plaatsen van rolstelling (forfait)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00023",
+   "product": "Gebruik van tijdelijke balustrades met montage op opstand",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Collectieve beschermingsmiddelen type Balustrades",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00024",
+   "product": "Verwijderen ballastlaag (rolgrind/kiezel)",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.16,
+   "source": "Verwijderen van huidige ballastlaag",
+   "kits": 2,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00025",
+   "product": "Verwijderen van de terrasvloer type: tegels/dallen",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.38,
+   "source": "Verwijderen van de huidige terrasvloer",
+   "kits": 3,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00026",
+   "product": "Verwijderen van de terrasvloer type: bankirai",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.38,
+   "source": "Verwijderen van de huidige terrasvloer",
+   "kits": 3,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00027",
+   "product": "Verwijderen van de dakbedekking type: roofing 1 laag",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00028",
+   "product": "Verwijderen van de dakbedekking type: roofing 2 laags",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00029",
+   "product": "Verwijderen van extra lagen roofing (per laag in 'worst case')",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.02,
+   "source": "Verwijderen van bijkomende lagen roofing(prijs per laag) (m²)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00030",
+   "product": "Verwijderen van de dakbedekking type: Resitrix",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00031",
+   "product": "Verwijderen van de dakbedekking type: EPDM",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00032",
+   "product": "Verwijderen van de dakbedekking type: PVC",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00033",
+   "product": "Verwijderen van de dakbedekking type: zink",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen van de huidige dakbedekking type",
+   "kits": 11,
+   "kinds": [
+    "Afbraakwerken",
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00034",
+   "product": "Verwijderen van de dakbedekking type: sandwichpanelen",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.35,
+   "source": "Verwijderen van de sandwichpanelen",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00035",
+   "product": "Verwijderen van de isolatie type: ....... dikte: ........",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.15,
+   "source": "Verwijderen van het huidige isolatiepakket",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00036",
+   "product": "Verwijderen van de dakvloer type: houtvezelplaten",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.15,
+   "source": "Verwijderen van de huidige dakvloer type: houtvezelplaten (m²)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00037",
+   "product": "Verwijderen van de houten roostering (balken)",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.15,
+   "source": "Verwijderen van de huidige houten constructie (balken)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00038",
+   "product": "Verwijderen van de hellingschape 5-10cm dik",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "verwijderen van de huidige hellingschape (m²)",
+   "kits": 4,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00039",
+   "product": "Verwijderen van de hellingschape 10-15cm dik",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "verwijderen van de huidige hellingschape (m²)",
+   "kits": 4,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00040",
+   "product": "Verwijderen van de hellingschape 15-20cm dik",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "verwijderen van de huidige hellingschape (m²)",
+   "kits": 4,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00041",
+   "product": "Verwijderen van de dekstenen/dekpannen",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.18,
+   "source": "Verwijderen van de dekstenen/dekpannen (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00042",
+   "product": "Verwijderen van de asbest dekstenen",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "Verwijderen van asbesthoudende dekstenen (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00043",
+   "product": "Verwijderen van de dakranden",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.1,
+   "source": "Verwijderen van de dakrandprofielen",
+   "kits": 2,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00044",
+   "product": "Verwijderen en terugplaatsen van de nokpannen",
+   "uom": "m",
+   "hours_execution": 0.4,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen en herplaatsen van de nokpannen",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak",
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00045",
+   "product": "Verwijderen en terugplaatsen van de onderste dakpannen",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.1,
+   "source": "Verwijderen en herplaatsen van de onderste rij pannen",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak",
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00046",
+   "product": "Verwijderen en terugplaatsen onderste rij leien",
+   "uom": "m",
+   "hours_execution": 0.4,
+   "hours_demolition": 0.2,
+   "source": "Verwijderen en herplaatsen van onderste rij leien",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak",
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00047",
+   "product": "Verwijderen en terugplaatsen onderste rij sidings/gevelleien",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.35,
+   "source": "Verwijderen en herplaatsen van de onderste rij sidings",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak",
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00048",
+   "product": "Horizontaal inkorten van de sidings (afslijpen)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Inkorten van de sidings/leien (horizontaal afschijven) ifv plaatsen solins (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00049",
+   "product": "Verwijderen van de solins/wandaansluitprofielen",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.08,
+   "source": "Verwijderen wandaansluitprofielen",
+   "kits": 1,
+   "kinds": [
+    "Afbraakwerken"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00050",
+   "product": "Verwijderen van de kunststof koepelschaal",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.3,
+   "source": "Verwijderen van de koepelschaal exclusief koepelopstand",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00051",
+   "product": "Verwijderen van de koepel (compleet)",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "Verwijderen van de koepelschaal inclusief koepelopstand",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00052",
+   "product": "Verwijderen van het dakluik (hout)",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.75,
+   "source": "Verwijderen van houten dakluik (daktoegangskoepel komt in de plaats hiervan: zie opbouwwerken)",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00053",
+   "product": "Verwijderen van de dakdoorvoer",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.1,
+   "source": "Verwijderen dakdoorvoer",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00054",
+   "product": "Demonteren en terug aansluiten airco-unit",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 1.0,
+   "source": "Af- en aankoppelen van Airco unit",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00056",
+   "product": "Leveren en plaatsen van de rubbertegels 50x50x3cm",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "leveren en plaatsen van de rubbertegels 50x50",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00057",
+   "product": "Verwijderen van de afvoerbuis",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.07,
+   "source": "Verwijderen van Afvoerbuis PVC",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00058",
+   "product": "Verwijderen van de bekleding uit de bakgoot",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "Verwijderen van de bakgoot",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00059",
+   "product": "Verwijderen van de tapbuis",
+   "uom": "unit",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.3,
+   "source": "Afbraak van de tapbuis",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00060",
+   "product": "Reinigen en voorbereiden bestaande dakbedekking",
+   "uom": "m2",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.03,
+   "source": "Voorbereiding van de huidige dakbedekking om als dampscherm te voldoen",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00061",
+   "product": "Leveren en plaatsen van de baddens 63mm x 175mm",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de draagstructuur van het dak in baddens",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00062",
+   "product": "Leveren en plaatsen van de baddens 75mm x 225mm",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de draagstructuur van het dak in baddens",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00063",
+   "product": "Leveren en plaatsen hellingslatten",
+   "uom": "m",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingslatten - verval van 1cm / m (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00064",
+   "product": "Leveren en plaatsen van de OSB dikte 18mm tand & groef",
+   "uom": "m2",
+   "hours_execution": 0.28,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakvloer in OSB",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00065",
+   "product": "Leveren en plaatsen van de OSB dikte 22mm tand & groef",
+   "uom": "m2",
+   "hours_execution": 0.28,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakvloer in OSB",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00066",
+   "product": "Leveren en plaatsen CLS-kepers (38mm x 58mm) om opstanden op te hogen 10 à 12cm",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van CLS-latten om ophoging van de dakrand te voorzien om te kunnen isoleren (momenteel gebrek aan hoogte)",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00067",
+   "product": "Leveren en plaatsen CLS-kepers (38mm x 58mm) om opstanden op te hogen 14 à 16cm",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van CLS-latten om ophoging van de dakrand te voorzien om te kunnen isoleren (momenteel gebrek aan hoogte)",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00068",
+   "product": "Leveren en plaatsen spouwplaat type: multiplex 15mm",
+   "uom": "m2",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de spouwplank type: multiplex 15mm",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00069",
+   "product": "Leveren en plaatsen spouwplaat type: Solid John 15mm",
+   "uom": "m2",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van spouwplank Type: garantiemultiplex - Solid John 15mm",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00070",
+   "product": "Leveren en plaatsen 2-delige alu dakrandprofielen in RAL 9005 structuurlak",
+   "uom": "m",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00071",
+   "product": "Leveren en plaatsen 2-delige alu dakrandprofielen geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00072",
+   "product": "Leveren en plaatsen binnenhoek 2-delige dakranden in RAL 9005 structuurlak",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00073",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 45mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00074",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 60mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00075",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 80mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00076",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00077",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00078",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00079",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00080",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00081",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00082",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00083",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00084",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00085",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00086",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00087",
+   "product": "Leveren en plaatsen van de zinken kralen in naturel zink incl. onderliggend l-profiel (druiplijst)",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00088",
+   "product": "Leveren en plaatsen van de zinken kralen in naturel zink",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00089",
+   "product": "Leveren en plaatsen binnenhoek voor naturel zinken kralen incl. onderliggend l-profiel (druiplijst)",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00090",
+   "product": "Leveren en plaatsen binnenhoek voor naturel zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00091",
+   "product": "Leveren en plaatsen van de 2-delige aluminium kralen Iconik in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de 2-delige aluminium kralen type: ICONIK",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00092",
+   "product": "Leveren en plaatsen binnenhoek voor 2-delige aluminium kralen Iconik in RAL",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande alu-kralen (ICONIK)",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00093",
+   "product": "Leveren en plaatsen buitenhoek voor 2-delige aluminium kralen Iconik in RAL",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande alu-kralen. (ICONIK)",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00094",
+   "product": "Leveren en plaatsen van de enkelvoudige aluminium kralen in RAL 9005",
+   "uom": "m",
+   "hours_execution": 0.09,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de enkelvoudige aluminium kralen type: AE 28-15/60",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00095",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige aluminium kralen in RAL 9005",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande alu-kralen - AE-28-15-60",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00096",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige aluminium kralen in RAL 9005",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoek voor bovenstaande alu-kralen - AE-28-15-60",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00097",
+   "product": "Leveren en plaatsen van de solins in anthrazink",
+   "uom": "m",
+   "hours_execution": 0.33,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: solins in anthrazink (inslijpen in de muur incl. plastische elastische voeg) (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00098",
+   "product": "Leveren en plaatsen van de aluminium wandaansluitprofielen",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van L-profiel om ophoging van de dakopbouw weg te werken hoogte 150 mm kleur: idem dakrand =",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00099",
+   "product": "Aansluiting op de slabben die voorzien werden door de metser",
+   "uom": "m",
+   "hours_execution": 0.15,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM op de slabben die geplaatst werden door de metser",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00100",
+   "product": "Aansluiting onder het bestaand lood dat behouden kan worden",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van EPDM onder bestaand lood (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00101",
+   "product": "Aansluiting van de EPDM op het dak van de buren met resitrix",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting op het dak van de buren met resitrix",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00102",
+   "product": "Aansluiting van de EPDM op het dak van de buren met nadentape",
+   "uom": "m",
+   "hours_execution": 0.06,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting op het dak van de buren met naadtape",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00103",
+   "product": "Aansluiting van de EPDM in de zinken/PVC goot",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM in de zinken/PVC goot",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00104",
+   "product": "Aansluiting van de roofing in de zinken/PVC goot",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM in de zinken/PVC goot",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00105",
+   "product": "Aansluiting van de EPDM op de dekpannen die behouden",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM op de dekpannen die behouden worden met plaklood en naadtape (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00106",
+   "product": "Aansluiting van de roofing op de dekpannen die behouden worden",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM op de dekpannen die behouden worden met plaklood en naadtape (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00107",
+   "product": "Aansluiting van de EPDM op de verandaplaten/sandwichpanelen",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM op de verandaplaten",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00108",
+   "product": "Aansluiting van de roofing op de verandaplaten/sandwichpanelen",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM op de verandaplaten",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00109",
+   "product": "Aansluiting van de EPDM thv de gevelafwerking + inslijpen solins",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM thv de gevelbekleding of sidings: optrekken EPDM en inslijpen solin (incl. plastische voeg)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00110",
+   "product": "Aansluiting van de roofing thv de gevelafwerking + inslijpen solins",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM thv de gevelbekleding of sidings: optrekken EPDM en inslijpen solin (incl. plastische voeg)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00111",
+   "product": "Onderkapping van de gevel met lood/EPDM",
+   "uom": "m",
+   "hours_execution": 0.0,
+   "hours_demolition": 0.5,
+   "source": "Randaansluiting type: onderkapping van de opgaande gevel (=aansluiting tot op binnenspouwblad en voorzien van stootvoegen) met lood",
+   "kits": 1,
+   "kinds": [
+    "werkuren afbraak"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00112",
+   "product": "Aansluiting met een zinken profiel onder het onderdak van het hellend dak type: pannen",
+   "uom": "m",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting met zinken profiel op het onderdak van het hellend vlak",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00113",
+   "product": "Aansluiting met een zinken profiel onder het onderdak van het hellend dak type: leien",
+   "uom": "m",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting met zinken profiel op het onderdak van het hellend vlak",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00114",
+   "product": "Aansluiting van de dakbedekking thv de lichtstraat",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM thv de lichtstraat",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00115",
+   "product": "Aansluiting van de EPDM thv de dorpel",
+   "uom": "m",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Randaansluiting type: aansluiting van de EPDM thv de dorpel aan het raam/de deur. Nota: inpakken dorpel is hierbij noodzakelijk",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00116",
+   "product": "Leveren en plaatsen van de EPDM-slabben 50cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00117",
+   "product": "Leveren en plaatsen van de EPDM-slabben 60cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00118",
+   "product": "Leveren en plaatsen van de EPDM-slabben 70cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00119",
+   "product": "Leveren en plaatsen van de EPDM-slabben 80cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00120",
+   "product": "Leveren en plaatsen van de EPDM-slabben 90cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00121",
+   "product": "Leveren en plaatsen van de EPDM-slabben 100cm ontwikkeling",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen slabben in EPDM met een ontvouwing van",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00122",
+   "product": "Leveren en plaatsen van het dampscherm klasse E2 type: PE-folie",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00123",
+   "product": "Leveren en plaatsen van het dampscherm klasse E3 type: Alutrix (op houten dakvloer)",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00124",
+   "product": "Leveren en plaatsen van het dampscherm klasse E3 type: Alutrix (op beton/hellingschape)",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00125",
+   "product": "Leveren en plaatsen van het dampscherm klasse E3 type: Sopraglass V3",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00126",
+   "product": "Leveren en plaatsen van het dampscherm klasse E4 type: Sopraglass V4",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00127",
+   "product": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 10cm / hoogte: 20cm",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de isolatieaanzet thv de opgaande gevel ifv aansluiting met de gevelisolatie, hoogte 20cm/Dikte isolatie",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00128",
+   "product": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 12cm / hoogte: 20cm",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de isolatieaanzet thv de opgaande gevel ifv aansluiting met de gevelisolatie, hoogte 20cm/Dikte isolatie",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00129",
+   "product": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 14cm / hoogte: 20cm",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de isolatieaanzet thv de opgaande gevel ifv aansluiting met de gevelisolatie, hoogte 20cm/Dikte isolatie",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00130",
+   "product": "Leveren en plaatsen van de aanzet voor de muurisolatie dikte: 16cm / hoogte: 20cm",
+   "uom": "m",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de isolatieaanzet thv de opgaande gevel ifv aansluiting met de gevelisolatie, hoogte 20cm/Dikte isolatie",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00131",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 2cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00132",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 3cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00133",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 4cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00134",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 5cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00135",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 6cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00136",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 7cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00137",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 8cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00138",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00139",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00140",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00141",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00142",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00143",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00144",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200 / 5+5cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00145",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200 / 6+6cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00146",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200 / 7+7cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00147",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200 / 8+8cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00148",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200 / 10+10cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00149",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (1200x2400) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00150",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (1200x2400) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00151",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (1200x2400) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00152",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (1200x2400) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00153",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (1200x2400 / 8+10cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00154",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (1200x2400 / 10+10cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00155",
+   "product": "Creeëren van een ingewerkte goot in de isolatie met isolatie van 3cm dik (breedte ca. 25cm)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingsisolatie",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00156",
+   "product": "Creeëren van een ingewerkte goot in de isolatie met isolatie van 4cm dik (breedte ca. 25cm)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingsisolatie",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00157",
+   "product": "Creeëren van een ingewerkte goot in de isolatie met isolatie van 6cm dik (breedte ca. 25cm)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingsisolatie",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00158",
+   "product": "Creeëren van een ingewerkte goot in de isolatie met isolatie van 8cm dik (breedte ca. 25cm)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingsisolatie",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00159",
+   "product": "Creeëren van een ingewerkte goot in de isolatie met hellingsisolatie (breedte ca. 25cm)",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hellingsisolatie",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00177",
+   "product": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.33,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen EPDM verkleefd type:",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00178",
+   "product": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.33,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen EPDM verkleefd type:",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00179",
+   "product": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,1mm dik geballast",
+   "uom": "m2",
+   "hours_execution": 0.15,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen EPDM Type: Met ballast",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00180",
+   "product": "Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM 1,5mm dik geballast",
+   "uom": "m2",
+   "hours_execution": 0.15,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen EPDM Type: Met ballast",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00182",
+   "product": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de KIMFIXATIE thv de volledige omranding van het plat dak. Conform voorschriften van Buildwise (bouwnormen!) (lm)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00183",
+   "product": "Leveren en plaatsen van de ballastlaag inclusief beschermdoek (rolgrind 16/32)",
+   "uom": "m2",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de ballastlaag met keien 16/32 inclusief geotextiel en grindvanger",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00184",
+   "product": "Uitbekleden van de schoorsteen met EPDM + aansluiting onder de deksteen met wandaansluitprofiel",
+   "uom": "m2",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "inpakken van de schouw met EPDM incl. verdichting",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00185",
+   "product": "Uitbekleden van de schoorsteen met 3cm isolatie & EPDM + aansluiting onder de deksteen met wandaansluitprofiel",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 3cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00186",
+   "product": "Uitbekleden van de schoorsteen met multiplex 15mm & EPDM + aansluiting onder de deksteen met wandaansluitprofiel",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met multiplex 15mm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00187",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met EPDM",
+   "uom": "m2",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "inpakken van de schouw met EPDM incl. verdichting",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00188",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met isolatie 3cm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 3cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00189",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met multiplex 15mm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met multiplex 15mm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00190",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 63mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00191",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 75mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00192",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 90mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00193",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 110mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00194",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 125mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00195",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 160mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00196",
+   "product": "Leveren en plaatsen van de PE-tapbuis met zelfklevende slab dia: 200mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00197",
+   "product": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
+   "uom": "unit",
+   "hours_execution": 0.01,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00198",
+   "product": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 100mm",
+   "uom": "unit",
+   "hours_execution": 0.01,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00199",
+   "product": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 120mm",
+   "uom": "unit",
+   "hours_execution": 0.01,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00200",
+   "product": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 150mm",
+   "uom": "unit",
+   "hours_execution": 0.01,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00201",
+   "product": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 200mm",
+   "uom": "unit",
+   "hours_execution": 0.01,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de bolrooster / bladvanger type INOX",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00202",
+   "product": "Leveren en plaatsen van de PE-noodspuwer met zelfklevende slab dia: 50mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de noodspuwer in PE",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00203",
+   "product": "Uitcementeren van de opening rond de tapbuis",
+   "uom": "unit",
+   "hours_execution": 0.75,
+   "hours_demolition": 0.0,
+   "source": "Dichtmetsen van de opening rond de tapbuis (met cement)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00204",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 50mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00205",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 75mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00206",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 90mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00207",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 110mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00208",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 125mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00209",
+   "product": "Leveren en plaatsen van de PE-tapbuis met roofingslab dia: 160mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de PE-tapbuis incl. zelfklevende slab",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00210",
+   "product": "Leveren en plaatsen van de PE-noodspuwer met roofingslab dia: 50mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de noodspuwer in PE",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00211",
+   "product": "Leveren en plaatsen van de aluminium noodspuwer met roofingslab: dia 50mm",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de noodspuwer in PE",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00212",
+   "product": "Uitvoeren van boring voor noodspuwer doorheen ytong/facade",
+   "uom": "unit",
+   "hours_execution": 0.75,
+   "hours_demolition": 0.0,
+   "source": "Boring voor noodspuwer in ytong/facade",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00213",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) naturel rond dia 80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00214",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) naturel vierkant 80/80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00215",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) naturel rond dia 100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00216",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) naturel vierkant 100/100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00217",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) anthra rond dia 80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00218",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) anthra vierkant 80/80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00219",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) anthra rond dia 100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00220",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) anthra vierkant 100/100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00221",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) quartz rond dia 80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00222",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) quartz vierkant 80/80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00223",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) quartz rond dia 100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00224",
+   "product": "Leveren en plaatsen van de afvoerbuis type: zink (0,70mm dik) quartz vierkant 100/100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00225",
+   "product": "Leveren en plaatsen van de afvoerbuis type: koper (0,70mm dik) rond dia 80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00226",
+   "product": "Leveren en plaatsen van de afvoerbuis type: koper (0,70mm dik) vierkant 80/80 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00227",
+   "product": "Leveren en plaatsen van de afvoerbuis type: koper (0,70mm dik) rond dia 100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink rond",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00228",
+   "product": "Leveren en plaatsen van de afvoerbuis type: koper (0,70mm dik) vierkant 100/100 incl. scharnierhaken",
+   "uom": "m",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van afvoerbuis Type: zink vierkant",
+   "kits": 8,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00229",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) naturel rond dia 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00230",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) naturel vierkant 80/80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00231",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) naturel rond dia 100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00232",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) naturel vierkant 100/100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00233",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) anthra rond dia 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00234",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) anthra vierkant 80/80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00235",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) anthra rond dia 100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00236",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) anthra vierkant 100/100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00237",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) quartz rond 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00238",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) quartz vierkant 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00239",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) quartz rond 100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00240",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: zink (0,70mm dik) quartz vierkant 100/100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00241",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: koper (0,70mm dik) rond 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00242",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: koper (0,70mm dik) vierkant 80",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00243",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: koper (0,70mm dik) rond 100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis rond",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00244",
+   "product": "Leveren en plaatsen van de bocht onderaan de afvoerbuis type: koper (0,70mm dik) vierkant 100/100",
+   "uom": "unit",
+   "hours_execution": 0.3,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de zinken bocht onderaan de afvoerbuis vierkant",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00245",
+   "product": "Inkorten van de onderkant van de afvoerbuis",
+   "uom": "unit",
+   "hours_execution": 0.5,
+   "hours_demolition": 0.0,
+   "source": "Inkorten van de afvoerbuis die uitmondt op het plat dak gezien het dakoppervlak door de isolatie hoger komt te liggen",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00246",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 50",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00247",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 63",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00248",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 75",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00249",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 90",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00250",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 110",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00251",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 125",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00252",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 160",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00253",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 200",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de afvoerbuis in PE",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00254",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 50 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00255",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 63 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00256",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 75 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00257",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 90 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00258",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 110 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00259",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 125 incl. isolatie achter de buis & EPDM-slabbe rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00260",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 50 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00261",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 63 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00262",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 75 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00263",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 90 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00264",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 110 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00265",
+   "product": "Leveren en plaatsen van de afvoerbuis type: PE dia 125 incl. geluidsisolatie rond de buis",
+   "uom": "m",
+   "hours_execution": 0.17,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de U-profielen om overheen de ingewerkte PE-afvoerbuis te plaatsen",
+   "kits": 9,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00266",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in naturel zink breedte: 80mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00267",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in anthra zink breedte: 80mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00268",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in quartz zink breedte: 80mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00269",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in naturel zink breedte: 100mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00270",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in anthra zink breedte: 100mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00271",
+   "product": "Leveren en plaatsen van het plooiwerk op maat type: U-profiel in quartz zink breedte: 100mm",
+   "uom": "m",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand l/M",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00272",
+   "product": "Uitvoeren van de betonboring voor de dakdoorvoer met diameter ….. (eerste boring)",
+   "uom": "unit",
+   "hours_execution": 1.15,
+   "hours_demolition": 0.0,
+   "source": "Betonboring voor de dakdoorvoer",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00273",
+   "product": "Uitvoeren van de betonboring voor de dakdoorvoer met diameter ….. (volgende boringen)",
+   "uom": "unit",
+   "hours_execution": 0.7,
+   "hours_demolition": 0.0,
+   "source": "Volgende boringen",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00274",
+   "product": "Leveren en plaatsen van de dubbelwandige dakdoorvoer met zelfklevende slab dia 80",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00275",
+   "product": "Leveren en plaatsen van de dubbelwandige dakdoorvoer met zelfklevende slab dia 110",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00276",
+   "product": "Leveren en plaatsen van de dubbelwandige dakdoorvoer met zelfklevende slab dia 125",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00277",
+   "product": "Leveren en plaatsen van de dubbelwandige dakdoorvoer met zelfklevende slab dia 160",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00278",
+   "product": "Leveren en plaatsen van de dubbelwandige kabeldoorvoer met zelfklevende slab dia 80",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00279",
+   "product": "Leveren en plaatsen van de dubbelwandige kabeldoorvoer met zelfklevende slab dia 125",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van geïsoleerde dakdoorvoer",
+   "kits": 7,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00280",
+   "product": "Herverdichten van de dakdoorvoer die behouden kan worden type: …..",
+   "uom": "unit",
+   "hours_execution": 0.25,
+   "hours_demolition": 0.0,
+   "source": "Afdichten van de bestaande dakdoorvoer die behouden kan worden",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00281",
+   "product": "Verdichten van de dakdoorvoer die aangeleverd wordt door derden",
+   "uom": "unit",
+   "hours_execution": 0.75,
+   "hours_demolition": 0.0,
+   "source": "Afdichten van de dakdoorvoer geleverd door derden",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00282",
+   "product": "Verdichten van de nieuwe of aangepaste rookgasdoorvoer",
+   "uom": "unit",
+   "hours_execution": 0.75,
+   "hours_demolition": 0.0,
+   "source": "Afdichten van de dakdoorvoer geleverd door derden",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00283",
+   "product": "Creëren van de dakopening voor de nieuwe koepel. Maat dakopening: …..mm x …..mm",
+   "uom": "m",
+   "hours_execution": 0.15,
+   "hours_demolition": 0.0,
+   "source": "Uittimmeren van de dakopening voor de koepel",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00284",
+   "product": "Leveren en plaatsen CLS-kepers (38mm x 58mm) om de koepel op te hogen",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "[CONCLS] Leveren en plaatsen van CLS-latten om de ophoging van de koepelopstand te voorzien wegens gebrek aan hoogte ifv de isolatie",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00286",
+   "product": "Wegnemen en terugplaatsen van de bestaande koepelschaal (+ checkup zwelmousse)",
+   "uom": "m",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Afnemen, herverdichten en terugplaatsen van de bestaande koepel",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00314",
+   "product": "Leveren van de draaistok met haak voor spindel met oog (lengte 1,50m)",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren van de draaistok om de koepel manueel open te draaien",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00315",
+   "product": "Leveren van de draaistok met gleuf voor spindel met buis (lengte 1,50m)",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren van de draaistok om de koepel manueel open te draaien",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00324",
+   "product": "Creëren van de dakopening voor het nieuwe Dakraem. Timmermaten dakopening: …..mm x …..mm",
+   "uom": "m",
+   "hours_execution": 0.15,
+   "hours_demolition": 0.0,
+   "source": "Uittimmeren van de dakopening voor het nieuwe dakraem",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00325",
+   "product": "Creëren van de dakopstand voor het nieuwe Dakraem. Timmermaten dakopstand: …..mm x …..mm",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Uittimmeren van de dakopstand (onder lichte helling) voor het nieuwe dakraem",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00326",
+   "product": "Leveren en plaatsen van de isolatie 3cm PIR + EPDM thv de dakopstand voor het Dakraem. Timmermaten dakopstand: …..mm x …..mm",
+   "uom": "m",
+   "hours_execution": 0.04,
+   "hours_demolition": 0.0,
+   "source": "Uitisoleren van de dakopstand voor het dakraem met isolatie van 3cm dik + verdichting van de opstand met EPDM",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00328",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 23-35mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00329",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 35-50mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00330",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 50-80mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00331",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 80-110mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00332",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 110-140mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00335",
+   "product": "Leveren en plaatsen buitenhoek 2-delige dakranden geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00336",
+   "product": "Leveren en plaatsen binnenhoek 2-delige dakranden geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00337",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock-T-21 Roofing",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00338",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock-X-SR-B roofing",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00339",
+   "product": "Leveren en plaatsen ankerpunt ABS-Lock X-H-16 Roofing",
+   "uom": "unit",
+   "hours_execution": 0.375,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het permanent ankerpunt",
+   "kits": 6,
+   "kinds": [
+    "werkuren veiligheid"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00340",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 2cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00341",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 2cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00342",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 3cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00343",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 3cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00344",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 4cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00345",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 4cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00346",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 5cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00347",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 5cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00348",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 6cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00349",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 6cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00350",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 7cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00351",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 7cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00352",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 8cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00353",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 8cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00354",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00355",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00356",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00357",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00358",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00359",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00360",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00361",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00362",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00363",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00364",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00365",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00366",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200 / 5+5cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00367",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (600x1200 / 5+5cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00368",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200 / 6+6cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00369",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (600x1200 / 6+6cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00370",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200 / 7+7cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00371",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (600x1200 / 7+7cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00372",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200 / 8+8cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00373",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (600x1200 / 8+8cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00374",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200 / 10+10cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00375",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (600x1200 / 10+10cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00376",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (1200x2400) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00377",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 10cm (1200x2400) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00378",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (1200x2400) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00379",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 12cm (1200x2400) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00380",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (1200x2400) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00381",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 14cm (1200x2400) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00382",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (1200x2400) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00383",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 16cm (1200x2400) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00384",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (1200x2400 / 8+10cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00385",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (1200x2400 / 8+10cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00386",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (1200x2400 / 10+10cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00387",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 20cm (1200x2400 / 10+10cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00388",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200 / 10+8cm geschrankt) mechanisch",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00389",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200 / 10+8cm geschrankt) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00390",
+   "product": "Leveren en plaatsen isolatie type: Unilin Utherm Roof PIR dikte: 18cm (600x1200 / 10+8cm geschrankt) losliggend",
+   "uom": "m2",
+   "hours_execution": 0.18,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco) (m²) met ballast",
+   "kits": 10,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00391",
+   "product": "Leveren en plaatsen buitenhoek 2-delige dakranden in RAL 9005 stuctuurlak",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00392",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00393",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00394",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00395",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00396",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00397",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00398",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00399",
+   "product": "Leveren en plaatsen buitenhoek voor naturel zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00400",
+   "product": "Leveren en plaatsen 2-delige alu dakrandprofielen in RAL naar keuze",
+   "uom": "m",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00401",
+   "product": "Leveren en plaatsen binnenhoek 2-delige dakranden in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00402",
+   "product": "Leveren en plaatsen buitenhoek 2-delige dakranden in RAL naar keuze",
+   "uom": "unit",
+   "hours_execution": 0.12,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande 2-delige dakranden",
+   "kits": 5,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00403",
+   "product": "Eindstuk voor bovenstaande dakranden",
+   "uom": "unit",
+   "hours_execution": 0.33,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van eindstukken voor bovenstaande muurkappen",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00404",
+   "product": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder DBR (op houten dakvloer)",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00405",
+   "product": "Leveren en plaatsen van het dampscherm klasse E3 type: Bauder KSD (op beton/hellingschape)",
+   "uom": "m2",
+   "hours_execution": 0.055,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van dampscherm type:",
+   "kits": 4,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00406",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 45mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00407",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 60mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00408",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 80mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00409",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00410",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00411",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00412",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 200mm geanodiseerd",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00413",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 45mm in RAL stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00414",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 60mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00415",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 80mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00416",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00417",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00418",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00419",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 200mm in RAL Stock",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00420",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 45mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00421",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 60mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00422",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 80mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00423",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 100mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van het enkelvoudige dakrandprofiel",
+   "kits": 16,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00424",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 150mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00425",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 175mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00426",
+   "product": "Leveren en plaatsen van de enkelvoudige dakrandprofielen hoogte: 200mm Brut",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de hoge dakrandprofielen DRBS",
+   "kits": 18,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00427",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00428",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00429",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00430",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00431",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00432",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00433",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00434",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00435",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00436",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00437",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00438",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00439",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00440",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00441",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00442",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00443",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor DRB-dakrandprofiel",
+   "kits": 20,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00444",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00445",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00446",
+   "product": "Leveren en plaatsen binnenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.16,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van binnenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 21,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00447",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00448",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00449",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00450",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00451",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00452",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00453",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm geanodiseerd",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00454",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00455",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00456",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00457",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00458",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00459",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00460",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm in RAL Stock",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00461",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 45mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00462",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 60mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00463",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 80mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00464",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 100mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoek voor DRB-dakrandprofiel",
+   "kits": 40,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00465",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 150mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00466",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 175mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00467",
+   "product": "Leveren en plaatsen buitenhoek voor de enkelvoudige dakrandprofielen hoogte: 200mm Brut",
+   "uom": "unit",
+   "hours_execution": 0.2,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van buitenhoeken voor bovenstaande hoge dakranden DRBS",
+   "kits": 19,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00468",
+   "product": "Leveren en plaatsen van de alu grindvangers",
+   "uom": "m",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de ballastlaag met keien 16/32 inclusief geotextiel en grindvanger",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00469",
+   "product": "Leveren en plaatsen van de kunststof tegeldragers regelbaar in hoogte 140-170mm",
+   "uom": "unit",
+   "hours_execution": 0.05,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de kunststof regelbare tegeldragers om de terrasvloer mooi waterpas te kunnen plaatsen )en om de druk op de isolatie te verdelen)",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00474",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met isolatie 4cm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 6cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00475",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met isolatie 6cm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 6cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00476",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met isolatie 8cm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 6cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00477",
+   "product": "Volledig inpakken van de schoorsteen incl. bovenzijde met isolatie 10cm & EPDM",
+   "uom": "m2",
+   "hours_execution": 1.0,
+   "hours_demolition": 0.0,
+   "source": "Inpakken van de schouw met isolatie 6cm dik & EPDM",
+   "kits": 2,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00479",
+   "product": "Leveren en plaatsen van de bekleding type Rockpanel",
+   "uom": "m2",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van Trespa",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00480",
+   "product": "Leveren en plaatsen van de bekleding type Trespa",
+   "uom": "m2",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van Trespa",
+   "kits": 1,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00481",
+   "product": "Leveren en plaatsen van de zinken kralen in Quartz zink",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00482",
+   "product": "Leveren en plaatsen binnenhoek voor Quartz zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00483",
+   "product": "Leveren en plaatsen buitenhoek voor Quartz zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00484",
+   "product": "Leveren en plaatsen van de zinken kralen in Quartz zink incl. onderliggend l-profiel (druiplijst)",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00485",
+   "product": "Leveren en plaatsen buitenhoek voor Quartz zinken kralen incl. onderliggend l-profiel (druiplijst)",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00486",
+   "product": "Leveren en plaatsen binnenhoek voor Quartz zinken kralen incl. onderliggend l-profiel (druiplijst)",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00487",
+   "product": "Leveren en plaatsen van de zinken kralen in Anthra zink",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00488",
+   "product": "Leveren en plaatsen binnenhoek voor Anthra zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00489",
+   "product": "Leveren en plaatsen buitenhoek voor Anthra zinken kralen",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00490",
+   "product": "Leveren en plaatsen van de zinken kralen in Anthra zink incl. onderliggend l-profiel (druiplijst)",
+   "uom": "m",
+   "hours_execution": 0.08,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de dakranden type: zinken kraal",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00491",
+   "product": "Leveren en plaatsen binnenhoek voor Anthra zinken kralen incl. onderliggend l-profiel (druiplijst)",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de binnenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00492",
+   "product": "Leveren en plaatsen buitenhoek voor Anthra zinken kralen incl. onderliggend l-profiel (druiplijst)",
+   "uom": "unit",
+   "hours_execution": 0.1,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen van de buitenhoeken voor bovenstaande kralen",
+   "kits": 6,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  },
+  {
+   "code": "S00494",
+   "product": "Leveren en plaatsen isolatie type: Elevate Isogard HD Coverboard dikte: 12,7mm (1200x2250) verkleefd",
+   "uom": "m2",
+   "hours_execution": 0.13,
+   "hours_demolition": 0.0,
+   "source": "Leveren en plaatsen isolatie type: PIR A-merk (Unilin,Recticel,Idelco)",
+   "kits": 45,
+   "kinds": [
+    "werkuren construction"
+   ],
+   "method": "mapping"
+  }
+ ],
+ "stats": {
+  "products": 415,
+  "by_mapping": 415,
+  "by_name": 0,
+  "export_products_with_labour": 183,
+  "export_products_unused": 72
+ },
+ "unused_export_products": [
+  "Aansluiting hellend dak",
+  "Afbraak huidige spouwplank type:",
+  "Afbraak schoorsteen",
+  "Afbraak van de schouw",
+  "Afbraak van de spuwer",
+  "Afbraak van de trespa geveldelen",
+  "Afdichten van de opening van de koepel met houten constructie, OSB en dampscherm",
+  "Bekleding oversteek",
+  "Connection with wall insulation + EPDM lifting",
+  "Dichtmaken van de dakopening van de koepel/lichtstraat die verwijderd wordt met maat dakopening:",
+  "Framing the chimney with solines",
+  "Gebogen aluminium profielen",
+  "Inpakken van de muur met isolatie 3cm dik",
+  "Isoleren van de verticale opstand met 3cm isolatie",
+  "Klein materiaal Forfait",
+  "Leveren en plaatsen EPDM Wit verkleefd type:",
+  "Leveren en plaatsen c-profiel onder de deksteen van de schouw",
+  "Leveren en plaatsen lichtstraat",
+  "Leveren en plaatsen slabben in EPDM met een ontvouwing van ___tijdens ruwbouwfase",
+  "Leveren en plaatsen van Hout",
+  "Leveren en plaatsen van U-profiel Crepi 80/27/60",
+  "Leveren en plaatsen van binnenhoeken voor bovenstaande 2-delige dakranden (C)",
+  "Leveren en plaatsen van binnenhoeken voor bovenstaande muurkappen",
+  "Leveren en plaatsen van buitenhoeken voor bovenstaande 2-delige dakranden (C)",
+  "Leveren en plaatsen van buitenhoeken voor bovenstaande muurkappen",
+  "Leveren en plaatsen van de 2-delige aluminium dakrandprofielen type: C",
+  "Leveren en plaatsen van de EPDM slabbe aan de buitenkant om de CLS-latten te beschermen",
+  "Leveren en plaatsen van de binnenhoeken voor enkelvoudige dakrandprofiel (C)",
+  "Leveren en plaatsen van de dakdoorvoer type: snorkel",
+  "Leveren en plaatsen van de geïsoleerde dampkapdoorvoer dia 160",
+  "Leveren en plaatsen van de gootvloer in multiplex in de bakgoot",
+  "Leveren en plaatsen van de muurkappen in aluminium",
+  "Leveren en plaatsen van de nieuwe dakdoorvoer voor de CV type: rookgasdoorvoer",
+  "Leveren en plaatsen van de spouwplank type: multiplex 15mm (lm)",
+  "Leveren en plaatsen van de zettingsstrip thv de vertikale opstanden type: Isover Multimax 30 met dikte: 45mm",
+  "Leveren en plaatsen van het enkelvoudige dakrandprofiel type: C",
+  "Leveren en plaatsen van het gootsysteem breedte 25cm tbv optimale afwatering naar tapbuis & het behoud van een verlaagde dakrand",
+  "Leveren en plaatsen van ontvangbak",
+  "Leveren en plaatsen van spouwplank Type: garantiemultiplex - Solid John 15mm (lm)",
+  "Leveren, plaatsen en afdichten van Solin - onderkapt",
+  "Openmaken opstand rond tapbuis",
+  "Ophogen van de koepelopstand met badden 18cm hoog (wordt gemonteerd onder de opstand)",
+  "Opmetselen van de muur",
+  "Overlappen van koppelstuk dubbel",
+  "Overlappen van koppelstuk enkel",
+  "Randaansluiting type: C-profiel incl. plastische elastische voeg",
+  "Randaansluiting type: aansluiting met naadtape",
+  "Randaansluiting type: aansluiting op het dak van de garage met naadtape",
+  "Randaansluiting type: solins in lood(inslijpen in de muur incl. plastische elastische voeg) (lm)",
+  "Removal of suspended gutter PE",
+  "Removal of the PE drain pipe connection",
+  "Removal of undercut lead",
+  "Terugplaatsen van de bestaande dakrandprofielen die gerecupereerd worden",
+  "Verstevigen van overhangende spouwplank met L-ijzer",
+  "Verwijderen Solins",
+  "Verwijderen aansluitprofiel",
+  "Verwijderen en terugplaatsen van de nokpannen",
+  "Verwijderen lichtstraat",
+  "Verwijderen rotte houtvezelplaat + plaatsen van nieuwe OSB",
+  "Verwijderen van Afvoerbuis PE",
+  "Verwijderen van Afvoerbuis Zink",
+  "Verwijderen van asbesthoudende leien (m²)",
+  "Verwijderen van de afvoerbuis",
+  "Verwijderen van de bestaande balustrades",
+  "Verwijderen van de bestaande oversteken",
+  "Verwijderen van de dekpannen",
+  "Verwijderen van de dekstenen (lm)",
+  "Verwijderen van de hanggoot",
+  "Verwijderen van de onderste rij pannen",
+  "Verwijderen van zinken bekleding uit de bakgoot (binnenzijde)",
+  "[ISOLAV] Leveren en plaatsen van isolatie verlijmd",
+  "afbraak van huidige oversteek type: trespa/rockpanel"
+ ]
+}

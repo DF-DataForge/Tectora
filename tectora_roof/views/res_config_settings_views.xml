@@ -18,6 +18,17 @@
                             <field name="tectora_mapbox_token"/>
                         </setting>
                     </block>
+                    <block title="Offerte-pdf" help="Hoe de offerte naar de klant gaat.">
+                        <setting string="Standaard offerte"
+                                 help="Nieuwe offertes gebruiken het standaard offertedocument van Odoo in plaats van de Tectora-offerte. Per offerte te wijzigen op de order.">
+                            <field name="tectora_standard_quotation"/>
+                        </setting>
+                        <setting string="Standaardstijl Tectora-offerte"
+                                 help="Projectdossier, compact, klassiek, visueel of minimalistisch. Per offerte te wijzigen op de order."
+                                 invisible="tectora_standard_quotation">
+                            <field name="tectora_quotation_style"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

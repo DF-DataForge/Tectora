@@ -90,6 +90,55 @@ install on Odoo 17 or earlier without adjustments.
 - Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
   accounts for the retina factor by measuring the actual stored image width.
 
+## Offerte als Tectora-projectdossier
+
+De offerte-pdf (afdrukken, e-mailen, klantenportaal) is een **projectdossier**
+in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
+
+1. **Voorblad** met klant, werfadres, contactpersoon, kerncijfers en, bij een
+   dakproject, het dak in één oogopslag (oppervlakte, omtrek, dakvlakken,
+   dakobjecten) met de tekening;
+2. **Onze aanpak**: de vijf stappen van kennismaking tot nazorg, waarom Tectora
+   en het dienstenaanbod (tectora.be/diensten);
+3. **De offerte**: lijnen gegroepeerd per hoofdstuk en daksectie met subtotalen,
+   totalen, opties, betalingsvoorwaarden, opmerkingen en het akkoordvak (met de
+   digitale handtekening zodra getekend);
+4. **Dakplan** (optioneel): het meetblad met tekening, maten en producten;
+5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
+   EPC-attest (tectora.be/service), kwaliteitspunten en contact.
+
+Op de verkooporder staat naast het dakproject het vinkje **Standaard
+offerte**: aangevinkt gaat de offerte als het standaard Odoo-document naar de
+klant (pdf, e-mail én klantenportaal), met het dakplan erachter als dat
+aangevinkt blijft. Uitgevinkt kies je de **Offertestijl** van de
+Tectora-offerte en of het **Dakplan** meegaat. Er zijn vijf stijlen, opgebouwd
+uit dezelfde blokken
+(partijen, dak in één oogopslag, aanpak, diensten, offerte, opties,
+voorwaarden en akkoord, dakplan, service en garantie):
+
+| Stijl | Voor wie | Opbouw |
+|---|---|---|
+| **Projectdossier** | particulieren, volledig verhaal | voorblad in teal, aanpak en diensten, offerte, dakplan, service en contact |
+| **Compact** | aannemers, architecten, snelle beslissers | offerte voorop met totaal in beeld, korte servicestrook, dakplan achteraan |
+| **Klassiek** | formele briefwisseling | briefhoofd en aanhef, begeleidende tekst, monochrome tabel in serif, bijlage service |
+| **Visueel** | wie het dakplan wil zien | tekening groot voorop met kerncijfers, offerte per onderdeel, aanpak en service |
+| **Minimalistisch** | rustige, moderne uitstraling | veel wit, dunne lijnen, teal alleen op het totaal, servicestrook |
+
+De standaardkeuze voor nieuwe offertes (standaard offerte of niet, en de
+stijl) staat in *Instellingen → Tectora Dakmeting → Offerte-pdf*. De
+teksten staan in `report/sale_order_dossier_report.xml` (blokken
+`report_tq_block_*`) en zijn per blok aan te passen.
+
+## Eén btw-tarief voor de hele offerte
+
+Op de tab *Overige info* van de order staat naast de fiscale positie het veld
+**Btw-tarief voor alle regels** met de knop **Toepassen op alle regels**. Kies
+bv. het 6%-tarief bij renovatie van een woning ouder dan 10 jaar en klik op de
+knop: elke productregel krijgt dat tarief. Het is bewust een handeling en geen
+automatisme: regels die nadien bijkomen houden de btw van hun product tot u
+opnieuw toepast. Zonder gekozen tarief zet de knop de btw van de producten en
+de fiscale positie terug.
+
 ## Dakproject ↔ verkooporder (1 op 1)
 
 Eén dakproject staat tegenover één offerte/order, in beide richtingen:
@@ -133,8 +182,13 @@ De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
   productcategorie.
 * **Hoeveelheden volgen de meting**: een m²-product neemt de dakoppervlakte,
   een m-product de omtrek (uit de tekening); getelde producten (stuks, forfait,
-  dagen) nemen het aantal van de offerte over en zijn op beide kanten te
-  wijzigen. Op een daksectie of dakobject volgt een oppervlakteproduct de
+  dagen) nemen het aantal van de offerte over. Elke hoeveelheid is op **beide
+  kanten** te wijzigen: wat je op het dakproject intikt komt op de offerte,
+  wat je op de offerte intikt komt op het dakproject — ook voor m² en m. Zo'n
+  ingevoerde hoeveelheid blijft staan (ook als je daarna andere lijnen
+  wijzigt) tot de tekening of de opgemeten oppervlakte/omtrek verandert; dan
+  neemt de meting het weer over. Een m²- of m-lijn die op een offerte
+  bijkomt, houdt de hoeveelheid van de offerte tot er een meting is. Op een daksectie of dakobject volgt een oppervlakteproduct de
   oppervlakte en een randproduct de omtrek van die vorm.
 * De **meetlijnen** (per daksectie en dakobject, uit het tekenen en de
   productkiezer) worden bij elke wijziging van de tekening herbouwd op de
@@ -197,13 +251,51 @@ project (start- en einddatum) en omgekeerd.
   eerdere bevestiging van dezelfde order worden vervangen.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
+
+## Geschatte uren opbouw en afbraak, en de taken Uitvoeringswerken en Afbraakwerken
+
+Elk product heeft op zijn fiche, naast de prijzen, twee tijdnormen in **uren
+per eenheid** (per m², per lm, per stuk): **Uren opbouw per eenheid** en
+**Uren afbraak per eenheid**. Eén werkpost kan beide dragen (nokpannen
+verwijderen én herplaatsen). De module `tectora_boms` vult ze voor 415 van de
+499 verkoopproducten uit de **werkurenregels van de stuklijstexport van
+Tectora** (`werkuren construction` en `werkuren veiligheid` → opbouw,
+`werkuren afbraak` en `Afbraakwerken` → afbraak); zie
+`docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit volgt:
+
+* op elke **offertelijn** de uren afbraak en de uren opbouw (hoeveelheid ×
+  norm, getoond als uu:mm, met kolomtotalen; een lijn in een andere eenheid
+  wordt eerst omgerekend);
+* onder de totalen van de offerte **Geschatte uren afbraak**, **Geschatte uren
+  opbouw** en de **Geschatte uitvoeringstijd** samen, in uren en in werkdagen
+  (uren per dag uit de werktijden van het bedrijf, anders 8). De offerte-PDF
+  toont dezelfde regels onder de totalen, in elke stijl, enkel als er iets
+  geschat is;
+* bij het **bevestigen** van de order per werksoort een taak op het project,
+  **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte uren van die
+  werksoort als **toegewezen tijd**, de leverdatum van de order (of het
+  geplande einde van het dakproject) als deadline en in de omschrijving de
+  opsplitsing per werkpost. Uren worden op die taken gelogd, zodat afbraak en
+  uitvoering in de urenstaten uit elkaar te houden zijn; het medewerkersportaal
+  (`tectora_portal`) laat de ploeg daarvoor kiezen tussen *Start uitvoering*
+  en *Start afbraak*. Verandert nadien een hoeveelheid op de bevestigde order,
+  dan volgt de toegewezen tijd; de rest van de taak (toewijzing, fase,
+  omschrijving) blijft van wie het werk plant. De taken zijn herkenbaar aan het
+  veld *Werksoort (Tectora)*; er is er één per werksoort per project.
+* Het projectdashboard toont de geschatte tijd op de kaart **Taken** en de
+  werksoort en toegewezen tijd per taak op de tab Taken.
+
+Producten zonder norm tellen niet mee; een werksoort zonder geschatte uren
+krijgt geen taak.
 * Slimme knoppen op het dakproject: Offerte / Order, Materialen, Leveringen,
   Inkoop, Facturen, Werkblokken en het Project (dashboard).
 
 Manufacturing (`mrp`), Inkoop (`purchase`), Voorraad (`stock`) en Urenstaten
 (`hr_timesheet`) zijn optioneel: zonder Manufacturing bevat de materiaallijst
 de verkochte producten zelf, zonder Inkoop/Voorraad/Urenstaten blijven de
-overeenkomstige kaarten leeg.
+overeenkomstige kaarten leeg. Met Voorraad zet de brug `tectora_roof_stock`
+de materiaallijst klaar als **uitgaande levering** (knop *Levering
+klaarzetten*), telkens voor wat nog niet op een levering staat.
 
 ## Planning op ploegen
 

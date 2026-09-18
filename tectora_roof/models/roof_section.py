@@ -95,6 +95,17 @@ class TectoraRoofSection(models.Model):
         return Line.create(values) if values else Line
 
     # --------------------------------------------------- convert to roof object
+    def write(self, vals):
+        """A measurement typed by hand (area, perimeter) moves the measured
+        quantities of the section's lines and of the chapter lines, so the
+        open quotation must follow, the way it does after a drawing sync."""
+        result = super().write(vals)
+        if not self.env.context.get("tectora_sync") and (
+            {"area", "perimeter", "inner_area", "inner_perimeter", "upstand_area"} & set(vals)
+        ):
+            self.project_id._tectora_mirror_to_order()
+        return result
+
     def action_convert_to_chimney(self):
         return self._convert_to_object("chimney")
 
