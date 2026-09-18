@@ -18,10 +18,17 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="tectora_roof.mapbox_token",
         help="Fallback mapping provider when no Google Maps key is configured.",
     )
+    tectora_standard_quotation = fields.Boolean(
+        string="Standaard offerte",
+        config_parameter="tectora_roof.standard_quotation",
+        help="Nieuwe offertes gebruiken het standaard offertedocument van Odoo "
+        "in plaats van de Tectora-offerte; per offerte aan te passen.",
+    )
     tectora_quotation_style = fields.Selection(
         QUOTATION_STYLES,
         string="Standaardstijl offerte",
         config_parameter="tectora_roof.quotation_style",
         default="dossier",
-        help="De stijl die een nieuwe offerte krijgt; per offerte aan te passen.",
+        help="De stijl die een nieuwe Tectora-offerte krijgt; per offerte aan "
+        "te passen.",
     )
