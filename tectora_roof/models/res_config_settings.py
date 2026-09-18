@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models
 
+from .sale_order import QUOTATION_STYLES
+
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
@@ -15,4 +17,11 @@ class ResConfigSettings(models.TransientModel):
         string="Mapbox access token",
         config_parameter="tectora_roof.mapbox_token",
         help="Fallback mapping provider when no Google Maps key is configured.",
+    )
+    tectora_quotation_style = fields.Selection(
+        QUOTATION_STYLES,
+        string="Standaardstijl offerte",
+        config_parameter="tectora_roof.quotation_style",
+        default="dossier",
+        help="De stijl die een nieuwe offerte krijgt; per offerte aan te passen.",
     )

@@ -27,6 +27,16 @@ SYNC_PAIRS = [
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
 
+# The looks the quotation PDF can take (see report/sale_order_dossier_report.xml).
+QUOTATION_STYLES = [
+    ("dossier", "Projectdossier — voorblad, aanpak, offerte, dakplan, service"),
+    ("compact", "Compact — offerte voorop, kort en zakelijk"),
+    ("classic", "Klassiek — briefstijl met begeleidende tekst"),
+    ("visual", "Visueel — dakplan en kerncijfers voorop"),
+    ("minimal", "Minimalistisch — rustig, veel wit"),
+    ("standard", "Standaard Odoo-document"),
+]
+
 
 def _differs(record, field_name, value):
     """Whether writing ``value`` (an id for relational fields) would change
@@ -141,6 +151,38 @@ class SaleOrder(models.Model):
                 days=("%.1f" % days).replace(".", ","),
             )
         return label
+
+    tectora_quotation_style = fields.Selection(
+        QUOTATION_STYLES,
+        string="Offertestijl",
+        default=lambda self: self._default_tectora_quotation_style(),
+        required=True,
+        help="De opmaak van de offerte-pdf (afdrukken, e-mail, klantenportaal). "
+        "De standaardstijl staat in Instellingen → Tectora Dakmeting.",
+    )
+    tectora_tax_id = fields.Many2one(
+        "account.tax",
+        string="Btw-tarief voor alle regels",
+        domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]",
+        check_company=True,
+        help="Eén btw-tarief voor de hele offerte, bv. 6% bij renovatie van een "
+        "woning ouder dan 10 jaar. Kies het tarief en klik op 'Toepassen op "
+        "alle regels': elke productregel krijgt dan dit tarief. Regels die "
+        "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
+    )
+    tectora_include_roof_plan = fields.Boolean(
+        string="Dakplan toevoegen",
+        default=True,
+        help="Neem het dakplan (tekening, maten en producten per daksectie) "
+        "op in de offerte-pdf.",
+    )
+
+    @api.model
+    def _default_tectora_quotation_style(self):
+        style = self.env["ir.config_parameter"].sudo().get_param(
+            "tectora_roof.quotation_style"
+        )
+        return style if style in dict(QUOTATION_STYLES) else "dossier"
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi
@@ -405,16 +447,23 @@ class SaleOrder(models.Model):
         """Order lines -> roof project.
 
         A product line without a roof counterpart becomes a project-level
-        (chapter) line of the roof project, measured by its unit: m² lines
-        take the roof area, m lines the perimeter, counted lines the quantity
-        of the order. A line that already has its counterpart pushes an
-        edited count onto it; for measured lines the roof project decides, so
-        the order quantity is put back.
+        (chapter) line of the roof project, measured by its unit (m² ->
+        surface, m -> edges, else counted) and starting with the quantity of
+        the order; the drawing takes over the measured ones as soon as it
+        changes.
+
+        ``lines`` given means the user just edited those order lines: their
+        quantity is pushed onto the roof line whatever its coverage, the way a
+        quantity typed on the roof project is pushed onto the order. Without
+        ``lines`` (aligning a whole order) counted lines follow the order and
+        measured lines follow the roof project, so the order quantity is put
+        back.
         """
         self.ensure_one()
         roof = self.roof_project_id
         if not roof or self.state not in ("draft", "sent"):
             return
+        order_is_master = lines is not None
         RoofLine = self.env["tectora.roof.section.product"].with_context(
             tectora_sync=True
         )
@@ -444,14 +493,15 @@ class SaleOrder(models.Model):
                     roof_line = self.env["tectora.roof.section.product"]
                 if not roof_line:
                     coverage = RoofLine._coverage_from_product(line.product_id)
-                    values = {
+                    # The order's quantity is kept, also on a measured line:
+                    # without it a roof project without drawing would zero
+                    # the line. The drawing overrides it when it changes.
+                    roof_line = RoofLine.create({
                         "project_direct_id": roof.id,
                         "product_id": line.product_id.id,
                         "coverage": coverage,
-                    }
-                    if coverage == "general":
-                        values["quantity"] = line.product_uom_qty
-                    roof_line = RoofLine.create(values)
+                        "quantity": line.product_uom_qty,
+                    })
                     direct_by_product[line.product_id] = roof_line
                 line.with_context(tectora_sync=True).write(
                     {"roof_line_id": roof_line.id}
@@ -463,9 +513,11 @@ class SaleOrder(models.Model):
                         "coverage": RoofLine._coverage_from_product(line.product_id),
                     }
                 )
-            # Quantities: counted chapter lines follow the order, measured
-            # lines follow the roof project.
-            if roof_line.project_direct_id and roof_line.coverage == "general":
+            # Quantities: an edited order line wins; otherwise counted chapter
+            # lines follow the order and measured lines the roof project.
+            if order_is_master or (
+                roof_line.project_direct_id and roof_line.coverage == "general"
+            ):
                 if roof_line._quantity_differs(line.product_uom_qty):
                     roof_line.with_context(tectora_sync=True).write(
                         {"quantity": line.product_uom_qty}
@@ -616,6 +668,65 @@ class SaleOrder(models.Model):
         tz = pytz.timezone(self.env.user.tz or "UTC")
         local = tz.localize(datetime.combine(deadline, time(hour=8)))
         return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+    # ------------------------------------------------------------------- btw
+    def action_apply_tectora_tax(self):
+        """Put the chosen tax on every product line. Deliberately a button,
+        not an automatism: the user decides when the whole order switches."""
+        for order in self:
+            lines = order.order_line.filtered(lambda line: not line.display_type)
+            if not lines:
+                continue
+            if order.tectora_tax_id:
+                lines.with_context(tectora_sync=True).write(
+                    {"tax_ids": [(6, 0, order.tectora_tax_id.ids)]}
+                )
+            else:
+                # No tax chosen: back to the taxes of the products and the
+                # fiscal position.
+                lines.with_context(tectora_sync=True)._compute_tax_ids()
+        return True
+
+    # ---------------------------------------------------------------- report
+    def _tectora_report_sections(self, optional=False):
+        """The order lines grouped under their section headers, with a
+        subtotal per section, for the dossier PDF. Lines before the first
+        header form a nameless first group. Subsections and notes stay in
+        the group as lines (their display_type tells them apart).
+
+        Odoo 19 marks optional products as sections flagged ``is_optional``:
+        ``optional=False`` returns the ordinary sections, ``optional=True``
+        the optional ones (offered separately, outside the totals).
+        """
+        self.ensure_one()
+        sections = []
+        current = {"name": False, "lines": [], "subtotal": 0.0, "measurement": False, "optional": False}
+        for line in self.order_line:
+            if line.display_type == "line_section":
+                if current["lines"] or current["name"]:
+                    sections.append(current)
+                current = {
+                    "name": line.name,
+                    "lines": [],
+                    "subtotal": 0.0,
+                    "measurement": bool(line.roof_measurement_line),
+                    "optional": bool(getattr(line, "is_optional", False)),
+                }
+                continue
+            current["lines"].append(line)
+            if not line.display_type:
+                current["subtotal"] += line.price_subtotal
+        if current["lines"] or current["name"]:
+            sections.append(current)
+        return [section for section in sections if section["optional"] == optional]
+
+    def _tectora_report_tax_label(self, line):
+        """"21%" for a line's taxes, the way a customer reads them."""
+        labels = []
+        for tax in line.tax_ids:
+            amount = ("%g" % tax.amount) if tax.amount_type == "percent" else tax.name
+            labels.append("%s%%" % amount if tax.amount_type == "percent" else amount)
+        return ", ".join(labels)
 
     # ---------------------------------------------------------- smart buttons
     def action_view_roof_project(self):

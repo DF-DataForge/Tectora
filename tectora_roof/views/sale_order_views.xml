@@ -6,10 +6,25 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='fiscal_position_id']/.." position="after">
+                <label for="tectora_tax_id"/>
+                <div class="o_row">
+                    <field name="tectora_tax_id" options="{'no_create': True}"/>
+                    <button string="Toepassen op alle regels"
+                            name="action_apply_tectora_tax" type="object"
+                            class="btn-link mb-1 px-0"
+                            invisible="state not in ('draft', 'sent')"
+                            confirm="Het gekozen btw-tarief wordt op alle productregels gezet (zonder tarief: de btw van de producten en de fiscale positie). Doorgaan?"
+                            help="Zet het gekozen btw-tarief op elke productregel van deze offerte."/>
+                </div>
+            </xpath>
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="roof_project_id"
                        context="{'default_partner_id': partner_id}"/>
                 <field name="roof_project_state" invisible="1"/>
+                <field name="tectora_quotation_style"/>
+                <field name="tectora_include_roof_plan"
+                       invisible="not roof_project_id or tectora_quotation_style == 'standard'"/>
             </xpath>
             <!-- The roof project and the project are always one click away:
                  an order without a roof project gets one when the button is

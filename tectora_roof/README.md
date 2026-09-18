@@ -90,6 +90,51 @@ install on Odoo 17 or earlier without adjustments.
 - Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
   accounts for the retina factor by measuring the actual stored image width.
 
+## Offerte als Tectora-projectdossier
+
+De offerte-pdf (afdrukken, e-mailen, klantenportaal) is een **projectdossier**
+in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
+
+1. **Voorblad** met klant, werfadres, contactpersoon, kerncijfers en, bij een
+   dakproject, het dak in één oogopslag (oppervlakte, omtrek, dakvlakken,
+   dakobjecten) met de tekening;
+2. **Onze aanpak**: de vijf stappen van kennismaking tot nazorg, waarom Tectora
+   en het dienstenaanbod (tectora.be/diensten);
+3. **De offerte**: lijnen gegroepeerd per hoofdstuk en daksectie met subtotalen,
+   totalen, opties, betalingsvoorwaarden, opmerkingen en het akkoordvak (met de
+   digitale handtekening zodra getekend);
+4. **Dakplan** (optioneel): het meetblad met tekening, maten en producten;
+5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
+   EPC-attest (tectora.be/service), kwaliteitspunten en contact.
+
+Op de verkooporder kies je naast het dakproject de **Offertestijl** en of het
+**Dakplan** meegaat. Er zijn vijf stijlen, opgebouwd uit dezelfde blokken
+(partijen, dak in één oogopslag, aanpak, diensten, offerte, opties,
+voorwaarden en akkoord, dakplan, service en garantie):
+
+| Stijl | Voor wie | Opbouw |
+|---|---|---|
+| **Projectdossier** | particulieren, volledig verhaal | voorblad in teal, aanpak en diensten, offerte, dakplan, service en contact |
+| **Compact** | aannemers, architecten, snelle beslissers | offerte voorop met totaal in beeld, korte servicestrook, dakplan achteraan |
+| **Klassiek** | formele briefwisseling | briefhoofd en aanhef, begeleidende tekst, monochrome tabel in serif, bijlage service |
+| **Visueel** | wie het dakplan wil zien | tekening groot voorop met kerncijfers, offerte per onderdeel, aanpak en service |
+| **Minimalistisch** | rustige, moderne uitstraling | veel wit, dunne lijnen, teal alleen op het totaal, servicestrook |
+
+De standaardstijl voor nieuwe offertes staat in *Instellingen → Tectora
+Dakmeting → Offerte-pdf*; *Standaard Odoo-document* blijft beschikbaar. De
+teksten staan in `report/sale_order_dossier_report.xml` (blokken
+`report_tq_block_*`) en zijn per blok aan te passen.
+
+## Eén btw-tarief voor de hele offerte
+
+Op de tab *Overige info* van de order staat naast de fiscale positie het veld
+**Btw-tarief voor alle regels** met de knop **Toepassen op alle regels**. Kies
+bv. het 6%-tarief bij renovatie van een woning ouder dan 10 jaar en klik op de
+knop: elke productregel krijgt dat tarief. Het is bewust een handeling en geen
+automatisme: regels die nadien bijkomen houden de btw van hun product tot u
+opnieuw toepast. Zonder gekozen tarief zet de knop de btw van de producten en
+de fiscale positie terug.
+
 ## Dakproject ↔ verkooporder (1 op 1)
 
 Eén dakproject staat tegenover één offerte/order, in beide richtingen:
@@ -133,8 +178,13 @@ De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
   productcategorie.
 * **Hoeveelheden volgen de meting**: een m²-product neemt de dakoppervlakte,
   een m-product de omtrek (uit de tekening); getelde producten (stuks, forfait,
-  dagen) nemen het aantal van de offerte over en zijn op beide kanten te
-  wijzigen. Op een daksectie of dakobject volgt een oppervlakteproduct de
+  dagen) nemen het aantal van de offerte over. Elke hoeveelheid is op **beide
+  kanten** te wijzigen: wat je op het dakproject intikt komt op de offerte,
+  wat je op de offerte intikt komt op het dakproject — ook voor m² en m. Zo'n
+  ingevoerde hoeveelheid blijft staan (ook als je daarna andere lijnen
+  wijzigt) tot de tekening of de opgemeten oppervlakte/omtrek verandert; dan
+  neemt de meting het weer over. Een m²- of m-lijn die op een offerte
+  bijkomt, houdt de hoeveelheid van de offerte tot er een meting is. Op een daksectie of dakobject volgt een oppervlakteproduct de
   oppervlakte en een randproduct de omtrek van die vorm.
 * De **meetlijnen** (per daksectie en dakobject, uit het tekenen en de
   productkiezer) worden bij elke wijziging van de tekening herbouwd op de
