@@ -15,6 +15,8 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from odoo.addons.tectora_roof.models.project_task import WORK_KINDS
+
 _logger = logging.getLogger(__name__)
 
 
@@ -42,6 +44,16 @@ class TectoraRoofTimer(models.Model):
         string="Werkblok",
         ondelete="set null",
         help="Het werkblok van die dag waaruit de aanwezige ploeg voorgesteld werd.",
+    )
+    work_kind = fields.Selection(
+        WORK_KINDS,
+        string="Werksoort",
+        default="uitvoering",
+        required=True,
+        index=True,
+        help="Waaraan gewerkt werd: de uren komen op de taak Afbraakwerken of "
+        "Uitvoeringswerken van het project, zodat afbraak en uitvoering in "
+        "de urenstaten uit elkaar te houden zijn.",
     )
     start_datetime = fields.Datetime(
         string="Start", required=True, default=fields.Datetime.now, index=True
@@ -156,6 +168,11 @@ class TectoraRoofTimer(models.Model):
         end = self.end_datetime or fields.Datetime.now()
         return max((end - self.start_datetime).total_seconds() / 3600.0, 0.0)
 
+    def _work_kind_label(self):
+        """``Afbraakwerken`` / ``Uitvoeringswerken``, for the portal."""
+        self.ensure_one()
+        return dict(WORK_KINDS).get(self.work_kind, "")
+
     def _elapsed_display(self):
         """``H:MM`` of the registration (until now when still running)."""
         self.ensure_one()
@@ -172,8 +189,12 @@ class TectoraRoofTimer(models.Model):
 
     # ------------------------------------------------------------------- start
     @api.model
-    def _start(self, project, employee, notes=None):
-        """Open the timer of a site from the portal. Refuses a second one."""
+    def _start(self, project, employee, notes=None, work_kind=None):
+        """Open the timer of a site from the portal. Refuses a second one.
+
+        :param work_kind: ``afbraak`` or ``uitvoering``, the task the hours
+            will be booked on; execution when not given.
+        """
         running = self._running_for(project)
         if running:
             raise UserError(
@@ -194,6 +215,7 @@ class TectoraRoofTimer(models.Model):
                 "started_by_id": employee.id if employee else False,
                 "employee_ids": [(6, 0, employees.ids)],
                 "notes": notes or False,
+                "work_kind": work_kind if work_kind in dict(WORK_KINDS) else "uitvoering",
             }
         )
 
@@ -256,6 +278,7 @@ class TectoraRoofTimer(models.Model):
         end = self._local(self.end_datetime or fields.Datetime.now())
         parts = [
             _("Werf %s", self.project_id.display_name),
+            dict(WORK_KINDS).get(self.work_kind, ""),
             "%s–%s" % (start.strftime("%H:%M"), end.strftime("%H:%M")),
         ]
         if self.notes:
@@ -292,6 +315,9 @@ class TectoraRoofTimer(models.Model):
                 continue
             if not dossier.allow_timesheets:
                 dossier.write({"allow_timesheets": True})
+            # The task of the work kind: Afbraakwerken or Uitvoeringswerken,
+            # created here if the order's confirmation did not make it yet.
+            task = dossier._tectora_work_task(timer.work_kind, create=True)
             date = timer._local(timer.start_datetime).date()
             description = timer._timesheet_description()
             vals_list = []
@@ -303,6 +329,7 @@ class TectoraRoofTimer(models.Model):
                     {
                         "name": description,
                         "project_id": dossier.id,
+                        "task_id": task.id,
                         "employee_id": employee.id,
                         "date": date,
                         "unit_amount": timer._timesheet_unit_amount(company),

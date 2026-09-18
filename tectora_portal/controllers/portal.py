@@ -273,7 +273,10 @@ class TectoraEmployeePortal(CustomerPortal):
         tab = post.get("tab") or "report"
         try:
             request.env["tectora.roof.timer"].sudo()._start(
-                project, employee, notes=(post.get("notes") or "").strip() or None
+                project,
+                employee,
+                notes=(post.get("notes") or "").strip() or None,
+                work_kind=post.get("work_kind"),
             )
         except (UserError, ValidationError) as error:
             return request.redirect(self._tectora_site_url(project, tab, error=str(error)))

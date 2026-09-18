@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The demo set is loaded on install and upgrade; these two entries let
+         the office refresh it after an edit, or take it out of a database
+         that is going live. Both act only on BoMs keyed "demo:<code>". -->
+    <record id="action_demo_boms_load" model="ir.actions.server">
+        <field name="name">Demo-stuklijsten laden</field>
+        <field name="model_id" ref="mrp.model_mrp_bom"/>
+        <field name="state">code</field>
+        <field name="code">action = model._tectora_demo_boms_action()</field>
+    </record>
+
+    <record id="action_demo_boms_remove" model="ir.actions.server">
+        <field name="name">Demo-stuklijsten verwijderen</field>
+        <field name="model_id" ref="mrp.model_mrp_bom"/>
+        <field name="state">code</field>
+        <field name="code">action = model._tectora_demo_boms_action(remove=True)</field>
+    </record>
+
+    <!-- The time norms of the works items, from the werkuren lines of the
+         export; overwrites, because reloading is a deliberate choice. -->
+    <record id="action_labour_norms_load" model="ir.actions.server">
+        <field name="name">Tijdnormen laden uit stuklijstexport</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">action = model._tectora_labour_norms_action()</field>
+    </record>
+
+    <menuitem id="menu_demo_boms_load"
+              name="Demo-stuklijsten laden"
+              parent="sale.menu_sale_config"
+              action="action_demo_boms_load"
+              groups="base.group_system"
+              sequence="27"/>
+
+    <menuitem id="menu_demo_boms_remove"
+              name="Demo-stuklijsten verwijderen"
+              parent="sale.menu_sale_config"
+              action="action_demo_boms_remove"
+              groups="base.group_system"
+              sequence="28"/>
+
+    <menuitem id="menu_labour_norms_load"
+              name="Tijdnormen laden uit stuklijstexport"
+              parent="sale.menu_sale_config"
+              action="action_labour_norms_load"
+              groups="base.group_system"
+              sequence="29"/>
+
+</odoo>

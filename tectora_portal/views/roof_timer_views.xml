@@ -11,6 +11,7 @@
                 <field name="end_datetime"/>
                 <field name="duration_hours" widget="float_time" sum="Totaal"/>
                 <field name="project_id"/>
+                <field name="work_kind" optional="show"/>
                 <field name="partner_id" optional="show"/>
                 <field name="address" optional="hide"/>
                 <field name="employee_ids" widget="many2many_avatar_employee"/>
@@ -57,6 +58,7 @@
                             <field name="address"/>
                             <field name="dossier_project_id"/>
                             <field name="planning_id"/>
+                            <field name="work_kind" readonly="state != 'running'"/>
                         </group>
                         <group string="Tijd">
                             <field name="start_datetime"/>
@@ -80,6 +82,7 @@
                                 <list>
                                     <field name="date"/>
                                     <field name="employee_id"/>
+                                    <field name="task_id"/>
                                     <field name="name"/>
                                     <field name="unit_amount" widget="float_time" sum="Totaal"/>
                                     <field name="amount" sum="Loonkost" optional="show"/>

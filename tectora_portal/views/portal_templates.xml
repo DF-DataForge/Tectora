@@ -243,6 +243,7 @@
                 <t t-if="running_timer">
                     <div class="small text-uppercase text-success fw-bold">
                         <i class="fa fa-circle me-1 small"/>Uren lopen
+                        <span class="text-muted">· <t t-out="running_timer._work_kind_label()"/></span>
                     </div>
                     <div class="o_tectora_elapsed my-2"
                          t-att-data-start="running_timer.start_datetime.isoformat() + 'Z'"
@@ -271,12 +272,21 @@
                             Er is niemand ingepland op deze werf; de uren worden op jouw naam geboekt.
                         </t>
                     </div>
+                    <!-- One tap per work kind: the hours land on the task
+                         Afbraakwerken or Uitvoeringswerken of the project. -->
                     <form method="post" t-attf-action="/my/werven/#{site.id}/uren/start" class="mt-auto">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
-                        <button type="submit" class="btn btn-success btn-lg o_tectora_btn_timer w-100">
-                            <i class="fa fa-play me-1"/>Start
-                        </button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="work_kind" value="uitvoering"
+                                    class="btn btn-success btn-lg o_tectora_btn_timer w-100">
+                                <i class="fa fa-play me-1"/>Start uitvoering
+                            </button>
+                            <button type="submit" name="work_kind" value="afbraak"
+                                    class="btn btn-outline-success o_tectora_btn_timer w-100">
+                                <i class="fa fa-play me-1"/>Start afbraak
+                            </button>
+                        </div>
                     </form>
                 </t>
             </div>
@@ -763,6 +773,8 @@
                                             </td>
                                             <td class="text-end" t-out="timer._elapsed_display()"/>
                                             <td class="small">
+                                                <span t-attf-class="badge me-1 #{'text-bg-warning' if timer.work_kind == 'afbraak' else 'text-bg-light border'}"
+                                                      t-out="timer._work_kind_label()"/>
                                                 <t t-out="', '.join(timer.employee_ids.mapped('name'))"/>
                                                 <span t-if="timer.notes" class="text-muted d-block" t-out="timer.notes"/>
                                             </td>

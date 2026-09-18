@@ -374,6 +374,23 @@
                     <td>Totaal incl. btw</td>
                     <td class="text-end"><span t-field="doc.amount_total"/></td>
                 </tr>
+                <!-- The estimated execution time, when the products carry a
+                     time norm; the standard Odoo style gets the same line
+                     through report/sale_order_report.xml. -->
+                <tr t-if="doc.tectora_estimated_hours">
+                    <td>Geschatte uitvoeringstijd</td>
+                    <td class="text-end"><t t-out="doc._tectora_estimated_time_label()"/></td>
+                </tr>
+                <t t-if="doc.tectora_demolition_hours">
+                    <tr class="tq-muted" style="font-size: 9px;">
+                        <td>waarvan afbraakwerken</td>
+                        <td class="text-end"><t t-out="doc._tectora_hours_label(doc.tectora_demolition_hours)"/></td>
+                    </tr>
+                    <tr class="tq-muted" style="font-size: 9px;">
+                        <td>waarvan uitvoeringswerken</td>
+                        <td class="text-end"><t t-out="doc._tectora_hours_label(doc.tectora_execution_hours)"/></td>
+                    </tr>
+                </t>
             </table>
         </div>
     </template>

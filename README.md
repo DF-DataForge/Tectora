@@ -12,7 +12,7 @@ contractors.
 | [`tectora_portal`](tectora_portal/) | Medewerkersportaal: employees log in as portal users, see their sites (overview, materials, roof plan, execution reports) and register hours with a start/stop timer that books timesheets for the planned crew. |
 | [`tectora_report_layout`](tectora_report_layout/) | The Tectora document layout: the roof-edge header as a choice in Settings → Configure Document Layout, applied to every printed document. |
 | [`tectora_products`](tectora_products/) | Supplier catalogue, price book and quotation templates. |
-| [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list. |
+| [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list: the imported export plus a demo set with one complete bill of materials per works item, keyed on product codes ([`docs/demo_stuklijsten.md`](docs/demo_stuklijsten.md)). |
 
 The application originates from the standalone BROOF app
 (React + Express + PostgreSQL), which was rewritten as a native Odoo module
