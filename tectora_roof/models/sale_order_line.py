@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models
 
-from .project_task import WORK_KINDS
-
 
 class SaleOrderLine(models.Model):
     """Order lines mirror the roof project.
@@ -31,60 +29,80 @@ class SaleOrderLine(models.Model):
         help="Aangemaakt uit de daksecties en dakobjecten van de meting; wordt "
         "herbouwd zodra de tekening verandert.",
     )
-    tectora_minutes_per_uom = fields.Float(
-        related="product_id.tectora_minutes_per_uom",
-        string="Min. per eenheid",
+    # The estimate of the line: quantity x the product's hours per unit, one
+    # figure per work kind, so the order can total demolition and execution
+    # apart and size a task for each.
+    tectora_execution_hours = fields.Float(
+        string="Uren opbouw",
+        compute="_compute_tectora_hours",
+        store=True,
+        digits=(16, 2),
+        help="Hoeveelheid × uren opbouw per eenheid van het product.",
+    )
+    tectora_demolition_hours = fields.Float(
+        string="Uren afbraak",
+        compute="_compute_tectora_hours",
+        store=True,
+        digits=(16, 2),
+        help="Hoeveelheid × uren afbraak per eenheid van het product.",
     )
     tectora_estimated_hours = fields.Float(
         string="Geschatte tijd",
-        compute="_compute_tectora_estimated_hours",
+        compute="_compute_tectora_hours",
         store=True,
         digits=(16, 2),
-        help="Uitvoeringstijd in uren: hoeveelheid × geschatte tijd per eenheid "
-        "van het product.",
+        help="Uren opbouw en afbraak van deze lijn samen.",
     )
-    tectora_work_kind = fields.Selection(
-        WORK_KINDS,
-        string="Werksoort",
-        compute="_compute_tectora_work_kind",
-        store=True,
-        help="Afbraakwerken voor de producten van het hoofdstuk Afbraak, "
-        "Uitvoeringswerken voor de rest. Bepaalt op welke taak van het "
-        "project de geschatte tijd van deze lijn komt.",
-    )
-
-    @api.depends("product_id.categ_id.complete_name", "display_type")
-    def _compute_tectora_work_kind(self):
-        # The same reading of the category tree as the roof project's Afbraak
-        # tab: the chapter "03. Afbraakwerken plat dak" and everything under it.
-        for line in self:
-            if line.display_type or not line.product_id:
-                line.tectora_work_kind = False
-                continue
-            path = (line.product_id.categ_id.complete_name or "").lower()
-            line.tectora_work_kind = "afbraak" if "afbraak" in path else "uitvoering"
 
     @api.depends(
-        "product_id.tectora_minutes_per_uom",
+        "product_id.tectora_hours_execution_per_uom",
+        "product_id.tectora_hours_demolition_per_uom",
         "product_uom_qty",
         "product_uom_id",
         "display_type",
     )
-    def _compute_tectora_estimated_hours(self):
+    def _compute_tectora_hours(self):
         for line in self:
             product = line.product_id
-            minutes = product.tectora_minutes_per_uom if product else 0.0
-            if line.display_type or not minutes or not line.product_uom_qty:
+            if line.display_type or not product or not line.product_uom_qty:
+                line.tectora_execution_hours = 0.0
+                line.tectora_demolition_hours = 0.0
                 line.tectora_estimated_hours = 0.0
                 continue
-            quantity = line.product_uom_qty
-            # The norm is per unit of the product; a line sold in another unit
-            # is converted first.
-            if line.product_uom_id and line.product_uom_id != product.uom_id:
-                quantity = line.product_uom_id._compute_quantity(
-                    quantity, product.uom_id
-                )
-            line.tectora_estimated_hours = quantity * minutes / 60.0
+            quantity = line._tectora_quantity_in_product_uom()
+            line.tectora_execution_hours = (
+                quantity * product.tectora_hours_execution_per_uom
+            )
+            line.tectora_demolition_hours = (
+                quantity * product.tectora_hours_demolition_per_uom
+            )
+            line.tectora_estimated_hours = (
+                line.tectora_execution_hours + line.tectora_demolition_hours
+            )
+
+    def _tectora_quantity_in_product_uom(self):
+        """The line's quantity in the product's own unit: the norm is per
+        unit of the product, and a line may be sold in another one."""
+        self.ensure_one()
+        quantity = self.product_uom_qty
+        product_uom = self.product_id.uom_id
+        if self.product_uom_id and product_uom and self.product_uom_id != product_uom:
+            quantity = self.product_uom_id._compute_quantity(quantity, product_uom)
+        return quantity
+
+    def _tectora_hours_of_kind(self, kind):
+        """Hours of one work kind (``afbraak`` / ``uitvoering``) on the line."""
+        self.ensure_one()
+        if kind == "afbraak":
+            return self.tectora_demolition_hours
+        return self.tectora_execution_hours
+
+    def _tectora_norm_of_kind(self, kind):
+        """The product's hours per unit of one work kind."""
+        self.ensure_one()
+        if kind == "afbraak":
+            return self.product_id.tectora_hours_demolition_per_uom
+        return self.product_id.tectora_hours_execution_per_uom
 
     def _tectora_mirrorable(self):
         """Lines the roof project should know about: real product lines of an

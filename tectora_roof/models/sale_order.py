@@ -103,7 +103,7 @@ class SaleOrder(models.Model):
     )
 
     @api.depends(
-        "order_line.tectora_estimated_hours", "order_line.tectora_work_kind"
+        "order_line.tectora_execution_hours", "order_line.tectora_demolition_hours"
     )
     def _compute_tectora_estimated_hours(self):
         for order in self:
@@ -115,11 +115,11 @@ class SaleOrder(models.Model):
     def _tectora_hours_by_kind(self):
         """{'afbraak': hours, 'uitvoering': hours} of the order's lines."""
         self.ensure_one()
-        hours = {kind: 0.0 for kind, _label in WORK_KINDS}
-        for line in self.order_line:
-            if line.tectora_work_kind and line.tectora_estimated_hours:
-                hours[line.tectora_work_kind] += line.tectora_estimated_hours
-        return hours
+        lines = self.order_line.filtered(lambda line: not line.display_type)
+        return {
+            "afbraak": sum(lines.mapped("tectora_demolition_hours")),
+            "uitvoering": sum(lines.mapped("tectora_execution_hours")),
+        }
 
     @api.depends("tectora_estimated_hours", "company_id")
     def _compute_tectora_estimated_days(self):
@@ -301,20 +301,21 @@ class SaleOrder(models.Model):
         self.ensure_one()
         rows = []
         lines = self.order_line.filtered(
-            lambda line: line.tectora_estimated_hours and line.tectora_work_kind == kind
+            lambda line: not line.display_type and line._tectora_hours_of_kind(kind)
         )
-        for line in lines.sorted(key=lambda line: -line.tectora_estimated_hours):
+        for line in lines.sorted(key=lambda line: -line._tectora_hours_of_kind(kind)):
             rows.append(
                 "<tr><td>%s</td><td class='text-end'>%s %s</td>"
-                "<td class='text-end'>%s min</td><td class='text-end'>%s u</td></tr>"
+                "<td class='text-end'>%s u</td><td class='text-end'>%s u</td></tr>"
                 % (
                     html_escape(line.product_id.display_name),
                     ("%.2f" % line.product_uom_qty).rstrip("0").rstrip("."),
                     html_escape(line.product_uom_id.name or ""),
-                    ("%.1f" % line.tectora_minutes_per_uom).rstrip("0").rstrip("."),
-                    "%.2f" % line.tectora_estimated_hours,
+                    ("%.3f" % line._tectora_norm_of_kind(kind)).rstrip("0").rstrip("."),
+                    "%.2f" % line._tectora_hours_of_kind(kind),
                 )
             )
+        total = sum(line._tectora_hours_of_kind(kind) for line in lines)
         return (
             "<p>%s</p><table class='table table-sm'><thead><tr><th>%s</th>"
             "<th class='text-end'>%s</th><th class='text-end'>%s</th>"
@@ -322,7 +323,7 @@ class SaleOrder(models.Model):
             % (
                 _("%(kind)s, geschat uit %(order)s: %(hours)s.",
                   kind=dict(WORK_KINDS)[kind], order=self.name,
-                  hours=self._tectora_hours_label(sum(lines.mapped("tectora_estimated_hours")))),
+                  hours=self._tectora_hours_label(total)),
                 _("Werkpost"), _("Hoeveelheid"), _("Per eenheid"), _("Uren"),
                 "".join(rows),
             )

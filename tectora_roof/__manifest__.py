@@ -29,13 +29,12 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   dashboard -- revenue and costs, deliveries, tasks, team planning and the roof
   measurement itself -- with every card opening the records behind it and the
   order and the roof project one click away.
-* Every product carries an estimated execution time per unit (minutes,
-  filled from the werkuren of the Stuklijst export by tectora_boms); the
-  quotation shows the estimate per line and in total (hours and working
-  days, demolition and execution apart), and confirming the order puts it as
-  allocated time on the project's tasks "Afbraakwerken" and
-  "Uitvoeringswerken", which follow later quantity changes and on which the
-  hours are logged.
+* Every product carries two time norms, hours of execution and hours of
+  demolition per sold unit (filled from the werkuren of the Stuklijst export
+  by tectora_boms); the quotation shows both per line and totals them, with
+  the working days, and confirming the order puts them as allocated time on
+  the project's tasks "Afbraakwerken" and "Uitvoeringswerken", which follow
+  later quantity changes and on which the hours are logged.
 * The quotation mirrors the roof project: its chapter lines (Algemene werken,
   Veiligheid, Afbraak, Opbouw, ...) are the project-level lines of the roof
   project and the measurement lines come from the drawing, so m² and m

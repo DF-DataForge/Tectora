@@ -248,39 +248,40 @@ project (start- en einddatum) en omgekeerd.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
 
-## Geschatte uitvoeringstijd en de taken Afbraakwerken en Uitvoeringswerken
+## Geschatte uren opbouw en afbraak, en de taken Uitvoeringswerken en Afbraakwerken
 
-Elk product heeft op zijn fiche, naast de prijzen, een **geschatte tijd per
-eenheid** in minuten (per m², per lm, per stuk). De module `tectora_boms` vult
-dat veld voor 415 van de 499 verkoopproducten uit de **werkurenregels van de
-stuklijstexport van Tectora** (`werkuren construction`, `werkuren afbraak`,
-`werkuren veiligheid`); zie `docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit
-volgt:
+Elk product heeft op zijn fiche, naast de prijzen, twee tijdnormen in **uren
+per eenheid** (per m², per lm, per stuk): **Uren opbouw per eenheid** en
+**Uren afbraak per eenheid**. Eén werkpost kan beide dragen (nokpannen
+verwijderen én herplaatsen). De module `tectora_boms` vult ze voor 415 van de
+499 verkoopproducten uit de **werkurenregels van de stuklijstexport van
+Tectora** (`werkuren construction` en `werkuren veiligheid` → opbouw,
+`werkuren afbraak` en `Afbraakwerken` → afbraak); zie
+`docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit volgt:
 
-* op elke **offertelijn** de geschatte tijd (hoeveelheid × minuten, getoond
-  als uren; een lijn in een andere eenheid wordt eerst omgerekend) en haar
-  **werksoort**: *Afbraakwerken* voor de producten van het hoofdstuk Afbraak,
-  *Uitvoeringswerken* voor de rest;
-* onder de totalen van de offerte de **som** in uren en in werkdagen (uren per
-  dag uit de werktijden van het bedrijf, anders 8), met het deel afbraak en het
-  deel uitvoering. De offerte-PDF toont dezelfde regels onder de totalen, enkel
-  als er iets geschat is;
+* op elke **offertelijn** de uren afbraak en de uren opbouw (hoeveelheid ×
+  norm, getoond als uu:mm, met kolomtotalen; een lijn in een andere eenheid
+  wordt eerst omgerekend);
+* onder de totalen van de offerte **Geschatte uren afbraak**, **Geschatte uren
+  opbouw** en de **Geschatte uitvoeringstijd** samen, in uren en in werkdagen
+  (uren per dag uit de werktijden van het bedrijf, anders 8). De offerte-PDF
+  toont dezelfde regels onder de totalen, in elke stijl, enkel als er iets
+  geschat is;
 * bij het **bevestigen** van de order per werksoort een taak op het project,
-  **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte tijd van die
+  **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte uren van die
   werksoort als **toegewezen tijd**, de leverdatum van de order (of het
   geplande einde van het dakproject) als deadline en in de omschrijving de
   opsplitsing per werkpost. Uren worden op die taken gelogd, zodat afbraak en
   uitvoering in de urenstaten uit elkaar te houden zijn; het medewerkersportaal
   (`tectora_portal`) laat de ploeg daarvoor kiezen tussen *Start uitvoering*
-  en *Start afbraak*. Verandert nadien een
-  hoeveelheid op de bevestigde order, dan volgt de toegewezen tijd; de rest van
-  de taak (toewijzing, fase, omschrijving) blijft van wie het werk plant. De
-  taken zijn herkenbaar aan het veld *Werksoort (Tectora)*; er is er één per
-  werksoort per project.
+  en *Start afbraak*. Verandert nadien een hoeveelheid op de bevestigde order,
+  dan volgt de toegewezen tijd; de rest van de taak (toewijzing, fase,
+  omschrijving) blijft van wie het werk plant. De taken zijn herkenbaar aan het
+  veld *Werksoort (Tectora)*; er is er één per werksoort per project.
 * Het projectdashboard toont de geschatte tijd op de kaart **Taken** en de
   werksoort en toegewezen tijd per taak op de tab Taken.
 
-Producten zonder norm tellen niet mee; een werksoort zonder geschatte tijd
+Producten zonder norm tellen niet mee; een werksoort zonder geschatte uren
 krijgt geen taak.
 * Slimme knoppen op het dakproject: Offerte / Order, Materialen, Leveringen,
   Inkoop, Facturen, Werkblokken en het Project (dashboard).

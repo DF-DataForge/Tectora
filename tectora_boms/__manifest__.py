@@ -64,8 +64,8 @@ The export's labour lines (``werkuren construction``, ``werkuren afbraak``,
 ``werkuren veiligheid``) are Tectora's own time per unit of each works item.
 ``tools/build_labour_norms.py`` reads them into ``data/labour_norms.json``,
 mapped by hand onto the catalogue's product families, and the module fills
-"Geschatte tijd per eenheid" (a field of Tectora Dakmeting) from it on install
-and upgrade, keeping any value the office typed in; *Verkoop → Configuratie →
+"Uren opbouw / afbraak per eenheid" (fields of Tectora Dakmeting) from it on
+install and upgrade, keeping any value the office typed in; *Verkoop → Configuratie →
 Tijdnormen laden* reloads and overwrites.
     """,
     "version": "19.0.1.3.0",

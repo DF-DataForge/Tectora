@@ -153,9 +153,12 @@ De kits van de export dragen elk een of twee werkurenregels: `werkuren
 construction` op de opbouwwerken (610 regels), `werkuren afbraak` op de
 afbraakwerken (68), `werkuren veiligheid` (6) en het losse component
 `Afbraakwerken` (6), alle in uren per eenheid van de werkpost. Dat is de eigen
-tijdnorm van Tectora, en precies wat het veld **Geschatte tijd per eenheid**
-(minuten) van `tectora_roof` nodig heeft om een offerte te schatten en de taken
-Afbraakwerken en Uitvoeringswerken op het project te dimensioneren.
+tijdnorm van Tectora, en precies wat de velden **Uren opbouw per eenheid** en
+**Uren afbraak per eenheid** van `tectora_roof` nodig hebben om een offerte te
+schatten en de taken Uitvoeringswerken en Afbraakwerken op het project te
+dimensioneren. Construction en veiligheid voeden de opbouwnorm, afbraak de
+afbraaknorm; vier werkposten (nokpannen, pannen, leien en sidings verwijderen
+en herplaatsen) dragen beide.
 
 ```bash
 python3 tectora_boms/tools/build_labour_norms.py
@@ -172,21 +175,22 @@ fout wordt niets geschreven. Resultaat in `tectora_boms/data/labour_norms.json`:
 exportproducten hebben geen tegenhanger in de catalogus (muurkappen, type C,
 Engelse omschrijvingen) of zijn al gedekt door een zusterproduct.
 
-Enkele normen, zoals ze op de productfiche komen:
+Enkele normen, zoals ze op de productfiche komen (uren per eenheid):
 
-| Werkpost | Norm |
-|---|---|
-| EPDM verkleefd (per m²) | 19,8 min |
-| EPDM geballast (per m²) | 9 min |
-| PIR verkleefd (per m²) | 7,8 min |
-| Dampscherm (per m²) | 3,3 min |
-| Kimfixatie (per lm) | 6 min |
-| 2-delige dakrand (per lm) | 7,2 min |
-| Enkelvoudige dakrand, hoek | 4,8 min |
-| PE-tapbuis (per stuk) | 30 min |
-| Ankerpunt (per stuk) | 22,5 min |
-| Verwijderen dakbedekking (per m²) | 12 min |
-| Verwijderen dakranden (per lm) | 6 min |
+| Werkpost | Opbouw | Afbraak |
+|---|---|---|
+| EPDM verkleefd (per m²) | 0,33 | |
+| EPDM geballast (per m²) | 0,15 | |
+| PIR verkleefd (per m²) | 0,13 | |
+| Dampscherm (per m²) | 0,055 | |
+| Kimfixatie (per lm) | 0,10 | |
+| 2-delige dakrand (per lm) | 0,12 | |
+| Enkelvoudige dakrand, hoek | 0,08 | |
+| PE-tapbuis (per stuk) | 0,50 | |
+| Ankerpunt (per stuk) | 0,375 | |
+| Verwijderen dakbedekking (per m²) | | 0,20 |
+| Verwijderen dakranden (per lm) | | 0,10 |
+| Nokpannen verwijderen en herplaatsen (per lm) | 0,40 | 0,20 |
 
 Rockwool Rhinoxx heeft in de export geen werkuren en krijgt dus geen norm.
 

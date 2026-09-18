@@ -47,40 +47,45 @@
                         invisible="state not in ('sale', 'done')"
                         string="Projectdashboard"/>
             </xpath>
-            <!-- The estimated execution time, per line and in total: the
-                 line figure is hours (hh:mm), computed from the product's
-                 minutes per unit. -->
+            <!-- The estimate per line, hours of demolition and of execution
+                 (quantity x the product's hours per unit, shown as hh:mm),
+                 each with its column total. -->
             <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']"
                    position="before">
+                <field name="tectora_demolition_hours" widget="float_time"
+                       string="Uren afbraak" sum="Totaal afbraak" optional="show"
+                       invisible="display_type or is_downpayment" width="90px"/>
+                <field name="tectora_execution_hours" widget="float_time"
+                       string="Uren opbouw" sum="Totaal opbouw" optional="show"
+                       invisible="display_type or is_downpayment" width="90px"/>
                 <field name="tectora_estimated_hours" widget="float_time"
-                       string="Geschatte tijd" sum="Totaal" optional="show"
+                       string="Uren totaal" sum="Totaal" optional="hide"
                        invisible="display_type or is_downpayment" width="90px"/>
             </xpath>
+            <!-- The totals of the estimate under the amounts. -->
             <xpath expr="//group[@name='sale_total']" position="inside">
                 <div class="mt-2" invisible="not tectora_estimated_hours">
                     <div class="d-flex justify-content-between">
+                        <span>Geschatte uren afbraak</span>
+                        <span><field name="tectora_demolition_hours" widget="float_time"
+                                     class="oe_inline" nolabel="1"/> u</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Geschatte uren opbouw</span>
+                        <span><field name="tectora_execution_hours" widget="float_time"
+                                     class="oe_inline" nolabel="1"/> u</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-1 mt-1">
                         <label for="tectora_estimated_hours" class="fw-bold"/>
                         <div class="text-end">
                             <field name="tectora_estimated_hours" widget="float_time"
                                    class="oe_inline fw-bold" nolabel="1"/>
-                            <span> u</span>
+                            <span class="fw-bold"> u</span>
+                            <div class="text-muted small">
+                                ± <field name="tectora_estimated_days" class="oe_inline"
+                                         nolabel="1"/> werkdagen
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small"
-                         invisible="not tectora_demolition_hours">
-                        <span>waarvan afbraakwerken</span>
-                        <span><field name="tectora_demolition_hours" widget="float_time"
-                                     class="oe_inline" nolabel="1"/> u</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small"
-                         invisible="not tectora_demolition_hours">
-                        <span>waarvan uitvoeringswerken</span>
-                        <span><field name="tectora_execution_hours" widget="float_time"
-                                     class="oe_inline" nolabel="1"/> u</span>
-                    </div>
-                    <div class="text-end text-muted small">
-                        ± <field name="tectora_estimated_days" class="oe_inline"
-                                 nolabel="1"/> werkdagen
                     </div>
                 </div>
             </xpath>

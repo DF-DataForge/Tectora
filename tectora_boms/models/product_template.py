@@ -9,7 +9,11 @@ from odoo.tools import float_compare
 _logger = logging.getLogger(__name__)
 
 LABOUR_NORMS = Path(__file__).parent.parent / "data" / "labour_norms.json"
-NORM_FIELD = "tectora_minutes_per_uom"  # defined by tectora_roof
+# The fields of tectora_roof the norms go into: hours per unit, per work kind.
+NORM_FIELDS = {
+    "hours_execution": "tectora_hours_execution_per_uom",
+    "hours_demolition": "tectora_hours_demolition_per_uom",
+}
 
 
 class ProductTemplate(models.Model):
@@ -17,24 +21,24 @@ class ProductTemplate(models.Model):
 
     @api.model
     def _tectora_import_labour_norms(self, overwrite=False):
-        """Fill "Geschatte tijd per eenheid" from data/labour_norms.json: the
-        werkuren of the Stuklijst export per works item, in minutes.
+        """Fill "Uren opbouw / afbraak per eenheid" from data/labour_norms.json:
+        the werkuren of the Stuklijst export per works item, in hours.
 
-        The field belongs to tectora_roof; without it there is nothing to
+        The fields belong to tectora_roof; without them there is nothing to
         fill. A norm the office already typed in is kept unless ``overwrite``
         is set (the menu action does, install and upgrade do not).
         """
-        if NORM_FIELD not in self._fields:
+        if any(field not in self._fields for field in NORM_FIELDS.values()):
             _logger.info(
-                "tectora_boms: %s not installed here, labour norms not loaded",
-                NORM_FIELD,
+                "tectora_boms: tectora_roof's time norm fields are not installed "
+                "here, labour norms not loaded"
             )
             return {}
         if not LABOUR_NORMS.exists():
             _logger.warning("tectora_boms: %s missing, no labour norms loaded", LABOUR_NORMS)
             return {}
         data = json.loads(LABOUR_NORMS.read_text(encoding="utf-8"))
-        norms = {entry["code"]: entry["minutes"] for entry in data.get("norms") or []}
+        norms = {entry["code"]: entry for entry in data.get("norms") or []}
         templates = self.with_context(active_test=False).search(
             [("default_code", "in", list(norms))]
         )
@@ -42,16 +46,25 @@ class ProductTemplate(models.Model):
         found = set()
         for template in templates:
             found.add(template.default_code)
-            minutes = norms[template.default_code]
-            current = template[NORM_FIELD]
-            if not float_compare(current, minutes, precision_digits=1):
-                report["unchanged"] += 1
-                continue
-            if current and not overwrite:
+            entry = norms[template.default_code]
+            values = {}
+            kept = False
+            for key, field in NORM_FIELDS.items():
+                hours = entry.get(key) or 0.0
+                current = template[field]
+                if not float_compare(current, hours, precision_digits=3):
+                    continue
+                if current and not overwrite:
+                    kept = True
+                    continue
+                values[field] = hours
+            if values:
+                template.write(values)
+                report["set"] += 1
+            elif kept:
                 report["kept"] += 1
-                continue
-            template[NORM_FIELD] = minutes
-            report["set"] += 1
+            else:
+                report["unchanged"] += 1
         report["missing"] = sorted(set(norms) - found)
         _logger.info(
             "tectora_boms: labour norms: %(set)s products set, %(kept)s kept their "
@@ -67,13 +80,13 @@ class ProductTemplate(models.Model):
         report = self._tectora_import_labour_norms(overwrite=True)
         if not report:
             message = _(
-                "Het veld 'Geschatte tijd per eenheid' bestaat niet in deze "
-                "database (module Tectora Dakmeting niet geïnstalleerd)."
+                "De velden 'Uren opbouw / afbraak per eenheid' bestaan niet in "
+                "deze database (module Tectora Dakmeting niet geïnstalleerd)."
             )
             kind = "warning"
         else:
             message = _(
-                "%(set)s producten kregen hun tijdnorm uit de werkuren van de "
+                "%(set)s producten kregen hun tijdnormen uit de werkuren van de "
                 "stuklijstexport (%(unchanged)s stonden al juist).",
                 set=report["set"], unchanged=report["unchanged"],
             )

@@ -6,8 +6,11 @@ Every kit in ``data/bom_catalog.json`` carries one or two labour lines --
 ``werkuren construction`` on the build-up works, ``werkuren afbraak`` on the
 demolition works, ``werkuren veiligheid`` on the safety measures -- in hours
 per unit of the works item. That is Tectora's own time norm, and it is what
-``tectora_roof`` needs in "Geschatte tijd per eenheid" (minutes) to estimate a
-quotation and size the task Uitvoeringswerken.
+``tectora_roof`` needs in "Uren opbouw per eenheid" and "Uren afbraak per
+eenheid" to estimate a quotation and size the tasks Uitvoeringswerken and
+Afbraakwerken. The demolition lines (werkuren afbraak, Afbraakwerken) feed the
+demolition norm, every other labour line the execution norm; a kit can carry
+both.
 
 The export names its products differently from the catalogue and knows one
 product where the price list has a family (one "enkelvoudige dakrandprofiel"
@@ -18,8 +21,7 @@ products whose names do match are taken automatically as well.
 
 Per export product the hours of all its kits are summed per kit and the median
 over the kits is taken (the variants of one product carry the same labour,
-with a few exceptions where the median is the safe middle). Hours become
-minutes, rounded to a tenth.
+with a few exceptions where the median is the safe middle), per kind.
 
 Run from the module root:
 
@@ -311,23 +313,40 @@ def load_catalog():
     return {entry["code"]: entry for entry in data["products"]}
 
 
+DEMOLITION = re.compile(r"afbraak")   # werkuren afbraak, Afbraakwerken
+
+
 def labour_hours(boms):
-    """export product -> (median hours per unit over its kits, kits, kinds)."""
+    """export product -> {"execution": h, "demolition": h, "kits": n, "kinds": [...]}
+
+    Hours per kit, split by kind (demolition: the werkuren afbraak and the
+    bare Afbraakwerken component; execution: everything else), then the
+    median over the product's kits per kind.
+    """
     per_product = {}
     for bom in boms:
-        hours = 0.0
+        hours = {"execution": 0.0, "demolition": 0.0}
         kinds = set()
         for line in bom["lines"]:
-            if LABOUR.search(bom_rules.norm(line["component"])):
-                hours += float(line["qty"])
+            component = bom_rules.norm(line["component"])
+            if LABOUR.search(component):
+                kind = "demolition" if DEMOLITION.search(component) else "execution"
+                hours[kind] += float(line["qty"])
                 kinds.add(line["component"])
-        if hours > 0:
-            entry = per_product.setdefault(bom["product"], {"hours": [], "kinds": set()})
-            entry["hours"].append(hours)
+        if hours["execution"] > 0 or hours["demolition"] > 0:
+            entry = per_product.setdefault(
+                bom["product"], {"execution": [], "demolition": [], "kinds": set()}
+            )
+            entry["execution"].append(hours["execution"])
+            entry["demolition"].append(hours["demolition"])
             entry["kinds"] |= kinds
     return {
-        product: (statistics.median(entry["hours"]), len(entry["hours"]),
-                  sorted(entry["kinds"]))
+        product: {
+            "execution": statistics.median(entry["execution"]),
+            "demolition": statistics.median(entry["demolition"]),
+            "kits": len(entry["execution"]),
+            "kinds": sorted(entry["kinds"]),
+        }
         for product, entry in per_product.items()
     }
 
@@ -340,7 +359,7 @@ def build(products, norms):
         if source not in norms:
             problems.append("export product not found or without labour: %s" % source)
             continue
-        hours, kits, kinds = norms[source]
+        norm = norms[source]
         for code in targets:
             entry = products.get(code)
             if entry is None:
@@ -357,11 +376,11 @@ def build(products, norms):
                 "code": code,
                 "product": entry["name"],
                 "uom": entry["uom"],
-                "minutes": round(hours * 60, 1),
-                "hours": round(hours, 4),
+                "hours_execution": round(norm["execution"], 4),
+                "hours_demolition": round(norm["demolition"], 4),
                 "source": source,
-                "kits": kits,
-                "kinds": kinds,
+                "kits": norm["kits"],
+                "kinds": norm["kinds"],
                 "method": "mapping",
             }
     # The names that do match, for export products the mapping does not name.
@@ -370,7 +389,7 @@ def build(products, norms):
         for code, entry in products.items() if entry["is_service"]
     ])
     mapped_sources = set(MAPPING)
-    for source, (hours, kits, kinds) in norms.items():
+    for source, norm in norms.items():
         if source in mapped_sources:
             continue
         score, match = bom_rules.match_product(source, sellable)
@@ -380,11 +399,11 @@ def build(products, norms):
             "code": match["code"],
             "product": match["name"],
             "uom": products[match["code"]]["uom"],
-            "minutes": round(hours * 60, 1),
-            "hours": round(hours, 4),
+            "hours_execution": round(norm["execution"], 4),
+            "hours_demolition": round(norm["demolition"], 4),
             "source": source,
-            "kits": kits,
-            "kinds": kinds,
+            "kits": norm["kits"],
+            "kinds": norm["kinds"],
             "method": "name (%.2f)" % score,
         }
     return out, problems
