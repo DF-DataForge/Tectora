@@ -114,6 +114,71 @@ class TectoraRoofProject(models.Model):
             project.epdm_sheet_count = len(project.epdm_sheet_ids)
             project.epdm_total_area = sum(project.epdm_sheet_ids.mapped("area"))
 
+    def _info_sheet_sections(self):
+        """The site sheet as two columns of cards, each a title and rows of
+        (label, kind, value): kind "bool" renders as a Ja/Nee mark, "text" as
+        it is. Keeps the printed sheet's structure in one place."""
+        self.ensure_one()
+
+        def flag(field_name):
+            return ("bool", bool(self[field_name]))
+
+        def text(value):
+            return ("text", value or "/")
+
+        substrate = self._info_label("roof_substrate") if self.roof_substrate else ""
+        if self.roof_substrate_note:
+            substrate = "%s (%s)" % (substrate or "Andere", self.roof_substrate_note)
+        lift = ("Ja — %s" % self.aerial_lift_type) if self.aerial_lift_needed and self.aerial_lift_type else None
+
+        left = [
+            ("Voorbereiding", [
+                ("Checkin@work", *flag("checkin_at_work")),
+                ("Asbesthoudende materialen", *flag("asbestos_present")),
+                ("Hoogte dak(en)", *text("%.2f m" % self.roof_height if self.roof_height else "")),
+                ("Ondergrond dak(en)", *text(substrate)),
+            ]),
+            ("Bereikbaarheid materiaal", [
+                ("Materiaal rechtstreeks op het dak", *flag("material_direct_roof")),
+                ("Materiaal doorheen het gebouw", *flag("material_through_building")),
+                ("Materiaal via zijkant gebouw", *flag("material_via_side")),
+                ("Hoogwerker nodig", *(text(lift) if lift else flag("aerial_lift_needed"))),
+            ]),
+            ("Transport", [
+                ("Transport materialen naar werf", *text(self.material_transport)),
+                ("Afval afvoer via", *text(self.waste_disposal)),
+                ("Geschat uur levering / ophaling", *text(self.supplier_pickup_time)),
+                ("Transport overheen gebouw", *flag("transport_over_building")),
+            ]),
+            ("Bereikbaarheid werf", [
+                ("Makkelijk parkeren", *flag("easy_parking")),
+                ("Parkeerverbod nodig", *flag("parking_ban_needed")),
+                ("Oprit verhard", *flag("driveway_paved")),
+            ]),
+        ]
+        extras = [
+            ("Stelling", *flag("scaffolding_needed")),
+            ("Rolstelling", *flag("mobile_scaffolding_needed")),
+            ("Betonboring", *flag("concrete_drilling_needed")),
+            ("Aannemer HVAC", *flag("hvac_contractor_needed")),
+            ("Specifieke voorzorgsmaatregelen", *flag("precautions_needed")),
+        ]
+        if self.precautions_note:
+            extras.append(("Voorzorgsmaatregelen", "note", self.precautions_note))
+        right = [
+            ("Extra's te voorzien", extras),
+            ("Te voorzien ter plaatse", [
+                ("Stroomgenerator", *flag("generator_needed")),
+                ("Werftoilet", *flag("site_toilet_needed")),
+                ("Werfkeet", *flag("site_hut_needed")),
+            ]),
+            ("Afwijking dakranden", [
+                ("Type(s)", *text(self.roof_edge_types)),
+                ("Kleur(en)", *text(self.roof_edge_colors)),
+            ]),
+        ]
+        return left, right
+
     def _info_label(self, field_name):
         """Human label of a field's value, for the printed sheet."""
         self.ensure_one()

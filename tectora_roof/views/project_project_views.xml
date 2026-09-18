@@ -207,6 +207,9 @@
                                 <field name="closed_task_count" readonly="1"/> afgerond van
                                 <field name="task_count" readonly="1"/>
                             </span>
+                            <span class="o_tectora_card_sub" invisible="not tectora_estimated_hours">
+                                <field name="tectora_estimated_hours" readonly="1" widget="float_time"/> u geschat
+                            </span>
                         </button>
                         <button name="action_view_tectora_planning" type="object"
                                 class="o_tectora_card o_tectora_card_planning">
@@ -313,6 +316,8 @@
                                     <field name="priority" widget="priority"/>
                                     <field name="name"/>
                                     <field name="user_ids" widget="many2many_avatar_user"/>
+                                    <field name="tectora_work_kind" optional="show"/>
+                                    <field name="allocated_hours" widget="float_time" sum="Totaal"/>
                                     <field name="date_deadline"/>
                                     <field name="stage_id"/>
                                     <field name="state" widget="project_task_state_selection"/>

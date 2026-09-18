@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_tectora_timers"
+              name="Urenregistraties"
+              parent="tectora_roof.menu_tectora_root"
+              action="action_tectora_roof_timer"
+              sequence="17"/>
+
+    <menuitem id="menu_tectora_execution_reports"
+              name="Uitvoeringsverslagen"
+              parent="tectora_roof.menu_tectora_root"
+              action="action_tectora_roof_execution_report"
+              sequence="18"/>
+
+</odoo>

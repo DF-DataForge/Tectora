@@ -4,8 +4,13 @@ from datetime import datetime, time
 
 import pytz
 
+from markupsafe import escape as html_escape
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import float_compare, str2bool
+
+from .project_task import WORK_KINDS
 
 _logger = logging.getLogger(__name__)
 
@@ -21,6 +26,15 @@ SYNC_PAIRS = [
 ]
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
+
+# The looks the quotation PDF can take (see report/sale_order_dossier_report.xml).
+QUOTATION_STYLES = [
+    ("dossier", "Projectdossier — voorblad, aanpak, offerte, dakplan, service"),
+    ("compact", "Compact — offerte voorop, kort en zakelijk"),
+    ("classic", "Klassiek — briefstijl met begeleidende tekst"),
+    ("visual", "Visueel — dakplan en kerncijfers voorop"),
+    ("minimal", "Minimalistisch — rustig, veel wit"),
+]
 
 
 def _differs(record, field_name, value):
@@ -53,6 +67,137 @@ class SaleOrder(models.Model):
     roof_total_area = fields.Float(
         related="roof_project_id.total_area", string="Dakoppervlakte (m²)"
     )
+    tectora_estimated_hours = fields.Float(
+        string="Geschatte uitvoeringstijd",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Uren afbraak en uren opbouw van de orderlijnen samen "
+        "(hoeveelheid × de normen per eenheid van het product).",
+    )
+    tectora_demolition_hours = fields.Float(
+        string="Geschatte tijd afbraak",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Som van de uren afbraak van de orderlijnen; wordt bij "
+        "bevestiging de toegewezen tijd van de taak Afbraakwerken.",
+    )
+    tectora_execution_hours = fields.Float(
+        string="Geschatte tijd uitvoering",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Som van de uren opbouw van de orderlijnen; wordt bij "
+        "bevestiging de toegewezen tijd van de taak Uitvoeringswerken.",
+    )
+    tectora_estimated_days = fields.Float(
+        string="Geschatte werkdagen",
+        compute="_compute_tectora_estimated_days",
+        digits=(16, 1),
+        help="Geschatte uitvoeringstijd gedeeld door de uren per dag van de "
+        "werktijden van het bedrijf.",
+    )
+
+    @api.depends(
+        "order_line.tectora_execution_hours", "order_line.tectora_demolition_hours"
+    )
+    def _compute_tectora_estimated_hours(self):
+        for order in self:
+            hours = order._tectora_hours_by_kind()
+            order.tectora_demolition_hours = hours["afbraak"]
+            order.tectora_execution_hours = hours["uitvoering"]
+            order.tectora_estimated_hours = hours["afbraak"] + hours["uitvoering"]
+
+    def _tectora_hours_by_kind(self):
+        """{'afbraak': hours, 'uitvoering': hours} of the order's lines."""
+        self.ensure_one()
+        lines = self.order_line.filtered(lambda line: not line.display_type)
+        return {
+            "afbraak": sum(lines.mapped("tectora_demolition_hours")),
+            "uitvoering": sum(lines.mapped("tectora_execution_hours")),
+        }
+
+    @api.depends("tectora_estimated_hours", "company_id")
+    def _compute_tectora_estimated_days(self):
+        for order in self:
+            order.tectora_estimated_days = (
+                order.tectora_estimated_hours / order._tectora_hours_per_day()
+            )
+
+    def _tectora_hours_per_day(self):
+        """Working hours of one day, from the company's working schedule."""
+        calendar = (self.company_id or self.env.company).resource_calendar_id
+        return calendar.hours_per_day if calendar and calendar.hours_per_day else 8.0
+
+    @api.model
+    def _tectora_hours_label(self, value):
+        """``42 u 30`` for 42.5 hours."""
+        total_minutes = int(round((value or 0.0) * 60))
+        hours, minutes = divmod(total_minutes, 60)
+        return _("%(hours)s u %(minutes)02d", hours=hours, minutes=minutes)
+
+    def _tectora_estimated_time_label(self):
+        """``42 u 30 (± 5,3 werkdagen)``, for the quotation."""
+        self.ensure_one()
+        label = self._tectora_hours_label(self.tectora_estimated_hours)
+        days = self.tectora_estimated_days
+        if days >= 1:
+            label += " " + _(
+                "(± %(days)s werkdagen)",
+                days=("%.1f" % days).replace(".", ","),
+            )
+        return label
+
+    tectora_standard_quotation = fields.Boolean(
+        string="Standaard offerte",
+        default=lambda self: self._default_tectora_standard_quotation(),
+        help="Gebruik het standaard offertedocument van Odoo in plaats van de "
+        "Tectora-offerte (afdrukken, e-mail en klantenportaal). Het dakplan "
+        "kan er nog achter. De standaardkeuze voor nieuwe offertes staat in "
+        "Instellingen → Tectora Dakmeting.",
+    )
+    tectora_quotation_style = fields.Selection(
+        QUOTATION_STYLES,
+        string="Offertestijl",
+        default=lambda self: self._default_tectora_quotation_style(),
+        required=True,
+        help="De opmaak van de Tectora-offerte (afdrukken, e-mail, "
+        "klantenportaal); niet van toepassing bij een standaard offerte. De "
+        "standaardstijl staat in Instellingen → Tectora Dakmeting.",
+    )
+    tectora_tax_id = fields.Many2one(
+        "account.tax",
+        string="Btw-tarief voor alle regels",
+        domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]",
+        check_company=True,
+        help="Eén btw-tarief voor de hele offerte, bv. 6% bij renovatie van een "
+        "woning ouder dan 10 jaar. Kies het tarief en klik op 'Toepassen op "
+        "alle regels': elke productregel krijgt dan dit tarief. Regels die "
+        "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
+    )
+    tectora_include_roof_plan = fields.Boolean(
+        string="Dakplan toevoegen",
+        default=True,
+        help="Neem het dakplan (tekening, maten en producten per daksectie) "
+        "op in de offerte-pdf.",
+    )
+
+    @api.model
+    def _default_tectora_quotation_style(self):
+        style = self.env["ir.config_parameter"].sudo().get_param(
+            "tectora_roof.quotation_style"
+        )
+        return style if style in dict(QUOTATION_STYLES) else "dossier"
+
+    @api.model
+    def _default_tectora_standard_quotation(self):
+        return str2bool(
+            self.env["ir.config_parameter"].sudo().get_param(
+                "tectora_roof.standard_quotation", "False"
+            ),
+            default=False,
+        )
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi
@@ -125,6 +270,79 @@ class SaleOrder(models.Model):
                 )
             )
         self._tectora_generate_materials()
+        self._tectora_sync_execution_task()
+
+    # -------------------------------------------------------- execution task
+    def _tectora_execution_project(self):
+        self.ensure_one()
+        return self.roof_project_id.project_id or self.project_id
+
+    def _tectora_sync_execution_task(self):
+        """Put the order's estimated time on the project's tasks
+        "Afbraakwerken" and "Uitvoeringswerken", one per work kind, so hours
+        are logged apart: created on confirmation, their allocated time
+        follows the estimate whenever the order changes afterwards. Only the
+        allocated time is touched on an existing task; the rest belongs to
+        whoever plans the work.
+        """
+        for order in self:
+            if order.state != "sale":
+                continue
+            project = order._tectora_execution_project()
+            if not project:
+                continue
+            hours_by_kind = order._tectora_hours_by_kind()
+            deadline = order.commitment_date or order.roof_project_id.planned_date_end
+            for kind, _label in WORK_KINDS:
+                hours = hours_by_kind[kind]
+                task = project._tectora_work_task(kind)
+                if task:
+                    if float_compare(task.allocated_hours, hours, precision_digits=2):
+                        task.write({"allocated_hours": hours})
+                    continue
+                if not hours:
+                    continue  # nothing estimated for this kind: no task to size
+                project._tectora_work_task(
+                    kind,
+                    create=True,
+                    allocated_hours=hours,
+                    date_deadline=deadline or False,
+                    description=order._tectora_execution_task_description(kind),
+                )
+
+    def _tectora_execution_task_description(self, kind):
+        """The estimate per works item of one work kind, so the task says
+        where its time comes from."""
+        self.ensure_one()
+        rows = []
+        lines = self.order_line.filtered(
+            lambda line: not line.display_type and line._tectora_hours_of_kind(kind)
+        )
+        for line in lines.sorted(key=lambda line: -line._tectora_hours_of_kind(kind)):
+            rows.append(
+                "<tr><td>%s</td><td class='text-end'>%s %s</td>"
+                "<td class='text-end'>%s u</td><td class='text-end'>%s u</td></tr>"
+                % (
+                    html_escape(line.product_id.display_name),
+                    ("%.2f" % line.product_uom_qty).rstrip("0").rstrip("."),
+                    html_escape(line.product_uom_id.name or ""),
+                    ("%.3f" % line._tectora_norm_of_kind(kind)).rstrip("0").rstrip("."),
+                    "%.2f" % line._tectora_hours_of_kind(kind),
+                )
+            )
+        total = sum(line._tectora_hours_of_kind(kind) for line in lines)
+        return (
+            "<p>%s</p><table class='table table-sm'><thead><tr><th>%s</th>"
+            "<th class='text-end'>%s</th><th class='text-end'>%s</th>"
+            "<th class='text-end'>%s</th></tr></thead><tbody>%s</tbody></table>"
+            % (
+                _("%(kind)s, geschat uit %(order)s: %(hours)s.",
+                  kind=dict(WORK_KINDS)[kind], order=self.name,
+                  hours=self._tectora_hours_label(total)),
+                _("Werkpost"), _("Hoeveelheid"), _("Per eenheid"), _("Uren"),
+                "".join(rows),
+            )
+        )
 
     # -------------------------------------------------- roof project pairing
     def _tectora_roof_project_values(self):
@@ -238,16 +456,23 @@ class SaleOrder(models.Model):
         """Order lines -> roof project.
 
         A product line without a roof counterpart becomes a project-level
-        (chapter) line of the roof project, measured by its unit: m² lines
-        take the roof area, m lines the perimeter, counted lines the quantity
-        of the order. A line that already has its counterpart pushes an
-        edited count onto it; for measured lines the roof project decides, so
-        the order quantity is put back.
+        (chapter) line of the roof project, measured by its unit (m² ->
+        surface, m -> edges, else counted) and starting with the quantity of
+        the order; the drawing takes over the measured ones as soon as it
+        changes.
+
+        ``lines`` given means the user just edited those order lines: their
+        quantity is pushed onto the roof line whatever its coverage, the way a
+        quantity typed on the roof project is pushed onto the order. Without
+        ``lines`` (aligning a whole order) counted lines follow the order and
+        measured lines follow the roof project, so the order quantity is put
+        back.
         """
         self.ensure_one()
         roof = self.roof_project_id
         if not roof or self.state not in ("draft", "sent"):
             return
+        order_is_master = lines is not None
         RoofLine = self.env["tectora.roof.section.product"].with_context(
             tectora_sync=True
         )
@@ -277,14 +502,15 @@ class SaleOrder(models.Model):
                     roof_line = self.env["tectora.roof.section.product"]
                 if not roof_line:
                     coverage = RoofLine._coverage_from_product(line.product_id)
-                    values = {
+                    # The order's quantity is kept, also on a measured line:
+                    # without it a roof project without drawing would zero
+                    # the line. The drawing overrides it when it changes.
+                    roof_line = RoofLine.create({
                         "project_direct_id": roof.id,
                         "product_id": line.product_id.id,
                         "coverage": coverage,
-                    }
-                    if coverage == "general":
-                        values["quantity"] = line.product_uom_qty
-                    roof_line = RoofLine.create(values)
+                        "quantity": line.product_uom_qty,
+                    })
                     direct_by_product[line.product_id] = roof_line
                 line.with_context(tectora_sync=True).write(
                     {"roof_line_id": roof_line.id}
@@ -296,9 +522,11 @@ class SaleOrder(models.Model):
                         "coverage": RoofLine._coverage_from_product(line.product_id),
                     }
                 )
-            # Quantities: counted chapter lines follow the order, measured
-            # lines follow the roof project.
-            if roof_line.project_direct_id and roof_line.coverage == "general":
+            # Quantities: an edited order line wins; otherwise counted chapter
+            # lines follow the order and measured lines the roof project.
+            if order_is_master or (
+                roof_line.project_direct_id and roof_line.coverage == "general"
+            ):
                 if roof_line._quantity_differs(line.product_uom_qty):
                     roof_line.with_context(tectora_sync=True).write(
                         {"quantity": line.product_uom_qty}
@@ -449,6 +677,65 @@ class SaleOrder(models.Model):
         tz = pytz.timezone(self.env.user.tz or "UTC")
         local = tz.localize(datetime.combine(deadline, time(hour=8)))
         return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+    # ------------------------------------------------------------------- btw
+    def action_apply_tectora_tax(self):
+        """Put the chosen tax on every product line. Deliberately a button,
+        not an automatism: the user decides when the whole order switches."""
+        for order in self:
+            lines = order.order_line.filtered(lambda line: not line.display_type)
+            if not lines:
+                continue
+            if order.tectora_tax_id:
+                lines.with_context(tectora_sync=True).write(
+                    {"tax_ids": [(6, 0, order.tectora_tax_id.ids)]}
+                )
+            else:
+                # No tax chosen: back to the taxes of the products and the
+                # fiscal position.
+                lines.with_context(tectora_sync=True)._compute_tax_ids()
+        return True
+
+    # ---------------------------------------------------------------- report
+    def _tectora_report_sections(self, optional=False):
+        """The order lines grouped under their section headers, with a
+        subtotal per section, for the dossier PDF. Lines before the first
+        header form a nameless first group. Subsections and notes stay in
+        the group as lines (their display_type tells them apart).
+
+        Odoo 19 marks optional products as sections flagged ``is_optional``:
+        ``optional=False`` returns the ordinary sections, ``optional=True``
+        the optional ones (offered separately, outside the totals).
+        """
+        self.ensure_one()
+        sections = []
+        current = {"name": False, "lines": [], "subtotal": 0.0, "measurement": False, "optional": False}
+        for line in self.order_line:
+            if line.display_type == "line_section":
+                if current["lines"] or current["name"]:
+                    sections.append(current)
+                current = {
+                    "name": line.name,
+                    "lines": [],
+                    "subtotal": 0.0,
+                    "measurement": bool(line.roof_measurement_line),
+                    "optional": bool(getattr(line, "is_optional", False)),
+                }
+                continue
+            current["lines"].append(line)
+            if not line.display_type:
+                current["subtotal"] += line.price_subtotal
+        if current["lines"] or current["name"]:
+            sections.append(current)
+        return [section for section in sections if section["optional"] == optional]
+
+    def _tectora_report_tax_label(self, line):
+        """"21%" for a line's taxes, the way a customer reads them."""
+        labels = []
+        for tax in line.tax_ids:
+            amount = ("%g" % tax.amount) if tax.amount_type == "percent" else tax.name
+            labels.append("%s%%" % amount if tax.amount_type == "percent" else amount)
+        return ", ".join(labels)
 
     # ---------------------------------------------------------- smart buttons
     def action_view_roof_project(self):

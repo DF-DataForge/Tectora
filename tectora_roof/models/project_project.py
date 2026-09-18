@@ -15,6 +15,8 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+from .project_task import WORK_KINDS
+
 _logger = logging.getLogger(__name__)
 
 
@@ -184,6 +186,12 @@ class ProjectProject(models.Model):
     tectora_planned_employee_ids = fields.Many2many(
         "hr.employee", string="Ingeplande medewerkers",
         compute="_compute_tectora_planning",
+    )
+    tectora_estimated_hours = fields.Float(
+        related="tectora_sale_order_id.tectora_estimated_hours",
+        string="Geschatte uitvoeringstijd",
+        help="Uit de order: hoeveelheid × geschatte tijd per eenheid van elk "
+        "product. Staat als toegewezen tijd op de taak Uitvoeringswerken.",
     )
 
     # ------------------------------------------------------------------ links
@@ -525,6 +533,27 @@ class ProjectProject(models.Model):
     def action_view_tectora_tasks(self):
         self.ensure_one()
         return self.action_view_tasks()
+
+    def _tectora_work_task(self, kind, create=False, **values):
+        """The project's task of one work kind, Afbraakwerken or
+        Uitvoeringswerken: the order sizes it with its estimate, the crew logs
+        its hours on it. Created on request, so hours registered before the
+        order is confirmed still land on the right task."""
+        self.ensure_one()
+        Task = self.env["project.task"].sudo()
+        task = Task.search(
+            [("project_id", "=", self.id), ("tectora_work_kind", "=", kind)],
+            limit=1,
+        )
+        if not task and create:
+            task = Task.create({
+                "name": dict(WORK_KINDS)[kind],
+                "project_id": self.id,
+                "partner_id": self.partner_id.id,
+                "tectora_work_kind": kind,
+                **values,
+            })
+        return task
 
     def action_view_tectora_profitability(self):
         """Odoo's own profitability panel of the project, for the detail
