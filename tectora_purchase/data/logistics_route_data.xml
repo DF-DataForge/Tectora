@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The two routes the office works with. noupdate: they are meant to be
+         tuned (name, warehouse, default) and an upgrade must not undo that. -->
+    <data noupdate="1">
+
+        <record id="route_dropship" model="tectora.logistics.route">
+            <field name="name">Dropship — levering op de werf</field>
+            <field name="sequence">10</field>
+            <field name="delivery_type">dropship</field>
+            <field name="note">De leverancier levert rechtstreeks op de werf.
+De inkooporder krijgt het leveradres van het dakproject (het leveradres van de
+order, anders de klant) en de dropship-operatie; bij bevestiging ontstaat een
+dropship-levering van leverancier naar klant.</field>
+        </record>
+
+        <record id="route_warehouse" model="tectora.logistics.route">
+            <field name="name">Levering aan magazijn</field>
+            <field name="sequence">20</field>
+            <field name="delivery_type">warehouse</field>
+            <field name="warehouse_id" ref="stock.warehouse0"/>
+            <field name="is_default" eval="True"/>
+            <field name="note">De leverancier levert aan het magazijn; het materiaal
+gaat van daar met de ploeg naar de werf. De inkooporder krijgt de
+ontvangst-operatie van het magazijn; bij bevestiging ontstaat een ontvangst.</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tectora_logistics_route_user,tectora.logistics.route user,model_tectora_logistics_route,base.group_user,1,0,0,0
+access_tectora_logistics_route_purchase_manager,tectora.logistics.route purchase manager,model_tectora_logistics_route,purchase.group_purchase_manager,1,1,1,1
+access_tectora_logistics_route_system,tectora.logistics.route system,model_tectora_logistics_route,base.group_system,1,1,1,1
+access_tectora_purchase_from_material_user,tectora.purchase.from.material purchase user,model_tectora_purchase_from_material,purchase.group_purchase_user,1,1,1,1
+access_tectora_purchase_from_material_group_user,tectora.purchase.from.material.group purchase user,model_tectora_purchase_from_material_group,purchase.group_purchase_user,1,1,1,1

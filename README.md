@@ -11,6 +11,7 @@ contractors.
 | [`tectora_roof_planning`](tectora_roof_planning/) | Bridge to the Planning app: work blocks become employee shifts, the project dashboard shows them. Installs itself with Planning. |
 | [`tectora_products`](tectora_products/) | Supplier catalogue, price book and quotation templates. |
 | [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list. |
+| [`tectora_purchase`](tectora_purchase/) | Orders the material list at the configured vendors: two logistic routes (dropship to the site, delivery to the warehouse) and one-click purchase orders from the material need overview. Installs itself with Purchase, Inventory and Dropshipping. |
 
 The application originates from the standalone BROOF app
 (React + Express + PostgreSQL), which was rewritten as a native Odoo module
