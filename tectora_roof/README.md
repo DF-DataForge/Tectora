@@ -197,6 +197,29 @@ project (start- en einddatum) en omgekeerd.
   eerdere bevestiging van dezelfde order worden vervangen.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
+
+## Geschatte uitvoeringstijd en de taak Uitvoeringswerken
+
+Elk product heeft op zijn fiche, naast de prijzen, een **geschatte tijd per
+eenheid** in minuten (per m², per lm, per stuk). Daaruit volgt:
+
+* op elke **offertelijn** de geschatte tijd (hoeveelheid × minuten, getoond
+  als uren; een lijn in een andere eenheid wordt eerst omgerekend), met de
+  **som onder de totalen** in uren en in werkdagen (uren per dag uit de
+  werktijden van het bedrijf, anders 8). De offerte-PDF toont dezelfde regel
+  *Geschatte uitvoeringstijd* onder de totalen, enkel als er iets geschat is;
+* bij het **bevestigen** van de order een taak **Uitvoeringswerken** op het
+  project, met die som als **toegewezen tijd**, de leverdatum van de order
+  (of het geplande einde van het dakproject) als deadline en in de
+  omschrijving de opsplitsing per werkpost. Verandert nadien een hoeveelheid
+  op de bevestigde order, dan volgt de toegewezen tijd; de rest van de taak
+  (toewijzing, fase, omschrijving) blijft van wie het werk plant. De taak is
+  herkenbaar aan het vinkje *Uitvoeringstaak*; er is er één per project.
+* Het projectdashboard toont de geschatte tijd op de kaart **Taken** en de
+  toegewezen tijd per taak op de tab Taken.
+
+Producten zonder norm tellen niet mee; een order zonder enige norm krijgt geen
+taak.
 * Slimme knoppen op het dakproject: Offerte / Order, Materialen, Leveringen,
   Inkoop, Facturen, Werkblokken en het Project (dashboard).
 

@@ -29,6 +29,40 @@ class SaleOrderLine(models.Model):
         help="Aangemaakt uit de daksecties en dakobjecten van de meting; wordt "
         "herbouwd zodra de tekening verandert.",
     )
+    tectora_minutes_per_uom = fields.Float(
+        related="product_id.tectora_minutes_per_uom",
+        string="Min. per eenheid",
+    )
+    tectora_estimated_hours = fields.Float(
+        string="Geschatte tijd",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Uitvoeringstijd in uren: hoeveelheid × geschatte tijd per eenheid "
+        "van het product.",
+    )
+
+    @api.depends(
+        "product_id.tectora_minutes_per_uom",
+        "product_uom_qty",
+        "product_uom_id",
+        "display_type",
+    )
+    def _compute_tectora_estimated_hours(self):
+        for line in self:
+            product = line.product_id
+            minutes = product.tectora_minutes_per_uom if product else 0.0
+            if line.display_type or not minutes or not line.product_uom_qty:
+                line.tectora_estimated_hours = 0.0
+                continue
+            quantity = line.product_uom_qty
+            # The norm is per unit of the product; a line sold in another unit
+            # is converted first.
+            if line.product_uom_id and line.product_uom_id != product.uom_id:
+                quantity = line.product_uom_id._compute_quantity(
+                    quantity, product.uom_id
+                )
+            line.tectora_estimated_hours = quantity * minutes / 60.0
 
     def _tectora_mirrorable(self):
         """Lines the roof project should know about: real product lines of an
@@ -48,15 +82,20 @@ class SaleOrderLine(models.Model):
         if not self.env.context.get("tectora_sync"):
             for order in lines._tectora_mirrorable().order_id:
                 order._tectora_mirror_to_roof(lines.filtered(lambda l: l.order_id == order))
+        lines.order_id._tectora_sync_execution_task()
         return lines
 
     def write(self, vals):
         result = super().write(vals)
-        if not self.env.context.get("tectora_sync") and (
-            {"product_uom_qty", "product_id", "product_uom_id"} & set(vals)
-        ):
-            for order in self._tectora_mirrorable().order_id:
-                order._tectora_mirror_to_roof(self.filtered(lambda l: l.order_id == order))
+        if {"product_uom_qty", "product_id", "product_uom_id"} & set(vals):
+            if not self.env.context.get("tectora_sync"):
+                for order in self._tectora_mirrorable().order_id:
+                    order._tectora_mirror_to_roof(
+                        self.filtered(lambda l: l.order_id == order)
+                    )
+            # A quantity changed on a confirmed order: the execution task
+            # follows the new estimate.
+            self.order_id._tectora_sync_execution_task()
         return result
 
     def unlink(self):

@@ -29,6 +29,10 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   dashboard -- revenue and costs, deliveries, tasks, team planning and the roof
   measurement itself -- with every card opening the records behind it and the
   order and the roof project one click away.
+* Every product carries an estimated execution time per unit (minutes); the
+  quotation shows the estimate per line and in total (hours and working
+  days), and confirming the order puts it as allocated time on the project's
+  task "Uitvoeringswerken", which follows later quantity changes.
 * The quotation mirrors the roof project: its chapter lines (Algemene werken,
   Veiligheid, Afbraak, Opbouw, ...) are the project-level lines of the roof
   project and the measurement lines come from the drawing, so m² and m
@@ -37,7 +41,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   Employees -> Configuration -> Ploegen); the Employees app opens grouped per
   team.
     """,
-    "version": "19.0.3.13.0",
+    "version": "19.0.3.14.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -58,9 +62,11 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/project_project_views.xml",
         "views/res_config_settings_views.xml",
         "views/product_category_views.xml",
+        "views/product_template_views.xml",
         "views/crm_lead_views.xml",
         "views/sale_portal_templates.xml",
         "report/roof_project_report.xml",
+        "report/sale_order_report.xml",
         "report/roof_project_info_report.xml",
         "views/menus.xml",
     ],

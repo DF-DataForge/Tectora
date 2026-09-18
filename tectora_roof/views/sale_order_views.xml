@@ -32,6 +32,30 @@
                         invisible="state not in ('sale', 'done')"
                         string="Projectdashboard"/>
             </xpath>
+            <!-- The estimated execution time, per line and in total: the
+                 line figure is hours (hh:mm), computed from the product's
+                 minutes per unit. -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']"
+                   position="before">
+                <field name="tectora_estimated_hours" widget="float_time"
+                       string="Geschatte tijd" sum="Totaal" optional="show"
+                       invisible="display_type or is_downpayment" width="90px"/>
+            </xpath>
+            <xpath expr="//group[@name='sale_total']" position="inside">
+                <div class="d-flex justify-content-between mt-2"
+                     invisible="not tectora_estimated_hours">
+                    <label for="tectora_estimated_hours" class="fw-bold"/>
+                    <div class="text-end">
+                        <field name="tectora_estimated_hours" widget="float_time"
+                               class="oe_inline fw-bold" nolabel="1"/>
+                        <span> u</span>
+                        <div class="text-muted small">
+                            ± <field name="tectora_estimated_days" class="oe_inline"
+                                     nolabel="1"/> werkdagen
+                        </div>
+                    </div>
+                </div>
+            </xpath>
         </field>
     </record>
 

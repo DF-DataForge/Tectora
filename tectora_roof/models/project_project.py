@@ -185,6 +185,12 @@ class ProjectProject(models.Model):
         "hr.employee", string="Ingeplande medewerkers",
         compute="_compute_tectora_planning",
     )
+    tectora_estimated_hours = fields.Float(
+        related="tectora_sale_order_id.tectora_estimated_hours",
+        string="Geschatte uitvoeringstijd",
+        help="Uit de order: hoeveelheid × geschatte tijd per eenheid van elk "
+        "product. Staat als toegewezen tijd op de taak Uitvoeringswerken.",
+    )
 
     # ------------------------------------------------------------------ links
     @api.depends("roof_project_ids")
