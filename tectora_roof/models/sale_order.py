@@ -8,7 +8,7 @@ from markupsafe import escape as html_escape
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, str2bool
 
 from .project_task import WORK_KINDS
 
@@ -34,7 +34,6 @@ QUOTATION_STYLES = [
     ("classic", "Klassiek — briefstijl met begeleidende tekst"),
     ("visual", "Visueel — dakplan en kerncijfers voorop"),
     ("minimal", "Minimalistisch — rustig, veel wit"),
-    ("standard", "Standaard Odoo-document"),
 ]
 
 
@@ -73,26 +72,24 @@ class SaleOrder(models.Model):
         compute="_compute_tectora_estimated_hours",
         store=True,
         digits=(16, 2),
-        help="Som van de geschatte tijd van de orderlijnen (hoeveelheid × "
-        "geschatte tijd per eenheid van het product), in uren. Bij "
-        "bevestiging wordt ze de toegewezen tijd van de taak "
-        "Uitvoeringswerken op het project.",
+        help="Uren afbraak en uren opbouw van de orderlijnen samen "
+        "(hoeveelheid × de normen per eenheid van het product).",
     )
     tectora_demolition_hours = fields.Float(
         string="Geschatte tijd afbraak",
         compute="_compute_tectora_estimated_hours",
         store=True,
         digits=(16, 2),
-        help="Het deel van de geschatte tijd op de producten van het hoofdstuk "
-        "Afbraak; wordt de toegewezen tijd van de taak Afbraakwerken.",
+        help="Som van de uren afbraak van de orderlijnen; wordt bij "
+        "bevestiging de toegewezen tijd van de taak Afbraakwerken.",
     )
     tectora_execution_hours = fields.Float(
         string="Geschatte tijd uitvoering",
         compute="_compute_tectora_estimated_hours",
         store=True,
         digits=(16, 2),
-        help="Het deel van de geschatte tijd op alle andere producten; wordt "
-        "de toegewezen tijd van de taak Uitvoeringswerken.",
+        help="Som van de uren opbouw van de orderlijnen; wordt bij "
+        "bevestiging de toegewezen tijd van de taak Uitvoeringswerken.",
     )
     tectora_estimated_days = fields.Float(
         string="Geschatte werkdagen",
@@ -152,13 +149,22 @@ class SaleOrder(models.Model):
             )
         return label
 
+    tectora_standard_quotation = fields.Boolean(
+        string="Standaard offerte",
+        default=lambda self: self._default_tectora_standard_quotation(),
+        help="Gebruik het standaard offertedocument van Odoo in plaats van de "
+        "Tectora-offerte (afdrukken, e-mail en klantenportaal). Het dakplan "
+        "kan er nog achter. De standaardkeuze voor nieuwe offertes staat in "
+        "Instellingen → Tectora Dakmeting.",
+    )
     tectora_quotation_style = fields.Selection(
         QUOTATION_STYLES,
         string="Offertestijl",
         default=lambda self: self._default_tectora_quotation_style(),
         required=True,
-        help="De opmaak van de offerte-pdf (afdrukken, e-mail, klantenportaal). "
-        "De standaardstijl staat in Instellingen → Tectora Dakmeting.",
+        help="De opmaak van de Tectora-offerte (afdrukken, e-mail, "
+        "klantenportaal); niet van toepassing bij een standaard offerte. De "
+        "standaardstijl staat in Instellingen → Tectora Dakmeting.",
     )
     tectora_tax_id = fields.Many2one(
         "account.tax",
@@ -183,6 +189,15 @@ class SaleOrder(models.Model):
             "tectora_roof.quotation_style"
         )
         return style if style in dict(QUOTATION_STYLES) else "dossier"
+
+    @api.model
+    def _default_tectora_standard_quotation(self):
+        return str2bool(
+            self.env["ir.config_parameter"].sudo().get_param(
+                "tectora_roof.standard_quotation", "False"
+            ),
+            default=False,
+        )
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi

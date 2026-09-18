@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The dossier on/off switch became a choice of quotation style: orders that
-had the standard document keep it."""
+had the standard document keep it -- since 19.0.3.20.0 through the checkbox
+"Standaard offerte", the style list no longer holding a standard entry."""
 
 
 def migrate(cr, version):
@@ -15,7 +16,7 @@ def migrate(cr, version):
     cr.execute(
         """
         UPDATE sale_order
-        SET tectora_quotation_style = 'standard'
+        SET tectora_standard_quotation = TRUE
         WHERE tectora_dossier_layout IS NOT TRUE
         """
     )

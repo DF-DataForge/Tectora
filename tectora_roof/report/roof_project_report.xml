@@ -122,10 +122,10 @@
         </t>
     </template>
 
-    <!-- The quotation PDF: the Tectora project dossier when the order asks for
-         it (the default), otherwise Odoo's standard document, followed by the
-         meetblad when the order includes the roof plan. In Odoo 19 the
-         per-document loop lives in sale.report_saleorder_raw. -->
+    <!-- The quotation PDF: Odoo's standard document when the order ticks
+         "Standaard offerte" (followed by the meetblad when the order includes
+         the roof plan), otherwise the Tectora quotation in the chosen style.
+         In Odoo 19 the per-document loop lives in sale.report_saleorder_raw. -->
     <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder_raw">
         <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="attributes">
             <attribute name="t-call">tectora_roof.report_saleorder_document_dispatch</attribute>
@@ -133,27 +133,29 @@
     </template>
 
     <template id="report_saleorder_document_dispatch">
-        <t t-set="style" t-value="doc.tectora_quotation_style or 'dossier'"/>
-        <t t-if="style == 'dossier'">
-            <t t-call="tectora_roof.report_tq_dossier"/>
-        </t>
-        <t t-elif="style == 'compact'">
-            <t t-call="tectora_roof.report_tq_compact"/>
-        </t>
-        <t t-elif="style == 'classic'">
-            <t t-call="tectora_roof.report_tq_classic"/>
-        </t>
-        <t t-elif="style == 'visual'">
-            <t t-call="tectora_roof.report_tq_visual"/>
-        </t>
-        <t t-elif="style == 'minimal'">
-            <t t-call="tectora_roof.report_tq_minimal"/>
-        </t>
-        <t t-else="">
+        <t t-if="doc.tectora_standard_quotation">
             <t t-call="sale.report_saleorder_document"/>
             <t t-if="doc.roof_project_id and doc.tectora_include_roof_plan">
                 <t t-set="roof_doc" t-value="doc.roof_project_id"/>
                 <t t-call="tectora_roof.report_roof_project_page"/>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-set="style" t-value="doc.tectora_quotation_style or 'dossier'"/>
+            <t t-if="style == 'compact'">
+                <t t-call="tectora_roof.report_tq_compact"/>
+            </t>
+            <t t-elif="style == 'classic'">
+                <t t-call="tectora_roof.report_tq_classic"/>
+            </t>
+            <t t-elif="style == 'visual'">
+                <t t-call="tectora_roof.report_tq_visual"/>
+            </t>
+            <t t-elif="style == 'minimal'">
+                <t t-call="tectora_roof.report_tq_minimal"/>
+            </t>
+            <t t-else="">
+                <t t-call="tectora_roof.report_tq_dossier"/>
             </t>
         </t>
     </template>
