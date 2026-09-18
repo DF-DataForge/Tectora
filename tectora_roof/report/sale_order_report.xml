@@ -16,6 +16,20 @@
                                 <span t-esc="doc._tectora_estimated_time_label()"/>
                             </td>
                         </tr>
+                        <t t-if="doc.tectora_demolition_hours">
+                            <tr class="text-muted small">
+                                <td class="text-start ps-4">waarvan afbraakwerken</td>
+                                <td class="text-end">
+                                    <span t-esc="doc._tectora_hours_label(doc.tectora_demolition_hours)"/>
+                                </td>
+                            </tr>
+                            <tr class="text-muted small">
+                                <td class="text-start ps-4">waarvan uitvoeringswerken</td>
+                                <td class="text-end">
+                                    <span t-esc="doc._tectora_hours_label(doc.tectora_execution_hours)"/>
+                                </td>
+                            </tr>
+                        </t>
                     </table>
                 </div>
             </div>

@@ -198,28 +198,38 @@ project (start- en einddatum) en omgekeerd.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
 
-## Geschatte uitvoeringstijd en de taak Uitvoeringswerken
+## Geschatte uitvoeringstijd en de taken Afbraakwerken en Uitvoeringswerken
 
 Elk product heeft op zijn fiche, naast de prijzen, een **geschatte tijd per
-eenheid** in minuten (per m², per lm, per stuk). Daaruit volgt:
+eenheid** in minuten (per m², per lm, per stuk). De module `tectora_boms` vult
+dat veld voor 415 van de 499 verkoopproducten uit de **werkurenregels van de
+stuklijstexport van Tectora** (`werkuren construction`, `werkuren afbraak`,
+`werkuren veiligheid`); zie `docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit
+volgt:
 
 * op elke **offertelijn** de geschatte tijd (hoeveelheid × minuten, getoond
-  als uren; een lijn in een andere eenheid wordt eerst omgerekend), met de
-  **som onder de totalen** in uren en in werkdagen (uren per dag uit de
-  werktijden van het bedrijf, anders 8). De offerte-PDF toont dezelfde regel
-  *Geschatte uitvoeringstijd* onder de totalen, enkel als er iets geschat is;
-* bij het **bevestigen** van de order een taak **Uitvoeringswerken** op het
-  project, met die som als **toegewezen tijd**, de leverdatum van de order
-  (of het geplande einde van het dakproject) als deadline en in de
-  omschrijving de opsplitsing per werkpost. Verandert nadien een hoeveelheid
-  op de bevestigde order, dan volgt de toegewezen tijd; de rest van de taak
-  (toewijzing, fase, omschrijving) blijft van wie het werk plant. De taak is
-  herkenbaar aan het vinkje *Uitvoeringstaak*; er is er één per project.
+  als uren; een lijn in een andere eenheid wordt eerst omgerekend) en haar
+  **werksoort**: *Afbraakwerken* voor de producten van het hoofdstuk Afbraak,
+  *Uitvoeringswerken* voor de rest;
+* onder de totalen van de offerte de **som** in uren en in werkdagen (uren per
+  dag uit de werktijden van het bedrijf, anders 8), met het deel afbraak en het
+  deel uitvoering. De offerte-PDF toont dezelfde regels onder de totalen, enkel
+  als er iets geschat is;
+* bij het **bevestigen** van de order per werksoort een taak op het project,
+  **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte tijd van die
+  werksoort als **toegewezen tijd**, de leverdatum van de order (of het
+  geplande einde van het dakproject) als deadline en in de omschrijving de
+  opsplitsing per werkpost. Uren worden op die taken gelogd, zodat afbraak en
+  uitvoering in de urenstaten uit elkaar te houden zijn. Verandert nadien een
+  hoeveelheid op de bevestigde order, dan volgt de toegewezen tijd; de rest van
+  de taak (toewijzing, fase, omschrijving) blijft van wie het werk plant. De
+  taken zijn herkenbaar aan het veld *Werksoort (Tectora)*; er is er één per
+  werksoort per project.
 * Het projectdashboard toont de geschatte tijd op de kaart **Taken** en de
-  toegewezen tijd per taak op de tab Taken.
+  werksoort en toegewezen tijd per taak op de tab Taken.
 
-Producten zonder norm tellen niet mee; een order zonder enige norm krijgt geen
-taak.
+Producten zonder norm tellen niet mee; een werksoort zonder geschatte tijd
+krijgt geen taak.
 * Slimme knoppen op het dakproject: Offerte / Order, Materialen, Leveringen,
   Inkoop, Facturen, Werkblokken en het Project (dashboard).
 

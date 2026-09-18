@@ -147,6 +147,54 @@ die prijzen (of eenheden) in de catalogus rechtgezet zijn, is de
 | P01066 Keien rolgrind 16/32 (40 kg/zak) | kg | 9,74 | prijs per **zak** van 40 kg → 0,24 €/kg |
 | P01207 / P00479 Iconik basisprofiel / sierlijst 3 m | m | 46,13 | prijs per **element** van 3 m → 15,4 €/m |
 
+## Tijdnormen uit de werkuren van de export
+
+De kits van de export dragen elk een of twee werkurenregels: `werkuren
+construction` op de opbouwwerken (610 regels), `werkuren afbraak` op de
+afbraakwerken (68), `werkuren veiligheid` (6) en het losse component
+`Afbraakwerken` (6), alle in uren per eenheid van de werkpost. Dat is de eigen
+tijdnorm van Tectora, en precies wat het veld **Geschatte tijd per eenheid**
+(minuten) van `tectora_roof` nodig heeft om een offerte te schatten en de taken
+Afbraakwerken en Uitvoeringswerken op het project te dimensioneren.
+
+```bash
+python3 tectora_boms/tools/build_labour_norms.py
+```
+
+Het script somt per kit de werkuren, neemt per exportproduct de mediaan over
+zijn kits (varianten dragen dezelfde tijd; 17 producten wijken af, de mediaan
+is dan het veilige midden) en legt elk exportproduct met een **handmatige
+mapping** op de catalogusfamilie waarvoor het staat, net als bij de
+demo-stuklijsten: één *enkelvoudige dakrandprofiel* uit de export tegen de 28
+hoogtes × afwerkingen van de prijslijst. Elke code wordt gecontroleerd; bij een
+fout wordt niets geschreven. Resultaat in `tectora_boms/data/labour_norms.json`:
+**415 van de 499 verkoopproducten** met een norm, uit 111 exportproducten; 72
+exportproducten hebben geen tegenhanger in de catalogus (muurkappen, type C,
+Engelse omschrijvingen) of zijn al gedekt door een zusterproduct.
+
+Enkele normen, zoals ze op de productfiche komen:
+
+| Werkpost | Norm |
+|---|---|
+| EPDM verkleefd (per m²) | 19,8 min |
+| EPDM geballast (per m²) | 9 min |
+| PIR verkleefd (per m²) | 7,8 min |
+| Dampscherm (per m²) | 3,3 min |
+| Kimfixatie (per lm) | 6 min |
+| 2-delige dakrand (per lm) | 7,2 min |
+| Enkelvoudige dakrand, hoek | 4,8 min |
+| PE-tapbuis (per stuk) | 30 min |
+| Ankerpunt (per stuk) | 22,5 min |
+| Verwijderen dakbedekking (per m²) | 12 min |
+| Verwijderen dakranden (per lm) | 6 min |
+
+Rockwool Rhinoxx heeft in de export geen werkuren en krijgt dus geen norm.
+
+De module laadt de normen bij installatie en upgrade en **laat een waarde die
+het bureau zelf invulde staan**; *Verkoop → Configuratie → Tijdnormen laden uit
+stuklijstexport* herlaadt en overschrijft. Het veld hoort bij `tectora_roof`;
+zonder die module wordt er niets geladen.
+
 ## Hoe het geladen wordt
 
 * Bij **installatie** (post_init_hook) en bij **upgrade** (migratie

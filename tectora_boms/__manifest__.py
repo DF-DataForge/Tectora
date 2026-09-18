@@ -57,8 +57,18 @@ roofer's consumption norms. It is loaded on install and upgrade with the
 reference "Demo" and the key ``demo:<code>``, ahead of the imported export, and
 can be refreshed or removed from *Verkoop → Configuratie*. Built and checked
 by ``tools/build_demo_boms.py``; see ``docs/demo_stuklijsten.md``.
+
+Labour norms
+------------
+The export's labour lines (``werkuren construction``, ``werkuren afbraak``,
+``werkuren veiligheid``) are Tectora's own time per unit of each works item.
+``tools/build_labour_norms.py`` reads them into ``data/labour_norms.json``,
+mapped by hand onto the catalogue's product families, and the module fills
+"Geschatte tijd per eenheid" (a field of Tectora Dakmeting) from it on install
+and upgrade, keeping any value the office typed in; *Verkoop → Configuratie →
+Tijdnormen laden* reloads and overwrites.
     """,
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Manufacturing",
     "license": "Other proprietary",
     "author": "Data Forge",

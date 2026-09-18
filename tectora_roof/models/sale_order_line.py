@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models
 
+from .project_task import WORK_KINDS
+
 
 class SaleOrderLine(models.Model):
     """Order lines mirror the roof project.
@@ -41,6 +43,26 @@ class SaleOrderLine(models.Model):
         help="Uitvoeringstijd in uren: hoeveelheid × geschatte tijd per eenheid "
         "van het product.",
     )
+    tectora_work_kind = fields.Selection(
+        WORK_KINDS,
+        string="Werksoort",
+        compute="_compute_tectora_work_kind",
+        store=True,
+        help="Afbraakwerken voor de producten van het hoofdstuk Afbraak, "
+        "Uitvoeringswerken voor de rest. Bepaalt op welke taak van het "
+        "project de geschatte tijd van deze lijn komt.",
+    )
+
+    @api.depends("product_id.categ_id.complete_name", "display_type")
+    def _compute_tectora_work_kind(self):
+        # The same reading of the category tree as the roof project's Afbraak
+        # tab: the chapter "03. Afbraakwerken plat dak" and everything under it.
+        for line in self:
+            if line.display_type or not line.product_id:
+                line.tectora_work_kind = False
+                continue
+            path = (line.product_id.categ_id.complete_name or "").lower()
+            line.tectora_work_kind = "afbraak" if "afbraak" in path else "uitvoering"
 
     @api.depends(
         "product_id.tectora_minutes_per_uom",

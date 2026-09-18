@@ -10,6 +10,8 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
 
+from .project_task import WORK_KINDS
+
 _logger = logging.getLogger(__name__)
 
 # Fields kept equal between an order and its roof project: (order, roof).
@@ -66,6 +68,22 @@ class SaleOrder(models.Model):
         "bevestiging wordt ze de toegewezen tijd van de taak "
         "Uitvoeringswerken op het project.",
     )
+    tectora_demolition_hours = fields.Float(
+        string="Geschatte tijd afbraak",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Het deel van de geschatte tijd op de producten van het hoofdstuk "
+        "Afbraak; wordt de toegewezen tijd van de taak Afbraakwerken.",
+    )
+    tectora_execution_hours = fields.Float(
+        string="Geschatte tijd uitvoering",
+        compute="_compute_tectora_estimated_hours",
+        store=True,
+        digits=(16, 2),
+        help="Het deel van de geschatte tijd op alle andere producten; wordt "
+        "de toegewezen tijd van de taak Uitvoeringswerken.",
+    )
     tectora_estimated_days = fields.Float(
         string="Geschatte werkdagen",
         compute="_compute_tectora_estimated_days",
@@ -74,12 +92,24 @@ class SaleOrder(models.Model):
         "werktijden van het bedrijf.",
     )
 
-    @api.depends("order_line.tectora_estimated_hours")
+    @api.depends(
+        "order_line.tectora_estimated_hours", "order_line.tectora_work_kind"
+    )
     def _compute_tectora_estimated_hours(self):
         for order in self:
-            order.tectora_estimated_hours = sum(
-                order.order_line.mapped("tectora_estimated_hours")
-            )
+            hours = order._tectora_hours_by_kind()
+            order.tectora_demolition_hours = hours["afbraak"]
+            order.tectora_execution_hours = hours["uitvoering"]
+            order.tectora_estimated_hours = hours["afbraak"] + hours["uitvoering"]
+
+    def _tectora_hours_by_kind(self):
+        """{'afbraak': hours, 'uitvoering': hours} of the order's lines."""
+        self.ensure_one()
+        hours = {kind: 0.0 for kind, _label in WORK_KINDS}
+        for line in self.order_line:
+            if line.tectora_work_kind and line.tectora_estimated_hours:
+                hours[line.tectora_work_kind] += line.tectora_estimated_hours
+        return hours
 
     @api.depends("tectora_estimated_hours", "company_id")
     def _compute_tectora_estimated_days(self):
@@ -93,12 +123,17 @@ class SaleOrder(models.Model):
         calendar = (self.company_id or self.env.company).resource_calendar_id
         return calendar.hours_per_day if calendar and calendar.hours_per_day else 8.0
 
-    def _tectora_estimated_time_label(self):
-        """``42 u 30 (5,3 werkdagen)``, for the quotation."""
-        self.ensure_one()
-        total_minutes = int(round(self.tectora_estimated_hours * 60))
+    @api.model
+    def _tectora_hours_label(self, value):
+        """``42 u 30`` for 42.5 hours."""
+        total_minutes = int(round((value or 0.0) * 60))
         hours, minutes = divmod(total_minutes, 60)
-        label = _("%(hours)s u %(minutes)02d", hours=hours, minutes=minutes)
+        return _("%(hours)s u %(minutes)02d", hours=hours, minutes=minutes)
+
+    def _tectora_estimated_time_label(self):
+        """``42 u 30 (± 5,3 werkdagen)``, for the quotation."""
+        self.ensure_one()
+        label = self._tectora_hours_label(self.tectora_estimated_hours)
         days = self.tectora_estimated_days
         if days >= 1:
             label += " " + _(
@@ -186,49 +221,54 @@ class SaleOrder(models.Model):
         return self.roof_project_id.project_id or self.project_id
 
     def _tectora_sync_execution_task(self):
-        """Put the order's estimated execution time on the project's task
-        "Uitvoeringswerken": created on confirmation, its allocated time
+        """Put the order's estimated time on the project's tasks
+        "Afbraakwerken" and "Uitvoeringswerken", one per work kind, so hours
+        are logged apart: created on confirmation, their allocated time
         follows the estimate whenever the order changes afterwards. Only the
         allocated time is touched on an existing task; the rest belongs to
         whoever plans the work.
         """
         Task = self.env["project.task"].sudo()
+        labels = dict(WORK_KINDS)
         for order in self:
             if order.state != "sale":
                 continue
             project = order._tectora_execution_project()
             if not project:
                 continue
-            hours = order.tectora_estimated_hours
-            task = Task.search(
-                [("project_id", "=", project.id), ("tectora_execution", "=", True)],
-                limit=1,
+            hours_by_kind = order._tectora_hours_by_kind()
+            tasks = Task.search(
+                [("project_id", "=", project.id), ("tectora_work_kind", "!=", False)]
             )
-            if task:
-                if float_compare(task.allocated_hours, hours, precision_digits=2):
-                    task.write({"allocated_hours": hours})
-                continue
-            if not hours:
-                continue  # nothing estimated: no task to size
             deadline = order.commitment_date or order.roof_project_id.planned_date_end
-            Task.create({
-                "name": _("Uitvoeringswerken"),
-                "project_id": project.id,
-                "partner_id": order.partner_id.id,
-                "tectora_execution": True,
-                "allocated_hours": hours,
-                "date_deadline": deadline or False,
-                "description": order._tectora_execution_task_description(),
-            })
+            for kind, _label in WORK_KINDS:
+                hours = hours_by_kind[kind]
+                task = tasks.filtered(lambda task: task.tectora_work_kind == kind)[:1]
+                if task:
+                    if float_compare(task.allocated_hours, hours, precision_digits=2):
+                        task.write({"allocated_hours": hours})
+                    continue
+                if not hours:
+                    continue  # nothing estimated for this kind: no task to size
+                Task.create({
+                    "name": labels[kind],
+                    "project_id": project.id,
+                    "partner_id": order.partner_id.id,
+                    "tectora_work_kind": kind,
+                    "allocated_hours": hours,
+                    "date_deadline": deadline or False,
+                    "description": order._tectora_execution_task_description(kind),
+                })
 
-    def _tectora_execution_task_description(self):
-        """The estimate per works item, so the task says where its time
-        comes from."""
+    def _tectora_execution_task_description(self, kind):
+        """The estimate per works item of one work kind, so the task says
+        where its time comes from."""
         self.ensure_one()
         rows = []
-        for line in self.order_line.filtered("tectora_estimated_hours").sorted(
-            key=lambda line: -line.tectora_estimated_hours
-        ):
+        lines = self.order_line.filtered(
+            lambda line: line.tectora_estimated_hours and line.tectora_work_kind == kind
+        )
+        for line in lines.sorted(key=lambda line: -line.tectora_estimated_hours):
             rows.append(
                 "<tr><td>%s</td><td class='text-end'>%s %s</td>"
                 "<td class='text-end'>%s min</td><td class='text-end'>%s u</td></tr>"
@@ -245,8 +285,9 @@ class SaleOrder(models.Model):
             "<th class='text-end'>%s</th><th class='text-end'>%s</th>"
             "<th class='text-end'>%s</th></tr></thead><tbody>%s</tbody></table>"
             % (
-                _("Geschatte uitvoeringstijd uit %s: %s.", self.name,
-                  self._tectora_estimated_time_label()),
+                _("%(kind)s, geschat uit %(order)s: %(hours)s.",
+                  kind=dict(WORK_KINDS)[kind], order=self.name,
+                  hours=self._tectora_hours_label(sum(lines.mapped("tectora_estimated_hours")))),
                 _("Werkpost"), _("Hoeveelheid"), _("Per eenheid"), _("Uren"),
                 "".join(rows),
             )
