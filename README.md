@@ -15,6 +15,7 @@ contractors.
 | [`tectora_products`](tectora_products/) | Supplier catalogue, price book and quotation templates. |
 | [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list: the imported export plus a demo set with one complete bill of materials per works item, keyed on product codes ([`docs/demo_stuklijsten.md`](docs/demo_stuklijsten.md)). |
 | [`tectora_purchase`](tectora_purchase/) | Orders the material list at the configured vendors: two logistic routes (dropship to the site, delivery to the warehouse) and one-click purchase orders from the material need overview. Installs itself with Purchase, Inventory and Dropshipping. |
+| [`tectora_purchase_portal`](tectora_purchase_portal/) | The three logistic lists of a site (pick-up at the own warehouse, receipts at the warehouse, dropship on site) on the employee portal, with their PDF. Installs itself with both. |
 
 The application originates from the standalone BROOF app
 (React + Express + PostgreSQL), which was rewritten as a native Odoo module

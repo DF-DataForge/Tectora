@@ -53,10 +53,18 @@ project dashboard:
 The lines remember their purchase order and follow it: te bestellen, uit
 voorraad, offerteaanvraag, besteld, ontvangen.
 
+Every roof project has three **logistic lists** (tab Logistiek, and the
+report *Logistieke lijsten*, each list also printable on its own): the pick
+list of the own warehouse, the receipts of project-specific orders at the
+warehouse and the dropship deliveries on site, each with the purchase orders
+and transfers behind it, tick boxes per line and the logistics responsible of
+the project. With the employee portal installed, the same lists are on the
+site's Materialen tab, with the PDF.
+
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.2.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -72,6 +80,7 @@ are installed.
         "views/product_views.xml",
         "views/purchase_order_views.xml",
         "report/purchase_order_report.xml",
+        "report/logistics_lists_report.xml",
         "wizard/purchase_from_material_views.xml",
     ],
     "post_init_hook": "post_init_hook",

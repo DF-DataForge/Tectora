@@ -113,6 +113,27 @@ class TectoraRoofMaterial(models.Model):
     project_planned_date_begin = fields.Datetime(
         related="project_id.planned_date_begin", string="Geplande start"
     )
+    purchase_date_planned = fields.Datetime(
+        related="purchase_line_id.date_planned", string="Verwacht op"
+    )
+
+    # --- the transfer behind the purchase (receipt or dropship) ----------------
+    picking_ids = fields.Many2many(
+        "stock.picking",
+        string="Leveringen",
+        compute="_compute_pickings",
+        help="De ontvangsten (levering aan magazijn) of dropship-leveringen "
+        "die uit de inkooplijn volgen.",
+    )
+    picking_id = fields.Many2one(
+        "stock.picking",
+        string="Levering",
+        compute="_compute_pickings",
+        help="De lopende levering van de inkooplijn, anders de laatste.",
+    )
+    picking_state = fields.Selection(
+        related="picking_id.state", string="Leveringsstatus"
+    )
 
     # ------------------------------------------------------------- computes
     @api.model
@@ -210,6 +231,17 @@ class TectoraRoofMaterial(models.Model):
         lines = self.search([]).filtered(lambda l: l.stock_state in values)
         negate = operator in ("!=", "not in")
         return [("id", "not in" if negate else "in", lines.ids)]
+
+    @api.depends("purchase_line_id.move_ids.state", "purchase_line_id.move_ids.picking_id")
+    def _compute_pickings(self):
+        for line in self:
+            moves = line.purchase_line_id.move_ids.filtered(
+                lambda m: m.state != "cancel" and m.picking_id
+            )
+            pickings = moves.picking_id.sorted("id")
+            live = pickings.filtered(lambda p: p.state not in ("done", "cancel"))
+            line.picking_ids = pickings
+            line.picking_id = (live or pickings)[-1:] if pickings else False
 
     @api.depends(
         "purchase_line_id",
