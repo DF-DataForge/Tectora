@@ -30,6 +30,7 @@ class TectoraLogisticsRoute(models.Model):
         [
             ("dropship", "Dropship — rechtstreeks naar de werf"),
             ("warehouse", "Levering aan magazijn"),
+            ("stock", "Uit voorraad — niet bestellen"),
         ],
         string="Levering",
         required=True,
@@ -37,16 +38,18 @@ class TectoraLogisticsRoute(models.Model):
         help="Dropship: de leverancier levert op de werf, de inkooporder "
         "krijgt het leveradres van het dakproject. Magazijn: de leverancier "
         "levert aan het magazijn, de inkooporder krijgt de ontvangst van dat "
-        "magazijn.",
+        "magazijn. Uit voorraad: het materiaal ligt in het magazijn en wordt "
+        "niet besteld; de ploeg neemt het mee.",
     )
+    color = fields.Integer(string="Kleur")
     warehouse_id = fields.Many2one(
         "stock.warehouse",
         string="Magazijn",
         compute="_compute_warehouse_id",
         store=True,
         readonly=False,
-        help="Het magazijn dat de levering ontvangt (enkel voor levering aan "
-        "magazijn).",
+        help="Het magazijn dat de levering ontvangt, of waar het materiaal "
+        "uit voorraad ligt.",
     )
     picking_type_id = fields.Many2one(
         "stock.picking.type",
@@ -81,7 +84,7 @@ class TectoraLogisticsRoute(models.Model):
     def _compute_warehouse_id(self):
         Warehouse = self.env["stock.warehouse"]
         for route in self:
-            if route.delivery_type != "warehouse":
+            if route.delivery_type == "dropship":
                 route.warehouse_id = False
             elif not route.warehouse_id or (
                 route.company_id and route.warehouse_id.company_id != route.company_id
@@ -106,8 +109,10 @@ class TectoraLogisticsRoute(models.Model):
         for route in self:
             if route.delivery_type == "dropship":
                 route.stock_route_id = dropship
-            else:
+            elif route.delivery_type == "warehouse":
                 route.stock_route_id = route.warehouse_id.buy_pull_id.route_id
+            else:
+                route.stock_route_id = False
 
     def _compute_material_count(self):
         groups = self.env["tectora.roof.material"]._read_group(
@@ -134,6 +139,8 @@ class TectoraLogisticsRoute(models.Model):
         dropship operation, or the receipt of the route's warehouse."""
         self.ensure_one()
         PickingType = self.env["stock.picking.type"]
+        if self.delivery_type == "stock":
+            return PickingType  # nothing is purchased on this route
         if self.delivery_type == "dropship":
             return PickingType.search(
                 [("code", "=", "dropship"), ("company_id", "=", company.id)],
@@ -161,6 +168,12 @@ class TectoraLogisticsRoute(models.Model):
         if picking_type and picking_type.company_id in (company, self.env["res.company"]):
             return picking_type
         return self._find_picking_type(company)
+
+    @api.model
+    def _read_group_routes(self, routes, domain):
+        """Kanban columns of the material list: every active route, so a
+        column without cards still exists and can receive a dragged card."""
+        return self.search(self._available_domain(), order="sequence, id")
 
     @api.model
     def _available_domain(self, company=None):

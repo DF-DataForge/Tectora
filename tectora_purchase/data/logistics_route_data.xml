@@ -21,8 +21,18 @@ dropship-levering van leverancier naar klant.</field>
             <field name="warehouse_id" ref="stock.warehouse0"/>
             <field name="is_default" eval="True"/>
             <field name="note">De leverancier levert aan het magazijn; het materiaal
-gaat van daar met de ploeg naar de werf. De inkooporder krijgt de
-ontvangst-operatie van het magazijn; bij bevestiging ontstaat een ontvangst.</field>
+gaat van daar met de ploeg naar de werf. Per leverancier één inkooporder,
+met de lijnen per dakproject gegroepeerd; bij bevestiging ontstaat een
+ontvangst.</field>
+        </record>
+
+        <record id="route_stock" model="tectora.logistics.route">
+            <field name="name">Uit voorraad — niet bestellen</field>
+            <field name="sequence">30</field>
+            <field name="delivery_type">stock</field>
+            <field name="warehouse_id" ref="stock.warehouse0"/>
+            <field name="note">Het materiaal ligt in het magazijn en wordt niet
+besteld; de ploeg neemt het mee (of haalt het af bij een dropship-order).</field>
         </record>
 
     </data>

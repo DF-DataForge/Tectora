@@ -25,20 +25,38 @@ product carries its preferred route (product form, tab Inkoop) and the route
 falls back on the product's Odoo routes (a product with the Dropship route is
 dropshipped) and then on the default route.
 
-Every material requirement line gets its logistic route and its vendor (the
-cheapest vendor pricelist line of the product, changeable per line). From the
-Materiaalbehoefte overview -- or from the Materiaallijst of a roof project --
-select the lines and click *Inkooporders aanmaken*: one purchase order per
-vendor, per route and per roof project (lines of several projects can be
-merged for warehouse deliveries) is created at the vendor's prices, with the
-project's analytic account on every line, so the purchase shows up on the
-project dashboard. The lines remember their purchase order and follow it: te
-bestellen, offerteaanvraag, besteld, ontvangen.
+A third route, **Uit voorraad**, is for material that lies in the warehouse
+and is not purchased at all.
+
+Every material requirement line gets its logistic route, its vendor (the
+cheapest vendor pricelist line of the product, changeable per line) and the
+free stock of its product. *Inkoop organiseren* -- from the Dakmeting menu or
+from a roof project -- is the ordering board: one kanban column per route,
+cards ordered per vendor, vendor and stock on every card; dragging a card to
+another column decides how that material is delivered.
+
+*Inkooporders aanmaken* (on the board, on the Materiaalbehoefte list, on the
+roof project) then orders what is on the board at the vendors' prices, with
+the project's analytic account on every line so the purchase shows on the
+project dashboard:
+
+* a **dropship** order is always one roof project: it carries the site
+  address, the project reference, the planned start of the works as expected
+  arrival, and -- when the same project also has material coming through the
+  warehouse or from stock -- the flag *Extra materiaal af te halen aan het
+  magazijn* with the list of that material, shown on the order, on the roof
+  project and in the project's chatter;
+* a **warehouse** order is one per vendor, its lines grouped per roof project
+  under a section line naming the project, the site and the planned start, so
+  the vendor sees which delivery belongs to which project.
+
+The lines remember their purchase order and follow it: te bestellen, uit
+voorraad, offerteaanvraag, besteld, ontvangen.
 
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -53,6 +71,7 @@ are installed.
         "views/project_project_views.xml",
         "views/product_views.xml",
         "views/purchase_order_views.xml",
+        "report/purchase_order_report.xml",
         "wizard/purchase_from_material_views.xml",
     ],
     "post_init_hook": "post_init_hook",

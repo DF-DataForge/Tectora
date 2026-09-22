@@ -8,28 +8,56 @@
         <field name="arch" type="xml">
             <xpath expr="//header/field[@name='state']" position="before">
                 <field name="material_to_order_count" invisible="1"/>
+                <button name="action_organize_purchases" type="object"
+                        string="Inkoop organiseren" class="btn-secondary"
+                        invisible="material_count == 0"
+                        help="Het bestelbord van dit dakproject: sleep materiaal tussen dropship, levering aan magazijn en uit voorraad, zie leverancier en voorraad per lijn, en maak de inkooporders."/>
                 <button name="action_create_purchase_orders" type="object"
                         string="Inkooporders aanmaken" class="btn-secondary"
                         groups="purchase.group_purchase_user"
                         invisible="material_to_order_count == 0"
-                        help="Bestelt de nog niet bestelde materiaallijnen bij hun leveranciers: één inkooporder per leverancier en per logistieke route."/>
+                        help="Bestelt de nog niet bestelde materiaallijnen bij hun leveranciers volgens hun route: dropship per werf, magazijnleveringen per leverancier."/>
+            </xpath>
+            <xpath expr="//page[@name='materials']/field[@name='material_line_ids']" position="before">
+                <div class="alert alert-warning d-flex align-items-start gap-2" role="alert"
+                     invisible="not dropship_pickup_info">
+                    <i class="fa fa-exclamation-triangle fa-lg mt-1" title="Afhaling aan het magazijn"/>
+                    <div class="flex-grow-1">
+                        <b>Extra materiaal af te halen aan het magazijn</b>, naast de
+                        dropship-levering op de werf (zoals vermeld op de inkooporders
+                        <field name="dropship_pickup_order_ids" widget="many2many_tags" readonly="1" class="d-inline-block"/>):
+                        <field name="dropship_pickup_info" readonly="1" nolabel="1" class="mb-0"/>
+                    </div>
+                </div>
             </xpath>
             <xpath expr="//page[@name='materials']//list/field[@name='product_uom_id']" position="after">
                 <field name="vendor_id" optional="show"/>
                 <field name="logistics_route_id" optional="show"/>
+                <field name="is_storable" column_invisible="1"/>
+                <field name="free_qty" optional="show" string="Vrij op voorraad"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"
+                       decoration-muted="not is_storable"/>
+                <field name="stock_state" optional="hide" widget="badge"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"/>
             </xpath>
             <xpath expr="//page[@name='materials']//list/field[@name='sale_order_id']" position="after">
                 <field name="purchase_order_id" optional="show" readonly="1"/>
                 <field name="purchase_state" optional="show" widget="badge"
-                       decoration-muted="purchase_state == 'to_order'"
+                       decoration-danger="purchase_state == 'to_order'"
                        decoration-info="purchase_state == 'rfq'"
                        decoration-warning="purchase_state == 'ordered'"
                        decoration-success="purchase_state == 'received'"/>
             </xpath>
             <xpath expr="//page[@name='materials']/div[hasclass('text-muted')]" position="inside">
-                Elke lijn heeft een leverancier en een logistieke route (dropship
-                naar de werf of levering aan het magazijn); <b>Inkooporders
-                aanmaken</b> bestelt de te bestellen lijnen bij die leveranciers.
+                Elke lijn heeft een leverancier, een logistieke route (dropship
+                naar de werf, levering aan het magazijn of uit voorraad) en toont
+                de vrije voorraad. <b>Inkoop organiseren</b> opent het bestelbord
+                waar de lijnen tussen de routes gesleept worden; <b>Inkooporders
+                aanmaken</b> bestelt ze bij hun leveranciers.
             </xpath>
         </field>
     </record>

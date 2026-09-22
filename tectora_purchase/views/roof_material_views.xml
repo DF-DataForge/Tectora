@@ -1,7 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Materiaalbehoefte overview: select lines, create the purchase orders. -->
+    <!-- ============================================================ -->
+    <!-- The ordering board: one column per logistic route, cards      -->
+    <!-- dragged from one to the other, vendor and stock on every card. -->
+    <!-- ============================================================ -->
+    <record id="view_tectora_roof_material_kanban" model="ir.ui.view">
+        <field name="name">tectora.roof.material.kanban</field>
+        <field name="model">tectora.roof.material</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="logistics_route_id"
+                    default_order="vendor_id, product_id"
+                    records_draggable="1"
+                    group_create="0" group_delete="0" group_edit="0"
+                    quick_create="false"
+                    class="o_tectora_material_kanban">
+                <header>
+                    <button name="action_create_purchase_orders" type="object"
+                            string="Inkooporders aanmaken" class="btn-primary"
+                            display="always" groups="purchase.group_purchase_user"
+                            help="Zonder selectie: alle te bestellen lijnen van het bord. Met selectie: enkel de geselecteerde kaarten."/>
+                </header>
+                <field name="logistics_route_id"/>
+                <field name="delivery_type"/>
+                <field name="vendor_id"/>
+                <field name="purchase_state"/>
+                <field name="stock_state"/>
+                <field name="is_storable"/>
+                <field name="qty_shortage"/>
+                <field name="purchase_order_id"/>
+                <field name="project_planned_date_begin"/>
+                <progressbar field="purchase_state"
+                             colors='{"to_order": "danger", "rfq": "warning", "ordered": "success"}'/>
+                <templates>
+                    <t t-name="card">
+                        <div t-attf-class="border-start border-4 ps-2 {{ ['ordered', 'received'].includes(record.purchase_state.raw_value) ? 'border-success' : record.purchase_state.raw_value == 'rfq' ? 'border-warning' : record.stock_state.raw_value == 'enough' ? 'border-success' : record.stock_state.raw_value == 'partial' ? 'border-warning' : record.stock_state.raw_value == 'none' ? 'border-danger' : 'border-secondary' }}">
+                            <div class="d-flex justify-content-between align-items-start gap-1">
+                                <div class="fw-bold text-truncate" title="Leverancier">
+                                    <i class="fa fa-truck me-1 text-muted" title="Leverancier"/>
+                                    <field name="vendor_id" t-if="record.vendor_id.raw_value"/>
+                                    <span t-else="" class="text-danger">Geen leverancier</span>
+                                </div>
+                                <field name="purchase_state" widget="badge"
+                                       decoration-danger="purchase_state == 'to_order'"
+                                       decoration-info="purchase_state == 'rfq'"
+                                       decoration-warning="purchase_state == 'ordered'"
+                                       decoration-success="purchase_state == 'received'"/>
+                            </div>
+                            <div class="text-truncate mt-1">
+                                <field name="product_id"/>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <span class="fw-bold">
+                                    <field name="quantity"/> <field name="product_uom_id"/>
+                                </span>
+                                <t t-if="record.is_storable.raw_value">
+                                    <span t-attf-class="badge rounded-pill {{ record.stock_state.raw_value == 'enough' ? 'text-bg-success' : record.stock_state.raw_value == 'partial' ? 'text-bg-warning' : 'text-bg-danger' }}"
+                                          title="Vrij beschikbare voorraad in het magazijn / verwachte voorraad">
+                                        <i class="fa fa-cubes me-1"/>
+                                        <field name="free_qty"/> vrij
+                                        <t t-if="record.stock_state.raw_value != 'enough'">
+                                            · tekort <field name="qty_shortage"/>
+                                        </t>
+                                    </span>
+                                </t>
+                                <span t-else="" class="badge rounded-pill text-bg-light text-muted"
+                                      title="Dit product heeft geen voorraadbeheer">
+                                    <i class="fa fa-cubes me-1"/>geen voorraad
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small mt-1">
+                                <span class="text-truncate">
+                                    <field name="project_id"/>
+                                </span>
+                                <span t-if="record.project_planned_date_begin.raw_value" title="Geplande start van de werf">
+                                    <i class="fa fa-calendar me-1"/><field name="project_planned_date_begin" widget="date"/>
+                                </span>
+                            </div>
+                            <div t-if="record.purchase_order_id.raw_value" class="small mt-1">
+                                <i class="fa fa-shopping-cart me-1 text-muted"/>
+                                <field name="purchase_order_id"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_tectora_material_organize" model="ir.actions.act_window">
+        <field name="name">Inkoop organiseren</field>
+        <field name="res_model">tectora.roof.material</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_id" ref="view_tectora_roof_material_kanban"/>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Geen materiaal te regelen</p>
+            <p>Elke kolom is een logistieke route: <b>dropship</b> (de
+               leverancier levert op de werf), <b>levering aan magazijn</b>
+               of <b>uit voorraad</b>. Sleep een kaart naar een andere kolom
+               om te beslissen hoe het materiaal aangeleverd wordt; elke kaart
+               toont de leverancier en de vrije voorraad. <b>Inkooporders
+               aanmaken</b> bestelt wat op het bord staat.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_tectora_material_organize"
+              name="Inkoop organiseren"
+              parent="tectora_roof.menu_tectora_root"
+              action="action_tectora_material_organize"
+              sequence="26"/>
+
+    <!-- ============================================================ -->
+    <!-- Materiaalbehoefte list: vendor, route, stock and purchase state -->
+    <!-- ============================================================ -->
     <record id="view_tectora_roof_material_list_purchase" model="ir.ui.view">
         <field name="name">tectora.roof.material.list.purchase</field>
         <field name="model">tectora.roof.material</field>
@@ -15,18 +127,30 @@
                     <button name="action_create_purchase_orders" type="object"
                             string="Inkooporders aanmaken" class="btn-primary"
                             groups="purchase.group_purchase_user"
-                            help="Maakt per leverancier, per logistieke route en per dakproject een inkooporder voor de geselecteerde lijnen."/>
+                            help="Maakt per leverancier en per logistieke route een inkooporder voor de geselecteerde lijnen: dropship per dakproject, magazijnleveringen per leverancier met de lijnen per dakproject gegroepeerd."/>
                 </header>
             </xpath>
             <xpath expr="//list/field[@name='product_uom_id']" position="after">
                 <field name="vendor_id" optional="show"/>
                 <field name="vendor_price" optional="hide"/>
                 <field name="logistics_route_id" optional="show"/>
+                <field name="is_storable" column_invisible="1"/>
+                <field name="free_qty" optional="show" string="Vrij op voorraad"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"
+                       decoration-muted="not is_storable"/>
+                <field name="stock_state" optional="show" widget="badge"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"/>
+                <field name="qty_shortage" optional="hide"/>
+                <field name="virtual_available" optional="hide"/>
             </xpath>
             <xpath expr="//list/field[@name='sale_order_id']" position="after">
                 <field name="purchase_order_id" optional="show"/>
                 <field name="purchase_state" optional="show" widget="badge"
-                       decoration-muted="purchase_state == 'to_order'"
+                       decoration-danger="purchase_state == 'to_order'"
                        decoration-info="purchase_state == 'rfq'"
                        decoration-warning="purchase_state == 'ordered'"
                        decoration-success="purchase_state == 'received'"/>
@@ -49,13 +173,28 @@
                     </group>
                     <group>
                         <field name="purchase_state" widget="badge"
-                               decoration-muted="purchase_state == 'to_order'"
+                               decoration-danger="purchase_state == 'to_order'"
                                decoration-info="purchase_state == 'rfq'"
                                decoration-warning="purchase_state == 'ordered'"
                                decoration-success="purchase_state == 'received'"/>
                         <field name="purchase_order_id"/>
                         <field name="purchase_line_id" invisible="not purchase_line_id"/>
                         <field name="qty_received" invisible="not purchase_line_id"/>
+                    </group>
+                </group>
+                <group string="Voorraad" invisible="not is_storable">
+                    <group>
+                        <field name="is_storable" invisible="1"/>
+                        <field name="free_qty"/>
+                        <field name="qty_available"/>
+                        <field name="virtual_available"/>
+                    </group>
+                    <group>
+                        <field name="stock_state" widget="badge"
+                               decoration-success="stock_state == 'enough'"
+                               decoration-warning="stock_state == 'partial'"
+                               decoration-danger="stock_state == 'none'"/>
+                        <field name="qty_shortage"/>
                     </group>
                 </group>
             </xpath>
@@ -78,8 +217,13 @@
             <xpath expr="//field[@name='sale_order_id']" position="after">
                 <field name="vendor_id"/>
                 <field name="purchase_order_id"/>
+                <filter string="Nog te regelen" name="open"
+                        domain="[('purchase_state', 'in', ('to_order', 'stock')), ('product_id.type', '=', 'consu')]"
+                        help="Te bestellen of uit voorraad: nog niet op een inkooporder."/>
                 <filter string="Te bestellen" name="to_order"
                         domain="[('purchase_state', '=', 'to_order'), ('product_id.type', '=', 'consu')]"/>
+                <filter string="Uit voorraad" name="from_stock"
+                        domain="[('purchase_state', '=', 'stock')]"/>
                 <filter string="In offerteaanvraag" name="rfq"
                         domain="[('purchase_state', '=', 'rfq')]"/>
                 <filter string="Besteld" name="ordered"
@@ -91,12 +235,24 @@
                         domain="[('logistics_route_id.delivery_type', '=', 'dropship')]"/>
                 <filter string="Levering aan magazijn" name="warehouse"
                         domain="[('logistics_route_id.delivery_type', '=', 'warehouse')]"/>
+                <filter string="Uit voorraad (route)" name="stock_route"
+                        domain="[('logistics_route_id.delivery_type', '=', 'stock')]"/>
+                <separator/>
+                <filter string="Volledig op voorraad" name="stock_enough"
+                        domain="[('stock_state', '=', 'enough')]"/>
+                <filter string="Deels op voorraad" name="stock_partial"
+                        domain="[('stock_state', '=', 'partial')]"/>
+                <filter string="Niet op voorraad" name="stock_none"
+                        domain="[('stock_state', '=', 'none')]"/>
+                <separator/>
+                <filter string="Zonder leverancier" name="no_vendor"
+                        domain="[('vendor_id', '=', False), ('product_id.type', '=', 'consu')]"/>
             </xpath>
             <xpath expr="//filter[@name='group_product']" position="after">
-                <filter string="Leverancier" name="group_vendor"
-                        context="{'group_by': 'vendor_id'}"/>
                 <filter string="Logistieke route" name="group_route"
                         context="{'group_by': 'logistics_route_id'}"/>
+                <filter string="Leverancier" name="group_vendor"
+                        context="{'group_by': 'vendor_id'}"/>
                 <filter string="Inkoopstatus" name="group_purchase_state"
                         context="{'group_by': 'purchase_state'}"/>
                 <filter string="Inkooporder" name="group_purchase_order"
@@ -105,13 +261,20 @@
         </field>
     </record>
 
+    <!-- The Materiaalbehoefte list opens per project, then per vendor: the
+         way the office orders. -->
+    <record id="tectora_roof.action_tectora_roof_material" model="ir.actions.act_window">
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_group_project': 1, 'search_default_group_vendor': 1}</field>
+    </record>
+
     <!-- The same action in the list's Actie menu, for selections made from
          a grouped list. -->
     <record id="action_server_tectora_material_purchase" model="ir.actions.server">
         <field name="name">Inkooporders aanmaken</field>
         <field name="model_id" ref="tectora_roof.model_tectora_roof_material"/>
         <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_material"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,kanban</field>
         <field name="group_ids" eval="[(4, ref('purchase.group_purchase_user'))]"/>
         <field name="state">code</field>
         <field name="code">action = records.action_create_purchase_orders()</field>

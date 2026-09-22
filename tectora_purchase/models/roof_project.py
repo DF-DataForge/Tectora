@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class TectoraRoofProject(models.Model):
@@ -19,6 +19,18 @@ class TectoraRoofProject(models.Model):
             project.material_to_order_count = len(
                 project.material_line_ids._lines_to_order()
             )
+
+    dropship_pickup_order_ids = fields.Many2many(
+        "purchase.order",
+        string="Dropship-orders met afhaling",
+        compute="_compute_dropship_pickup_info",
+    )
+    dropship_pickup_info = fields.Text(
+        string="Af te halen aan het magazijn",
+        compute="_compute_dropship_pickup_info",
+        help="Wat de ploeg aan het magazijn ophaalt naast de dropship-"
+        "leveringen op de werf, zoals vermeld op die inkooporders.",
+    )
 
     def _tectora_delivery_partner(self):
         """Where a dropship for this project goes: the delivery address of the
@@ -45,3 +57,41 @@ class TectoraRoofProject(models.Model):
         """Order the material of this roof project that is not ordered yet."""
         self.ensure_one()
         return self.material_line_ids.action_create_purchase_orders()
+
+    def action_organize_purchases(self):
+        """The ordering board of this project: one column per logistic
+        route, cards dragged from one to the other, vendors and stock on
+        every card, and the purchase orders made from there."""
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id(
+            "tectora_purchase.action_tectora_material_organize"
+        )
+        action["domain"] = [("project_id", "=", self.id)]
+        action["display_name"] = _("Inkoop organiseren — %s", self.display_name)
+        action["context"] = {
+            "default_project_id": self.id,
+            "search_default_open": 1,
+        }
+        return action
+
+    @api.depends(
+        "material_line_ids.purchase_order_id.tectora_warehouse_pickup",
+        "material_line_ids.purchase_order_id.state",
+    )
+    def _compute_dropship_pickup_info(self):
+        for project in self:
+            orders = project.material_line_ids.purchase_order_id.filtered(
+                lambda o: o.tectora_warehouse_pickup and o.state != "cancel"
+            )
+            orders |= self.env["purchase.order"].search(
+                [
+                    ("tectora_roof_project_id", "=", project.id),
+                    ("tectora_warehouse_pickup", "=", True),
+                    ("state", "!=", "cancel"),
+                ]
+            )
+            project.dropship_pickup_order_ids = orders
+            project.dropship_pickup_info = "\n\n".join(
+                "%s: %s" % (order.name, order.tectora_warehouse_pickup_note or "")
+                for order in orders
+            )
