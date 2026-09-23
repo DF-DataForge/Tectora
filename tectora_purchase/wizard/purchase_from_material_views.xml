@@ -9,10 +9,15 @@
                 <div class="alert alert-info" role="alert">
                     <field name="orderable_count" class="oe_inline fw-bold"/> van de
                     <field name="line_count" class="oe_inline"/> geselecteerde
-                    materiaallijnen worden besteld: één inkooporder per
-                    leverancier, per logistieke route en per dakproject, aan de
-                    prijzen van de inkoopprijslijst. De lijnen onthouden hun
-                    inkooporder.
+                    materiaallijnen worden besteld, aan de prijzen van de
+                    inkoopprijslijst. Een <b>dropship</b> is één order per dakproject,
+                    met het werfadres, de projectreferentie en de geplande start van
+                    de werf als leverdatum. <b>Levering aan magazijn</b> is één order
+                    per leverancier, met de lijnen per dakproject gegroepeerd.
+                    <span invisible="stock_count == 0">
+                        <br/><field name="stock_count" class="oe_inline"/> lijn(en) komen
+                        uit voorraad en worden niet besteld.
+                    </span>
                     <span invisible="skipped_count == 0">
                         <br/><field name="skipped_count" class="oe_inline"/> lijn(en)
                         worden overgeslagen: al besteld, of geen goederen (arbeid).
@@ -30,20 +35,28 @@
                                placeholder="route van elke lijn"/>
                         <field name="vendor_id" options="{'no_create': True}"
                                placeholder="leverancier van elke lijn"/>
+                        <field name="date_planned"/>
                     </group>
                     <group string="Orders">
                         <field name="one_order_per_project"/>
-                        <field name="date_planned"/>
+                        <field name="warehouse_pickup"/>
+                        <field name="warehouse_pickup_note" invisible="not warehouse_pickup"
+                               placeholder="bv. ook de ladder en de gasflessen meenemen…"/>
                         <field name="confirm"/>
                     </group>
                 </group>
                 <field name="group_ids" nolabel="1" readonly="1">
-                    <list string="Inkooporders" create="0" delete="0" no_open="1">
-                        <field name="vendor_id"/>
+                    <list string="Inkooporders" create="0" delete="0" no_open="1"
+                          decoration-info="delivery_type == 'dropship'">
+                        <field name="delivery_type" column_invisible="1"/>
                         <field name="logistics_route_id"/>
-                        <field name="project_id"/>
+                        <field name="vendor_id"/>
+                        <field name="project_id" invisible="not project_id"/>
+                        <field name="project_count" string="Dakprojecten"/>
                         <field name="line_count"/>
                         <field name="product_count"/>
+                        <field name="pickup_count" string="Af te halen aan magazijn"/>
+                        <field name="date_planned" widget="date" string="Verwacht op"/>
                         <field name="amount_estimate" sum="Totaal"/>
                         <field name="currency_id" column_invisible="1"/>
                     </list>
