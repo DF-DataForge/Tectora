@@ -54,6 +54,10 @@ installed.
     },
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",
-    "auto_install": True,
-    "installable": True,
+    # Not ported to Odoo 20 Enterprise yet: its Planning app no longer has
+    # planning.slot.resource_id, which this module matches shifts on. Off so
+    # that it does not install itself (auto_install) and roll back the install
+    # of the other modules; see UPGRADE_NOTES.md.
+    "auto_install": False,
+    "installable": False,
 }

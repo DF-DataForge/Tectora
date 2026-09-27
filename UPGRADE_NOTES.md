@@ -112,11 +112,15 @@ On a fresh Odoo 20.0 community database (all modules except
 
 ## Not verified
 
-* **`tectora_roof_planning`** depends on the Enterprise `planning` app, which
-  is not available here. It got the same mechanical changes (version, config
-  parameters, icons) and shows none of the patterns above, but its
-  `planning.slot` fields, its gantt views and the `web_gantt` renderer it
-  extends still need a run on Odoo 20 Enterprise.
+* **`tectora_roof_planning`** depends on the Enterprise `planning` app and is
+  **switched off** (`installable: False`) until it is ported: Odoo 20's
+  Planning no longer has `planning.slot.resource_id`, which the module
+  matches shifts to employees on (its view hooks, the team planning and the
+  work-block sync). It got the mechanical changes (version, config
+  parameters, icons); the `planning.slot` fields, its gantt views and the
+  `web_gantt` renderer it extends still need porting against Odoo 20
+  Enterprise. Everything else works without it: the work blocks of Tectora
+  Dakmeting itself are not affected.
 * **PDF output** through wkhtmltopdf: the reports were rendered as HTML only.
 * **Upgrading an existing Odoo 19 database** (through Odoo's upgrade
   service). The module migrations are in place, but no real database was
