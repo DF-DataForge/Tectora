@@ -35,7 +35,7 @@ class SaleOrder(models.Model):
                 )
                 continue
             factor = component.product_uom_id._compute_quantity(
-                quantity, kit.product_uom_id, round=False
+                quantity, kit.uom_id, round=False
             ) / (kit.product_qty or 1.0)
             _boms_done, lines_done = kit.explode(component.product_id, factor)
             for bom_line, line_data in lines_done:
@@ -44,7 +44,7 @@ class SaleOrder(models.Model):
                         line,
                         bom_line.product_id,
                         self._tectora_exploded_quantity(kit, factor, bom_line, line_data),
-                        bom_line.product_uom_id,
+                        bom_line.uom_id,
                         name,
                     )
                 )

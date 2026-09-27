@@ -82,21 +82,21 @@ class TectoraRoofProject(models.Model):
             "Afhaallijst eigen magazijn",
             "Materiaal uit voorraad dat de ploeg aan het magazijn meeneemt; "
             "er wordt niets voor besteld.",
-            "fa-cubes",
+            "deployed_code",
         ),
         (
             "warehouse",
             "Ontvangsten aan het magazijn",
             "Projectspecifieke bestellingen die de leverancier aan het "
             "magazijn levert; de ploeg neemt ze van daar mee.",
-            "fa-truck",
+            "local_shipping",
         ),
         (
             "dropship",
             "Rechtstreeks op de werf geleverd (dropship)",
             "Bestellingen die de leverancier rechtstreeks op de werf levert, "
             "tegen de geplande start van de werken.",
-            "fa-map-marker",
+            "location_on",
         ),
     )
 

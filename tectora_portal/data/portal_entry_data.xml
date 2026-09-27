@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Odoo 20 builds the portal home from portal.entry records: the card
+         "Mijn werven", counted by tectora_site_count (controllers/portal.py)
+         and always shown to employees (models/portal_entry.py). -->
+    <record id="portal_entry_sites" model="portal.entry">
+        <field name="name">Mijn werven</field>
+        <field name="description">Je werven met planning, materialen, dakplan en urenregistratie</field>
+        <field name="url">/my/werven</field>
+        <field name="image" type="bytes" file="tectora_portal/static/description/icon.png"/>
+        <field name="placeholder_count">tectora_site_count</field>
+        <field name="category">service_category</field>
+        <field name="sequence" eval="5"/>
+    </record>
+</odoo>

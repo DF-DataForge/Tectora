@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_tectora_roof_project" type="object"
-                        class="oe_stat_button" icon="fa-home"
+                        class="oe_stat_button" icon="home"
                         invisible="not tectora_roof_project_id">
                     <div class="o_stat_info">
                         <span class="o_stat_value"><field name="tectora_roof_project_id" readonly="1" options="{'no_open': True}"/></span>
@@ -16,7 +16,7 @@
                     </div>
                 </button>
                 <button name="action_view_tectora_materials" type="object"
-                        class="oe_stat_button" icon="fa-cubes"
+                        class="oe_stat_button" icon="deployed_code"
                         invisible="tectora_material_count == 0">
                     <field name="tectora_material_count" widget="statinfo" string="Materiaalbehoefte"/>
                 </button>
@@ -28,7 +28,7 @@
                 <field name="tectora_delivery_type" invisible="1"/>
                 <div class="alert alert-info d-flex align-items-center gap-3 mb-2" role="alert"
                      invisible="tectora_delivery_type != 'dropship'">
-                    <i class="fa fa-truck fa-lg" title="Dropship"/>
+                    <i class="oi fs-5" data-icon="local_shipping" title="Dropship"/>
                     <div>
                         <b>Dropship: levering rechtstreeks op de werf</b>
                         <span invisible="not tectora_site_address"> — <field name="tectora_site_address" readonly="1" class="d-inline"/></span>.
@@ -43,7 +43,7 @@
                 </div>
                 <div class="alert alert-warning d-flex align-items-start gap-3 mb-2" role="alert"
                      invisible="not tectora_warehouse_pickup">
-                    <i class="fa fa-exclamation-triangle fa-lg mt-1" title="Afhaling aan het magazijn"/>
+                    <i class="oi fs-5 mt-1" data-icon="warning" title="Afhaling aan het magazijn"/>
                     <div class="flex-grow-1">
                         <b>Extra materiaal af te halen aan het magazijn</b>, naast deze
                         dropship-levering op de werf:

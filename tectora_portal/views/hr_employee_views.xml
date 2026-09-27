@@ -11,14 +11,14 @@
             <xpath expr="//div[@name='button_box']" position="inside">
                 <field name="tectora_portal_state" invisible="1"/>
                 <button name="action_tectora_grant_portal_access" type="object"
-                        class="oe_stat_button" icon="fa-globe"
+                        class="oe_stat_button" icon="public"
                         invisible="tectora_portal_state != 'none'"
                         groups="hr.group_hr_user"
                         confirm="Er wordt een portaallogin aangemaakt op het werk-e-mailadres van de medewerker en een uitnodiging verstuurd. Doorgaan?"
                         string="Portaaltoegang geven"
                         help="Maakt een portaalgebruiker (externe gebruiker) voor deze medewerker en stuurt de uitnodiging om een wachtwoord te kiezen. De medewerker vindt zijn werven daarna op /my/werven."/>
                 <button name="action_tectora_open_portal_user" type="object"
-                        class="oe_stat_button" icon="fa-globe"
+                        class="oe_stat_button" icon="public"
                         invisible="tectora_portal_state != 'portal'"
                         groups="hr.group_hr_user">
                     <div class="o_stat_info">

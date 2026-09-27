@@ -76,7 +76,7 @@ De stuklijst wordt opgeslagen voor 1 eenheid van het product; het vinkje
 
 ## Herkomst
 
-Overgezet van `df_custom_bom_in_so` (Odoo 18) naar Odoo 19 en de Tectora-flow.
+Overgezet van `df_custom_bom_in_so` (Odoo 18) naar Odoo 19 en de Tectora-flow, en daarna naar Odoo 20.
 Wat bewust anders is:
 
 * geen herschrijven van leveringsregels bij bevestigen: Tectora bouwt een

@@ -16,7 +16,7 @@
             </xpath>
             <xpath expr="//button[@name='action_view_pickings']" position="after">
                 <button name="action_view_material_pickings" type="object"
-                        class="oe_stat_button" icon="fa-cubes"
+                        class="oe_stat_button" icon="deployed_code"
                         invisible="material_picking_count == 0">
                     <field name="material_picking_count" widget="statinfo"
                            string="Materiaalleveringen"/>
@@ -26,7 +26,7 @@
                    position="after">
                 <div class="mt-2">
                     <button name="action_create_material_picking" type="object"
-                            class="btn btn-secondary" icon="fa-truck"
+                            class="btn btn-secondary" icon="local_shipping"
                             invisible="material_count == 0">
                         Levering klaarzetten
                     </button>

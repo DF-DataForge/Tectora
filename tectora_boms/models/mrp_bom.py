@@ -190,7 +190,7 @@ class MrpBom(models.Model):
                 lines.append({
                     "product_id": c_product["id"],
                     "product_qty": qty,
-                    "product_uom_id": c_product["uom_id"],
+                    "uom_id": c_product["uom_id"],
                     "sequence": len(lines) + 1,
                     "_component": component,
                     "_method": method,
@@ -254,7 +254,7 @@ class MrpBom(models.Model):
             values = {
                 "product_tmpl_id": product["tmpl_id"],
                 "product_qty": 1.0,
-                "product_uom_id": product["uom_id"] or default_uom.id,
+                "uom_id": product["uom_id"] or default_uom.id,
                 "type": entry["type"],
                 "code": entry["code"],
                 "sequence": entry["sequence"],
@@ -374,7 +374,7 @@ class MrpBom(models.Model):
                     "product_id": component.id,
                     "product_qty": line["qty"],
                     # The norm is written in the catalogue unit of the material.
-                    "product_uom_id": component.uom_id.id,
+                    "uom_id": component.uom_id.id,
                     "sequence": len(lines) + 1,
                 })
             if not lines:

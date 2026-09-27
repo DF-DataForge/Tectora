@@ -5,3 +5,4 @@ from . import roof_execution_report
 from . import roof_timer
 from . import roof_project
 from . import project_project
+from . import portal_entry

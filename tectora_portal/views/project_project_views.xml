@@ -36,7 +36,7 @@
                     </field>
                     <div class="mt-2 mb-3">
                         <button name="action_view_roof_execution_reports" type="object"
-                                class="btn btn-link p-0" icon="fa-external-link">
+                                class="btn btn-link p-0" icon="open_in_new">
                             Alle verslagen openen
                         </button>
                     </div>
@@ -57,7 +57,7 @@
                     </field>
                     <div class="mt-2">
                         <button name="action_view_roof_timers" type="object"
-                                class="btn btn-link p-0" icon="fa-external-link">
+                                class="btn btn-link p-0" icon="open_in_new">
                             Alle urenregistraties openen
                         </button>
                     </div>

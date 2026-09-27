@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
-import io
 import logging
 
 from odoo import _, fields, models
@@ -85,7 +83,7 @@ class ProductCatalogImport(models.TransientModel):
             )
         try:
             workbook = openpyxl.load_workbook(
-                io.BytesIO(base64.b64decode(self.file)),
+                self.file.open(),
                 data_only=True,
                 read_only=True,
             )

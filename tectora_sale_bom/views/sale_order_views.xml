@@ -8,14 +8,14 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='order_line']/list/field[@name='product_template_id']" position="after">
+            <xpath expr="//field[@name='order_line']/list/column[@name='product_and_description']" position="after">
                 <field name="tectora_has_sale_bom" column_invisible="True"/>
                 <button name="action_open_tectora_sale_bom" type="object"
-                        icon="fa-list-ul" title="Stuklijst aanpassen"
+                        icon="format_list_bulleted" title="Stuklijst aanpassen"
                         class="btn-link text-muted"
                         invisible="display_type or is_downpayment or not product_id or tectora_has_sale_bom"/>
                 <button name="action_open_tectora_sale_bom" type="object"
-                        icon="fa-list-ul" title="Stuklijst op maat"
+                        icon="format_list_bulleted" title="Stuklijst op maat"
                         class="btn-link text-primary"
                         invisible="display_type or is_downpayment or not product_id or not tectora_has_sale_bom"/>
             </xpath>

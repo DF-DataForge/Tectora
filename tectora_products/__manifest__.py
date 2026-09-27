@@ -51,7 +51,7 @@ the quotation. The data lives in ``data/quotation_templates.json``, generated
 and validated by ``tools/build_quotation_templates.py``; loading is idempotent
 and never overwrites the lines of a template the office has already tuned.
     """,
-    "version": "19.0.2.4.0",
+    "version": "20.0.2.4.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -59,7 +59,7 @@ and never overwrites the lines of a template the office has already tuned.
     "depends": ["product", "sale_management"],
     "external_dependencies": {"python": ["openpyxl"]},
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "wizard/product_catalog_import_views.xml",
         "wizard/quotation_template_import_views.xml",
     ],

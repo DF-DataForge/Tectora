@@ -63,7 +63,7 @@
             </xpath>
             <xpath expr="//field[@name='job_title']/.." position="after">
                 <div t-if="record.roof_team_id.raw_value" class="text-truncate">
-                    <i class="fa fa-fw me-2 fa-users text-primary" title="Ploeg"/>
+                    <i class="oi oi-fw me-2 text-primary" data-icon="group" title="Ploeg"/>
                     <field name="roof_team_id"/>
                     <span t-if="record.is_roof_team_leader.raw_value"
                           class="badge rounded-pill text-bg-primary ms-1">ploegbaas</span>

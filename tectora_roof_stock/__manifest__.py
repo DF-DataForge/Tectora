@@ -24,7 +24,7 @@ list (labour) are skipped; only goods move.
 
 Installs itself with Inventory.
     """,
-    "version": "19.0.1.0.0",
+    "version": "20.0.1.0.0",
     "category": "Inventory",
     "license": "Other proprietary",
     "author": "Data Forge",

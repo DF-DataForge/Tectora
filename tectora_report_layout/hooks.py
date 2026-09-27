@@ -2,7 +2,11 @@
 """On install, every company switches to the Tectora layout, so all documents
 -- quotations, invoices, deliveries, purchase orders, the roofing sheets --
 come out with the roof-edge header at once. The layout stays a choice in
-Settings -> Configure Document Layout like any other."""
+Settings -> Configure Document Layout like any other.
+
+Since Odoo 20 the table design is a choice of its own (Light, Striped, ...);
+a company still on the default gets Striped, the design the layout was drawn
+with."""
 
 
 def post_init_hook(env):
@@ -13,3 +17,6 @@ def post_init_hook(env):
     companies.write({"external_report_layout_id": view.id})
     for company in companies.filtered(lambda c: not c.primary_color):
         company.primary_color = "#008B93"
+    companies.filtered(lambda c: c.report_tables_id == "light").write(
+        {"report_tables_id": "striped"}
+    )

@@ -37,7 +37,7 @@ class TestSaleBom(TransactionCase):
         cls.demo_bom = env["mrp.bom"].create({
             "product_tmpl_id": cls.roofing.product_tmpl_id.id,
             "product_qty": 10.0,
-            "product_uom_id": m2.id,
+            "uom_id": m2.id,
             "type": "phantom",
             "sequence": 0,
             "code": "Demo",

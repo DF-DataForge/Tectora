@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
 import io
 import json
 import logging
@@ -11,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools.binary import BinaryBytes
 
 _logger = logging.getLogger(__name__)
 
@@ -381,7 +381,7 @@ class TectoraRoofProject(models.Model):
         for project in self:
             if not project.address and project.partner_id:
                 project.address = project.partner_id._display_address(
-                    without_company=True
+                    without_name=True
                 ).replace("\n", ", ")
 
     def _compute_has_background_image(self):
@@ -853,8 +853,8 @@ class TectoraRoofProject(models.Model):
     def _get_map_credentials(self):
         icp = self.env["ir.config_parameter"].sudo()
         return (
-            icp.get_param("tectora_roof.google_maps_api_key"),
-            icp.get_param("tectora_roof.mapbox_token"),
+            icp.get_str("tectora_roof.google_maps_api_key"),
+            icp.get_str("tectora_roof.mapbox_token"),
         )
 
     def _geocode(self, address):
@@ -969,7 +969,7 @@ class TectoraRoofProject(models.Model):
 
         self.write(
             {
-                "background_image": base64.b64encode(image_bytes),
+                "background_image": BinaryBytes(image_bytes),
                 "address": formatted,
                 "bg_lat": lat,
                 "bg_lng": lng,
@@ -1193,33 +1193,34 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         return dict(self._fields["project_type"].selection).get(self.project_type, "")
 
-    def _get_drawing_b64(self):
-        """Base64 PNG of the drawing for the measurement sheet: the snapshot
-        stored by the canvas widget, or a server-side render as fallback.
-        Returns bytes (image_data_uri decodes them itself); never raises —
-        without a drawing the sheet renders without image."""
+    def _get_drawing_png(self):
+        """PNG of the drawing for the measurement sheet, as raw bytes: the
+        snapshot stored by the canvas widget, or a server-side render as
+        fallback. Never raises -- without a drawing the sheet renders without
+        image.
+
+        Odoo 20 reads a binary field as a BinaryValue (raw content) and its
+        image_data_uri() takes raw bytes; up to Odoo 19 both were base64.
+        """
         self.ensure_one()
         if self.canvas_snapshot:
-            snapshot = self.canvas_snapshot
-            return snapshot if isinstance(snapshot, bytes) else snapshot.encode()
+            return self.canvas_snapshot.content
         try:
-            return self._render_drawing_fallback_b64()
+            return self._render_drawing_fallback_png()
         except Exception:
             _logger.exception(
                 "Could not render the fallback drawing for %s", self.code
             )
             return False
 
-    def _render_drawing_fallback_b64(self):
+    def _render_drawing_fallback_png(self):
         self.ensure_one()
         try:
             shapes = self._parse_canvas_shapes()
         except UserError:
             shapes = []
         if self.background_image:
-            base = Image.open(
-                io.BytesIO(base64.b64decode(self.background_image))
-            ).convert("RGBA")
+            base = Image.open(self.background_image.open()).convert("RGBA")
         else:
             xs = [p[0] for s in shapes for p in s["points"]] or [0.0, 1400.0]
             ys = [p[1] for s in shapes for p in s["points"]] or [0.0, 900.0]
@@ -1287,7 +1288,7 @@ class TectoraRoofProject(models.Model):
         image = Image.alpha_composite(base, overlay).convert("RGB")
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
-        return base64.b64encode(buffer.getvalue())
+        return buffer.getvalue()
 
     # ------------------------------------------------------------- quotation
     def _measurement_order_lines(self):
