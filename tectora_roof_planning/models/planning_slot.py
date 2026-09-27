@@ -70,7 +70,9 @@ class PlanningSlot(models.Model):
             if project_id:
                 groups.setdefault(project_id, self.browse())
                 groups[project_id] |= slot
-        for slot in rest:
+        # Without the Planning <-> Project bridge (no planning.slot.project_id,
+        # as on Odoo 20 Planning alone) there is nothing to match on.
+        for slot in rest if dossiers else ():
             project_id = dossiers.get(slot.project_id.id)
             if project_id:
                 groups.setdefault(project_id, self.browse())
@@ -124,6 +126,13 @@ class PlanningSlot(models.Model):
                 )
         return True
 
+    def _tectora_resource(self):
+        """The resource a shift is for. Odoo 20 Planning holds a shift's
+        resources in resource_ids (up to 19 one resource_id); the roof
+        planning keeps one shift per employee, so it is the first one."""
+        self.ensure_one()
+        return self.resource_ids[:1]
+
     def _tectora_plan_team_one(self, Block):
         self.ensure_one()
         team = self.roof_team_id
@@ -136,9 +145,9 @@ class PlanningSlot(models.Model):
                 # Take a member of the new team first: re-syncing the block
                 # drops the shifts of everyone who is no longer on it, and this
                 # record is the one the user is looking at.
-                if members and self.resource_id not in members.resource_id:
+                if members and self._tectora_resource() not in members.resource_id:
                     self.with_context(tectora_planning_sync=True).write(
-                        {"resource_id": members[0].resource_id.id}
+                        {"resource_ids": [(6, 0, members[0].resource_id.ids)]}
                     )
                 block.write({
                     "team_id": team.id,
@@ -166,12 +175,12 @@ class PlanningSlot(models.Model):
         })
         # Hand this shift to one of the team members, so the planner does not
         # end up with a stray unassigned shift next to the team's own.
-        resource = self.resource_id
+        resource = self._tectora_resource()
         if resource not in members.resource_id:
             resource = members[0].resource_id
         self.with_context(tectora_planning_sync=True).write({
             "roof_planning_id": block.id,
-            "resource_id": resource.id,
+            "resource_ids": [(6, 0, resource.ids)],
         })
         block._sync_slots()
         return True

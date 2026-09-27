@@ -54,6 +54,10 @@ installed.
     },
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",
-    "auto_install": True,
+    # Installed by hand (no auto_install) on Odoo 20: Planning is Enterprise
+    # and its gantt could not be tested with this port, so a problem there
+    # only fails this module's own install, never that of the other Tectora
+    # modules. See UPGRADE_NOTES.md.
+    "auto_install": False,
     "installable": True,
 }
