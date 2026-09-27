@@ -2,167 +2,167 @@
 <templates xml:space="preserve">
 
     <t t-name="tectora_roof.RoofCanvasField">
-        <div class="o_roof_canvas" t-ref="wrapper" tabindex="0" t-on-keydown="onKeyDown"
-             t-att-class="{ o_roof_canvas_fullscreen: state.fullscreen }">
+        <div class="o_roof_canvas" t-ref="this.wrapperRef" tabindex="0" t-on-keydown="this.onKeyDown"
+             t-att-class="{ o_roof_canvas_fullscreen: this.state.fullscreen }">
             <div class="o_roof_canvas_body d-flex align-items-stretch">
-            <div class="o_roof_canvas_main flex-grow-1" t-ref="main" style="min-width: 0;">
+            <div class="o_roof_canvas_main flex-grow-1" t-ref="this.mainRef" style="min-width: 0;">
             <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1"
-                 t-ref="toolbar">
+                 t-ref="this.toolbarRef">
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.tool === 'select' }"
+                            t-att-class="{ active: this.state.tool === 'select' }"
                             t-on-click="() => this.setTool('select')"
                             title="Selecteren / verplaatsen">
-                        <i class="fa fa-mouse-pointer"/> Selecteer
+                        <i class="oi" data-icon="arrow_selector_tool"/> Selecteer
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.tool === 'rect' }"
+                            t-att-class="{ active: this.state.tool === 'rect' }"
                             t-on-click="() => this.setTool('rect')"
                             title="Rechthoekige sectie tekenen">
-                        <i class="fa fa-square-o"/> Rechthoek
+                        <i class="oi" data-icon="square"/> Rechthoek
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.tool === 'polygon' }"
+                            t-att-class="{ active: this.state.tool === 'polygon' }"
                             t-on-click="() => this.setTool('polygon')"
                             title="Polygoon tekenen (klik punten, dubbelklik om te sluiten)">
-                        <i class="fa fa-star-o"/> Polygoon
+                        <i class="oi" data-icon="star"/> Polygoon
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.tool === 'seam' }"
+                            t-att-class="{ active: this.state.tool === 'seam' }"
                             t-on-click="() => this.setTool('seam')"
                             title="Naad tekenen: stippellijn die aangeeft dat twee dakvlakken gescheiden zijn (klik punten, dubbelklik om af te sluiten). Klik nadien op het label om naadproducten toe te wijzen.">
-                        <i class="fa fa-ellipsis-h"/> Naad
+                        <i class="oi" data-icon="more_horiz"/> Naad
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.tool === 'pan' }"
+                            t-att-class="{ active: this.state.tool === 'pan' }"
                             t-on-click="() => this.setTool('pan')"
                             title="Verschuiven">
-                        <i class="fa fa-hand-paper-o"/> Pan
+                        <i class="oi" data-icon="back_hand"/> Pan
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => this.zoomBy(1.25)" title="Inzoomen">
-                        <i class="fa fa-search-plus"/>
+                        <i class="oi" data-icon="zoom_in"/>
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => this.zoomBy(0.8)" title="Uitzoomen">
-                        <i class="fa fa-search-minus"/>
+                        <i class="oi" data-icon="zoom_out"/>
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
-                        <i class="fa fa-arrows-alt"/>
+                        <i class="oi" data-icon="open_with"/>
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.fullscreen }"
-                            t-on-click="toggleFullscreen"
-                            t-att-title="state.fullscreen ? 'Terug naar overzicht met tabbladen (Esc)' : 'Tekening op volledig scherm (F)'">
-                        <i t-att-class="state.fullscreen ? 'fa fa-compress' : 'fa fa-expand'"/>
-                    </button>
-                </div>
-                <div class="btn-group btn-group-sm ms-2" role="group">
-                    <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.showGrid }"
-                            t-on-click="toggleGrid" title="Meetraster tonen/verbergen">
-                        <i class="fa fa-th"/> Raster
+                            t-att-class="{ active: this.state.fullscreen }"
+                            t-on-click="this.toggleFullscreen"
+                            t-att-title="this.state.fullscreen ? 'Terug naar overzicht met tabbladen (Esc)' : 'Tekening op volledig scherm (F)'">
+                        <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-disabled="!state.selectedId"
-                            t-on-click="renameSelected" title="Geselecteerde sectie hernoemen">
-                        <i class="fa fa-pencil"/>
+                            t-att-class="{ active: this.state.showGrid }"
+                            t-on-click="this.toggleGrid" title="Meetraster tonen/verbergen">
+                        <i class="oi" data-icon="grid_view"/> Raster
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-att-disabled="!this.state.selectedId"
+                            t-on-click="this.renameSelected" title="Geselecteerde sectie hernoemen">
+                        <i class="oi" data-icon="edit"/>
                     </button>
                     <button type="button" class="btn btn-outline-danger"
-                            t-att-disabled="!state.selectedId"
-                            t-on-click="deleteSelected" title="Geselecteerde vorm verwijderen (Del)">
-                        <i class="fa fa-trash-o"/>
+                            t-att-disabled="!this.state.selectedId"
+                            t-on-click="this.deleteSelected" title="Geselecteerde vorm verwijderen (Del)">
+                        <i class="oi" data-icon="delete"/>
                     </button>
                 </div>
                 <!-- Background: one icon for everything about the satellite
                      image or uploaded plan behind the drawing. -->
-                <div class="btn-group btn-group-sm ms-2 position-relative" role="group" t-ref="bgmenu">
+                <div class="btn-group btn-group-sm ms-2 position-relative" role="group" t-ref="this.bgMenuRef">
                     <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: state.bgMenu or (backgroundUrl and state.showBackground) }"
-                            t-att-disabled="state.bgBusy"
-                            t-on-click="toggleBackgroundMenu"
+                            t-att-class="{ active: this.state.bgMenu or (this.backgroundUrl and this.state.showBackground) }"
+                            t-att-disabled="this.state.bgBusy"
+                            t-on-click="this.toggleBackgroundMenu"
                             title="Achtergrond: satellietbeeld ophalen, plan uploaden, tonen/verbergen">
-                        <i t-att-class="state.bgBusy ? 'fa fa-spinner fa-spin' : 'fa fa-globe'"/>
+                        <i class="oi" t-att-class="this.state.bgBusy ? 'oi-spin' : ''" t-att-data-icon="this.state.bgBusy ? 'progress_activity' : 'public'"/>
                     </button>
-                    <div t-if="state.bgMenu" class="o_roof_canvas_bgmenu dropdown-menu show shadow-sm p-0">
-                        <button type="button" class="dropdown-item" t-on-click="fetchSatellite"
+                    <div t-if="this.state.bgMenu" class="o_roof_canvas_bgmenu dropdown-menu show shadow-sm p-0">
+                        <button type="button" class="dropdown-item" t-on-click="this.fetchSatellite"
                                 title="Geocodeert het werfadres en haalt een satellietfoto op als achtergrond; de schaal volgt uit de kaartprojectie.">
-                            <i class="fa fa-fw fa-globe me-1"/>
-                            <t t-if="backgroundUrl">Satellietbeeld opnieuw ophalen</t>
+                            <i class="oi oi-fw me-1" data-icon="public"/>
+                            <t t-if="this.backgroundUrl">Satellietbeeld opnieuw ophalen</t>
                             <t t-else="">Satellietbeeld ophalen (werfadres)</t>
                         </button>
-                        <button type="button" class="dropdown-item" t-on-click="chooseUpload"
+                        <button type="button" class="dropdown-item" t-on-click="this.chooseUpload"
                                 title="Eigen plan of foto als achtergrond; kalibreer de schaal nadien via rechtsklik op een zijdelengte.">
-                            <i class="fa fa-fw fa-upload me-1"/> Eigen plan uploaden…
+                            <i class="oi oi-fw me-1" data-icon="upload"/> Eigen plan uploaden…
                         </button>
-                        <input type="file" accept="image/*" class="d-none" t-ref="bgfile"
-                               t-on-change="uploadPlan"/>
-                        <t t-if="backgroundUrl">
+                        <input type="file" accept="image/*" class="d-none" t-ref="this.bgFileRef"
+                               t-on-change="this.uploadPlan"/>
+                        <t t-if="this.backgroundUrl">
                             <div class="dropdown-divider"/>
-                            <button type="button" class="dropdown-item" t-on-click="toggleBackground">
-                                <i t-att-class="state.showBackground ? 'fa fa-fw fa-eye-slash me-1' : 'fa fa-fw fa-eye me-1'"/>
-                                <t t-if="state.showBackground">Achtergrond verbergen</t>
+                            <button type="button" class="dropdown-item" t-on-click="this.toggleBackground">
+                                <i class="oi oi-fw me-1" t-att-data-icon="this.state.showBackground ? 'visibility_off' : 'visibility'"/>
+                                <t t-if="this.state.showBackground">Achtergrond verbergen</t>
                                 <t t-else="">Achtergrond tonen</t>
                             </button>
                             <div class="px-3 py-1 d-flex align-items-center gap-2 small text-muted">
-                                <i class="fa fa-fw fa-adjust"/>
+                                <i class="oi oi-fw" data-icon="contrast"/>
                                 <input type="range" min="0.1" max="1" step="0.05"
                                        class="flex-grow-1"
-                                       t-att-value="state.backgroundOpacity"
-                                       t-on-input="onOpacityInput"
+                                       t-att-value="this.state.backgroundOpacity"
+                                       t-on-input="this.onOpacityInput"
                                        title="Transparantie achtergrond"/>
                             </div>
                             <div class="dropdown-divider"/>
                             <button type="button" class="dropdown-item text-danger"
-                                    t-on-click="clearBackground">
-                                <i class="fa fa-fw fa-trash-o me-1"/> Achtergrond verwijderen
+                                    t-on-click="this.clearBackground">
+                                <i class="oi oi-fw me-1" data-icon="delete"/> Achtergrond verwijderen
                             </button>
                         </t>
                         <div class="dropdown-divider"/>
                         <div class="px-3 py-1 small text-muted">
-                            Schaal <t t-out="scaleLabel"/> — kalibreren: rechtsklik op een zijdelengte.
+                            Schaal <t t-out="this.scaleLabel"/> — kalibreren: rechtsklik op een zijdelengte.
                         </div>
                     </div>
                 </div>
                 <span class="ms-auto text-muted small pe-2">
-                    Schaal: <t t-out="scaleLabel"/>
-                    <t t-if="state.showGrid"> · raster <t t-out="state.gridStep"/> m</t>
+                    Schaal: <t t-out="this.scaleLabel"/>
+                    <t t-if="this.state.showGrid"> · raster <t t-out="this.state.gridStep"/> m</t>
                 </span>
             </div>
-            <canvas t-ref="canvas"
-                    t-on-pointerdown="onPointerDown"
-                    t-on-pointermove="onPointerMove"
-                    t-on-pointerup="onPointerUp"
-                    t-on-dblclick="onDblClick"
-                    t-on-contextmenu="onContextMenu"
-                    t-on-wheel="onWheel"/>
-            <div class="o_roof_canvas_status text-muted small px-2 py-1" t-ref="status">
-                <t t-out="state.status"/>
+            <canvas t-ref="this.canvasRef"
+                    t-on-pointerdown="this.onPointerDown"
+                    t-on-pointermove="this.onPointerMove"
+                    t-on-pointerup="this.onPointerUp"
+                    t-on-dblclick="this.onDblClick"
+                    t-on-contextmenu="this.onContextMenu"
+                    t-on-wheel="this.onWheel"/>
+            <div class="o_roof_canvas_status text-muted small px-2 py-1" t-ref="this.statusRef">
+                <t t-out="this.state.status"/>
             </div>
             </div>
             <div class="o_roof_canvas_sidebar">
-                <t t-if="state.panel">
+                <t t-if="this.state.panel">
                     <div class="o_roof_canvas_panel card">
                         <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
-                            <strong class="text-truncate" t-out="state.panel.name"/>
+                            <strong class="text-truncate" t-out="this.state.panel.name"/>
                             <button type="button" class="btn-close" title="Sluiten"
-                                    t-on-click="closePanel"/>
+                                    t-on-click="this.closePanel"/>
                         </div>
                         <div class="card-body p-0">
-                            <t t-if="state.panel.loading">
+                            <t t-if="this.state.panel.loading">
                                 <div class="p-2 text-muted small">Laden…</div>
                             </t>
-                            <t t-elif="!state.panel.synced">
+                            <t t-elif="!this.state.panel.synced">
                                 <div class="p-2 text-muted small">
                                     Nog niet gesynchroniseerd — sla het project op.
                                 </div>
                             </t>
-                            <t t-elif="!state.panel.lines.length">
+                            <t t-elif="!this.state.panel.lines.length">
                                 <div class="p-2 text-muted small">
                                     Nog geen producten toegewezen. Klik op een label,
                                     rand of hoekpunt om producten toe te voegen.
@@ -170,7 +170,7 @@
                             </t>
                             <t t-else="">
                                 <ul class="list-group list-group-flush small">
-                                    <li t-foreach="state.panel.lines" t-as="line" t-key="line.id"
+                                    <li t-foreach="this.state.panel.lines" t-as="line" t-key="line.id"
                                         class="list-group-item py-1 px-2">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <span class="fw-bold me-1" t-out="line.product_id[1]"/>
@@ -178,11 +178,11 @@
                                                     class="btn btn-link text-danger p-0"
                                                     title="Lijn verwijderen"
                                                     t-on-click="() => this.removeLine(line)">
-                                                <i class="fa fa-trash-o"/>
+                                                <i class="oi" data-icon="delete"/>
                                             </button>
                                         </div>
                                         <div class="d-flex justify-content-between text-muted">
-                                            <span t-out="coverageLabel(line)"/>
+                                            <span t-out="this.coverageLabel(line)"/>
                                             <span>
                                                 <t t-out="line.quantity.toFixed(2)"/>
                                                 <t t-out="line.uom_id ? line.uom_id[1] : ''"/>
@@ -193,13 +193,13 @@
                                 </ul>
                             </t>
                         </div>
-                        <div t-if="state.panel.lines.length"
+                        <div t-if="this.state.panel.lines.length"
                              class="card-footer py-1 px-2 d-flex justify-content-between small">
                             <strong>Totaal</strong>
-                            <strong t-out="state.panel.total.toFixed(2)"/>
+                            <strong t-out="this.state.panel.total.toFixed(2)"/>
                         </div>
                     </div>
-                    <div t-if="state.panel.edges.length" class="o_roof_canvas_panel card">
+                    <div t-if="this.state.panel.edges.length" class="o_roof_canvas_panel card">
                         <div class="card-header py-1 px-2">
                             <strong>Rand &amp; opstand per zijde (m)</strong>
                         </div>
@@ -214,7 +214,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr t-foreach="state.panel.edges" t-as="edge" t-key="edge.index">
+                                <tr t-foreach="this.state.panel.edges" t-as="edge" t-key="edge.index">
                                     <td class="py-1 px-2">
                                         <t t-out="edge.label"/><br/>
                                         <span class="text-muted">
@@ -239,7 +239,7 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-secondary py-0 px-1 text-nowrap"
                                                 t-att-disabled="!edge.width and !edge.upstand"
-                                                t-att-title="applyEverywhereTitle(edge)"
+                                                t-att-title="this.applyEverywhereTitle(edge)"
                                                 t-on-click="() => this.applyEdgeValuesToAll(edge)">
                                             Overal
                                         </button>
@@ -247,20 +247,20 @@
                                 </tr>
                             </tbody>
                         </table>
-                        <div t-if="state.panel.inner"
+                        <div t-if="this.state.panel.inner"
                              class="card-footer py-1 px-2 small d-flex justify-content-between">
                             <span>Binnenmaat</span>
                             <span>
-                                <t t-out="state.panel.inner.area.toFixed(2)"/> m² ·
-                                omtrek <t t-out="state.panel.inner.perimeter.toFixed(2)"/> m
+                                <t t-out="this.state.panel.inner.area.toFixed(2)"/> m² ·
+                                omtrek <t t-out="this.state.panel.inner.perimeter.toFixed(2)"/> m
                             </span>
                         </div>
-                        <div t-if="state.panel.upstand"
+                        <div t-if="this.state.panel.upstand"
                              class="card-footer py-1 px-2 small d-flex justify-content-between">
                             <span>Opstand</span>
                             <span>
-                                <t t-out="state.panel.upstand.area.toFixed(2)"/> m² ·
-                                <t t-out="state.panel.upstand.length.toFixed(2)"/> m
+                                <t t-out="this.state.panel.upstand.area.toFixed(2)"/> m² ·
+                                <t t-out="this.state.panel.upstand.length.toFixed(2)"/> m
                             </span>
                         </div>
                     </div>
@@ -271,26 +271,26 @@
                 </div>
             </div>
             </div>
-            <div t-if="state.contextMenu"
+            <div t-if="this.state.contextMenu"
                  class="o_roof_canvas_ctxmenu dropdown-menu show"
-                 t-attf-style="left: {{ state.contextMenu.x }}px; top: {{ state.contextMenu.y }}px;">
+                 t-attf-style="left: {{ this.state.contextMenu.x }}px; top: {{ this.state.contextMenu.y }}px;">
                 <h6 class="dropdown-header">Dakobject toevoegen</h6>
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('chimney', 'rect')">
-                    <i class="fa fa-square-o me-1"/> Schoorsteen — rechthoek
+                    <i class="oi me-1" data-icon="square"/> Schoorsteen — rechthoek
                 </button>
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('chimney', 'circle')">
-                    <i class="fa fa-circle-o me-1"/> Schoorsteen — cirkel
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Schoorsteen — cirkel
                 </button>
                 <div class="dropdown-divider"/>
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('skylight', 'rect')">
-                    <i class="fa fa-square-o me-1"/> Koepel — rechthoek
+                    <i class="oi me-1" data-icon="square"/> Koepel — rechthoek
                 </button>
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('skylight', 'circle')">
-                    <i class="fa fa-circle-o me-1"/> Koepel — cirkel
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Koepel — cirkel
                 </button>
             </div>
         </div>

@@ -35,7 +35,7 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_sale_order" type="object"
-                                class="oe_stat_button" icon="fa-file-text-o">
+                                class="oe_stat_button" icon="description">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="tectora_sale_order_id" readonly="1"
@@ -47,7 +47,7 @@
                             </div>
                         </button>
                         <button name="action_view_roof_project" type="object"
-                                class="oe_stat_button" icon="fa-home">
+                                class="oe_stat_button" icon="home">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="roof_total_area" readonly="1"
@@ -59,7 +59,7 @@
                             </div>
                         </button>
                         <button name="action_view_tectora_tasks" type="object"
-                                class="oe_stat_button" icon="fa-check">
+                                class="oe_stat_button" icon="check">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="open_task_count" readonly="1"/> /
@@ -69,37 +69,37 @@
                             </div>
                         </button>
                         <button name="action_view_tectora_invoices" type="object"
-                                class="oe_stat_button" icon="fa-money"
+                                class="oe_stat_button" icon="payments"
                                 invisible="tectora_invoice_count == 0">
                             <field name="tectora_invoice_count" widget="statinfo" string="Facturen"/>
                         </button>
                         <button name="action_view_tectora_pickings" type="object"
-                                class="oe_stat_button" icon="fa-truck"
+                                class="oe_stat_button" icon="local_shipping"
                                 invisible="tectora_picking_count == 0">
                             <field name="tectora_picking_count" widget="statinfo" string="Leveringen"/>
                         </button>
                         <button name="action_view_tectora_purchases" type="object"
-                                class="oe_stat_button" icon="fa-shopping-cart"
+                                class="oe_stat_button" icon="shopping_cart"
                                 invisible="tectora_purchase_count == 0">
                             <field name="tectora_purchase_count" widget="statinfo" string="Inkoop"/>
                         </button>
                         <button name="action_view_tectora_materials" type="object"
-                                class="oe_stat_button" icon="fa-cubes"
+                                class="oe_stat_button" icon="deployed_code"
                                 invisible="tectora_material_count == 0">
                             <field name="tectora_material_count" widget="statinfo" string="Materialen"/>
                         </button>
                         <button name="action_view_tectora_planning" type="object"
-                                class="oe_stat_button" icon="fa-calendar"
+                                class="oe_stat_button" icon="calendar_today"
                                 invisible="tectora_planning_count == 0">
                             <field name="tectora_planning_count" widget="statinfo" string="Werkblokken"/>
                         </button>
                         <button name="action_view_tectora_timesheets" type="object"
-                                class="oe_stat_button" icon="fa-clock-o"
+                                class="oe_stat_button" icon="schedule"
                                 invisible="not tectora_has_timesheets">
                             <field name="tectora_timesheet_hours" widget="statinfo" string="Uren"/>
                         </button>
                         <button name="action_open_project_form" type="object"
-                                class="oe_stat_button" icon="fa-cog" string="Instellingen"/>
+                                class="oe_stat_button" icon="settings" string="Instellingen"/>
                     </div>
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
@@ -243,7 +243,7 @@
                                                class="o_tectora_roof_snapshot"/>
                                         <div class="mt-2">
                                             <button name="action_view_roof_project" type="object"
-                                                    class="btn btn-link p-0" icon="fa-external-link">
+                                                    class="btn btn-link p-0" icon="open_in_new">
                                                 Dakmeting openen
                                             </button>
                                         </div>
@@ -325,7 +325,7 @@
                             </field>
                             <div class="mt-2">
                                 <button name="action_view_tectora_tasks" type="object"
-                                        class="btn btn-link p-0" icon="fa-external-link">
+                                        class="btn btn-link p-0" icon="open_in_new">
                                     Alle taken (ook afgeronde) openen
                                 </button>
                             </div>
@@ -374,6 +374,16 @@
                 <attribute name="action">action_open_dashboard</attribute>
                 <attribute name="type">object</attribute>
             </xpath>
+        </field>
+    </record>
+
+    <!-- Odoo 20 keeps the card templates (and their menu) in a view of their
+         own, referenced by the kanban's card_id. -->
+    <record id="view_project_card_inherit_tectora" model="ir.ui.view">
+        <field name="name">project.project.card.inherit.tectora.roof</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_card"/>
+        <field name="arch" type="xml">
             <xpath expr="//t[@t-name='menu']//a[@name='action_view_tasks']/.." position="before">
                 <div role="menuitem">
                     <a name="action_open_dashboard" type="object">Dashboard</a>
@@ -391,10 +401,10 @@
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_open_dashboard" type="object"
-                        class="oe_stat_button" icon="fa-tachometer"
+                        class="oe_stat_button" icon="speed"
                         string="Projectdashboard"/>
                 <button name="action_view_sale_order" type="object"
-                        class="oe_stat_button" icon="fa-file-text-o">
+                        class="oe_stat_button" icon="description">
                     <div class="o_stat_info">
                         <span class="o_stat_value">
                             <field name="tectora_sale_order_id" readonly="1"
@@ -406,7 +416,7 @@
                     </div>
                 </button>
                 <button name="action_view_roof_project" type="object"
-                        class="oe_stat_button" icon="fa-home">
+                        class="oe_stat_button" icon="home">
                     <div class="o_stat_info">
                         <span class="o_stat_value">
                             <field name="roof_total_area" readonly="1"

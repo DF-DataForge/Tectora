@@ -29,7 +29,7 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_roof_project" type="object" class="oe_stat_button"
-                                icon="fa-home" string="Dakproject"/>
+                                icon="home" string="Dakproject"/>
                     </div>
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
@@ -83,7 +83,7 @@
                         <div class="d-flex justify-content-between mt-1">
                             <field name="employee_id" widget="many2one_avatar_employee"/>
                             <span t-if="record.image_count.raw_value">
-                                <i class="fa fa-camera me-1"/><field name="image_count"/>
+                                <i class="oi me-1" data-icon="photo_camera"/><field name="image_count"/>
                             </span>
                         </div>
                     </t>

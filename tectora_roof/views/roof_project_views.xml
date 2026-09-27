@@ -25,7 +25,7 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_sale_orders" type="object"
-                                class="oe_stat_button" icon="fa-file-text-o">
+                                class="oe_stat_button" icon="description">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="sale_order_id" readonly="1"
@@ -40,27 +40,27 @@
                             </div>
                         </button>
                         <button name="action_view_materials" type="object"
-                                class="oe_stat_button" icon="fa-cubes"
+                                class="oe_stat_button" icon="deployed_code"
                                 invisible="material_count == 0">
                             <field name="material_count" widget="statinfo" string="Materialen"/>
                         </button>
                         <button name="action_view_pickings" type="object"
-                                class="oe_stat_button" icon="fa-truck"
+                                class="oe_stat_button" icon="local_shipping"
                                 invisible="picking_count == 0">
                             <field name="picking_count" widget="statinfo" string="Leveringen"/>
                         </button>
                         <button name="action_view_purchase_orders" type="object"
-                                class="oe_stat_button" icon="fa-shopping-cart"
+                                class="oe_stat_button" icon="shopping_cart"
                                 invisible="purchase_count == 0">
                             <field name="purchase_count" widget="statinfo" string="Inkoop"/>
                         </button>
                         <button name="action_view_invoices" type="object"
-                                class="oe_stat_button" icon="fa-money"
+                                class="oe_stat_button" icon="payments"
                                 invisible="invoice_count == 0">
                             <field name="invoice_count" widget="statinfo" string="Facturen"/>
                         </button>
                         <button name="action_open_project" type="object"
-                                class="oe_stat_button" icon="fa-tachometer"
+                                class="oe_stat_button" icon="speed"
                                 help="Het planbare project achter dit dakproject, met het dashboard van omzet, kosten, leveringen, taken en planning.">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">

@@ -277,10 +277,10 @@ def _install_team_planner(env):
     # The app itself opens on the team planner.
     Param = env["ir.config_parameter"].sudo()
     current_ref = _action_reference(root)
-    if current_ref and current_ref != reference and not Param.get_param(
+    if current_ref and current_ref != reference and not Param.get_str(
         ROOT_ACTION_PARAM
     ):
-        Param.set_param(ROOT_ACTION_PARAM, current_ref)
+        Param.set_str(ROOT_ACTION_PARAM, current_ref)
     try:
         with env.cr.savepoint():
             root.action = reference
@@ -302,8 +302,8 @@ def _move_teams_menu(env, config):
     if teams_menu.parent_id == config:
         return
     Param = env["ir.config_parameter"].sudo()
-    if teams_menu.parent_id and not Param.get_param(PARENT_MENU_PARAM):
-        Param.set_param(PARENT_MENU_PARAM, str(teams_menu.parent_id.id))
+    if teams_menu.parent_id and not Param.get_str(PARENT_MENU_PARAM):
+        Param.set_str(PARENT_MENU_PARAM, str(teams_menu.parent_id.id))
     try:
         with env.cr.savepoint():
             teams_menu.write({"parent_id": config.id, "sequence": 90})
@@ -331,7 +331,7 @@ def uninstall_hook(env):
     """Give the Planning app its own default planner and menu layout back."""
     Param = env["ir.config_parameter"].sudo()
     _schedule, root, _config = _planning_menus(env)
-    previous = Param.get_param(ROOT_ACTION_PARAM)
+    previous = Param.get_str(ROOT_ACTION_PARAM)
     action = env.ref(TEAM_ACTION_XMLID, raise_if_not_found=False)
     ours = "%s,%s" % (action._name, action.id) if action else ""
     if root and _action_reference(root) == ours:
@@ -347,10 +347,10 @@ def uninstall_hook(env):
                 "tectora_roof_planning: could not restore the Planning app's "
                 "default action: %s", error
             )
-    Param.set_param(ROOT_ACTION_PARAM, "")
+    Param.set_str(ROOT_ACTION_PARAM, "")
 
     teams_menu = env.ref(TEAMS_MENU_XMLID, raise_if_not_found=False)
-    parent_id = Param.get_param(PARENT_MENU_PARAM)
+    parent_id = Param.get_str(PARENT_MENU_PARAM)
     if teams_menu and parent_id:
         try:
             with env.cr.savepoint():
@@ -360,4 +360,4 @@ def uninstall_hook(env):
                 "tectora_roof_planning: could not move the Ploegen menu back: %s",
                 error,
             )
-    Param.set_param(PARENT_MENU_PARAM, "")
+    Param.set_str(PARENT_MENU_PARAM, "")

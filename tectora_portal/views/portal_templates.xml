@@ -2,23 +2,6 @@
 <odoo>
 
     <!-- ================================================================ home -->
-    <template id="portal_my_home_tectora" name="Portaal: Mijn werven"
-              inherit_id="portal.portal_my_home" priority="30">
-        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
-            <t t-set="portal_service_category_enable" t-value="True"/>
-        </xpath>
-        <div id="portal_service_category" position="inside">
-            <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/tectora_portal/static/description/icon.png'"/>
-                <t t-set="title">Mijn werven</t>
-                <t t-set="text">Je werven met planning, materialen, dakplan en urenregistratie</t>
-                <t t-set="url" t-value="'/my/werven'"/>
-                <t t-set="placeholder_count" t-value="'tectora_site_count'"/>
-                <t t-set="config_card" t-value="tectora_employee"/>
-            </t>
-        </div>
-    </template>
-
     <template id="portal_breadcrumbs_tectora" name="Portaal: kruimelpad werven"
               inherit_id="portal.portal_breadcrumbs" priority="30">
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
@@ -51,12 +34,10 @@
 
     <!-- ================================================================ list -->
     <template id="portal_my_sites" name="Portaal: Mijn werven">
-        <t t-call="portal.portal_layout">
-            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+        <t t-call="portal.portal_layout" breadcrumbs_searchbar="True">
             <div class="o_tectora_portal">
-                <t t-call="portal.portal_searchbar">
-                    <t t-set="title">Mijn werven</t>
-                </t>
+                <t t-call="portal.portal_searchbar" breadcrumbs_searchbar="True"
+                   title.translate="Mijn werven"/>
                 <t t-if="not projects">
                     <div class="alert alert-info" role="status">
                         <t t-if="filterby == 'today'">Vandaag staat er geen werf voor je ingepland.</t>
@@ -85,10 +66,10 @@
                                     <t t-out="site.name or ''"/>
                                 </a>
                                 <div class="small text-muted" t-if="site.partner_id">
-                                    <i class="fa fa-user me-1" title="Klant"/><t t-out="site.partner_id.name"/>
+                                    <i class="oi me-1" data-icon="person" title="Klant"/><t t-out="site.partner_id.name"/>
                                 </div>
                                 <div class="small text-muted d-md-none" t-if="site.address">
-                                    <i class="fa fa-map-marker me-1" title="Werfadres"/><t t-out="site.address"/>
+                                    <i class="oi me-1" data-icon="location_on" title="Werfadres"/><t t-out="site.address"/>
                                 </div>
                             </td>
                             <td class="d-none d-md-table-cell">
@@ -112,7 +93,7 @@
                             <td class="text-end">
                                 <span t-if="site.running_timer_id"
                                       class="badge rounded-pill text-bg-success me-1" title="Er loopt een urenregistratie">
-                                    <i class="fa fa-clock-o me-1"/>Uren lopen
+                                    <i class="oi me-1" data-icon="schedule"/>Uren lopen
                                 </span>
                                 <span class="badge rounded-pill text-bg-light border" t-field="site.state"/>
                             </td>
@@ -152,20 +133,20 @@
                                           t-field="site.project_type"/>
                                 </div>
                                 <div t-if="site.partner_id" class="mb-1">
-                                    <i class="fa fa-fw fa-user text-muted me-1" title="Klant"/>
+                                    <i class="oi oi-fw text-muted me-1" data-icon="person" title="Klant"/>
                                     <t t-out="site.partner_id.name"/>
                                 </div>
                                 <div t-if="site.address" class="mb-1">
-                                    <i class="fa fa-fw fa-map-marker text-muted me-1" title="Werfadres"/>
+                                    <i class="oi oi-fw text-muted me-1" data-icon="location_on" title="Werfadres"/>
                                     <a t-att-href="maps_url"
                                        target="_blank" rel="noopener" class="text-decoration-none">
                                         <t t-out="site.address"/>
-                                        <i class="fa fa-external-link small ms-1"/>
+                                        <i class="oi small ms-1" data-icon="open_in_new"/>
                                     </a>
                                 </div>
                                 <div class="text-muted small">
                                     <t t-if="next_block">
-                                        <i class="fa fa-fw fa-calendar me-1"/>
+                                        <i class="oi oi-fw me-1" data-icon="calendar_today"/>
                                         Volgende werkdag:
                                         <span t-field="next_block.start_datetime"
                                               t-options='{"widget": "datetime", "format": "EEEE d MMMM HH:mm"}'/>
@@ -173,10 +154,10 @@
                                                 t-options='{"widget": "datetime", "format": "HH:mm"}'/>
                                     </t>
                                     <t t-else="">
-                                        <i class="fa fa-fw fa-calendar-o me-1"/>Geen werkdag ingepland.
+                                        <i class="oi oi-fw me-1" data-icon="calendar_today"/>Geen werkdag ingepland.
                                     </t>
                                     <t t-if="site.team_id">
-                                        · <i class="fa fa-fw fa-users me-1"/><t t-out="site.team_id.name"/>
+                                        · <i class="oi oi-fw me-1" data-icon="group"/><t t-out="site.team_id.name"/>
                                     </t>
                                 </div>
                             </div>
@@ -192,26 +173,26 @@
                     <li class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'overview' else ''}" data-bs-toggle="tab"
                            data-tab="overview" href="#tab-overview" role="tab">
-                            <i class="fa fa-info-circle me-1"/>Overzicht
+                            <i class="oi me-1" data-icon="info"/>Overzicht
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'materials' else ''}" data-bs-toggle="tab"
                            data-tab="materials" href="#tab-materials" role="tab">
-                            <i class="fa fa-cubes me-1"/>Materialen
+                            <i class="oi me-1" data-icon="deployed_code"/>Materialen
                             <span class="badge rounded-pill text-bg-light border ms-1" t-out="len(materials)"/>
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'plan' else ''}" data-bs-toggle="tab"
                            data-tab="plan" href="#tab-plan" role="tab">
-                            <i class="fa fa-map-o me-1"/>Plan
+                            <i class="oi me-1" data-icon="map"/>Plan
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'report' else ''}" data-bs-toggle="tab"
                            data-tab="report" href="#tab-report" role="tab">
-                            <i class="fa fa-file-text-o me-1"/>Uitvoeringsverslag
+                            <i class="oi me-1" data-icon="description"/>Uitvoeringsverslag
                             <span class="badge rounded-pill text-bg-light border ms-1" t-out="len(reports)"/>
                         </a>
                     </li>
@@ -242,7 +223,7 @@
             <div class="card-body d-flex flex-column">
                 <t t-if="running_timer">
                     <div class="small text-uppercase text-success fw-bold">
-                        <i class="fa fa-circle me-1 small"/>Uren lopen
+                        <i class="oi me-1 small" data-icon="circle"/>Uren lopen
                         <span class="text-muted">· <t t-out="running_timer._work_kind_label()"/></span>
                     </div>
                     <div class="o_tectora_elapsed my-2"
@@ -257,7 +238,7 @@
                     </div>
                     <button type="button" class="btn btn-danger btn-lg o_tectora_btn_timer mt-auto"
                             data-bs-toggle="modal" data-bs-target="#tectoraStopModal">
-                        <i class="fa fa-stop me-1"/>Stop
+                        <i class="oi me-1" data-icon="stop"/>Stop
                     </button>
                 </t>
                 <t t-else="">
@@ -280,11 +261,11 @@
                         <div class="d-grid gap-2">
                             <button type="submit" name="work_kind" value="uitvoering"
                                     class="btn btn-success btn-lg o_tectora_btn_timer w-100">
-                                <i class="fa fa-play me-1"/>Start uitvoering
+                                <i class="oi me-1" data-icon="play_arrow"/>Start uitvoering
                             </button>
                             <button type="submit" name="work_kind" value="afbraak"
                                     class="btn btn-outline-success o_tectora_btn_timer w-100">
-                                <i class="fa fa-play me-1"/>Start afbraak
+                                <i class="oi me-1" data-icon="play_arrow"/>Start afbraak
                             </button>
                         </div>
                     </form>
@@ -335,7 +316,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
                         <button type="submit" class="btn btn-danger">
-                            <i class="fa fa-stop me-1"/>Stoppen en uren boeken
+                            <i class="oi me-1" data-icon="stop"/>Stoppen en uren boeken
                         </button>
                     </div>
                 </form>
@@ -348,7 +329,7 @@
         <div class="row g-3">
             <div class="col-12 col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header fw-bold"><i class="fa fa-home me-2 text-muted"/>Werf</div>
+                    <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="home"/>Werf</div>
                     <div class="card-body">
                         <table class="table table-sm table-borderless mb-0">
                             <tr><th class="text-muted fw-normal w-25">Klant</th>
@@ -365,21 +346,21 @@
                                 <td>
                                     <t t-out="site.site_contact_id.name"/>
                                     <a t-if="site.site_contact_phone" t-attf-href="tel:#{site.site_contact_phone}"
-                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.site_contact_phone"/></a>
+                                       class="ms-2 text-decoration-none"><i class="oi me-1" data-icon="phone"/><t t-out="site.site_contact_phone"/></a>
                                 </td></tr>
                             <tr t-if="site.project_manager_id"><th class="text-muted fw-normal">Projectleider</th>
                                 <td>
                                     <t t-out="site.project_manager_id.name"/>
                                     <a t-if="site.project_manager_phone" t-attf-href="tel:#{site.project_manager_phone}"
-                                       class="ms-2 text-decoration-none"><i class="fa fa-phone me-1"/><t t-out="site.project_manager_phone"/></a>
+                                       class="ms-2 text-decoration-none"><i class="oi me-1" data-icon="phone"/><t t-out="site.project_manager_phone"/></a>
                                 </td></tr>
                         </table>
                         <div class="mt-3 d-flex flex-wrap gap-2">
                             <a t-attf-href="/my/werven/#{site.id}/pdf/werfblad" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                <i class="fa fa-file-pdf-o me-1"/>Werfblad (pdf)
+                                <i class="oi me-1" data-icon="picture_as_pdf"/>Werfblad (pdf)
                             </a>
                             <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
+                                <i class="oi me-1" data-icon="picture_as_pdf"/>Meetblad (pdf)
                             </a>
                         </div>
                     </div>
@@ -387,7 +368,7 @@
             </div>
             <div class="col-12 col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header fw-bold"><i class="fa fa-users me-2 text-muted"/>Ploeg en planning</div>
+                    <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="group"/>Ploeg en planning</div>
                     <div class="card-body">
                         <table class="table table-sm table-borderless mb-0">
                             <tr><th class="text-muted fw-normal w-25">Ploeg</th>
@@ -436,7 +417,7 @@
 
             <!-- the site sheet (werfblad) -->
             <div class="col-12">
-                <h5 class="mt-2 mb-2"><i class="fa fa-clipboard me-2 text-muted"/>Werfblad</h5>
+                <h5 class="mt-2 mb-2"><i class="oi me-2 text-muted" data-icon="content_paste"/>Werfblad</h5>
             </div>
             <t t-foreach="info_sheet" t-as="column">
                 <div class="col-12 col-lg-6">
@@ -527,7 +508,7 @@
         <div class="row g-3">
             <div class="col-12 col-xl-8">
                 <div class="card">
-                    <div class="card-header fw-bold"><i class="fa fa-map-o me-2 text-muted"/>Dakplan</div>
+                    <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="map"/>Dakplan</div>
                     <div class="card-body">
                         <div class="row g-2 mb-3 text-center">
                             <div class="col-6 col-md-3">
@@ -587,7 +568,7 @@
                         </div>
                         <div class="mt-3">
                             <a t-attf-href="/my/werven/#{site.id}/pdf/meetblad" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                <i class="fa fa-file-pdf-o me-1"/>Meetblad (pdf)
+                                <i class="oi me-1" data-icon="picture_as_pdf"/>Meetblad (pdf)
                             </a>
                         </div>
                     </div>
@@ -595,7 +576,7 @@
             </div>
             <div class="col-12 col-xl-4">
                 <div class="card">
-                    <div class="card-header fw-bold"><i class="fa fa-calendar me-2 text-muted"/>Werkdagen</div>
+                    <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="calendar_today"/>Werkdagen</div>
                     <div class="list-group list-group-flush" t-if="blocks">
                         <div t-foreach="blocks" t-as="block"
                              t-attf-class="list-group-item #{'text-muted' if block.state == 'done' else ''} #{'border-start border-3 border-primary' if block == next_block else ''}">
@@ -637,7 +618,7 @@
                 <!-- new report -->
                 <div class="card mb-3">
                     <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                        <span><i class="fa fa-pencil me-2 text-muted"/>Nieuw verslag</span>
+                        <span><i class="oi me-2 text-muted" data-icon="edit"/>Nieuw verslag</span>
                         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#tectoraReportForm" aria-expanded="false" aria-controls="tectoraReportForm">
                             Tonen / verbergen
@@ -684,7 +665,7 @@
                                 </div>
                                 <div class="col-12 text-end">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fa fa-check me-1"/>Verslag opslaan
+                                        <i class="oi me-1" data-icon="check"/>Verslag opslaan
                                     </button>
                                 </div>
                             </div>
@@ -732,7 +713,7 @@
             <!-- hours -->
             <div class="col-12 col-xl-5">
                 <div class="card mb-3">
-                    <div class="card-header fw-bold"><i class="fa fa-clock-o me-2 text-muted"/>Uren op deze werf</div>
+                    <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="schedule"/>Uren op deze werf</div>
                     <div class="card-body">
                         <div class="row g-2 text-center mb-2">
                             <div class="col-6">

@@ -10,8 +10,9 @@ import {
     Component,
     onMounted,
     onWillUnmount,
-    useRef,
-    useState,
+    proxy,
+    signal,
+    useProps,
 } from "@odoo/owl";
 
 // 50 px per meter — same default as the legacy standalone canvas.
@@ -382,20 +383,20 @@ function insetPolygon(points, widths) {
 
 export class RoofCanvasField extends Component {
     static template = "tectora_roof.RoofCanvasField";
-    static props = { ...standardFieldProps };
+    props = useProps(standardFieldProps);
 
     setup() {
-        this.canvasRef = useRef("canvas");
-        this.wrapperRef = useRef("wrapper");
-        this.mainRef = useRef("main");
-        this.toolbarRef = useRef("toolbar");
-        this.statusRef = useRef("status");
-        this.bgMenuRef = useRef("bgmenu");
-        this.bgFileRef = useRef("bgfile");
+        this.canvasRef = signal.ref();
+        this.wrapperRef = signal.ref();
+        this.mainRef = signal.ref();
+        this.toolbarRef = signal.ref();
+        this.statusRef = signal.ref();
+        this.bgMenuRef = signal.ref();
+        this.bgFileRef = signal.ref();
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
-        this.state = useState({
+        this.state = proxy({
             tool: "select",
             showBackground: true,
             backgroundOpacity: 0.9,
@@ -434,7 +435,7 @@ export class RoofCanvasField extends Component {
         };
         // A click anywhere outside the background menu closes it.
         this.onWindowPointerDown = (ev) => {
-            if (this.state.bgMenu && this.bgMenuRef.el && !this.bgMenuRef.el.contains(ev.target)) {
+            if (this.state.bgMenu && this.bgMenuRef() && !this.bgMenuRef().contains(ev.target)) {
                 this.state.bgMenu = false;
             }
         };
@@ -449,18 +450,18 @@ export class RoofCanvasField extends Component {
             window.addEventListener("pointerdown", this.onWindowPointerDown, true);
             // The main column changes size when the side panel opens or the
             // form gets narrower; follow it, not only the window.
-            if (window.ResizeObserver && this.mainRef.el) {
+            if (window.ResizeObserver && this.mainRef()) {
                 this._resizeObserver = new ResizeObserver(() => {
                     if (this._destroyed) {
                         return;
                     }
-                    const canvas = this.canvasRef.el;
-                    const main = this.mainRef.el;
+                    const canvas = this.canvasRef();
+                    const main = this.mainRef();
                     if (canvas && main && Math.abs(canvas.width - main.clientWidth) > 1) {
                         this.resizeCanvas();
                     }
                 });
-                this._resizeObserver.observe(this.mainRef.el);
+                this._resizeObserver.observe(this.mainRef());
             }
         });
         onWillUnmount(() => {
@@ -553,7 +554,7 @@ export class RoofCanvasField extends Component {
     exportSnapshot() {
         // Fitted PNG of the whole drawing, stored on the record and used on
         // the measurement sheet PDF attached to quotations.
-        const canvas = this.canvasRef.el;
+        const canvas = this.canvasRef();
         if (!canvas) {
             return null;
         }
@@ -594,14 +595,14 @@ export class RoofCanvasField extends Component {
 
     // ---------------------------------------------------------------- canvas
     resizeCanvas() {
-        const canvas = this.canvasRef.el;
-        const wrapper = this.mainRef.el || this.wrapperRef.el;
+        const canvas = this.canvasRef();
+        const wrapper = this.mainRef() || this.wrapperRef();
         if (!canvas || !wrapper) {
             return;
         }
         const chrome =
-            (this.toolbarRef.el ? this.toolbarRef.el.offsetHeight : 0) +
-            (this.statusRef.el ? this.statusRef.el.offsetHeight : 0);
+            (this.toolbarRef() ? this.toolbarRef().offsetHeight : 0) +
+            (this.statusRef() ? this.statusRef().offsetHeight : 0);
         // Fill the space the drawing has: the whole main column in fullscreen,
         // otherwise as much of the window as the form leaves it.
         const width = Math.max(wrapper.clientWidth, 600);
@@ -685,7 +686,7 @@ export class RoofCanvasField extends Component {
     }
 
     chooseUpload() {
-        this.bgFileRef.el?.click();
+        this.bgFileRef()?.click();
     }
 
     async uploadPlan(ev) {
@@ -717,7 +718,7 @@ export class RoofCanvasField extends Component {
         let url = this.backgroundUrl;
         if (!url) {
             this.backgroundImage = null;
-            const canvas = this.canvasRef.el;
+            const canvas = this.canvasRef();
             this.world = canvas && canvas.width
                 ? { w: canvas.width, h: canvas.height }
                 : { ...DEFAULT_WORLD };
@@ -743,7 +744,7 @@ export class RoofCanvasField extends Component {
     }
 
     fitView() {
-        const canvas = this.canvasRef.el;
+        const canvas = this.canvasRef();
         if (!canvas) {
             return;
         }
@@ -758,7 +759,7 @@ export class RoofCanvasField extends Component {
 
     // Pointer position in canvas pixels (the space view.x/y live in).
     canvasPoint(ev) {
-        const canvas = this.canvasRef.el;
+        const canvas = this.canvasRef();
         const rect = canvas.getBoundingClientRect();
         return [
             ((ev.clientX - rect.left) * canvas.width) / rect.width,
@@ -813,7 +814,7 @@ export class RoofCanvasField extends Component {
     }
 
     zoomBy(factor) {
-        const canvas = this.canvasRef.el;
+        const canvas = this.canvasRef();
         this.zoomAt(canvas.width / 2, canvas.height / 2, factor);
     }
 
@@ -932,9 +933,9 @@ export class RoofCanvasField extends Component {
 
     onPointerMove(ev) {
         if (!this.drag) {
-            if (this.state.tool === "select" && this.canvasRef.el) {
+            if (this.state.tool === "select" && this.canvasRef()) {
                 const hover = this.labelHitTest(this.toWorld(ev));
-                this.canvasRef.el.style.cursor = !hover
+                this.canvasRef().style.cursor = !hover
                     ? ""
                     : hover.type === "corner" || hover.type === "radius"
                     ? "move"
@@ -1088,7 +1089,7 @@ export class RoofCanvasField extends Component {
         if (ev.ctrlKey || ev.metaKey) {
             return; // Ctrl-click is the multi-select gesture, not a menu
         }
-        const wrapper = this.wrapperRef.el;
+        const wrapper = this.wrapperRef();
         if (!wrapper) {
             return;
         }
@@ -2120,7 +2121,7 @@ export class RoofCanvasField extends Component {
 
     // -------------------------------------------------------------- drawing
     draw() {
-        const canvas = this.canvasRef.el;
+        const canvas = this.canvasRef();
         if (!canvas) {
             return;
         }

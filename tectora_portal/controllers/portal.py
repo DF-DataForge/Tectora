@@ -16,7 +16,8 @@ from werkzeug.exceptions import NotFound
 
 from odoo import _, fields, http
 from odoo.exceptions import UserError, ValidationError
-from odoo.http import content_disposition, request
+from odoo.http import request
+from odoo.http.stream import content_disposition
 from odoo.tools.image import image_data_uri
 from odoo.fields import Domain
 
@@ -80,18 +81,14 @@ class TectoraEmployeePortal(CustomerPortal):
         values["tectora_employee"] = self._tectora_employee()
         return values
 
-    def _prepare_home_portal_values(self, counters):
-        values = super()._prepare_home_portal_values(counters)
-        if "tectora_site_count" in counters:
+    def _prepare_portal_counter_values(self, counter):
+        """The counter of the card "Mijn werven" (data/portal_entry_data.xml):
+        the sites the logged-in employee is on."""
+        if counter == "tectora_site_count":
             employee = self._tectora_employee()
-            values["tectora_site_count"] = (
-                request.env["tectora.roof.project"].sudo().search_count(
-                    self._tectora_sites_domain(employee)
-                )
-                if employee
-                else 0
-            )
-        return values
+            domain = self._tectora_sites_domain(employee) if employee else [("id", "=", False)]
+            return "tectora.roof.project", domain, "sudo"
+        return super()._prepare_portal_counter_values(counter)
 
     # ------------------------------------------------------------------ list
     @http.route(
@@ -207,8 +204,8 @@ class TectoraEmployeePortal(CustomerPortal):
                 ("project_id", "=", dossier.id), ("employee_id", "=", employee.id),
             ])
         my_hours = sum(my_lines.mapped("unit_amount"))
-        drawing_b64 = (
-            project._get_drawing_b64()
+        drawing_png = (
+            project._get_drawing_png()
             if project.canvas_snapshot or project.canvas_data else False
         )
         history = request.session.get("tectora_sites_history", [])
@@ -237,7 +234,7 @@ class TectoraEmployeePortal(CustomerPortal):
             "materials": project.material_line_ids,
             "sections": project.section_ids,
             "roof_objects": project.roof_object_ids,
-            "drawing_src": image_data_uri(drawing_b64) if drawing_b64 else False,
+            "drawing_src": image_data_uri(drawing_png) if drawing_png else False,
             "info_sheet": project._info_sheet_sections(),
             "my_hours": my_hours,
             "my_hours_display": "%d:%02d" % (int(my_hours), int(round((my_hours - int(my_hours)) * 60))),

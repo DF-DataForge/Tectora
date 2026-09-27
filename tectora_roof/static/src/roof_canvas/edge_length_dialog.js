@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { Dialog } from "@web/core/dialog/dialog";
-import { Component, onMounted, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, proxy, signal, t, useProps } from "@odoo/owl";
 
 /**
  * Ask for the real length of one side of a shape.
@@ -20,30 +20,30 @@ import { Component, onMounted, useRef, useState } from "@odoo/owl";
 export class RoofEdgeLengthDialog extends Component {
     static template = "tectora_roof.RoofEdgeLengthDialog";
     static components = { Dialog };
-    static props = {
-        title: { type: String },
-        currentLength: { type: Number },
-        currentScale: { type: Number },
+    props = useProps({
+        title: t.string(),
+        currentLength: t.number(),
+        currentScale: t.number(),
         // "Lengte" for a side, "Omtrek" for a circle.
-        lengthLabel: { type: String, optional: true },
+        lengthLabel: t.string().optional(),
         // Whether the fixed-corner selector applies (not for circles).
-        allowAnchor: { type: Boolean, optional: true },
+        allowAnchor: t.boolean().optional(),
         // 1-based corner numbers of this side, for the selector labels.
-        startPoint: { type: Number, optional: true },
-        endPoint: { type: Number, optional: true },
-        onConfirm: { type: Function },
-        close: { type: Function },
-    };
+        startPoint: t.number().optional(),
+        endPoint: t.number().optional(),
+        onConfirm: t.function(),
+        close: t.function(),
+    });
 
     setup() {
-        this.inputRef = useRef("length");
-        this.state = useState({
+        this.inputRef = signal.ref();
+        this.state = proxy({
             value: this.props.currentLength.toFixed(2),
             scaleAll: true,
             anchor: "start",
         });
         onMounted(() => {
-            const input = this.inputRef.el;
+            const input = this.inputRef();
             if (input) {
                 input.focus();
                 input.select();

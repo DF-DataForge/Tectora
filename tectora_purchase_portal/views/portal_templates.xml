@@ -8,9 +8,9 @@
         <xpath expr="//t[@t-if='not materials']" position="before">
             <t t-if="materials and logistics_lists">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
-                    <h5 class="mb-0"><i class="fa fa-truck me-1"/>Aanlevering van het materiaal</h5>
+                    <h5 class="mb-0"><i class="oi me-1" data-icon="local_shipping"/>Aanlevering van het materiaal</h5>
                     <a t-attf-href="/my/werven/#{site.id}/pdf/logistiek" class="btn btn-sm btn-outline-secondary" target="_blank">
-                        <i class="fa fa-file-pdf-o me-1"/>Logistieke lijsten (pdf)
+                        <i class="oi me-1" data-icon="picture_as_pdf"/>Logistieke lijsten (pdf)
                     </a>
                 </div>
                 <div t-if="site.planned_date_begin" class="small text-muted mb-2">
@@ -22,7 +22,7 @@
                     <div t-attf-class="card mb-3 o_tectora_logistics_card o_tectora_logistics_#{kind}">
                         <div class="card-header d-flex justify-content-between align-items-center py-2">
                             <span class="fw-bold">
-                                <i t-attf-class="fa #{section['icon']} me-1"/>
+                                <i class="oi me-1" t-att-data-icon="section['icon']"/>
                                 <t t-out="section['title']"/>
                             </span>
                             <span class="badge rounded-pill text-bg-light border" t-out="len(lines)"/>
@@ -92,7 +92,7 @@
                                 </t>
                             </div>
                             <div t-if="section['pickup_orders']" class="alert alert-warning m-3 mb-3 py-2">
-                                <strong><i class="fa fa-exclamation-triangle me-1"/>Extra materiaal af te halen aan het magazijn</strong>
+                                <strong><i class="oi me-1" data-icon="warning"/>Extra materiaal af te halen aan het magazijn</strong>
                                 <t t-foreach="section['pickup_orders']" t-as="order">
                                     <div class="small mt-1">
                                         <em>Bij <t t-out="order.name"/>:</em>
@@ -103,7 +103,7 @@
                         </div>
                     </div>
                 </t>
-                <h5 class="mt-4 mb-2"><i class="fa fa-cubes me-1"/>Volledige materiaallijst</h5>
+                <h5 class="mt-4 mb-2"><i class="oi me-1" data-icon="deployed_code"/>Volledige materiaallijst</h5>
             </t>
         </xpath>
     </template>
@@ -113,7 +113,7 @@
               inherit_id="tectora_portal.portal_site_tab_overview">
         <xpath expr="//a[contains(@t-attf-href, 'pdf/werfblad')]" position="after">
             <a t-attf-href="/my/werven/#{site.id}/pdf/logistiek" class="btn btn-sm btn-outline-secondary" target="_blank">
-                <i class="fa fa-file-pdf-o me-1"/>Logistieke lijsten (pdf)
+                <i class="oi me-1" data-icon="picture_as_pdf"/>Logistieke lijsten (pdf)
             </a>
         </xpath>
     </template>

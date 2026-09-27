@@ -8,7 +8,6 @@ earlier -- so each new transfer carries only what no earlier one does.
 """
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, float_round
 
 
 class TectoraRoofProject(models.Model):
@@ -62,7 +61,7 @@ class TectoraRoofProject(models.Model):
         shipped = {}
         pickings = self.material_picking_ids.filtered(lambda p: p.state != "cancel")
         for move in pickings.move_ids.filtered(lambda m: m.state != "cancel"):
-            quantity = move.product_uom._compute_quantity(
+            quantity = move.uom_id._compute_quantity(
                 move.product_uom_qty, move.product_id.uom_id
             )
             shipped[move.product_id] = shipped.get(move.product_id, 0.0) + quantity
@@ -74,11 +73,8 @@ class TectoraRoofProject(models.Model):
         shipped = self._material_on_pickings()
         remaining = {}
         for product, quantity in self._material_requirements().items():
-            rest = float_round(
-                quantity - shipped.get(product, 0.0),
-                precision_rounding=product.uom_id.rounding,
-            )
-            if float_compare(rest, 0.0, precision_rounding=product.uom_id.rounding) > 0:
+            rest = product.uom_id.round(quantity - shipped.get(product, 0.0))
+            if product.uom_id.compare(rest, 0.0) > 0:
                 remaining[product] = rest
         return remaining
 
@@ -130,10 +126,9 @@ class TectoraRoofProject(models.Model):
         origin = " / ".join(filter(None, [order.name if order else "", self.code or self.name]))
         moves = [
             (0, 0, {
-                "name": product.display_name,
                 "product_id": product.id,
                 "product_uom_qty": quantity,
-                "product_uom": product.uom_id.id,
+                "uom_id": product.uom_id.id,
                 "location_id": source.id,
                 "location_dest_id": destination.id,
                 "company_id": company.id,

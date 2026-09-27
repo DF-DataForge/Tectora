@@ -11,7 +11,7 @@
                    position="after">
                 <div class="mt-2" invisible="not roof_project_id">
                     <button name="action_create_material_picking" type="object"
-                            class="btn btn-secondary" icon="fa-truck">
+                            class="btn btn-secondary" icon="local_shipping">
                         Levering klaarzetten
                     </button>
                 </div>

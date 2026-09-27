@@ -21,7 +21,7 @@
             <xpath expr="//page[@name='materials']/field[@name='material_line_ids']" position="before">
                 <div class="alert alert-warning d-flex align-items-start gap-2" role="alert"
                      invisible="not dropship_pickup_info">
-                    <i class="fa fa-exclamation-triangle fa-lg mt-1" title="Afhaling aan het magazijn"/>
+                    <i class="oi fs-5 mt-1" data-icon="warning" title="Afhaling aan het magazijn"/>
                     <div class="flex-grow-1">
                         <b>Extra materiaal af te halen aan het magazijn</b>, naast de
                         dropship-levering op de werf (zoals vermeld op de inkooporders
@@ -61,7 +61,7 @@
                         <group>
                             <div class="d-flex flex-wrap gap-2" colspan="2">
                                 <button name="action_print_logistics_lists" type="object"
-                                        class="btn btn-secondary" icon="fa-print"
+                                        class="btn btn-secondary" icon="print"
                                         string="Logistieke lijsten afdrukken"
                                         help="Alle drie de lijsten, elk op een eigen blad, met afvinkvakjes. Elke lijst apart afdrukken kan via het menu Afdrukken."/>
                                 <button name="action_organize_purchases" type="object"

@@ -19,8 +19,13 @@ mogelijk in de configurator.
 ## Technisch
 
 * `report.layout`-record `report_layout_tectora` → sjabloon
-  `external_layout_tectora` (opgebouwd zoals de Wave- en Folder-lay-outs van
-  Odoo 19: header met een vaste vorm, artikel, voettekst).
+  `external_layout_tectora`, opgebouwd uit de gedeelde bouwstenen van Odoo 20
+  (`web.company_address_list`, `web.external_layout_body`,
+  `web.external_layout_footer_content`) met een eigen header-vorm.
+* Het tabelontwerp (Licht, Gestreept, ...) is sinds Odoo 20 een eigen keuze in
+  de documentlay-out; bij installatie (en bij de upgrade naar 20.0) krijgt een
+  bedrijf dat nog op de standaard staat *Gestreept*, het ontwerp waarmee de
+  lay-out getekend is.
 * De dakrand staat als inline SVG in `tectora_header_shape`, getekend in de
   hoofdkleur; `static/src/img/header_bg.svg` is dezelfde tekening als los
   bestand. Wie liever de originele foto gebruikt, vervangt de `<svg>` in dat

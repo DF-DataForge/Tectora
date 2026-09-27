@@ -228,26 +228,68 @@ class ProjectProject(models.Model):
 
     # ------------------------------------------------------------ profitability
     def _tectora_profitability_totals(self):
-        """Odoo's own profitability figures of the project (sale_project and
-        every module that plugs into it: purchase, timesheets, stock...).
-        Costs come back negative. Empty dict when it cannot be computed."""
+        """Revenues and costs of the project, as the dashboard shows them.
+        Costs come back negative. Empty dict when there is no analytic
+        account to read them from.
+
+        Up to Odoo 19 these came from project._get_profitability_items(),
+        which Odoo 20 removed (with the profitability panel) in favour of a
+        single real_cost figure; the same four totals are read here from the
+        records themselves:
+
+        * invoiced / to invoice: the order lines' untaxed invoiced and
+          to-invoice amounts;
+        * billed: every cost booked on the project's analytic account (vendor
+          bills, timesheets, stock valuation...), which is Odoo 20's own
+          real_cost;
+        * to bill: confirmed purchase lines charged to that account and not
+          billed yet (only with Purchase installed).
+        """
         self.ensure_one()
         if not self.id or not self.account_id:
             return {}
-        try:
-            items = self.with_context(active_test=False)._get_profitability_items(
-                with_action=False
-            )
-        except Exception:  # never let the dashboard break on a bridge module
-            _logger.exception("Could not compute the profitability of %s", self.name)
-            return {}
-        revenues = items.get("revenues", {}).get("total", {})
-        costs = items.get("costs", {}).get("total", {})
+        account = self.account_id
+        order = self.tectora_sale_order_id.sudo()
+        sale_lines = order.order_line.filtered(lambda line: not line.display_type)
+        costs = self.env["account.analytic.line"].sudo()._read_group(
+            [("account_id", "=", account.id), ("amount", "<", 0)],
+            aggregates=["amount:sum"],
+        )
+        to_bill = 0.0
+        PurchaseLine = self.env.get("purchase.order.line")
+        if PurchaseLine is not None:
+            # As Odoo 19 counted it: what was ordered for the project, less
+            # what posted vendor bills already cover (those are "billed").
+            def share(distribution):
+                # A key can combine accounts of several plans ("12,40").
+                return sum(
+                    float(percentage)
+                    for key, percentage in (distribution or {}).items()
+                    if str(account.id) in key.split(",")
+                ) / 100.0
+
+            def in_project_currency(line, amount):
+                return line.currency_id._convert(
+                    amount, self.currency_id, self.company_id, fields.Date.context_today(self)
+                )
+
+            purchase_lines = PurchaseLine.sudo().search(
+                [("analytic_distribution", "in", [account.id]), ("display_type", "=", False)]
+            ).filtered(lambda line: line.order_id.state in ("purchase", "done"))
+            for line in purchase_lines:
+                ordered = in_project_currency(line, line.price_subtotal) * share(line.analytic_distribution)
+                billed = sum(
+                    in_project_currency(bill_line, bill_line.price_subtotal)
+                    * share(bill_line.analytic_distribution)
+                    for bill_line in line.invoice_lines
+                    if bill_line.parent_state == "posted" and not bill_line.is_refund
+                )
+                to_bill += ordered - billed
         return {
-            "invoiced": revenues.get("invoiced", 0.0),
-            "to_invoice": revenues.get("to_invoice", 0.0),
-            "billed": costs.get("billed", 0.0),
-            "to_bill": costs.get("to_bill", 0.0),
+            "invoiced": sum(sale_lines.mapped("untaxed_amount_invoiced")),
+            "to_invoice": sum(sale_lines.mapped("untaxed_amount_to_invoice")),
+            "billed": costs[0][0] if costs else 0.0,
+            "to_bill": -to_bill,
         }
 
     @api.depends(

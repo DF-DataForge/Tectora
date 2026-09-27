@@ -9,7 +9,6 @@ warehouse and what is taken from stock.
 """
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, float_is_zero
 
 
 class TectoraRoofMaterial(models.Model):
@@ -156,12 +155,14 @@ class TectoraRoofMaterial(models.Model):
         if not product:
             return self.env["product.supplierinfo"]
         product = product.with_company(self.company_id or self.env.company)
+        # Odoo 20: _select_seller returns the seller's info as a dict, the
+        # vendor pricelist line under "supplierinfo".
         seller = product._select_seller(
             partner_id=self.vendor_id if self.vendor_id in product.sudo().seller_ids.partner_id else False,
             quantity=self.quantity or 0.0,
             date=fields.Date.context_today(self),
             uom_id=self.product_uom_id or product.uom_id,
-        )
+        ).get("supplierinfo")
         return seller or product._prepare_sellers()[:1]
 
     @api.depends("product_id")
@@ -180,7 +181,7 @@ class TectoraRoofMaterial(models.Model):
                 quantity=line.quantity or 0.0,
                 date=fields.Date.context_today(line),
                 uom_id=line.product_uom_id or product.uom_id,
-            ) or product._prepare_sellers()[:1]
+            ).get("supplierinfo") or product._prepare_sellers()[:1]
             line.vendor_id = seller.partner_id
 
     @api.depends("product_id", "vendor_id", "quantity", "product_uom_id")
@@ -189,7 +190,7 @@ class TectoraRoofMaterial(models.Model):
             seller = line._select_seller()
             if seller and seller.partner_id == line.vendor_id:
                 uom = line.product_uom_id or line.product_id.uom_id
-                seller_uom = seller.product_uom_id or line.product_id.uom_id
+                seller_uom = seller.uom_id or line.product_id.uom_id
                 line.vendor_price = seller_uom._compute_price(seller.price, uom)
             else:
                 line.vendor_price = line.product_id.standard_price
@@ -212,14 +213,14 @@ class TectoraRoofMaterial(models.Model):
                 continue
             needed = line._quantity_in_product_uom()
             free = product.free_qty
-            rounding = product.uom_id.rounding or 0.01
+            uom = product.uom_id
             shortage = max(needed - free, 0.0)
             line.qty_shortage = shortage
-            if float_is_zero(needed, precision_rounding=rounding):
+            if uom.is_zero(needed):
                 line.stock_state = "enough"
-            elif float_is_zero(shortage, precision_rounding=rounding):
+            elif uom.is_zero(shortage):
                 line.stock_state = "enough"
-            elif float_compare(free, 0.0, precision_rounding=rounding) > 0:
+            elif uom.compare(free, 0.0) > 0:
                 line.stock_state = "partial"
             else:
                 line.stock_state = "none"
@@ -259,13 +260,8 @@ class TectoraRoofMaterial(models.Model):
                 else:
                     line.purchase_state = "to_order"
             elif po_line.state in ("purchase", "done"):
-                rounding = po_line.product_uom_id.rounding or 0.01
                 received = (
-                    float_compare(
-                        po_line.qty_received, po_line.product_qty,
-                        precision_rounding=rounding,
-                    )
-                    >= 0
+                    po_line.uom_id.compare(po_line.qty_received, po_line.product_qty) >= 0
                 )
                 line.purchase_state = "received" if received else "ordered"
             else:

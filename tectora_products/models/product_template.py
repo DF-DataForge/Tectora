@@ -452,9 +452,9 @@ class ProductTemplate(models.Model):
                 [("name", "=ilike", name), ("supplier_rank", ">", 0)], limit=1
             ) or Partner.search([("name", "=ilike", name)], limit=1)
             if not partner:
-                partner = Partner.create(
-                    {"name": name, "company_type": "company", "supplier_rank": 1}
-                )
+                # Odoo 20 derives "is a company" from the VAT number; the
+                # price book carries none, so the vendor is a plain contact.
+                partner = Partner.create({"name": name, "supplier_rank": 1})
             elif not partner.supplier_rank:
                 partner.supplier_rank = 1
             result[name] = partner

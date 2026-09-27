@@ -37,15 +37,16 @@ invitation e-mail is sent. The reports and the hour registrations are also
 visible in the back office, under Dakmeting and on the project dashboard's
 *Uitvoering* tab.
     """,
-    "version": "19.0.1.1.0",
+    "version": "20.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
     "depends": ["tectora_roof", "portal", "hr_timesheet"],
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "data/ir_cron_data.xml",
+        "data/portal_entry_data.xml",
         "views/roof_timer_views.xml",
         "views/roof_execution_report_views.xml",
         "views/hr_employee_views.xml",

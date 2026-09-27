@@ -38,7 +38,7 @@
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-success="state == 'published'"/>
-                <button name="action_split" type="object" icon="fa-scissors"
+                <button name="action_split" type="object" icon="content_cut"
                         title="Splits per dag"/>
             </list>
         </field>
@@ -120,16 +120,16 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_project_dashboard" type="object"
-                                class="oe_stat_button" icon="fa-tachometer"
+                                class="oe_stat_button" icon="speed"
                                 string="Projectoverzicht"/>
                         <button name="action_open_roof_project" type="object"
-                                class="oe_stat_button" icon="fa-home"
+                                class="oe_stat_button" icon="home"
                                 string="Dakproject"/>
                     </div>
                     <div class="oe_title">
                         <h1><field name="project_name" readonly="1" placeholder="Project"/></h1>
                         <div class="text-muted">
-                            <i class="fa fa-map-marker me-1"/><field name="address" readonly="1"/>
+                            <i class="oi me-1" data-icon="location_on"/><field name="address" readonly="1"/>
                         </div>
                     </div>
                     <group>

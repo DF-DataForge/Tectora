@@ -109,9 +109,7 @@
         <div t-attf-class="header tq #{style_class}">
             <div class="row" style="margin-top: 4px;">
                 <div class="col-6">
-                    <t t-call="tectora_roof.report_tectora_logo">
-                        <t t-set="white" t-value="False"/>
-                    </t>
+                    <t t-call="tectora_roof.report_tectora_logo" white="False"/>
                 </div>
                 <div class="col-6 text-end tq-muted" style="padding-top: 8px;">
                     <strong class="tq-teal"><t t-out="doc_label"/> <t t-out="doc.name"/></strong><br/>
@@ -232,7 +230,7 @@
                 </div>
             </div>
             <t t-if="with_drawing">
-                <t t-set="glance_drawing" t-value="roof._get_drawing_b64()"/>
+                <t t-set="glance_drawing" t-value="roof._get_drawing_png()"/>
                 <div t-if="glance_drawing" t-attf-class="text-center tq-avoid #{hero and 'tq-hero' or ''}" style="margin-top: 4px;">
                     <img t-att-src="image_data_uri(glance_drawing)"
                          t-attf-style="max-width: 100%; max-height: #{drawing_height or '80mm'}; border: 1px solid #e3e7e9; border-radius: 4px;"
@@ -395,7 +393,7 @@
         </div>
     </template>
 
-    <!-- Optional sections, outside the totals (Odoo 19: is_optional sections). -->
+    <!-- Optional sections, outside the totals (Odoo 19 and 20: is_optional sections). -->
     <template id="report_tq_block_options">
         <t t-set="optional_sections" t-value="doc._tectora_report_sections(optional=True)"/>
         <div t-if="optional_sections" class="tq-avoid" style="margin-top: 14px;">
@@ -617,19 +615,15 @@
                         </div>
                     </div>
                     <div class="col-4 text-end">
-                        <t t-call="tectora_roof.report_tectora_logo">
-                            <t t-set="white" t-value="True"/>
-                            <t t-set="extra_class" t-value="'tq-logo-cover'"/>
-                        </t>
+                        <t t-call="tectora_roof.report_tectora_logo"
+                           white="True" extra_class="'tq-logo-cover'"/>
                     </div>
                 </div>
             </div>
             <div style="margin-top: 18px;">
                 <t t-call="tectora_roof.report_tq_block_parties"/>
             </div>
-            <t t-call="tectora_roof.report_tq_block_roof_glance">
-                <t t-set="with_drawing" t-value="with_plan"/>
-            </t>
+            <t t-call="tectora_roof.report_tq_block_roof_glance" with_drawing="with_plan"/>
             <div class="tq-page-break"/>
             <t t-call="tectora_roof.report_tq_block_approach"/>
             <t t-call="tectora_roof.report_tq_block_services"/>
@@ -776,9 +770,7 @@
             <t t-call="tectora_roof.report_tq_block_roof_plan"/>
             <div class="tq-page-break"/>
             <h2>Bijlage — service, garantie en kwaliteit</h2>
-            <t t-call="tectora_roof.report_tq_block_service">
-                <t t-set="no_title" t-value="True"/>
-            </t>
+            <t t-call="tectora_roof.report_tq_block_service" no_title="True"/>
             <t t-call="tectora_roof.report_tq_block_services"/>
         </div>
         <t t-call="tectora_roof.report_tq_footer"/>
@@ -815,12 +807,8 @@
                 </div>
             </div>
             <t t-if="roof">
-                <t t-call="tectora_roof.report_tq_block_roof_glance">
-                    <t t-set="no_title" t-value="True"/>
-                    <t t-set="with_drawing" t-value="True"/>
-                    <t t-set="hero" t-value="True"/>
-                    <t t-set="drawing_height" t-value="'120mm'"/>
-                </t>
+                <t t-call="tectora_roof.report_tq_block_roof_glance"
+                   no_title="True" with_drawing="True" hero="True" drawing_height="'120mm'"/>
             </t>
             <div style="margin-top: 12px;">
                 <t t-call="tectora_roof.report_tq_block_parties"/>
@@ -838,10 +826,7 @@
             <div class="tq-page-break"/>
             <t t-call="tectora_roof.report_tq_block_approach"/>
             <h3 style="margin-top: 20px;">Service, garantie en kwaliteit</h3>
-            <t t-call="tectora_roof.report_tq_block_service">
-                <t t-set="no_title" t-value="True"/>
-                <t t-set="no_quality" t-value="True"/>
-            </t>
+            <t t-call="tectora_roof.report_tq_block_service" no_title="True" no_quality="True"/>
             <t t-call="tectora_roof.report_tq_block_contact_band"/>
         </div>
         <t t-call="tectora_roof.report_tq_footer"/>

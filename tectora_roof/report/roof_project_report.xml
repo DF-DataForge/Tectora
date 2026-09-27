@@ -6,7 +6,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_roof.report_roof_project</field>
-        <field name="report_file">tectora_roof.report_roof_project</field>
         <field name="print_report_name">'Meetblad %s' % (object.code)</field>
         <field name="binding_model_id" ref="model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -42,9 +41,9 @@
                         <t t-out="'%.4f m/pixel' % roof_doc.scale_m_per_px"/>
                     </div>
                 </div>
-                <t t-set="drawing_b64" t-value="roof_doc._get_drawing_b64()"/>
-                <div t-if="drawing_b64" class="text-center mb-2">
-                    <img t-att-src="image_data_uri(drawing_b64)"
+                <t t-set="drawing_png" t-value="roof_doc._get_drawing_png()"/>
+                <div t-if="drawing_png" class="text-center mb-2">
+                    <img t-att-src="image_data_uri(drawing_png)"
                          style="max-width: 100%; max-height: 115mm;"
                          alt="Dakmeting"/>
                 </div>
@@ -125,7 +124,7 @@
     <!-- The quotation PDF: Odoo's standard document when the order ticks
          "Standaard offerte" (followed by the meetblad when the order includes
          the roof plan), otherwise the Tectora quotation in the chosen style.
-         In Odoo 19 the per-document loop lives in sale.report_saleorder_raw. -->
+         Since Odoo 19 the per-document loop lives in sale.report_saleorder_raw. -->
     <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder_raw">
         <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="attributes">
             <attribute name="t-call">tectora_roof.report_saleorder_document_dispatch</attribute>
