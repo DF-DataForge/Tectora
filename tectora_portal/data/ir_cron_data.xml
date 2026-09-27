@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- A timer nobody stopped on the portal is closed after 16 hours,
+             so a forgotten Stop never books days of hours. -->
+        <record id="ir_cron_stop_forgotten_timers" model="ir.cron">
+            <field name="name">Dakmeting portaal: vergeten urenregistraties stoppen</field>
+            <field name="model_id" ref="model_tectora_roof_timer"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_stop_forgotten_timers()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

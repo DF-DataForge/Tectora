@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The estimated execution time under the totals of the quotation:
+         "Geschatte uitvoeringstijd: 42 u 30 (± 5,3 werkdagen)". Only when
+         the products carry a time norm; a quotation without one is unchanged. -->
+    <template id="report_saleorder_document_inherit_tectora"
+              inherit_id="sale.report_saleorder_document">
+        <xpath expr="//div[@name='so_total_summary']" position="after">
+            <div t-if="doc.tectora_estimated_hours" class="row" name="tectora_estimated_time">
+                <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ms-auto">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td class="text-start"><strong>Geschatte uitvoeringstijd</strong></td>
+                            <td class="text-end">
+                                <span t-esc="doc._tectora_estimated_time_label()"/>
+                            </td>
+                        </tr>
+                        <t t-if="doc.tectora_demolition_hours">
+                            <tr class="text-muted small">
+                                <td class="text-start ps-4">waarvan afbraakwerken</td>
+                                <td class="text-end">
+                                    <span t-esc="doc._tectora_hours_label(doc.tectora_demolition_hours)"/>
+                                </td>
+                            </tr>
+                            <tr class="text-muted small">
+                                <td class="text-start ps-4">waarvan uitvoeringswerken</td>
+                                <td class="text-end">
+                                    <span t-esc="doc._tectora_hours_label(doc.tectora_execution_hours)"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

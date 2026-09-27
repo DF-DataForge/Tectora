@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_project_form_purchase" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form.purchase</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state']" position="before">
+                <field name="material_to_order_count" invisible="1"/>
+                <button name="action_organize_purchases" type="object"
+                        string="Inkoop organiseren" class="btn-secondary"
+                        invisible="material_count == 0"
+                        help="Het bestelbord van dit dakproject: sleep materiaal tussen dropship, levering aan magazijn en uit voorraad, zie leverancier en voorraad per lijn, en maak de inkooporders."/>
+                <button name="action_create_purchase_orders" type="object"
+                        string="Inkooporders aanmaken" class="btn-secondary"
+                        groups="purchase.group_purchase_user"
+                        invisible="material_to_order_count == 0"
+                        help="Bestelt de nog niet bestelde materiaallijnen bij hun leveranciers volgens hun route: dropship per werf, magazijnleveringen per leverancier."/>
+            </xpath>
+            <xpath expr="//page[@name='materials']/field[@name='material_line_ids']" position="before">
+                <div class="alert alert-warning d-flex align-items-start gap-2" role="alert"
+                     invisible="not dropship_pickup_info">
+                    <i class="fa fa-exclamation-triangle fa-lg mt-1" title="Afhaling aan het magazijn"/>
+                    <div class="flex-grow-1">
+                        <b>Extra materiaal af te halen aan het magazijn</b>, naast de
+                        dropship-levering op de werf (zoals vermeld op de inkooporders
+                        <field name="dropship_pickup_order_ids" widget="many2many_tags" readonly="1" class="d-inline-block"/>):
+                        <field name="dropship_pickup_info" readonly="1" nolabel="1" class="mb-0"/>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//page[@name='materials']//list/field[@name='product_uom_id']" position="after">
+                <field name="vendor_id" optional="show"/>
+                <field name="logistics_route_id" optional="show"/>
+                <field name="is_storable" column_invisible="1"/>
+                <field name="free_qty" optional="show" string="Vrij op voorraad"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"
+                       decoration-muted="not is_storable"/>
+                <field name="stock_state" optional="hide" widget="badge"
+                       decoration-success="stock_state == 'enough'"
+                       decoration-warning="stock_state == 'partial'"
+                       decoration-danger="stock_state == 'none'"/>
+            </xpath>
+            <xpath expr="//page[@name='materials']//list/field[@name='sale_order_id']" position="after">
+                <field name="purchase_order_id" optional="show" readonly="1"/>
+                <field name="purchase_state" optional="show" widget="badge"
+                       decoration-danger="purchase_state == 'to_order'"
+                       decoration-info="purchase_state == 'rfq'"
+                       decoration-warning="purchase_state == 'ordered'"
+                       decoration-success="purchase_state == 'received'"/>
+            </xpath>
+            <xpath expr="//page[@name='materials']" position="after">
+                <page string="Logistiek" name="logistics">
+                    <group>
+                        <group>
+                            <field name="logistics_user_id" widget="many2one_avatar_user"/>
+                        </group>
+                        <group>
+                            <div class="d-flex flex-wrap gap-2" colspan="2">
+                                <button name="action_print_logistics_lists" type="object"
+                                        class="btn btn-secondary" icon="fa-print"
+                                        string="Logistieke lijsten afdrukken"
+                                        help="Alle drie de lijsten, elk op een eigen blad, met afvinkvakjes. Elke lijst apart afdrukken kan via het menu Afdrukken."/>
+                                <button name="action_organize_purchases" type="object"
+                                        class="btn btn-link" string="Inkoop organiseren"
+                                        invisible="material_count == 0"/>
+                            </div>
+                        </group>
+                    </group>
+                    <div class="text-muted small mb-3">
+                        Drie lijsten, één per aanlevering, uit de logistieke route van elke
+                        materiaallijn (te wijzigen op het bord <b>Inkoop organiseren</b>).
+                        Dezelfde lijsten staan op het medewerkersportaal van de werf.
+                    </div>
+
+                    <separator string="Afhaallijst eigen magazijn"/>
+                    <div class="text-muted small mb-1">
+                        Uit voorraad: de ploeg neemt dit aan het magazijn mee, er wordt niets voor besteld.
+                        <field name="stock_material_count" class="oe_inline fw-bold"/> lijn(en).
+                    </div>
+                    <field name="stock_material_line_ids" nolabel="1" readonly="1">
+                        <list decoration-danger="stock_state == 'none'" decoration-warning="stock_state == 'partial'">
+                            <field name="product_id"/>
+                            <field name="quantity"/>
+                            <field name="product_uom_id"/>
+                            <field name="is_storable" column_invisible="1"/>
+                            <field name="free_qty" string="Vrij op voorraad"/>
+                            <field name="stock_state" widget="badge"
+                                   decoration-success="stock_state == 'enough'"
+                                   decoration-warning="stock_state == 'partial'"
+                                   decoration-danger="stock_state == 'none'"/>
+                            <field name="notes" optional="show"/>
+                        </list>
+                    </field>
+
+                    <separator string="Ontvangsten aan het magazijn"/>
+                    <div class="text-muted small mb-1">
+                        Projectspecifieke bestellingen die de leverancier aan het magazijn levert.
+                        <field name="warehouse_material_count" class="oe_inline fw-bold"/> lijn(en).
+                    </div>
+                    <field name="warehouse_material_line_ids" nolabel="1" readonly="1">
+                        <list decoration-muted="purchase_state == 'received'">
+                            <field name="product_id"/>
+                            <field name="quantity"/>
+                            <field name="product_uom_id"/>
+                            <field name="vendor_id"/>
+                            <field name="purchase_order_id"/>
+                            <field name="purchase_state" widget="badge"
+                                   decoration-danger="purchase_state == 'to_order'"
+                                   decoration-info="purchase_state == 'rfq'"
+                                   decoration-warning="purchase_state == 'ordered'"
+                                   decoration-success="purchase_state == 'received'"/>
+                            <field name="purchase_date_planned" widget="date" string="Verwacht op"/>
+                            <field name="picking_id" string="Ontvangst"/>
+                            <field name="picking_state"/>
+                            <field name="qty_received"/>
+                        </list>
+                    </field>
+
+                    <separator string="Rechtstreeks op de werf geleverd (dropship)"/>
+                    <div class="text-muted small mb-1">
+                        De leverancier levert op de werf tegen de geplande start
+                        (<field name="planned_date_begin" readonly="1" widget="date" class="oe_inline"/>).
+                        <field name="dropship_material_count" class="oe_inline fw-bold"/> lijn(en).
+                    </div>
+                    <field name="dropship_material_line_ids" nolabel="1" readonly="1">
+                        <list decoration-muted="purchase_state == 'received'">
+                            <field name="product_id"/>
+                            <field name="quantity"/>
+                            <field name="product_uom_id"/>
+                            <field name="vendor_id"/>
+                            <field name="purchase_order_id"/>
+                            <field name="purchase_state" widget="badge"
+                                   decoration-danger="purchase_state == 'to_order'"
+                                   decoration-info="purchase_state == 'rfq'"
+                                   decoration-warning="purchase_state == 'ordered'"
+                                   decoration-success="purchase_state == 'received'"/>
+                            <field name="purchase_date_planned" widget="date" string="Verwacht op"/>
+                            <field name="picking_id" string="Levering"/>
+                            <field name="picking_state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//page[@name='materials']/div[hasclass('text-muted')]" position="inside">
+                Elke lijn heeft een leverancier, een logistieke route (dropship
+                naar de werf, levering aan het magazijn of uit voorraad) en toont
+                de vrije voorraad. <b>Inkoop organiseren</b> opent het bestelbord
+                waar de lijnen tussen de routes gesleept worden; <b>Inkooporders
+                aanmaken</b> bestelt ze bij hun leveranciers.
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

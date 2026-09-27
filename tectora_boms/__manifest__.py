@@ -44,8 +44,31 @@ only offers goods, but the works items Tectora sells are services, so the
 domain is widened here.
 
 See ``docs/stuklijst_koppeling.md`` for the analysis.
+
+Demo set
+--------
+Because the export matches on names and loads mostly labour lines, the module
+also ships ``data/demo_boms.json``: one complete bill of materials per works
+item that has a counterpart among the raw materials (membrane with adhesive,
+tape, primer and sealant; insulation with foam or screws and plates; roof
+edges with profile, couplers, screws and sealant; outlets, downpipes, anchors,
+penetrations, wall connections, ...), keyed on product codes with the usual
+roofer's consumption norms. It is loaded on install and upgrade with the
+reference "Demo" and the key ``demo:<code>``, ahead of the imported export, and
+can be refreshed or removed from *Verkoop → Configuratie*. Built and checked
+by ``tools/build_demo_boms.py``; see ``docs/demo_stuklijsten.md``.
+
+Labour norms
+------------
+The export's labour lines (``werkuren construction``, ``werkuren afbraak``,
+``werkuren veiligheid``) are Tectora's own time per unit of each works item.
+``tools/build_labour_norms.py`` reads them into ``data/labour_norms.json``,
+mapped by hand onto the catalogue's product families, and the module fills
+"Uren opbouw / afbraak per eenheid" (fields of Tectora Dakmeting) from it on
+install and upgrade, keeping any value the office typed in; *Verkoop → Configuratie →
+Tijdnormen laden* reloads and overwrites.
     """,
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.3.0",
     "category": "Manufacturing",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -55,6 +78,7 @@ See ``docs/stuklijst_koppeling.md`` for the analysis.
     "data": [
         "security/ir.model.access.csv",
         "views/product_views.xml",
+        "views/demo_boms_actions.xml",
         "wizard/bom_import_views.xml",
     ],
     "post_init_hook": "post_init_hook",

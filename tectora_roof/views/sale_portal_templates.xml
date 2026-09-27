@@ -3,13 +3,14 @@
 
     <!-- On the customer portal, show the quotation PDF (which includes the
          meetblad page) directly instead of the HTML order rendering. Only for
-         orders that come from a roof project; other orders keep the standard
-         portal view. -->
+         orders that come from a roof project and use the Tectora quotation;
+         other orders, and orders marked "Standaard offerte", keep the
+         standard portal view. -->
     <template id="sale_order_portal_template_pdf"
               inherit_id="sale.sale_order_portal_template">
         <xpath expr="//div[@id='portal_sale_content']" position="replace">
             <div t-attf-class="#{'pb-5' if report_type == 'html' else ''}" id="portal_sale_content">
-                <t t-if="sale_order.roof_project_id">
+                <t t-if="sale_order.roof_project_id and not sale_order.tectora_standard_quotation">
                     <!-- Invisible stub: sale_management's SaleUpdateLineButton
                          interaction reads this table's dataset unconditionally
                          and crashes when the HTML order table is absent. -->

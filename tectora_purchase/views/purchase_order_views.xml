@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="purchase_order_form_tectora" model="ir.ui.view">
+        <field name="name">purchase.order.form.tectora</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_tectora_roof_project" type="object"
+                        class="oe_stat_button" icon="fa-home"
+                        invisible="not tectora_roof_project_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value"><field name="tectora_roof_project_id" readonly="1" options="{'no_open': True}"/></span>
+                        <span class="o_stat_text">Dakproject</span>
+                    </div>
+                </button>
+                <button name="action_view_tectora_materials" type="object"
+                        class="oe_stat_button" icon="fa-cubes"
+                        invisible="tectora_material_count == 0">
+                    <field name="tectora_material_count" widget="statinfo" string="Materiaalbehoefte"/>
+                </button>
+            </xpath>
+            <!-- A dropship order tells at a glance where it goes, when the
+                 works start and what the crew still fetches at the
+                 warehouse. -->
+            <xpath expr="//div[@name='button_box']" position="after">
+                <field name="tectora_delivery_type" invisible="1"/>
+                <div class="alert alert-info d-flex align-items-center gap-3 mb-2" role="alert"
+                     invisible="tectora_delivery_type != 'dropship'">
+                    <i class="fa fa-truck fa-lg" title="Dropship"/>
+                    <div>
+                        <b>Dropship: levering rechtstreeks op de werf</b>
+                        <span invisible="not tectora_site_address"> — <field name="tectora_site_address" readonly="1" class="d-inline"/></span>.
+                        <span invisible="not tectora_planned_date_begin">
+                            Geplande start van de werf:
+                            <field name="tectora_planned_date_begin" readonly="1" widget="date" class="d-inline fw-bold"/>.
+                        </span>
+                        <span invisible="tectora_planned_date_begin" class="text-danger">
+                            Het dakproject heeft nog geen geplande startdatum.
+                        </span>
+                    </div>
+                </div>
+                <div class="alert alert-warning d-flex align-items-start gap-3 mb-2" role="alert"
+                     invisible="not tectora_warehouse_pickup">
+                    <i class="fa fa-exclamation-triangle fa-lg mt-1" title="Afhaling aan het magazijn"/>
+                    <div class="flex-grow-1">
+                        <b>Extra materiaal af te halen aan het magazijn</b>, naast deze
+                        dropship-levering op de werf:
+                        <field name="tectora_warehouse_pickup_note" readonly="state not in ('draft', 'sent', 'to approve', 'purchase')"
+                               nolabel="1" class="mb-0" placeholder="Welk materiaal haalt de ploeg aan het magazijn op?"/>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <field name="tectora_roof_project_id"
+                       invisible="not tectora_roof_project_id"/>
+                <field name="tectora_roof_project_ids" widget="many2many_tags"
+                       invisible="tectora_roof_project_id or not tectora_roof_project_ids"/>
+                <field name="tectora_logistics_route_id"
+                       invisible="not tectora_logistics_route_id"/>
+                <field name="tectora_planned_date_begin" widget="date"
+                       invisible="tectora_delivery_type != 'dropship'"/>
+                <field name="tectora_warehouse_pickup"
+                       invisible="tectora_delivery_type != 'dropship'"
+                       readonly="state not in ('draft', 'sent', 'to approve', 'purchase')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_view_tree_tectora" model="ir.ui.view">
+        <field name="name">purchase.order.list.tectora</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="tectora_roof_project_id" optional="hide"/>
+                <field name="tectora_logistics_route_id" optional="hide"/>
+                <field name="tectora_warehouse_pickup" optional="hide" string="Afhaling magazijn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_tree_tectora" model="ir.ui.view">
+        <field name="name">purchase.order.rfq.list.tectora</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="tectora_roof_project_id" optional="hide"/>
+                <field name="tectora_logistics_route_id" optional="hide"/>
+                <field name="tectora_warehouse_pickup" optional="hide" string="Afhaling magazijn"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_purchase_order_filter_tectora" model="ir.ui.view">
+        <field name="name">purchase.order.search.tectora</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="tectora_roof_project_id"/>
+                <field name="tectora_roof_project_ids" string="Dakproject (op de lijnen)"/>
+                <filter string="Dropship naar werf" name="tectora_dropship"
+                        domain="[('tectora_logistics_route_id.delivery_type', '=', 'dropship')]"/>
+                <filter string="Levering aan magazijn" name="tectora_warehouse"
+                        domain="[('tectora_logistics_route_id.delivery_type', '=', 'warehouse')]"/>
+                <filter string="Met afhaling aan magazijn" name="tectora_pickup"
+                        domain="[('tectora_warehouse_pickup', '=', True)]"/>
+                <filter string="Dakproject" name="tectora_group_roof_project"
+                        context="{'group_by': 'tectora_roof_project_id'}"/>
+                <filter string="Logistieke route" name="tectora_group_route"
+                        context="{'group_by': 'tectora_logistics_route_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

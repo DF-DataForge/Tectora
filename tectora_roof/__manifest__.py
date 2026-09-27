@@ -29,6 +29,12 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   dashboard -- revenue and costs, deliveries, tasks, team planning and the roof
   measurement itself -- with every card opening the records behind it and the
   order and the roof project one click away.
+* Every product carries two time norms, hours of execution and hours of
+  demolition per sold unit (filled from the werkuren of the Stuklijst export
+  by tectora_boms); the quotation shows both per line and totals them, with
+  the working days, and confirming the order puts them as allocated time on
+  the project's tasks "Afbraakwerken" and "Uitvoeringswerken", which follow
+  later quantity changes and on which the hours are logged.
 * The quotation mirrors the roof project: its chapter lines (Algemene werken,
   Veiligheid, Afbraak, Opbouw, ...) are the project-level lines of the roof
   project and the measurement lines come from the drawing, so m² and m
@@ -37,7 +43,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   Employees -> Configuration -> Ploegen); the Employees app opens grouped per
   team.
     """,
-    "version": "19.0.3.13.0",
+    "version": "19.0.3.20.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -58,10 +64,13 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/project_project_views.xml",
         "views/res_config_settings_views.xml",
         "views/product_category_views.xml",
+        "views/product_template_views.xml",
         "views/crm_lead_views.xml",
         "views/sale_portal_templates.xml",
         "report/roof_project_report.xml",
+        "report/sale_order_report.xml",
         "report/roof_project_info_report.xml",
+        "report/sale_order_dossier_report.xml",
         "views/menus.xml",
     ],
     "assets": {

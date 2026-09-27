@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The vendor's copy: which site the order belongs to and, for a
+         dropship, when the works start (the day the material must be on
+         site). Warehouse orders already carry a section per project. -->
+    <template id="report_purchaseorder_document_tectora"
+              inherit_id="purchase.report_purchaseorder_document">
+        <xpath expr="//div[@id='informations']" position="inside">
+            <div t-if="o.tectora_roof_project_id" class="col">
+                <strong>Werf / project</strong>
+                <div>
+                    <span t-if="o.tectora_roof_project_id.code" t-field="o.tectora_roof_project_id.code"/>
+                    <span t-field="o.tectora_roof_project_id.name"/>
+                </div>
+                <div t-if="o.tectora_delivery_type == 'dropship'" class="fw-bold">
+                    Levering rechtstreeks op de werf
+                </div>
+            </div>
+            <div t-if="o.tectora_delivery_type == 'dropship' and o.tectora_planned_date_begin" class="col-2">
+                <strong>Geplande start werf:</strong>
+                <p t-field="o.tectora_planned_date_begin" t-options="{'date_only': 'true'}" class="m-0 fw-bold"/>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

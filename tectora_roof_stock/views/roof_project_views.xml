@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_project_form_stock" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form.stock</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_form"/>
+        <field name="arch" type="xml">
+            <!-- Next to the quotation buttons: the material list leaves the
+                 warehouse as an outgoing transfer. -->
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button name="action_create_material_picking" type="object"
+                        string="Levering klaarzetten" class="btn-secondary"
+                        invisible="material_count == 0"
+                        help="Zet de materiaallijst klaar als uitgaande levering: één regel per materiaal, voor wat nog niet op een levering staat."/>
+            </xpath>
+            <xpath expr="//button[@name='action_view_pickings']" position="after">
+                <button name="action_view_material_pickings" type="object"
+                        class="oe_stat_button" icon="fa-cubes"
+                        invisible="material_picking_count == 0">
+                    <field name="material_picking_count" widget="statinfo"
+                           string="Materiaalleveringen"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='materials']/field[@name='material_line_ids']"
+                   position="after">
+                <div class="mt-2">
+                    <button name="action_create_material_picking" type="object"
+                            class="btn btn-secondary" icon="fa-truck"
+                            invisible="material_count == 0">
+                        Levering klaarzetten
+                    </button>
+                    <button name="action_view_material_pickings" type="object"
+                            class="btn btn-link" invisible="material_picking_count == 0">
+                        Materiaalleveringen bekijken
+                    </button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

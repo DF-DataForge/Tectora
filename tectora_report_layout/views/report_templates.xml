@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The roof-edge header as a vector: sky tint above, the teal ridge line
+         of a flat roof running to its peak at three quarters of the width, the
+         roof edge as two light bands beneath it. Drawn in the company's primary
+         colour so the configurator's colours apply to it. -->
+    <template id="tectora_header_shape">
+        <svg t-att-class="shape_class" preserveAspectRatio="none" t-att-height="header_shape_height"
+             viewBox="0 0 1000 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient t-attf-id="tectora_sky_#{company.id}" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0" t-att-stop-color="tectora_color" stop-opacity=".16"/>
+                    <stop offset="1" t-att-stop-color="tectora_color" stop-opacity=".03"/>
+                </linearGradient>
+            </defs>
+            <!-- sky -->
+            <path d="M0 0H1000V118L777 24L0 192Z" t-attf-fill="url(#tectora_sky_#{company.id})"/>
+            <!-- roof edge: fascia -->
+            <path d="M0 192L777 24L1000 118V142L777 48L0 216Z" fill="#ffffff" fill-opacity=".85"/>
+            <path d="M0 216L777 48L1000 142V168L777 74L0 242Z" t-att-fill="tectora_color" fill-opacity=".12"/>
+            <!-- ridge line -->
+            <path d="M0 192L777 24L1000 118" t-att-stroke="tectora_color" stroke-width="3"
+                  stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+    </template>
+
+    <template id="external_layout_tectora">
+        <t t-set="tectora_color" t-value="company.primary_color or '#008B93'"/>
+        <!-- the shape is 200px high; the header content sits under the roof
+             edge (lower on the left, where the edge is low, higher on the
+             right, under the peak), so the whole header is about 240px -->
+        <t t-set="header_shape_height" t-value="'200'"/>
+        <t t-set="header_height" t-value="'240'"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout o_tectora_header {{report_type != 'pdf' and 'h-0'}}">
+            <t t-call="tectora_report_layout.tectora_header_shape">
+                <t t-set="shape_class"
+                   t-value="'o_tectora_header_shape start-0 top-0 w-100 z-n1 ' + (report_type == 'pdf' and 'position-fixed' or 'position-absolute')"/>
+            </t>
+            <div class="d-flex justify-content-between o_tectora_header_content" style="padding-top: 100px;">
+                <div class="w-50 o_tectora_header_brand" style="margin-top: 42px;">
+                    <img t-if="company.logo" class="o_company_logo mb-1" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    <div t-if="company.report_header" t-field="company.report_header" class="o_company_tagline fw-bold">Company tagline</div>
+                </div>
+                <div name="company_address" class="w-50 text-end small">
+                    <ul class="list-unstyled mb-0" name="company_address_list">
+                        <li t-if="company.is_company_details_empty">
+                            <span t-field="company.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'>
+                                <div class="d-flex flex-column align-items-center justify-content-center border-1 rounded p-4 h-100 w-100 bg-light opacity-75 text-muted text-center">
+                                    <strong>Company address block</strong>
+                                    <div>Contains the company address.</div>
+                                </div>
+                            </span>
+                        </li>
+                        <li t-else="">
+                            <span t-field="company.company_details">
+                                <div class="d-flex flex-column align-items-center justify-content-center border-1 rounded p-4 h-100 w-100 bg-light opacity-75 text-muted text-center">
+                                    <strong>Company details block</strong>
+                                    <div>Contains the company details.</div>
+                                </div>
+                            </span>
+                        </li>
+                        <li t-if="not forced_vat">
+                            <t t-if="company.vat">
+                                <t t-esc="company.country_id.vat_label or 'Tax ID'">Tax ID</t>:
+                                <span t-esc="company.vat">US12345671</span>
+                            </t>
+                        </li>
+                        <li t-else="">
+                            <t t-esc="company.country_id.vat_label or 'Tax ID'">Tax ID</t>:
+                            <span t-esc="forced_vat">US12345671</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-set="layout_background_url"
+           t-value="'data:image/png;base64,%s' % company.layout_background_image.decode('utf-8') if company.layout_background_image and company.layout_background == 'Custom' else
+                '/base/static/img/demo_logo_report.png' if company.layout_background == 'Demo logo' else ''" />
+        <div t-attf-class="article o_report_layout_tectora o_table_striped o_company_#{company.id}_layout {{'o_report_layout_background' if company.layout_background != 'Blank' else ''}}"
+             t-attf-style="{{report_type != 'pdf' and 'margin-top:' + header_height + 'px;'}}
+                {{ 'background-image: url(%s);' % layout_background_url if layout_background_url else ''}}"
+             t-att-data-oe-model="o and o._name"
+             t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-set="custom_layout_address" t-value="true"/>
+            <t t-call="web.address_layout"/>
+            <h2 t-out="layout_document_title"/>
+            <t t-out="0"/>
+        </div>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <div class="o_footer_content o_tectora_footer d-flex">
+                <div class="flex-grow-1 me-2 text-start" t-field="company.report_footer"/>
+                <div class="text-end text-muted text-nowrap">
+                    <div t-if="report_type == 'pdf' and display_name_in_footer" t-out="o.name">(document name)</div>
+                    <div t-if="report_type == 'pdf'">Page <span class="page"/> / <span class="topage"/></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- The company colours in the layout's own parts: title, information
+         band, table heads, totals and footer line. -->
+    <template id="styles_company_report_tectora" inherit_id="web.styles_company_report">
+        <xpath expr="//t[@t-elif=&quot;layout == 'web.external_layout_bubble'&quot;]" position="after">
+            <t t-elif="layout == 'tectora_report_layout.external_layout_tectora'">
+                &amp;.o_report_layout_tectora {
+                    #informations {
+                        border-color: mix(white, <t t-esc='primary'/>, 60%);
+                    }
+
+                    .o_main_table thead th {
+                        border-bottom: 2px solid <t t-esc='primary'/>;
+                        color: <t t-esc='primary'/>;
+                    }
+
+                    #total .o_total td {
+                        background-color: mix(white, <t t-esc='primary'/>, 90%);
+                    }
+                }
+
+                &amp; .o_tectora_footer {
+                    border-color: <t t-esc='primary'/>;
+                }
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

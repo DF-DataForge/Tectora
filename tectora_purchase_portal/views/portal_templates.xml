@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The Materialen tab of a site opens on the three logistic lists; the
+         full material list stays below. -->
+    <template id="portal_site_tab_materials_logistics" name="Portaal: werf logistieke lijsten"
+              inherit_id="tectora_portal.portal_site_tab_materials">
+        <xpath expr="//t[@t-if='not materials']" position="before">
+            <t t-if="materials and logistics_lists">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                    <h5 class="mb-0"><i class="fa fa-truck me-1"/>Aanlevering van het materiaal</h5>
+                    <a t-attf-href="/my/werven/#{site.id}/pdf/logistiek" class="btn btn-sm btn-outline-secondary" target="_blank">
+                        <i class="fa fa-file-pdf-o me-1"/>Logistieke lijsten (pdf)
+                    </a>
+                </div>
+                <div t-if="site.planned_date_begin" class="small text-muted mb-2">
+                    Geplande start van de werf: <b t-field="site.planned_date_begin" t-options="{'widget': 'date'}"/>
+                </div>
+                <t t-foreach="logistics_lists" t-as="section">
+                    <t t-set="kind" t-value="section['key']"/>
+                    <t t-set="lines" t-value="section['lines']"/>
+                    <div t-attf-class="card mb-3 o_tectora_logistics_card o_tectora_logistics_#{kind}">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <span class="fw-bold">
+                                <i t-attf-class="fa #{section['icon']} me-1"/>
+                                <t t-out="section['title']"/>
+                            </span>
+                            <span class="badge rounded-pill text-bg-light border" t-out="len(lines)"/>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="px-3 pt-2 small text-muted" t-out="section['subtitle']"/>
+                            <p t-if="not lines" class="px-3 py-2 mb-0 text-muted fst-italic">Geen materiaal op deze lijst.</p>
+                            <div t-else="" class="table-responsive">
+                                <table class="table table-sm table-striped align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Materiaal</th>
+                                            <th class="text-end">Hoeveelheid</th>
+                                            <th>Eenheid</th>
+                                            <th t-if="kind == 'stock'" class="d-none d-md-table-cell text-end">Vrij op voorraad</th>
+                                            <th t-if="kind != 'stock'" class="d-none d-md-table-cell">Leverancier</th>
+                                            <th t-if="kind != 'stock'">Status</th>
+                                            <th t-if="kind != 'stock'" class="d-none d-md-table-cell">Verwacht op</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="lines" t-as="line">
+                                            <td>
+                                                <t t-out="line.product_id.display_name"/>
+                                                <div t-if="line.notes" class="small text-muted" t-out="line.notes"/>
+                                            </td>
+                                            <td class="text-end fw-bold"><span t-field="line.quantity"/></td>
+                                            <td t-out="line.product_uom_id.name or line.product_id.uom_id.name or ''"/>
+                                            <td t-if="kind == 'stock'" class="d-none d-md-table-cell text-end">
+                                                <t t-if="line.is_storable">
+                                                    <span t-attf-class="badge rounded-pill #{'text-bg-success' if line.stock_state == 'enough' else 'text-bg-warning' if line.stock_state == 'partial' else 'text-bg-danger'}">
+                                                        <span t-field="line.free_qty"/>
+                                                    </span>
+                                                </t>
+                                                <span t-else="" class="text-muted">-</span>
+                                            </td>
+                                            <td t-if="kind != 'stock'" class="d-none d-md-table-cell" t-out="line.vendor_id.display_name or '-'"/>
+                                            <td t-if="kind != 'stock'">
+                                                <t t-if="line.purchase_order_id">
+                                                    <span t-attf-class="badge rounded-pill #{'text-bg-success' if line.purchase_state == 'received' else 'text-bg-warning' if line.purchase_state == 'ordered' else 'text-bg-info' if line.purchase_state == 'rfq' else 'text-bg-danger'}">
+                                                        <span t-field="line.purchase_state"/>
+                                                    </span>
+                                                    <div class="small text-muted">
+                                                        <t t-out="line.purchase_order_id.name"/>
+                                                        <t t-if="line.picking_id"> · <t t-out="line.picking_id.name"/> (<span t-field="line.picking_id.state"/>)</t>
+                                                    </div>
+                                                </t>
+                                                <span t-else="" class="badge rounded-pill text-bg-danger">nog te bestellen</span>
+                                            </td>
+                                            <td t-if="kind != 'stock'" class="d-none d-md-table-cell">
+                                                <span t-if="line.purchase_date_planned" t-field="line.purchase_date_planned" t-options="{'widget': 'date'}"/>
+                                                <span t-else="" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div t-if="section['pickings']" class="px-3 py-2 small border-top">
+                                <strong t-if="kind == 'stock'">Leveringen uit het magazijn:</strong>
+                                <strong t-elif="kind == 'warehouse'">Ontvangsten:</strong>
+                                <strong t-else="">Dropship-leveringen:</strong>
+                                <t t-foreach="section['pickings']" t-as="picking">
+                                    <span class="badge text-bg-light border ms-1">
+                                        <t t-out="picking.name"/> · <span t-field="picking.state"/>
+                                        <t t-if="picking.scheduled_date"> · <span t-field="picking.scheduled_date" t-options="{'widget': 'date'}"/></t>
+                                    </span>
+                                </t>
+                            </div>
+                            <div t-if="section['pickup_orders']" class="alert alert-warning m-3 mb-3 py-2">
+                                <strong><i class="fa fa-exclamation-triangle me-1"/>Extra materiaal af te halen aan het magazijn</strong>
+                                <t t-foreach="section['pickup_orders']" t-as="order">
+                                    <div class="small mt-1">
+                                        <em>Bij <t t-out="order.name"/>:</em>
+                                        <pre class="mb-0 small" style="white-space: pre-wrap; font-family: inherit;" t-out="order.tectora_warehouse_pickup_note or ''"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <h5 class="mt-4 mb-2"><i class="fa fa-cubes me-1"/>Volledige materiaallijst</h5>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- The PDF next to the Werfblad and the Meetblad on the overview. -->
+    <template id="portal_site_tab_overview_logistics" name="Portaal: werf overzicht logistieke lijsten"
+              inherit_id="tectora_portal.portal_site_tab_overview">
+        <xpath expr="//a[contains(@t-attf-href, 'pdf/werfblad')]" position="after">
+            <a t-attf-href="/my/werven/#{site.id}/pdf/logistiek" class="btn btn-sm btn-outline-secondary" target="_blank">
+                <i class="fa fa-file-pdf-o me-1"/>Logistieke lijsten (pdf)
+            </a>
+        </xpath>
+    </template>
+
+</odoo>
