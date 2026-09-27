@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import re
 from datetime import timedelta
 
@@ -206,6 +207,16 @@ class TestPortalRoutes(HttpCase, TectoraPortalCase):
         for tab in ("overview", "materials", "plan", "report"):
             response = self.url_open("%s?tab=%s" % (url, tab))
             self.assertEqual(response.status_code, 200, tab)
+
+        # the roof plan shows the stored drawing (a binary field holds raw
+        # bytes since Odoo 20, no longer base64)
+        png = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        )
+        self.project.sudo().canvas_snapshot = base64.b64encode(png).decode()
+        response = self.url_open("%s?tab=plan" % url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("data:image/png;base64," + base64.b64encode(png).decode(), response.text)
         self.assertIn("Ladder meenemen", response.text)
         self.assertIn("Mia Maat", response.text)
 

@@ -266,7 +266,7 @@ class TectoraSaleBom(models.Model):
         default = self.order_id._tectora_find_boms(product).get(product)
         values = {
             "product_qty": 1.0,
-            "product_uom_id": product.uom_id.id,
+            "uom_id": product.uom_id.id,
             "bom_line_ids": [Command.clear()] + [
                 Command.create(line._bom_line_values()) for line in self.line_ids
             ],
@@ -457,7 +457,7 @@ class TectoraSaleBomLine(models.Model):
         return {
             "product_id": self.product_id.id,
             "product_qty": self.quantity,
-            "product_uom_id": self.product_uom_id.id,
+            "uom_id": self.product_uom_id.id,
             "tectora_fixed_qty": self.fixed_quantity,
             "sequence": self.sequence,
         }

@@ -34,7 +34,7 @@ class SaleOrderLine(models.Model):
         product's unit, as lines of a bill of materials made to measure."""
         self.ensure_one()
         product = self.product_id
-        per = bom.product_uom_id._compute_quantity(
+        per = bom.uom_id._compute_quantity(
             bom.product_qty or 1.0, product.uom_id, round=False
         ) or 1.0
         values = []
@@ -45,7 +45,7 @@ class SaleOrderLine(models.Model):
             values.append({
                 "sequence": bom_line.sequence,
                 "product_id": bom_line.product_id.id,
-                "product_uom_id": bom_line.product_uom_id.id,
+                "product_uom_id": bom_line.uom_id.id,
                 "quantity": bom_line.product_qty if fixed else bom_line.product_qty / per,
                 "fixed_quantity": fixed,
             })

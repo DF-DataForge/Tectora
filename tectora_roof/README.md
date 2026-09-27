@@ -35,7 +35,7 @@ turning the measurement into a quotation.
    image through the globe icon on the drawing and calibrate the scale by
    right-clicking a side's length label.
 
-Requires Odoo **19.0**. Python dependencies (`requests`, `Pillow`) ship with
+Requires Odoo **20.0**. Python dependencies (`requests`, `Pillow`) ship with
 every standard Odoo install. The module uses the modern view syntax
 (`<list>` views, the `<chatter/>` tag) and the Odoo 18+ product model
 (`type`/`is_storable` instead of the removed `detailed_type`), so it does not

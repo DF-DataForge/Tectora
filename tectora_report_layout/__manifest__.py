@@ -22,7 +22,7 @@ Installing the module switches every company to this layout (and gives a
 company without a primary colour the Tectora teal); another layout can be
 picked again at any time.
     """,
-    "version": "19.0.1.0.0",
+    "version": "20.0.1.0.0",
     "category": "Hidden/Tools",
     "license": "Other proprietary",
     "author": "Data Forge",

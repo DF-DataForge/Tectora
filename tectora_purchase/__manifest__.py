@@ -64,14 +64,14 @@ site's Materialen tab, with the PDF.
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "19.0.1.2.0",
+    "version": "20.0.1.2.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
     "depends": ["tectora_roof", "purchase_stock", "stock_dropshipping"],
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "data/logistics_route_data.xml",
         "views/logistics_route_views.xml",
         "views/roof_material_views.xml",

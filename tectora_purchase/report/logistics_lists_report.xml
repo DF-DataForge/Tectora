@@ -11,7 +11,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_purchase.report_logistics_lists</field>
-        <field name="report_file">tectora_purchase.report_logistics_lists</field>
         <field name="print_report_name">'Logistieke lijsten %s' % (object.code or object.name)</field>
         <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -22,7 +21,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_purchase.report_logistics_stock</field>
-        <field name="report_file">tectora_purchase.report_logistics_stock</field>
         <field name="print_report_name">'Afhaallijst magazijn %s' % (object.code or object.name)</field>
         <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -33,7 +31,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_purchase.report_logistics_warehouse</field>
-        <field name="report_file">tectora_purchase.report_logistics_warehouse</field>
         <field name="print_report_name">'Ontvangsten magazijn %s' % (object.code or object.name)</field>
         <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -44,7 +41,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_purchase.report_logistics_dropship</field>
-        <field name="report_file">tectora_purchase.report_logistics_dropship</field>
         <field name="print_report_name">'Dropship werf %s' % (object.code or object.name)</field>
         <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -57,7 +53,7 @@
         <t t-set="lines" t-value="section['lines']"/>
         <div class="tl-section">
             <h4 class="mb-0">
-                <i t-attf-class="fa #{section['icon']} me-1"/>
+                <i class="oi me-1" t-att-data-icon="section['icon']"/>
                 <t t-out="section['title']"/>
                 <span class="text-muted small ms-2"><t t-out="len(lines)"/> materialen</span>
             </h4>
@@ -67,7 +63,7 @@
                 <div class="row small mb-2">
                     <div class="col-7">
                         <strong>Leveradres (werf):</strong>
-                        <t t-out="doc._tectora_delivery_partner()._display_address(without_company=True).replace('\n', ', ') if doc._tectora_delivery_partner() else (doc.address or '-')"/>
+                        <t t-out="doc._tectora_delivery_partner()._display_address(without_name=True).replace('\n', ', ') if doc._tectora_delivery_partner() else (doc.address or '-')"/>
                     </div>
                     <div class="col-5">
                         <strong>Geplande start werf:</strong>
@@ -167,7 +163,7 @@
 
             <t t-if="section['pickup_orders']">
                 <div class="tl-pickup mt-3">
-                    <strong><i class="fa fa-exclamation-triangle me-1"/>Extra materiaal af te halen aan het magazijn</strong>
+                    <strong><i class="oi me-1" data-icon="warning"/>Extra materiaal af te halen aan het magazijn</strong>
                     <t t-foreach="section['pickup_orders']" t-as="order">
                         <div class="small mt-1">
                             <em>Bij <t t-out="order.name"/>:</em>

@@ -395,5 +395,7 @@ class TectoraRoofSectionProduct(models.Model):
 
     def _quantity_differs(self, quantity):
         self.ensure_one()
-        rounding = self.product_id.uom_id.rounding or 0.01
-        return float_compare(self.quantity, quantity, precision_rounding=rounding) != 0
+        # Odoo 20 rounds every unit on the "Product Unit" precision (what
+        # uom.compare does, which needs a unit; a line may have no product).
+        digits = self.env["decimal.precision"].precision_get("Product Unit")
+        return float_compare(self.quantity, quantity, precision_digits=digits) != 0

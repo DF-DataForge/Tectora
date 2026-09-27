@@ -8,7 +8,7 @@ from markupsafe import escape as html_escape
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, str2bool
+from odoo.tools import float_compare
 
 from .project_task import WORK_KINDS
 
@@ -185,18 +185,15 @@ class SaleOrder(models.Model):
 
     @api.model
     def _default_tectora_quotation_style(self):
-        style = self.env["ir.config_parameter"].sudo().get_param(
+        style = self.env["ir.config_parameter"].sudo().get_str(
             "tectora_roof.quotation_style"
         )
         return style if style in dict(QUOTATION_STYLES) else "dossier"
 
     @api.model
     def _default_tectora_standard_quotation(self):
-        return str2bool(
-            self.env["ir.config_parameter"].sudo().get_param(
-                "tectora_roof.standard_quotation", "False"
-            ),
-            default=False,
+        return self.env["ir.config_parameter"].sudo().get_bool(
+            "tectora_roof.standard_quotation"
         )
 
     # ------------------------------------------------------------ lifecycle
@@ -357,7 +354,7 @@ class SaleOrder(models.Model):
         values = {
             "name": name,
             "company_id": self.company_id.id or self.env.company.id,
-            "address": address._display_address(without_company=True).replace(
+            "address": address._display_address(without_name=True).replace(
                 "\n", ", "
             ) if address else False,
             "state": "confirmed" if self.state in ("sale", "done") else "quoted",
@@ -703,7 +700,7 @@ class SaleOrder(models.Model):
         header form a nameless first group. Subsections and notes stay in
         the group as lines (their display_type tells them apart).
 
-        Odoo 19 marks optional products as sections flagged ``is_optional``:
+        Odoo 19 and 20 mark optional products as sections flagged ``is_optional``:
         ``optional=False`` returns the ordinary sections, ``optional=True``
         the optional ones (offered separately, outside the totals).
         """
@@ -846,9 +843,9 @@ class SaleOrder(models.Model):
         # explode() expects how many times the BoM is needed, in the BoM's
         # own unit of measure.
         bom_quantity = quantity
-        if line.product_uom_id and bom.product_uom_id != line.product_uom_id:
+        if line.product_uom_id and bom.uom_id != line.product_uom_id:
             bom_quantity = line.product_uom_id._compute_quantity(
-                quantity, bom.product_uom_id
+                quantity, bom.uom_id
             )
         factor = bom_quantity / (bom.product_qty or 1.0)
         _boms_done, lines_done = bom.explode(line.product_id, factor)
@@ -857,7 +854,7 @@ class SaleOrder(models.Model):
                 line,
                 bom_line.product_id,
                 self._tectora_exploded_quantity(bom, factor, bom_line, line_data),
-                bom_line.product_uom_id,
+                bom_line.uom_id,
                 bom.display_name,
             )
             for bom_line, line_data in lines_done

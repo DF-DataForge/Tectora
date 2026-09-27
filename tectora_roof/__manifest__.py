@@ -43,7 +43,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   Employees -> Configuration -> Ploegen); the Employees app opens grouped per
   team.
     """,
-    "version": "19.0.3.20.0",
+    "version": "20.0.3.20.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -51,7 +51,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
     "depends": ["sale_management", "crm", "project", "sale_project", "hr"],
     "external_dependencies": {"python": ["requests", "PIL"]},
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "data/ir_sequence_data.xml",
         "data/roof_usage_data.xml",
         "views/roof_project_views.xml",

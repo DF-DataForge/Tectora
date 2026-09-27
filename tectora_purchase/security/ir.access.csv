@@ -1,0 +1,6 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_logistics_route_user,tectora.logistics.route user,tectora.logistics.route,base.group_user,r,
+access_tectora_logistics_route_purchase_manager,tectora.logistics.route purchase manager,tectora.logistics.route,purchase.group_purchase_manager,crud,
+access_tectora_logistics_route_system,tectora.logistics.route system,tectora.logistics.route,base.group_system,crud,
+access_tectora_purchase_from_material_user,tectora.purchase.from.material purchase user,tectora.purchase.from.material,purchase.group_purchase_user,crud,
+access_tectora_purchase_from_material_group_user,tectora.purchase.from.material.group purchase user,tectora.purchase.from.material.group,purchase.group_purchase_user,crud,

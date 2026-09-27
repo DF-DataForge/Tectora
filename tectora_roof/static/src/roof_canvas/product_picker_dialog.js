@@ -2,7 +2,7 @@
 
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, proxy, t, useProps } from "@odoo/owl";
 
 /**
  * Product picker for the roof canvas: the matching products are loaded once
@@ -16,32 +16,32 @@ import { Component, onWillStart, useState } from "@odoo/owl";
 export class RoofProductPickerDialog extends Component {
     static template = "tectora_roof.RoofProductPickerDialog";
     static components = { Dialog };
-    static props = {
-        title: { type: String },
-        domain: { type: Array },
-        onConfirm: { type: Function },
-        close: { type: Function },
-        assignedDomain: { type: Array, optional: true },
-        assignedLabel: { type: String, optional: true },
+    props = useProps({
+        title: t.string(),
+        domain: t.array(),
+        onConfirm: t.function(),
+        close: t.function(),
+        assignedDomain: t.array().optional(),
+        assignedLabel: t.string().optional(),
         // Quantity the assignment will get (the clicked side's length, the
         // surface in m², 1 for a corner); shown per row with the subtotal.
-        quantity: { type: Number, optional: true },
+        quantity: t.number().optional(),
         // Other items of the same type in the drawing, each
         // {key, label, detail, quantity}. Empty or absent hides the option.
-        targets: { type: Array, optional: true },
+        targets: t.array().optional(),
         // Unit the quantities are in ("m", "m²", ""), for the totals line.
-        quantityUnit: { type: String, optional: true },
+        quantityUnit: t.string().optional(),
         // Target keys ticked from the start: the other sides the user
         // Ctrl-selected on the drawing.
-        preselectedTargets: { type: Array, optional: true },
+        preselectedTargets: t.array().optional(),
         // How the clicked item is named in the list of what gets the products.
-        baseLabel: { type: String, optional: true },
-    };
+        baseLabel: t.string().optional(),
+    });
 
     setup() {
         this.orm = useService("orm");
         this.assignedByProduct = {}; // product_id -> [line summaries]
-        this.state = useState({
+        this.state = proxy({
             products: [],
             activeCategory: null, // false = zonder categorie, null = alle
             search: "",

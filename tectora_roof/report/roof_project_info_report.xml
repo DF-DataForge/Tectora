@@ -6,7 +6,6 @@
         <field name="model">tectora.roof.project</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tectora_roof.report_roof_project_info</field>
-        <field name="report_file">tectora_roof.report_roof_project_info</field>
         <field name="print_report_name">'Projectinformatie %s' % (object.code or object.name)</field>
         <field name="binding_model_id" ref="model_tectora_roof_project"/>
         <field name="binding_type">report</field>
@@ -141,18 +140,14 @@
                 <div class="row">
                     <div class="col-6 ris-col-l">
                         <t t-foreach="columns[0]" t-as="section">
-                            <t t-call="tectora_roof.report_roof_info_card">
-                                <t t-set="title" t-value="section[0]"/>
-                                <t t-set="rows" t-value="section[1]"/>
-                            </t>
+                            <t t-call="tectora_roof.report_roof_info_card"
+                               title="section[0]" rows="section[1]"/>
                         </t>
                     </div>
                     <div class="col-6 ris-col-r">
                         <t t-foreach="columns[1]" t-as="section">
-                            <t t-call="tectora_roof.report_roof_info_card">
-                                <t t-set="title" t-value="section[0]"/>
-                                <t t-set="rows" t-value="section[1]"/>
-                            </t>
+                            <t t-call="tectora_roof.report_roof_info_card"
+                               title="section[0]" rows="section[1]"/>
                         </t>
                         <div class="ris-card">
                             <div class="ris-card-title">

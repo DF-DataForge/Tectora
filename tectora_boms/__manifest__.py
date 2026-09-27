@@ -68,7 +68,7 @@ mapped by hand onto the catalogue's product families, and the module fills
 install and upgrade, keeping any value the office typed in; *Verkoop → Configuratie →
 Tijdnormen laden* reloads and overwrites.
     """,
-    "version": "19.0.1.3.0",
+    "version": "20.0.1.3.0",
     "category": "Manufacturing",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -76,7 +76,7 @@ Tijdnormen laden* reloads and overwrites.
     "depends": ["tectora_products", "mrp"],
     "external_dependencies": {"python": ["openpyxl"]},
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "views/product_views.xml",
         "views/demo_boms_actions.xml",
         "wizard/bom_import_views.xml",

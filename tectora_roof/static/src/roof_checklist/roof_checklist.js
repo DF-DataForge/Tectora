@@ -4,7 +4,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, proxy, t, useProps } from "@odoo/owl";
 
 /**
  * Checklist widget for project-level product lines: shows ALL sellable
@@ -15,15 +15,15 @@ import { Component, onWillStart, useState } from "@odoo/owl";
  */
 export class RoofChecklistField extends Component {
     static template = "tectora_roof.RoofChecklistField";
-    static props = {
+    props = useProps({
         ...standardFieldProps,
-        category: { type: String },
-    };
+        category: t.string(),
+    });
 
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.state = useState({
+        this.state = proxy({
             products: [],
             lines: {}, // product_id -> line data
             search: "",

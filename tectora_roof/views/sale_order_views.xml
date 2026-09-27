@@ -33,7 +33,7 @@
                  used; the project exists once the order is confirmed. -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_roof_project" type="object"
-                        class="oe_stat_button" icon="fa-home">
+                        class="oe_stat_button" icon="home">
                     <div class="o_stat_info">
                         <span class="o_stat_value">
                             <field name="roof_total_area" readonly="1"
@@ -45,14 +45,14 @@
                     </div>
                 </button>
                 <button name="action_open_project_dashboard" type="object"
-                        class="oe_stat_button" icon="fa-tachometer"
+                        class="oe_stat_button" icon="speed"
                         invisible="state not in ('sale', 'done')"
                         string="Projectdashboard"/>
             </xpath>
             <!-- The estimate per line, hours of demolition and of execution
                  (quantity x the product's hours per unit, shown as hh:mm),
                  each with its column total. -->
-            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']"
+            <xpath expr="//field[@name='order_line']/list/column[@name='price_unit']"
                    position="before">
                 <field name="tectora_demolition_hours" widget="float_time"
                        string="Uren afbraak" sum="Totaal afbraak" optional="show"

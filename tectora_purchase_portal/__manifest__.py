@@ -15,7 +15,7 @@ and delivery status -- plus the PDF of the lists.
 Installs itself as soon as Dakmeting — Inkoop and the Medewerkersportaal are
 installed.
     """,
-    "version": "19.0.1.0.0",
+    "version": "20.0.1.0.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
