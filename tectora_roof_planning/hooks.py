@@ -70,6 +70,11 @@ VIEW_EXTENSIONS = [
         # of the team planner, so try a few anchors: the first one that fits
         # Odoo's own form wins.
         """
+        <xpath expr="//field[@name='resource_ids']" position="after">
+            %s
+        </xpath>
+        """ % FORM_FIELDS,
+        """
         <xpath expr="//field[@name='resource_id']" position="after">
             %s
         </xpath>

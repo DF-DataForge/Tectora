@@ -14,7 +14,7 @@
                     <list string="Planning-items">
                         <field name="start_datetime"/>
                         <field name="end_datetime"/>
-                        <field name="resource_id"/>
+                        <field name="resource_ids" widget="many2many_tags"/>
                         <field name="roof_team_id"/>
                         <field name="allocated_hours" sum="Totaal" optional="show"/>
                         <field name="state" widget="badge"
