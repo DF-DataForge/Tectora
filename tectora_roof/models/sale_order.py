@@ -826,6 +826,49 @@ class SaleOrder(models.Model):
                 by_product[product] = by_template[product.product_tmpl_id]
         return by_product
 
+    def _tectora_line_material_values(self, line, bom):
+        """Material requirement values of one order line, exploded from
+        ``bom`` (its product's bill of materials, or None).
+
+        A product without one is itself the material if it is goods; a
+        service without one is labour and contributes nothing. Extension
+        point: a line can bring its own components (tectora_sale_bom).
+        """
+        quantity = line.product_uom_qty
+        if not bom:
+            if line.product_id.type == "service":
+                return []  # works item with no bill of materials: labour
+            return [
+                self._tectora_material_values(
+                    line, line.product_id, quantity, line.product_uom_id, None
+                )
+            ]
+        # explode() expects how many times the BoM is needed, in the BoM's
+        # own unit of measure.
+        bom_quantity = quantity
+        if line.product_uom_id and bom.product_uom_id != line.product_uom_id:
+            bom_quantity = line.product_uom_id._compute_quantity(
+                quantity, bom.product_uom_id
+            )
+        factor = bom_quantity / (bom.product_qty or 1.0)
+        _boms_done, lines_done = bom.explode(line.product_id, factor)
+        return [
+            self._tectora_material_values(
+                line,
+                bom_line.product_id,
+                self._tectora_exploded_quantity(bom, factor, bom_line, line_data),
+                bom_line.product_uom_id,
+                bom.display_name,
+            )
+            for bom_line, line_data in lines_done
+        ]
+
+    def _tectora_exploded_quantity(self, bom, factor, bom_line, line_data):
+        """Quantity of one exploded component; ``factor`` is how many times
+        ``bom`` is needed. Extension point for components whose quantity does
+        not follow the order line (tectora_sale_bom)."""
+        return line_data["qty"]
+
     def _tectora_generate_materials(self):
         """Explode every sold product into material requirements.
 
@@ -849,36 +892,7 @@ class SaleOrder(models.Model):
 
         values = []
         for line in lines:
-            bom = boms.get(line.product_id)
-            quantity = line.product_uom_qty
-            if not bom:
-                if line.product_id.type == "service":
-                    continue  # works item with no bill of materials: labour
-                values.append(
-                    self._tectora_material_values(
-                        line, line.product_id, quantity, line.product_uom_id, None
-                    )
-                )
-                continue
-            # explode() expects how many times the BoM is needed, in the BoM's
-            # own unit of measure.
-            bom_quantity = quantity
-            if line.product_uom_id and bom.product_uom_id != line.product_uom_id:
-                bom_quantity = line.product_uom_id._compute_quantity(
-                    quantity, bom.product_uom_id
-                )
-            factor = bom_quantity / (bom.product_qty or 1.0)
-            _boms_done, lines_done = bom.explode(line.product_id, factor)
-            for bom_line, line_data in lines_done:
-                values.append(
-                    self._tectora_material_values(
-                        line,
-                        bom_line.product_id,
-                        line_data["qty"],
-                        bom_line.product_uom_id,
-                        bom.display_name,
-                    )
-                )
+            values += self._tectora_line_material_values(line, boms.get(line.product_id))
         materials = Material.create(values) if values else Material
         if materials:
             self.roof_project_id.message_post(
