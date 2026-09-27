@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.RoofProductPickerDialog">
+        <Dialog title="this.props.title" size="'xl'">
+            <div class="o_roof_product_picker">
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <button type="button" class="btn btn-sm"
+                            t-att-class="this.state.activeCategory === null ? 'btn-primary' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setCategory(null)">
+                        Alle (<t t-out="this.state.products.length"/>)
+                    </button>
+                    <t t-foreach="this.categories" t-as="category" t-key="category.id">
+                        <button type="button" class="btn btn-sm"
+                                t-att-class="this.state.activeCategory === category.id ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setCategory(category.id)">
+                            <t t-out="category.label"/> (<t t-out="category.count"/>)
+                        </button>
+                    </t>
+                </div>
+                <input type="text" class="form-control form-control-sm mb-2"
+                       placeholder="Zoeken op naam of interne referentie…"
+                       t-att-value="this.state.search"
+                       t-on-input="(ev) => { this.state.search = ev.target.value; }"/>
+
+                <t t-if="this.targets.length">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox"
+                               id="o_roof_picker_multi"
+                               t-att-checked="this.state.multi"
+                               t-on-change="(ev) => this.toggleMulti(ev.target.checked)"/>
+                        <label class="form-check-label" for="o_roof_picker_multi">
+                            <strong>Producten toewijzen aan meerdere items</strong>
+                        </label>
+                    </div>
+                    <div t-if="this.state.multi" class="o_roof_picker_targets border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold small text-uppercase text-muted">
+                                Producten gaan naar
+                            </span>
+                            <span class="small">
+                                <button type="button" class="btn btn-link btn-sm p-0"
+                                        t-on-click="() => this.selectAllTargets(true)">
+                                    Alles
+                                </button>
+                                <span class="text-muted mx-1">·</span>
+                                <button type="button" class="btn btn-link btn-sm p-0"
+                                        t-on-click="() => this.selectAllTargets(false)">
+                                    Niets
+                                </button>
+                            </span>
+                        </div>
+                        <div class="o_roof_picker_targets_list">
+                            <!-- The clicked item always gets the products, so it
+                                 sits in the list as a fixed entry: the top of
+                                 the dialog then shows the complete set. -->
+                            <div class="form-check form-check-sm">
+                                <input class="form-check-input" type="checkbox"
+                                       checked="checked" disabled="disabled"/>
+                                <label class="form-check-label d-flex justify-content-between">
+                                    <span class="fw-bold" t-out="this.baseLabel"/>
+                                    <span class="text-muted ms-2">
+                                        <t t-if="this.props.quantity !== undefined">
+                                            <t t-out="this.props.quantity.toFixed(2)"/>
+                                            <t t-out="this.props.quantityUnit || ''"/>
+                                        </t>
+                                    </span>
+                                </label>
+                            </div>
+                            <div t-foreach="this.targets" t-as="target" t-key="target.key"
+                                 class="form-check form-check-sm">
+                                <input class="form-check-input" type="checkbox"
+                                       t-attf-id="o_roof_picker_target_{{target_index}}"
+                                       t-att-checked="this.state.selectedTargets[target.key]"
+                                       t-on-change="() => this.toggleTarget(target)"/>
+                                <label class="form-check-label d-flex justify-content-between"
+                                       t-attf-for="o_roof_picker_target_{{target_index}}">
+                                    <span t-out="target.label"/>
+                                    <span class="text-muted ms-2" t-out="target.detail"/>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="small mt-1"
+                             t-att-class="this.itemCount > 1 ? 'text-body' : 'text-muted'">
+                            <t t-out="this.itemCount"/> item(s) — samen
+                            <t t-out="this.totalQuantity.toFixed(2)"/>
+                            <t t-out="this.props.quantityUnit || ''"/>.
+                        </div>
+                    </div>
+                </t>
+                <div class="o_roof_product_picker_list">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 2rem;"/>
+                                <th>Interne ref.</th>
+                                <th>Naam</th>
+                                <th class="text-end">Prijs/eenheid</th>
+                                <th>Eenheid</th>
+                                <th t-if="this.props.quantity !== undefined" class="text-end">Aantal</th>
+                                <th t-if="this.props.quantity !== undefined" class="text-end">Subtotaal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="this.visibleRows" t-as="row" t-key="row.key">
+                                <tr t-if="row.header" class="table-light">
+                                    <td colspan="7" class="fw-bold text-muted small text-uppercase"
+                                        t-out="row.header"/>
+                                </tr>
+                                <tr t-else=""
+                                    t-on-click="() => this.toggle(row.product)"
+                                    t-att-class="this.state.selected[row.product.id] ? 'table-primary' : ''"
+                                    style="cursor: pointer;">
+                                    <td>
+                                        <input type="checkbox"
+                                               t-att-checked="this.state.selected[row.product.id]"/>
+                                    </td>
+                                    <td t-out="row.product.default_code || ''"/>
+                                    <td>
+                                        <span t-out="row.product.name"/>
+                                        <span t-if="row.assigned"
+                                              class="badge text-bg-success ms-1">✓</span>
+                                        <div t-if="row.assigned" class="text-muted small">
+                                            <t t-foreach="this.assignedByProduct[row.product.id]"
+                                               t-as="summary" t-key="summary_index">
+                                                <div t-out="summary"/>
+                                            </t>
+                                        </div>
+                                    </td>
+                                    <td class="text-end" t-out="row.product.list_price.toFixed(2)"/>
+                                    <td t-out="row.product.uom_id ? row.product.uom_id[1] : ''"/>
+                                    <td t-if="this.props.quantity !== undefined" class="text-end">
+                                        <t t-out="this.totalQuantity.toFixed(2)"/>
+                                        <t t-out="row.product.uom_id ? ' ' + row.product.uom_id[1] : ''"/>
+                                    </td>
+                                    <td t-if="this.props.quantity !== undefined" class="text-end fw-bold"
+                                        t-out="(this.totalQuantity * row.product.list_price).toFixed(2)"/>
+                                </tr>
+                            </t>
+                            <tr t-if="!this.visibleProducts.length">
+                                <td colspan="7" class="text-muted text-center py-3">
+                                    Geen producten gevonden.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-primary"
+                        t-att-disabled="!this.selectedIds.length"
+                        t-on-click="this.confirm">
+                    Toevoegen (<t t-out="this.selectedIds.length"/>)
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> items
+                    </t>
+                </button>
+                <button type="button" class="btn btn-secondary"
+                        t-on-click="this.props.close">
+                    Annuleren
+                </button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

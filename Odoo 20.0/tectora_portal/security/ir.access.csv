@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_roof_timer_user,tectora.roof.timer user,tectora.roof.timer,base.group_user,r,
+access_tectora_roof_timer_sales,tectora.roof.timer sales,tectora.roof.timer,sales_team.group_sale_salesman,crud,
+access_tectora_roof_timer_timesheet_approver,tectora.roof.timer timesheet approver,tectora.roof.timer,hr_timesheet.group_hr_timesheet_approver,crud,
+access_tectora_roof_execution_report_user,tectora.roof.execution.report user,tectora.roof.execution.report,base.group_user,r,
+access_tectora_roof_execution_report_sales,tectora.roof.execution.report sales,tectora.roof.execution.report,sales_team.group_sale_salesman,crud,
+access_tectora_roof_execution_report_project_user,tectora.roof.execution.report project user,tectora.roof.execution.report,project.group_project_user,crud,

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_bom_import_form" model="ir.ui.view">
+        <field name="name">tectora.bom.import.form</field>
+        <field name="model">tectora.bom.import</field>
+        <field name="arch" type="xml">
+            <form string="Stuklijsten importeren">
+                <div invisible="state == 'done'">
+                    <div class="alert alert-info" role="alert">
+                        Laad de stuklijstexport (.xlsx) op. De kolommen worden op
+                        positie gelezen: <b>product</b>, reeks, referentie,
+                        <b>stuklijstsoort</b>, stuklijstregels,
+                        <b>aantal</b>, <b>onderdeel</b>, maateenheid onderdeel.
+                        Het bestand bevat geen productcodes, dus producten en
+                        componenten worden op naam en op structuur gezocht
+                        (familie + maat + afwerking).
+                    </div>
+                    <group>
+                        <group string="Bestand">
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="sheet_name" placeholder="eerste tabblad"/>
+                        </group>
+                        <group string="Wat koppelen">
+                            <field name="product_min"/>
+                            <field name="component_min"/>
+                        </group>
+                        <group string="Eenheden">
+                            <field name="uom_policy"/>
+                        </group>
+                        <group string="Uitvoeren">
+                            <field name="dry_run"/>
+                        </group>
+                    </group>
+                    <field name="state" invisible="1"/>
+                </div>
+                <div invisible="state != 'done'">
+                    <div class="alert alert-success" role="alert"
+                         invisible="dry_run">
+                        <b>De stuklijsten zijn geïmporteerd.</b>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not dry_run">
+                        <b>Analyse — er is nog niets aangemaakt.</b>
+                        Zet "Alleen analyseren" af om te importeren.
+                    </div>
+                    <field name="summary" nolabel="1" readonly="1"
+                           widget="text" class="o_field_text"/>
+                    <separator string="Nog te beslissen" invisible="not unmatched"/>
+                    <field name="unmatched" nolabel="1" readonly="1"
+                           widget="text" class="o_field_text"
+                           invisible="not unmatched"/>
+                </div>
+                <footer>
+                    <button name="action_import" type="object"
+                            string="Analyseren / importeren"
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Annuleren" special="cancel"
+                            class="btn-secondary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-primary" invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_bom_import" model="ir.actions.act_window">
+        <field name="name">Stuklijsten importeren</field>
+        <field name="res_model">tectora.bom.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_bom_import_form"/>
+    </record>
+
+    <!-- Next to "Catalogus importeren", which is where the imports live. -->
+    <menuitem id="menu_bom_import"
+              name="Stuklijsten importeren"
+              parent="sale.menu_sale_config"
+              action="action_bom_import"
+              groups="base.group_system"
+              sequence="26"/>
+
+    <!-- The import key, so a re-imported stuklijst can be recognised. -->
+    <record id="view_mrp_bom_form_tectora" model="ir.ui.view">
+        <field name="name">mrp.bom.form.tectora</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="tectora_bom_key" readonly="1"
+                       invisible="not tectora_bom_key"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

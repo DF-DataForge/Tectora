@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_roof_project" model="ir.actions.report">
+        <field name="name">Meetblad dakmeting</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_roof.report_roof_project</field>
+        <field name="print_report_name">'Meetblad %s' % (object.code)</field>
+        <field name="binding_model_id" ref="model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- One meetblad page; expects `roof_doc` (tectora.roof.project) to be
+         set. Reused by the standalone report and inside the quotation PDF. -->
+    <!-- The meetblad inside the standard document layout. -->
+    <template id="report_roof_project_page">
+        <t t-call="web.external_layout">
+            <t t-call="tectora_roof.report_roof_project_content"/>
+        </t>
+    </template>
+
+    <!-- The meetblad itself, without layout, so the quotation dossier can
+         embed it as one of its pages. Expects `roof_doc`. -->
+    <template id="report_roof_project_content">
+            <div class="page">
+                <h3 class="mb-1">
+                    Meetblad <t t-out="roof_doc.code"/> — <t t-out="roof_doc.name"/>
+                </h3>
+                <div class="row small mb-2">
+                    <div class="col-7">
+                        <strong>Klant:</strong>
+                        <t t-out="roof_doc.partner_id.display_name or '-'"/><br/>
+                        <strong>Werfadres:</strong>
+                        <t t-out="roof_doc.address or '-'"/>
+                    </div>
+                    <div class="col-5">
+                        <strong>Projecttype:</strong>
+                        <t t-out="roof_doc._project_type_label()"/><br/>
+                        <strong>Schaal:</strong>
+                        <t t-out="'%.4f m/pixel' % roof_doc.scale_m_per_px"/>
+                    </div>
+                </div>
+                <t t-set="drawing_png" t-value="roof_doc._get_drawing_png()"/>
+                <div t-if="drawing_png" class="text-center mb-2">
+                    <img t-att-src="image_data_uri(drawing_png)"
+                         style="max-width: 100%; max-height: 115mm;"
+                         alt="Dakmeting"/>
+                </div>
+                <div t-else="" class="text-muted text-center mb-2">
+                    (geen tekening beschikbaar)
+                </div>
+                <table class="table table-sm small mb-2">
+                    <thead>
+                        <tr>
+                            <th>Onderdeel</th>
+                            <th class="text-end">Breedte (m)</th>
+                            <th class="text-end">Lengte (m)</th>
+                            <th class="text-end">Oppervlakte (m²)</th>
+                            <th class="text-end">Omtrek (m)</th>
+                            <th class="text-end">Binnenopp. (m²)</th>
+                            <th class="text-end">Binnenomtrek (m)</th>
+                            <th class="text-end">Opstandopp. (m²)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="roof_doc.section_ids" t-as="section">
+                            <td t-out="section.name"/>
+                            <td class="text-end" t-out="'%.2f' % section.width"/>
+                            <td class="text-end" t-out="'%.2f' % section.length"/>
+                            <td class="text-end" t-out="'%.2f' % section.area"/>
+                            <td class="text-end" t-out="'%.2f' % section.perimeter"/>
+                            <td class="text-end"
+                                t-out="'%.2f' % section.inner_area if section.inner_area else '-'"/>
+                            <td class="text-end"
+                                t-out="'%.2f' % section.inner_perimeter if section.inner_perimeter else '-'"/>
+                            <td class="text-end"
+                                t-out="'%.2f' % section.upstand_area if section.upstand_area else '-'"/>
+                        </tr>
+                        <tr t-foreach="roof_doc.roof_object_ids" t-as="roof_object">
+                            <td>
+                                <t t-out="roof_object.name"/>
+                                <span class="text-muted"> (dakobject)</span>
+                            </td>
+                            <td class="text-end" t-out="'%.2f' % roof_object.width"/>
+                            <td class="text-end" t-out="'%.2f' % roof_object.length"/>
+                            <td class="text-end" t-out="'%.2f' % roof_object.area"/>
+                            <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
+                            <td class="text-end">-</td>
+                            <td class="text-end">-</td>
+                            <td class="text-end">-</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Totaal daksecties</th>
+                            <th/>
+                            <th/>
+                            <th class="text-end" t-out="'%.2f' % roof_doc.total_area"/>
+                            <th class="text-end" t-out="'%.2f' % roof_doc.total_perimeter"/>
+                            <th/>
+                            <th/>
+                            <th/>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="text-end">
+                    <strong>Geschat totaal (excl. btw):</strong>
+                    <span t-out="roof_doc.estimated_total"
+                          t-options="{'widget': 'monetary', 'display_currency': roof_doc.currency_id}"/>
+                </div>
+            </div>
+    </template>
+
+    <template id="report_roof_project">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="roof_doc" t-value="doc"/>
+                <t t-call="tectora_roof.report_roof_project_page"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- The quotation PDF: Odoo's standard document when the order ticks
+         "Standaard offerte" (followed by the meetblad when the order includes
+         the roof plan), otherwise the Tectora quotation in the chosen style.
+         Since Odoo 19 the per-document loop lives in sale.report_saleorder_raw. -->
+    <template id="report_saleorder_inherit_tectora" inherit_id="sale.report_saleorder_raw">
+        <xpath expr="//t[@t-call='sale.report_saleorder_document']" position="attributes">
+            <attribute name="t-call">tectora_roof.report_saleorder_document_dispatch</attribute>
+        </xpath>
+    </template>
+
+    <template id="report_saleorder_document_dispatch">
+        <t t-if="doc.tectora_standard_quotation">
+            <t t-call="sale.report_saleorder_document"/>
+            <t t-if="doc.roof_project_id and doc.tectora_include_roof_plan">
+                <t t-set="roof_doc" t-value="doc.roof_project_id"/>
+                <t t-call="tectora_roof.report_roof_project_page"/>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-set="style" t-value="doc.tectora_quotation_style or 'dossier'"/>
+            <t t-if="style == 'compact'">
+                <t t-call="tectora_roof.report_tq_compact"/>
+            </t>
+            <t t-elif="style == 'classic'">
+                <t t-call="tectora_roof.report_tq_classic"/>
+            </t>
+            <t t-elif="style == 'visual'">
+                <t t-call="tectora_roof.report_tq_visual"/>
+            </t>
+            <t t-elif="style == 'minimal'">
+                <t t-call="tectora_roof.report_tq_minimal"/>
+            </t>
+            <t t-else="">
+                <t t-call="tectora_roof.report_tq_dossier"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

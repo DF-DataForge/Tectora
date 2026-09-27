@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The employees' shifts on the project dashboard's Planning tab. -->
+    <record id="view_project_project_tectora_dashboard_slots" model="ir.ui.view">
+        <field name="name">project.project.form.tectora.dashboard.slots</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_project_project_tectora_dashboard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='planning']//field[@name='roof_planning_ids']" position="after">
+                <field name="tectora_slot_count" invisible="1"/>
+                <separator string="Planning-items van de medewerkers"/>
+                <field name="tectora_slot_ids" readonly="1" nolabel="1">
+                    <list string="Planning-items">
+                        <field name="start_datetime"/>
+                        <field name="end_datetime"/>
+                        <field name="resource_id"/>
+                        <field name="roof_team_id"/>
+                        <field name="allocated_hours" sum="Totaal" optional="show"/>
+                        <field name="state" widget="badge"
+                               decoration-info="state == 'draft'"
+                               decoration-success="state == 'published'"/>
+                    </list>
+                </field>
+            </xpath>
+            <xpath expr="//button[@name='action_view_tectora_planning'][hasclass('oe_stat_button')]" position="attributes">
+                <attribute name="invisible">tectora_slot_count == 0 and tectora_planning_count == 0</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

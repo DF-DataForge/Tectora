@@ -1,0 +1,189 @@
+.o_roof_canvas {
+    position: relative;
+    border: 1px solid var(--border-color, #d8dadd);
+    border-radius: 6px;
+    background: #fff;
+    outline: none;
+
+    // Fullscreen drawing: covers the form (but stays below Odoo's dialogs,
+    // so the product picker keeps working).
+    &.o_roof_canvas_fullscreen {
+        position: fixed;
+        inset: 0;
+        z-index: 1030;
+        border: 0;
+        border-radius: 0;
+        overflow: hidden;
+
+        .o_roof_canvas_body {
+            height: 100%;
+        }
+
+        .o_roof_canvas_main {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            canvas {
+                flex: 1 1 auto;
+            }
+        }
+    }
+
+    .o_roof_canvas_ctxmenu {
+        position: absolute;
+        z-index: 100;
+    }
+
+    // The background menu hangs under its toolbar icon.
+    .o_roof_canvas_bgmenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 100;
+        min-width: 20rem;
+        margin-top: 0.15rem;
+    }
+
+    .o_roof_canvas_sidebar {
+        flex: 0 0 320px;
+        width: 320px;
+        border-left: 1px solid var(--border-color, #d8dadd);
+        background: #f8f9fa;
+        overflow-y: auto;
+    }
+
+    .o_roof_canvas_panel {
+        margin: 0.5rem;
+        background: #fff;
+    }
+
+    .o_roof_canvas_toolbar {
+        border-bottom: 1px solid var(--border-color, #d8dadd);
+        background: #f8f9fa;
+        border-radius: 6px 6px 0 0;
+    }
+
+    canvas {
+        // Sized in pixels by the widget (style width/height match the bitmap),
+        // so it is never stretched by CSS.
+        display: block;
+        max-width: 100%;
+        cursor: crosshair;
+        touch-action: none;
+    }
+
+    .o_roof_canvas_status {
+        border-top: 1px solid var(--border-color, #d8dadd);
+        background: #f8f9fa;
+        border-radius: 0 0 6px 6px;
+        min-height: 1.8em;
+    }
+}
+
+.o_roof_product_picker {
+    .o_roof_product_picker_list {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+
+    // The other items of the same type, when assigning to several at once.
+    // Two columns keep a drawing with many sides readable without pushing
+    // the product list off screen.
+    .o_roof_picker_targets_list {
+        max-height: 9rem;
+        overflow-y: auto;
+        columns: 2;
+        font-size: 0.875rem;
+
+        @media (max-width: 767px) {
+            columns: 1;
+        }
+
+        .form-check {
+            break-inside: avoid;
+        }
+    }
+}
+
+// Compact KPI tiles on the dakproject form header.
+.o_roof_kpis {
+    .o_roof_kpi {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+        background: #f8f9fa;
+        border: 1px solid var(--border-color, #e2e6e9);
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+
+        .o_roof_kpi_value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.3;
+
+            .o_field_widget,
+            .o_field_widget span,
+            .o_field_widget input {
+                font-size: inherit;
+                font-weight: inherit;
+            }
+        }
+
+        .o_roof_kpi_label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6c757d;
+        }
+    }
+}
+
+// Forms of the roof project and the project dashboard: give the sheet the
+// full width on every tab (the drawing plus its product sidebar need it, and
+// the other tabs should not jump back to the narrow sheet when the drawing is
+// not the active tab). The <form> class ends up on the .o_form_view root
+// (form_controller's className), so it is there whatever tab is open; the
+// canvas selector is kept for forms that embed the drawing without the class.
+.o_form_view.o_tectora_chatter_bottom,
+.o_form_view:has(.o_roof_canvas) {
+    .o_form_sheet_bg .o_form_sheet {
+        max-width: 100%;
+    }
+}
+
+// Keeping the chatter under the form takes two things, and the direction is
+// the one that decides.
+//
+// form_compiler.js gives the renderer "flex-nowrap h-100" from XXL up and
+// "flex-column" below it -- read off uiService.size, not off the chatter's
+// layout. So dropping the o-aside class (roof_form/chatter_bottom.js) is not
+// enough on a wide screen: without it the chatter is still a flex item in a
+// nowrap row, and it just becomes a wide panel beside the sheet instead of a
+// narrow column beside it.
+//
+// This puts that one container back in the layout Odoo itself uses below XXL.
+// Scoped to .o_form_renderer on purpose: the same override on .o_form_view
+// once collapsed the whole form, because that wrapper holds many other flex
+// containers.
+//
+// The leading .o_form_view is there for weight, not for reach: the rules being
+// undone live under .o_form_view.o_xxl_form_view, and a tie would be settled by
+// bundle order alone.
+.o_form_view.o_tectora_chatter_bottom .o_form_renderer,
+.o_form_view .o_form_renderer:has(.o_roof_canvas) {
+    flex-direction: column !important;
+    // h-100 is a Bootstrap utility, so it needs the same weight to undo.
+    height: auto !important;
+
+    // At XXL the sheet is "flex: 2 1 <min-width>; overflow: auto" so it can
+    // scroll on its own next to the chatter. In a column that basis becomes a
+    // height and the sheet keeps its own scrollbar, with the chatter pinned
+    // under it. Let it take its natural height and scroll the page instead.
+    > .o_form_sheet_bg {
+        flex: 0 0 auto;
+        overflow: visible;
+    }
+}

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_quotation_template_import_form" model="ir.ui.view">
+        <field name="name">tectora.quotation.template.import.form</field>
+        <field name="model">tectora.quotation.template.import</field>
+        <field name="arch" type="xml">
+            <form string="Offertesjablonen laden">
+                <div invisible="state == 'done'">
+                    <div class="alert alert-info" role="alert">
+                        Laadt de twintig meegeleverde offertesjablonen: tien voor
+                        <b>renovatie</b> (met afbraakwerken) en tien voor
+                        <b>nieuwbouw</b> (zonder). Elk sjabloon bevat de algemene
+                        werken, de verplichte veiligheidsvoorzieningen, een
+                        dakopbouw met dampscherm, isolatie en dakbedekking, een
+                        dakrandtype met de bijhorende binnen- en buitenhoeken,
+                        en de regenwaterafvoer.
+                        <br/>
+                        De hoeveelheden beschrijven een referentiedak van 100 m²
+                        met 40 lm dakrand; ze worden overschreven door de
+                        opmeting van de tekening.
+                    </div>
+                    <group>
+                        <field name="refresh"/>
+                    </group>
+                    <field name="state" invisible="1"/>
+                </div>
+                <div invisible="state != 'done'">
+                    <div class="alert alert-success" role="alert">
+                        <b>De offertesjablonen zijn geladen.</b>
+                    </div>
+                    <field name="summary" nolabel="1" readonly="1"
+                           widget="text" class="o_field_text"/>
+                </div>
+                <footer>
+                    <button name="action_import" type="object" string="Laden"
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-secondary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-primary" invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_quotation_template_import" model="ir.actions.act_window">
+        <field name="name">Offertesjablonen laden</field>
+        <field name="res_model">tectora.quotation.template.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_quotation_template_import_form"/>
+    </record>
+
+    <menuitem id="menu_quotation_template_import"
+              name="Offertesjablonen laden"
+              parent="sale.menu_sale_config"
+              action="action_quotation_template_import"
+              groups="sales_team.group_sale_manager"
+              sequence="96"/>
+
+</odoo>

@@ -1,0 +1,31 @@
+// Tectora document layout: the roof-edge header.
+.o_tectora_header_shape {
+    pointer-events: none;
+}
+
+.o_report_layout_tectora {
+    #informations {
+        margin: 0 0 map-get($spacers, 4);
+        padding: map-get($spacers, 2) $table-cell-padding-y;
+        border-top: 1px solid;
+        border-bottom: 1px solid;
+
+        div:first-child {
+            padding-left: 0;
+        }
+
+        div:last-child {
+            padding-right: 0;
+        }
+    }
+
+    h2 {
+        font-weight: 300;
+        letter-spacing: .02em;
+    }
+}
+
+.o_tectora_footer {
+    border-top: 2px solid;
+    padding-top: map-get($spacers, 2);
+}

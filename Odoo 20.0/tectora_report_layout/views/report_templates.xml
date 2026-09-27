@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The roof-edge header as a vector: sky tint above, the teal ridge line
+         of a flat roof running to its peak at three quarters of the width, the
+         roof edge as two light bands beneath it. Drawn in the company's primary
+         colour so the configurator's colours apply to it. -->
+    <template id="tectora_header_shape">
+        <svg t-att-class="shape_class" preserveAspectRatio="none" t-att-height="header_shape_height"
+             viewBox="0 0 1000 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient t-attf-id="tectora_sky_#{company.id}" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0" t-att-stop-color="tectora_color" stop-opacity=".16"/>
+                    <stop offset="1" t-att-stop-color="tectora_color" stop-opacity=".03"/>
+                </linearGradient>
+            </defs>
+            <!-- sky -->
+            <path d="M0 0H1000V118L777 24L0 192Z" t-attf-fill="url(#tectora_sky_#{company.id})"/>
+            <!-- roof edge: fascia -->
+            <path d="M0 192L777 24L1000 118V142L777 48L0 216Z" fill="#ffffff" fill-opacity=".85"/>
+            <path d="M0 216L777 48L1000 142V168L777 74L0 242Z" t-att-fill="tectora_color" fill-opacity=".12"/>
+            <!-- ridge line -->
+            <path d="M0 192L777 24L1000 118" t-att-stroke="tectora_color" stroke-width="3"
+                  stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+    </template>
+
+    <!-- Odoo 20 builds every layout from shared parts: the company address
+         list, the body (address block, title, and the table design picked in
+         the configurator) and the footer content. Only the header shape and
+         the footer line are Tectora's own. -->
+    <template id="external_layout_tectora">
+        <t t-set="tectora_color" t-value="company.primary_color or '#008B93'"/>
+        <!-- the shape is 200px high; the header content sits under the roof
+             edge (lower on the left, where the edge is low, higher on the
+             right, under the peak), so the whole header is about 240px -->
+        <t t-set="header_shape_height" t-value="'200'"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout o_tectora_header {{report_type != 'pdf' and 'h-0'}}">
+            <t t-call="tectora_report_layout.tectora_header_shape"
+               shape_class="'o_tectora_header_shape start-0 top-0 w-100 z-n1 ' + (report_type == 'pdf' and 'position-fixed' or 'position-absolute')"/>
+            <div class="d-flex justify-content-between o_tectora_header_content" style="padding-top: 100px;">
+                <div class="w-50 o_tectora_header_brand" style="margin-top: 42px;">
+                    <img t-if="company.logo" class="o_company_logo mb-1" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    <div t-if="company.report_header" t-field="company.report_header" class="o_company_tagline fw-bold">Company tagline</div>
+                </div>
+                <div name="company_address" class="w-50 text-end small">
+                    <t t-call="web.company_address_list"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" custom_layout_address="True" hide_title="True">
+            <div class="o_report_layout_tectora"
+                 t-attf-style="{{report_type != 'pdf' and 'margin-top: 240px;' or ''}}">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="web.external_layout_footer_content"
+               footer_content_classes="'o_tectora_footer'"/>
+        </div>
+    </template>
+
+    <!-- The company colours in the layout's own parts: title, information
+         band, table heads, totals and footer line. -->
+    <template id="styles_company_report_tectora" inherit_id="web.styles_company_report">
+        <xpath expr="//t[@t-elif=&quot;layout == 'web.external_layout_lines'&quot;]" position="after">
+            <t t-elif="layout == 'tectora_report_layout.external_layout_tectora'">
+                &amp; .o_report_layout_tectora {
+                    #informations {
+                        border-color: mix(white, <t t-out='primary'/>, 60%);
+                    }
+
+                    .o_main_table thead th {
+                        border-bottom: 2px solid <t t-out='primary'/>;
+                        color: <t t-out='primary'/>;
+                    }
+
+                    #total .o_total_table .o_total td {
+                        background-color: mix(white, <t t-out='primary'/>, 90%);
+                    }
+                }
+
+                &amp; .o_tectora_footer {
+                    border-color: <t t-out='primary'/>;
+                }
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

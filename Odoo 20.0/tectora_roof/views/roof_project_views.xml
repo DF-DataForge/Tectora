@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_roof_project_form" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <form string="Dakproject" class="o_tectora_chatter_bottom">
+                <header>
+                    <button name="action_sync_from_canvas" type="object"
+                            string="Meting bijwerken uit tekening" class="btn-secondary"
+                            help="Create or update the roof sections and roof objects from the shapes on the canvas."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte maken" class="btn-primary"
+                            invisible="not section_ids or (sale_order_id and sale_order_state != 'cancel')"
+                            help="Maakt de offerte van dit dakproject uit de meting."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte bijwerken uit meting" class="btn-primary"
+                            invisible="not section_ids or not sale_order_id or sale_order_state not in ('draft', 'sent')"
+                            confirm="De lijnen van de openstaande offerte worden vervangen door de meting. Doorgaan?"
+                            help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,measured,quoted,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_orders" type="object"
+                                class="oe_stat_button" icon="description">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="sale_order_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not sale_order_id"/>
+                                    <span invisible="sale_order_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Offerte / Order</span>
+                                <span class="o_stat_text" invisible="sale_order_count &lt; 2">
+                                    (<field name="sale_order_count" readonly="1"/> in historiek)
+                                </span>
+                            </div>
+                        </button>
+                        <button name="action_view_materials" type="object"
+                                class="oe_stat_button" icon="deployed_code"
+                                invisible="material_count == 0">
+                            <field name="material_count" widget="statinfo" string="Materialen"/>
+                        </button>
+                        <button name="action_view_pickings" type="object"
+                                class="oe_stat_button" icon="local_shipping"
+                                invisible="picking_count == 0">
+                            <field name="picking_count" widget="statinfo" string="Leveringen"/>
+                        </button>
+                        <button name="action_view_purchase_orders" type="object"
+                                class="oe_stat_button" icon="shopping_cart"
+                                invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="Inkoop"/>
+                        </button>
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="payments"
+                                invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Facturen"/>
+                        </button>
+                        <button name="action_open_project" type="object"
+                                class="oe_stat_button" icon="speed"
+                                help="Het planbare project achter dit dakproject, met het dashboard van omzet, kosten, leveringen, taken en planning.">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="project_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not project_id"/>
+                                    <span invisible="project_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Project</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="bv. Plat dak — Kerkstraat 12"/></h1>
+                        <h3><field name="code" readonly="1"/></h3>
+                    </div>
+                    <field name="currency_id" invisible="1"/>
+                    <div class="o_roof_kpis d-flex flex-wrap gap-2 my-2">
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="total_area" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Oppervlakte (m²)</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="total_perimeter" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Omtrek (m)</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="section_count" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Daksecties</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="roof_object_count" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Dakobjecten</span>
+                        </div>
+                        <div class="o_roof_kpi">
+                            <span class="o_roof_kpi_value">
+                                <field name="estimated_total" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Geschat totaal (excl. btw)</span>
+                        </div>
+                        <div class="o_roof_kpi" invisible="revenue == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="revenue" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Omzet (bevestigd)</span>
+                        </div>
+                        <div class="o_roof_kpi" invisible="material_cost == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="material_cost" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Materiaalkost</span>
+                        </div>
+                        <div class="o_roof_kpi" invisible="revenue == 0">
+                            <span class="o_roof_kpi_value">
+                                <field name="margin" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_roof_kpi_label">Marge</span>
+                        </div>
+                    </div>
+                    <group class="mb-0">
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="project_type"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                        <group>
+                            <field name="address" placeholder="Straat nr, postcode gemeente"/>
+                            <field name="opportunity_id"/>
+                            <field name="sale_order_id"
+                                   context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>
+                            <field name="sale_order_state" invisible="1"/>
+                            <field name="project_id" readonly="1"
+                                   invisible="not project_id"/>
+                            <field name="analytic_account_id" readonly="1"
+                                   invisible="not analytic_account_id"
+                                   groups="analytic.group_analytic_accounting"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tekening" name="drawing">
+                            <field name="scale_m_per_px" invisible="1"/>
+                            <field name="has_background_image" invisible="1"/>
+                            <field name="canvas_snapshot" invisible="1"/>
+                            <field name="canvas_icons" invisible="1"/>
+                            <field name="address" invisible="1"/>
+                            <field name="canvas_data" widget="roof_canvas" nolabel="1"/>
+                        </page>
+                        <page string="Daksecties" name="sections">
+                            <field name="section_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="area" sum="Totaal"/>
+                                    <field name="perimeter" sum="Totaal"/>
+                                    <field name="inner_area" sum="Totaal" optional="show"/>
+                                    <field name="inner_perimeter" sum="Totaal" optional="hide"/>
+                                    <field name="upstand_area" sum="Totaal" optional="show"/>
+                                    <field name="upstand_length" sum="Totaal" optional="hide"/>
+                                    <field name="estimated_total" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                                <form string="Daksectie">
+                                    <sheet>
+                                        <div class="oe_title">
+                                            <h2><field name="name"/></h2>
+                                        </div>
+                                        <group>
+                                            <group>
+                                                <field name="width"/>
+                                                <field name="length"/>
+                                                <field name="area"/>
+                                                <field name="perimeter"/>
+                                                <field name="inner_area"/>
+                                                <field name="inner_perimeter"/>
+                                                <field name="upstand_length"/>
+                                                <field name="upstand_area"/>
+                                            </group>
+                                            <group>
+                                                <field name="canvas_ref"/>
+                                                <field name="estimated_total"/>
+                                                <field name="currency_id" invisible="1"/>
+                                                <field name="description"/>
+                                            </group>
+                                        </group>
+                                        <div class="mb-2">
+                                            <button name="action_convert_to_chimney" type="object"
+                                                    string="Zet om naar schoorsteen" class="btn btn-secondary me-2"
+                                                    confirm="This section will become a roof object and its product lines will be removed. Continue?"/>
+                                            <button name="action_convert_to_skylight" type="object"
+                                                    string="Zet om naar koepel" class="btn btn-secondary"
+                                                    confirm="This section will become a roof object and its product lines will be removed. Continue?"/>
+                                        </div>
+                                        <field name="product_line_ids">
+                                            <list editable="bottom">
+                                                <field name="product_id"/>
+                                                <field name="coverage"/>
+                                                <field name="side_display"/>
+                                                <field name="edge_index" optional="hide"/>
+                                                <field name="quantity"/>
+                                                <field name="uom_id"/>
+                                                <field name="price_unit"/>
+                                                <field name="price_subtotal" sum="Totaal"/>
+                                                <field name="currency_id" column_invisible="1"/>
+                                            </list>
+                                        </field>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Dakobjecten" name="objects">
+                            <field name="roof_object_ids">
+                                <list editable="bottom" open_form_view="True">
+                                    <field name="name"/>
+                                    <field name="object_type"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="height"/>
+                                    <field name="area"/>
+                                    <field name="perimeter"/>
+                                    <field name="volume"/>
+                                    <field name="estimated_total" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Algemene werken" name="general_works">
+                            <field name="general_line_ids" widget="roof_checklist"
+                                   options="{'category': 'algemene werken'}" nolabel="1"/>
+                        </page>
+                        <page string="Veiligheid" name="safety">
+                            <field name="safety_line_ids" widget="roof_checklist"
+                                   options="{'category': 'veiligheid'}" nolabel="1"/>
+                        </page>
+                        <page string="Afbraak" name="demolition">
+                            <field name="demolition_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'ilike', 'afbraak')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De afbraaklijnen van de offerte. Voeg hier een product toe om het
+                                op de offerte te zetten; m²- en m-hoeveelheden volgen de meting
+                                (oppervlakte en omtrek van het dak).
+                            </div>
+                        </page>
+                        <page string="Opbouw" name="buildup">
+                            <field name="buildup_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'ilike', 'opbouw')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De opbouwlijnen van de offerte. Voeg hier een product toe om het
+                                op de offerte te zetten; m²- en m-hoeveelheden volgen de meting.
+                                Producten die op een daksectie of dakobject van de tekening staan,
+                                worden daar geprijsd en staan hier niet.
+                            </div>
+                        </page>
+                        <page string="Overige" name="other_lines">
+                            <field name="other_line_ids" nolabel="1"
+                                   context="{'default_project_direct_id': id}">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('sale_ok', '=', True), ('categ_id.complete_name', 'not ilike', 'algemene werken'), ('categ_id.complete_name', 'not ilike', 'veiligheid'), ('categ_id.complete_name', 'not ilike', 'afbraak'), ('categ_id.complete_name', 'not ilike', 'opbouw')]"
+                                           options="{'no_create': True}"/>
+                                    <field name="coverage"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                Offertelijnen buiten de vier hoofdstukken (dakranden,
+                                regenwaterafvoer, opties…). Voeg hier een product toe om het op
+                                de offerte te zetten; oppervlak- en randlijnen volgen de meting.
+                            </div>
+                        </page>
+                        <page string="Werf" name="project_info">
+                            <group>
+                                <group string="Projectleiding">
+                                    <field name="project_manager_id"/>
+                                    <field name="project_manager_phone" readonly="1"
+                                           invisible="not project_manager_phone"/>
+                                    <field name="project_manager_email" readonly="1"
+                                           invisible="not project_manager_email"/>
+                                    <field name="date_deadline"/>
+                                </group>
+                                <group string="Contactpersoon werf">
+                                    <field name="site_contact_id"/>
+                                    <field name="site_contact_phone" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                    <field name="site_contact_email" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                </group>
+                                <group string="Voorbereiding">
+                                    <field name="checkin_at_work"/>
+                                    <field name="asbestos_present"/>
+                                    <field name="roof_height"/>
+                                    <field name="roof_substrate"/>
+                                    <field name="roof_substrate_note"
+                                           invisible="roof_substrate != 'andere'"/>
+                                </group>
+                                <group string="Bereikbaarheid materiaal">
+                                    <field name="material_direct_roof"/>
+                                    <field name="material_through_building"/>
+                                    <field name="material_via_side"/>
+                                    <field name="aerial_lift_needed"/>
+                                    <field name="aerial_lift_type"
+                                           invisible="not aerial_lift_needed"/>
+                                </group>
+                                <group string="Transport">
+                                    <field name="material_transport"/>
+                                    <field name="waste_disposal"/>
+                                    <field name="supplier_pickup_time"/>
+                                    <field name="transport_over_building"/>
+                                </group>
+                                <group string="Extra's te voorzien">
+                                    <field name="scaffolding_needed"/>
+                                    <field name="mobile_scaffolding_needed"/>
+                                    <field name="concrete_drilling_needed"/>
+                                    <field name="hvac_contractor_needed"/>
+                                    <field name="precautions_needed"/>
+                                </group>
+                                <group string="Te voorzien ter plaatse">
+                                    <field name="generator_needed"/>
+                                    <field name="site_toilet_needed"/>
+                                    <field name="site_hut_needed"/>
+                                </group>
+                                <group string="Bereikbaarheid werf">
+                                    <field name="easy_parking"/>
+                                    <field name="parking_ban_needed"/>
+                                    <field name="driveway_paved"/>
+                                </group>
+                                <group string="Afwijking dakranden">
+                                    <field name="roof_edge_types"/>
+                                    <field name="roof_edge_colors"/>
+                                </group>
+                                <group string="EPDM">
+                                    <field name="epdm_thickness"/>
+                                    <field name="epdm_total_area" readonly="1"/>
+                                    <field name="epdm_sheet_count" invisible="1"/>
+                                </group>
+                            </group>
+                            <separator string="EPDM-doeken"/>
+                            <field name="epdm_sheet_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="width"/>
+                                    <field name="length"/>
+                                    <field name="area" sum="Totaal"/>
+                                    <field name="note" optional="show"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group string="Voorzorgsmaatregelen">
+                                    <field name="precautions_note" nolabel="1"
+                                           placeholder="bv. PE-folie en schilderskarton (zie offerte)…"/>
+                                </group>
+                                <group string="Andere werken / extra's">
+                                    <field name="other_works" nolabel="1"
+                                           placeholder="bv. zonnepanelen weg en terug: partner…"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Materiaallijst" name="materials">
+                            <field name="material_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="unit_cost" optional="show"/>
+                                    <field name="cost_subtotal" sum="Totaal"/>
+                                    <field name="source_product_id" optional="show"/>
+                                    <field name="bom_name" optional="hide"/>
+                                    <field name="sale_order_id" optional="show"/>
+                                    <field name="notes" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De materiaallijst wordt automatisch opgebouwd uit de
+                                stuklijsten van de verkochte producten zodra een
+                                verkooporder bevestigd wordt. Handmatig toegevoegde
+                                lijnen blijven bewaard.
+                            </div>
+                        </page>
+                        <page string="Notities" name="notes">
+                            <field name="description" placeholder="Werfvoorbereiding, opmerkingen…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_list" model="ir.ui.view">
+        <field name="name">tectora.roof.project.list</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <list string="Dakprojecten">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="address" optional="hide"/>
+                <field name="total_area"/>
+                <field name="total_perimeter" optional="hide"/>
+                <field name="estimated_total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="project_id" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'measured'"
+                       decoration-success="state in ('quoted', 'confirmed', 'done')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_search" model="ir.ui.view">
+        <field name="name">tectora.roof.project.search</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="arch" type="xml">
+            <search string="Dakprojecten">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="partner_id"/>
+                <field name="address"/>
+                <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
+                <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
+                <filter string="Order bevestigd" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <group>
+                    <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_roof_project" model="ir.actions.act_window">
+        <field name="name">Dakprojecten</field>
+        <field name="res_model">tectora.roof.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak je eerste dakproject</p>
+            <p>Haal een satellietbeeld op, teken de daksecties en genereer een offerte.</p>
+        </field>
+    </record>
+
+</odoo>

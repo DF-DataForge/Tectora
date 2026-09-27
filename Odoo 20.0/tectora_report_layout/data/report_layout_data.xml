@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- The Tectora layout as a choice in Settings -> Configure Document
+             Layout; the configurator renders its own live preview. -->
+        <record id="report_layout_tectora" model="report.layout">
+            <field name="name">Tectora</field>
+            <field name="sequence">1</field>
+            <field name="view_id" ref="tectora_report_layout.external_layout_tectora"/>
+        </record>
+    </data>
+</odoo>

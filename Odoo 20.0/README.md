@@ -1,6 +1,6 @@
 # Tectora
 
-Odoo 19 addons for Tectora, flat-roof measurement and quoting for roofing
+Odoo 20 addons for Tectora, flat-roof measurement and quoting for roofing
 contractors.
 
 ## Modules
@@ -20,7 +20,8 @@ contractors.
 
 The application originates from the standalone BROOF app
 (React + Express + PostgreSQL), which was rewritten as a native Odoo module
-and then migrated to Odoo 19. Customers, products, quotations, invoicing and
+then migrated to Odoo 19 and to Odoo 20 (this folder; see
+[`UPGRADE_NOTES.md`](UPGRADE_NOTES.md)). Customers, products, quotations, invoicing and
 Belgian VAT are handled by the standard Odoo Sales/Invoicing apps.
 
 ## Installation
@@ -33,8 +34,5 @@ Belgian VAT are handled by the standard Odoo Sales/Invoicing apps.
 4. Optional: in *Settings → Tectora Dakmeting*, set a Google Maps API key or
    a Mapbox access token to enable satellite backgrounds.
 
-The same addons ported to **Odoo 20.0** live in [`Odoo 20.0/`](<Odoo 20.0/>)
-(see its [`UPGRADE_NOTES.md`](<Odoo 20.0/UPGRADE_NOTES.md>)).
-
-Requires **Odoo 19.0**. See [`tectora_roof/README.md`](tectora_roof/README.md)
+Requires **Odoo 20.0** (Python 3.12+). See [`tectora_roof/README.md`](tectora_roof/README.md)
 for the full workflow and data-model notes.

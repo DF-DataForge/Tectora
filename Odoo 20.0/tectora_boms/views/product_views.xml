@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Odoo hides the "Bill of Materials" button on anything that is not
+         goods (invisible="type != 'consu'"). The works items Tectora sells are
+         services and they are precisely the products that carry a stuklijst,
+         so the button has to show for those too. Otherwise a bill of
+         materials exists but cannot be reached from its product. -->
+    <record id="view_product_template_bom_button_tectora" model="ir.ui.view">
+        <field name="name">product.template.bom.button.tectora</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="mrp.product_template_form_view_bom_button"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bom_count']/.." position="attributes">
+                <attribute name="invisible">type not in ('consu', 'service')</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_product_bom_button_tectora" model="ir.ui.view">
+        <field name="name">product.product.bom.button.tectora</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="mrp.product_product_form_view_bom_button"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_view_bom']" position="attributes">
+                <attribute name="invisible">type not in ('consu', 'service')</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

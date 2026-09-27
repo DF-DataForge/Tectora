@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The three logistic lists of a roof project on paper, for whoever
+         follows the logistics up: tick boxes per line, the documents behind
+         each list, and for a dropship what the crew still fetches at the
+         warehouse. One report with all three (each on its own page) and one
+         per list. -->
+    <record id="action_report_logistics_lists" model="ir.actions.report">
+        <field name="name">Logistieke lijsten</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_purchase.report_logistics_lists</field>
+        <field name="print_report_name">'Logistieke lijsten %s' % (object.code or object.name)</field>
+        <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_logistics_stock" model="ir.actions.report">
+        <field name="name">Afhaallijst eigen magazijn</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_purchase.report_logistics_stock</field>
+        <field name="print_report_name">'Afhaallijst magazijn %s' % (object.code or object.name)</field>
+        <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_logistics_warehouse" model="ir.actions.report">
+        <field name="name">Ontvangsten aan het magazijn</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_purchase.report_logistics_warehouse</field>
+        <field name="print_report_name">'Ontvangsten magazijn %s' % (object.code or object.name)</field>
+        <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_logistics_dropship" model="ir.actions.report">
+        <field name="name">Dropship op de werf</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_purchase.report_logistics_dropship</field>
+        <field name="print_report_name">'Dropship werf %s' % (object.code or object.name)</field>
+        <field name="binding_model_id" ref="tectora_roof.model_tectora_roof_project"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- One list. Expects `doc` (the roof project) and `section` (one entry
+         of doc._logistics_lists()). -->
+    <template id="report_logistics_list_section">
+        <t t-set="kind" t-value="section['key']"/>
+        <t t-set="lines" t-value="section['lines']"/>
+        <div class="tl-section">
+            <h4 class="mb-0">
+                <i class="oi me-1" t-att-data-icon="section['icon']"/>
+                <t t-out="section['title']"/>
+                <span class="text-muted small ms-2"><t t-out="len(lines)"/> materialen</span>
+            </h4>
+            <div class="text-muted small mb-2" t-out="section['subtitle']"/>
+
+            <t t-if="kind == 'dropship'" >
+                <div class="row small mb-2">
+                    <div class="col-7">
+                        <strong>Leveradres (werf):</strong>
+                        <t t-out="doc._tectora_delivery_partner()._display_address(without_name=True).replace('\n', ', ') if doc._tectora_delivery_partner() else (doc.address or '-')"/>
+                    </div>
+                    <div class="col-5">
+                        <strong>Geplande start werf:</strong>
+                        <span t-if="doc.planned_date_begin" t-field="doc.planned_date_begin" t-options="{'widget': 'date'}"/>
+                        <span t-else="" class="text-danger">nog niet gepland</span>
+                    </div>
+                </div>
+            </t>
+
+            <p t-if="not lines" class="text-muted fst-italic">Geen materiaal op deze lijst.</p>
+            <table t-else="" class="table table-sm small tl-table">
+                <thead>
+                    <tr>
+                        <th class="tl-check-col"/>
+                        <th>Materiaal</th>
+                        <th class="text-end">Hoeveelheid</th>
+                        <th>Eenheid</th>
+                        <th t-if="kind == 'stock'" class="text-end">Vrij op voorraad</th>
+                        <th t-if="kind != 'stock'">Leverancier</th>
+                        <th t-if="kind != 'stock'">Inkooporder</th>
+                        <th t-if="kind != 'stock'">Verwacht op</th>
+                        <th t-if="kind == 'warehouse'">Ontvangst</th>
+                        <th t-if="kind == 'dropship'">Levering</th>
+                        <th t-if="kind == 'warehouse'" class="text-end">Ontvangen</th>
+                        <th class="tl-remark-col">Opmerking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="lines" t-as="line">
+                        <td class="tl-check-col"><span class="tl-check"/></td>
+                        <td>
+                            <t t-out="line.product_id.display_name"/>
+                            <div t-if="line.notes" class="text-muted" t-out="line.notes"/>
+                        </td>
+                        <td class="text-end fw-bold"><span t-field="line.quantity"/></td>
+                        <td t-out="line.product_uom_id.name or line.product_id.uom_id.name or ''"/>
+                        <td t-if="kind == 'stock'" class="text-end">
+                            <t t-if="line.is_storable">
+                                <span t-field="line.free_qty"/>
+                                <span t-if="line.stock_state == 'none'" class="text-danger"> (niet)</span>
+                                <span t-elif="line.stock_state == 'partial'" class="text-warning"> (deels)</span>
+                            </t>
+                            <span t-else="" class="text-muted">-</span>
+                        </td>
+                        <td t-if="kind != 'stock'" t-out="line.vendor_id.display_name or '-'"/>
+                        <td t-if="kind != 'stock'">
+                            <t t-if="line.purchase_order_id">
+                                <t t-out="line.purchase_order_id.name"/>
+                                <div class="text-muted"><span t-field="line.purchase_state"/></div>
+                            </t>
+                            <span t-else="" class="text-danger">nog te bestellen</span>
+                        </td>
+                        <td t-if="kind != 'stock'">
+                            <span t-if="line.purchase_date_planned" t-field="line.purchase_date_planned" t-options="{'widget': 'date'}"/>
+                            <span t-else="" class="text-muted">-</span>
+                        </td>
+                        <td t-if="kind != 'stock'">
+                            <t t-if="line.picking_id">
+                                <t t-out="line.picking_id.name"/>
+                                <div class="text-muted"><span t-field="line.picking_id.state"/></div>
+                            </t>
+                            <span t-else="" class="text-muted">-</span>
+                        </td>
+                        <td t-if="kind == 'warehouse'" class="text-end">
+                            <span t-if="line.purchase_line_id" t-field="line.qty_received"/>
+                            <span t-else="" class="text-muted">-</span>
+                        </td>
+                        <td class="tl-remark-col"/>
+                    </tr>
+                </tbody>
+            </table>
+
+            <t t-if="section['pickings'] or section['orders']">
+                <div class="row small mt-2">
+                    <div t-if="section['orders']" class="col-6">
+                        <strong>Inkooporders</strong>
+                        <ul class="mb-0 ps-3">
+                            <li t-foreach="section['orders']" t-as="order">
+                                <t t-out="order.name"/> — <t t-out="order.partner_id.display_name"/>
+                                (<span t-field="order.state"/><t t-if="order.date_planned">, verwacht <span t-field="order.date_planned" t-options="{'widget': 'date'}"/></t>)
+                            </li>
+                        </ul>
+                    </div>
+                    <div t-if="section['pickings']" class="col-6">
+                        <strong t-if="kind == 'stock'">Leveringen uit het magazijn</strong>
+                        <strong t-elif="kind == 'warehouse'">Ontvangsten</strong>
+                        <strong t-else="">Dropship-leveringen</strong>
+                        <ul class="mb-0 ps-3">
+                            <li t-foreach="section['pickings']" t-as="picking">
+                                <t t-out="picking.name"/>
+                                (<span t-field="picking.state"/><t t-if="picking.scheduled_date">, gepland <span t-field="picking.scheduled_date" t-options="{'widget': 'date'}"/></t>)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </t>
+
+            <t t-if="section['pickup_orders']">
+                <div class="tl-pickup mt-3">
+                    <strong><i class="oi me-1" data-icon="warning"/>Extra materiaal af te halen aan het magazijn</strong>
+                    <t t-foreach="section['pickup_orders']" t-as="order">
+                        <div class="small mt-1">
+                            <em>Bij <t t-out="order.name"/>:</em>
+                            <pre class="tl-pre mb-0" t-out="order.tectora_warehouse_pickup_note or ''"/>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </template>
+
+    <!-- The document: header of the project, then the requested lists, each
+         on its own page. Expects `doc` and `list_keys` (tuple of keys). -->
+    <template id="report_logistics_lists_document">
+        <t t-call="web.external_layout">
+            <t t-set="sections" t-value="doc._logistics_lists(list_keys)"/>
+            <div class="page tl-page">
+                <style>
+                    .tl-page h3 { margin-bottom: 2px; }
+                    .tl-table th, .tl-table td { vertical-align: top; }
+                    .tl-check-col { width: 18px; }
+                    .tl-check { display: inline-block; width: 11px; height: 11px; border: 1px solid #333; border-radius: 2px; margin-top: 2px; }
+                    .tl-remark-col { width: 26%; border-bottom: 1px dotted #999; }
+                    .tl-pickup { border: 1px solid #e0a800; background: #fff8e1; padding: 6px 8px; border-radius: 3px; }
+                    .tl-pre { white-space: pre-wrap; font-family: inherit; font-size: inherit; }
+                    .tl-header { border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 8px; }
+                </style>
+                <t t-foreach="sections" t-as="section">
+                    <div t-if="not section_first" style="page-break-before: always;"/>
+                    <div class="tl-header">
+                        <h3>
+                            <t t-if="len(sections) == 1"><t t-out="section['title']"/> — </t>
+                            <t t-else="">Logistieke lijsten — </t>
+                            <t t-out="doc.code"/> <t t-out="doc.name"/>
+                        </h3>
+                        <div class="row small">
+                            <div class="col-6">
+                                <strong>Klant:</strong> <t t-out="doc.partner_id.display_name or '-'"/><br/>
+                                <strong>Werfadres:</strong> <t t-out="doc.address or '-'"/><br/>
+                                <strong>Order:</strong> <t t-out="doc.sale_order_id.name or '-'"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Geplande uitvoering:</strong>
+                                <t t-if="doc.planned_date_begin">
+                                    <span t-field="doc.planned_date_begin" t-options="{'widget': 'date'}"/>
+                                    <t t-if="doc.planned_date_end"> — <span t-field="doc.planned_date_end" t-options="{'widget': 'date'}"/></t>
+                                </t>
+                                <t t-else="">-</t><br/>
+                                <strong>Logistiek verantwoordelijke:</strong>
+                                <t t-out="doc.logistics_user_id.name or '-'"/><br/>
+                                <strong>Projectleider:</strong>
+                                <t t-out="doc.project_manager_id.name or '-'"/>
+                                <span class="text-muted ms-2">afgedrukt <t t-out="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M')"/></span>
+                            </div>
+                        </div>
+                    </div>
+                    <t t-call="tectora_purchase.report_logistics_list_section"/>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_logistics_lists">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="list_keys" t-value="('stock', 'warehouse', 'dropship')"/>
+                <t t-call="tectora_purchase.report_logistics_lists_document"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_logistics_stock">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="list_keys" t-value="('stock',)"/>
+                <t t-call="tectora_purchase.report_logistics_lists_document"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_logistics_warehouse">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="list_keys" t-value="('warehouse',)"/>
+                <t t-call="tectora_purchase.report_logistics_lists_document"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_logistics_dropship">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="list_keys" t-value="('dropship',)"/>
+                <t t-call="tectora_purchase.report_logistics_lists_document"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

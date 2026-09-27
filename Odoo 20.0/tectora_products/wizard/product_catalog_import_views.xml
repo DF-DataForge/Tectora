@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_product_catalog_import_form" model="ir.ui.view">
+        <field name="name">tectora.product.catalog.import.form</field>
+        <field name="model">tectora.product.catalog.import</field>
+        <field name="arch" type="xml">
+            <form string="Catalogus importeren">
+                <div invisible="state == 'done'">
+                    <div class="alert alert-info" role="alert">
+                        Laad de productenexport (.xlsx) op. Kolommen worden herkend op
+                        hun naam: <b>interne referentie</b> (of productcode), naam,
+                        <b>productcategorie</b>, aankoopprijs, verkoopprijs, eenheid,
+                        leverancier, leverancierscode, EAN en gewicht.
+                    </div>
+                    <group>
+                        <group string="Bestand">
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="sheet_name" placeholder="bv. Export Simpla"/>
+                        </group>
+                        <group string="Indeling">
+                            <field name="category_mode"/>
+                            <field name="type_mode"/>
+                        </group>
+                        <group string="Prijzen">
+                            <field name="markup"/>
+                        </group>
+                        <group string="Opties">
+                            <field name="sale_ok_goods"/>
+                            <field name="archive_price_book"/>
+                        </group>
+                    </group>
+                    <field name="state" invisible="1"/>
+                </div>
+                <div invisible="state != 'done'">
+                    <div class="alert alert-success" role="alert">
+                        <b>De catalogus is geïmporteerd.</b>
+                    </div>
+                    <field name="summary" nolabel="1" readonly="1"
+                           widget="text" class="o_field_text"/>
+                </div>
+                <footer>
+                    <button name="action_import" type="object" string="Importeren"
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-secondary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-primary" invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_product_catalog_import" model="ir.actions.act_window">
+        <field name="name">Catalogus importeren</field>
+        <field name="res_model">tectora.product.catalog.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_product_catalog_import_form"/>
+    </record>
+
+    <menuitem id="menu_product_catalog_import"
+              name="Catalogus importeren"
+              parent="sale.menu_sale_config"
+              action="action_product_catalog_import"
+              groups="sales_team.group_sale_manager"
+              sequence="95"/>
+
+</odoo>
