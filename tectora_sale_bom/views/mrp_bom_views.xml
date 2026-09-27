@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- A component can hold for the whole order line instead of per sold
+         unit (one container per site); a bill of materials saved from a
+         quotation keeps that. -->
+    <record id="mrp_bom_form_view_tectora_fixed_qty" model="ir.ui.view">
+        <field name="name">mrp.bom.form.tectora.fixed.qty</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bom_line_ids']/list/field[@name='product_qty']" position="after">
+                <field name="tectora_fixed_qty" string="Vast" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -14,6 +14,7 @@ contractors.
 | [`tectora_report_layout`](tectora_report_layout/) | The Tectora document layout: the roof-edge header as a choice in Settings → Configure Document Layout, applied to every printed document. |
 | [`tectora_products`](tectora_products/) | Supplier catalogue, price book and quotation templates. |
 | [`tectora_boms`](tectora_boms/) | Bills of materials of the works items, for the material list: the imported export plus a demo set with one complete bill of materials per works item, keyed on product codes ([`docs/demo_stuklijsten.md`](docs/demo_stuklijsten.md)). |
+| [`tectora_sale_bom`](tectora_sale_bom/) | Bill of materials made to measure per order line: adapt the components of a works item on the quotation (per sold unit or fixed per line, with cost, margin and computed price); the material list uses them instead of the product's, and they can be saved as the product's default bill of materials. Installs itself with `tectora_roof` and `tectora_boms`. |
 | [`tectora_purchase`](tectora_purchase/) | Orders the material list at the configured vendors: two logistic routes (dropship to the site, delivery to the warehouse) and one-click purchase orders from the material need overview. Installs itself with Purchase, Inventory and Dropshipping. |
 | [`tectora_purchase_portal`](tectora_purchase_portal/) | The three logistic lists of a site (pick-up at the own warehouse, receipts at the warehouse, dropship on site) on the employee portal, with their PDF. Installs itself with both. |
 

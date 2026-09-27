@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tectora_sale_bom_salesman,tectora.sale.bom salesman,model_tectora_sale_bom,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_sale_bom_line_salesman,tectora.sale.bom.line salesman,model_tectora_sale_bom_line,sales_team.group_sale_salesman,1,1,1,1
+access_tectora_sale_bom_mrp_user,tectora.sale.bom mrp user,model_tectora_sale_bom,mrp.group_mrp_user,1,0,0,0
+access_tectora_sale_bom_line_mrp_user,tectora.sale.bom.line mrp user,model_tectora_sale_bom_line,mrp.group_mrp_user,1,0,0,0

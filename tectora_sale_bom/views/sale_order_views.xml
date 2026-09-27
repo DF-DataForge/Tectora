@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- A button per product line opens its bill of materials to adapt for
+         this quotation; it shows in colour once the line has its own. -->
+    <record id="view_order_form_tectora_sale_bom" model="ir.ui.view">
+        <field name="name">sale.order.form.tectora.sale.bom</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_template_id']" position="after">
+                <field name="tectora_has_sale_bom" column_invisible="True"/>
+                <button name="action_open_tectora_sale_bom" type="object"
+                        icon="fa-list-ul" title="Stuklijst aanpassen"
+                        class="btn-link text-muted"
+                        invisible="display_type or is_downpayment or not product_id or tectora_has_sale_bom"/>
+                <button name="action_open_tectora_sale_bom" type="object"
+                        icon="fa-list-ul" title="Stuklijst op maat"
+                        class="btn-link text-primary"
+                        invisible="display_type or is_downpayment or not product_id or not tectora_has_sale_bom"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
