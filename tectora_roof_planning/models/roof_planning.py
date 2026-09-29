@@ -34,7 +34,8 @@ class TectoraRoofPlanning(models.Model):
             "roof_planning_id": self.id,
             "roof_project_id": self.project_id.id,
             "roof_team_id": self.team_id.id,
-            "resource_id": employee.resource_id.id,
+            # One shift per employee (Odoo 20 Planning: resource_ids).
+            "resource_ids": [(6, 0, employee.resource_id.ids)],
             "start_datetime": self.start_datetime,
             "end_datetime": self.end_datetime,
             "company_id": (self.company_id or self.env.company).id,
@@ -84,10 +85,10 @@ class TectoraRoofPlanning(models.Model):
         Slot = self.env["planning.slot"].with_context(tectora_planning_sync=True)
         wanted_resources = self.employee_ids.resource_id
         slots = self.slot_ids
-        stale = slots.filtered(lambda slot: slot.resource_id not in wanted_resources)
+        stale = slots.filtered(lambda slot: slot._tectora_resource() not in wanted_resources)
         if stale:
             stale.unlink()
-        by_resource = {slot.resource_id: slot for slot in self.slot_ids}
+        by_resource = {slot._tectora_resource(): slot for slot in self.slot_ids}
         to_create = []
         for employee in self.employee_ids:
             values = self._planning_slot_values(employee)
@@ -109,7 +110,7 @@ class TectoraRoofPlanning(models.Model):
             return Slot
         domain = [
             ("roof_planning_id", "=", False),
-            ("resource_id", "=", employee.resource_id.id),
+            ("resource_ids", "in", employee.resource_id.ids),
             ("start_datetime", "<", self.end_datetime),
             ("end_datetime", ">", self.start_datetime),
         ]

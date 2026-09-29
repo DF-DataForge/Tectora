@@ -46,7 +46,7 @@
                         <group string="Wanneer">
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
-                            <field name="resource_id"/>
+                            <field name="resource_ids" widget="many2many_tags"/>
                             <field name="roof_planning_id" readonly="1"
                                    invisible="not roof_planning_id"/>
                         </group>
@@ -68,7 +68,7 @@
             <gantt string="Planning per medewerker"
                    date_start="start_datetime"
                    date_stop="end_datetime"
-                   default_group_by="resource_id"/>
+                   default_group_by="resource_ids"/>
         </field>
     </record>
 
@@ -79,7 +79,7 @@
             <list string="Planning-items">
                 <field name="start_datetime"/>
                 <field name="end_datetime"/>
-                <field name="resource_id"/>
+                <field name="resource_ids" widget="many2many_tags"/>
                 <field name="roof_project_id"/>
                 <field name="roof_team_id" optional="show"/>
                 <field name="roof_partner_id" optional="hide"/>
@@ -96,7 +96,7 @@
             <search string="Planning">
                 <field name="roof_project_id"/>
                 <field name="roof_team_id"/>
-                <field name="resource_id"/>
+                <field name="resource_ids" widget="many2many_tags"/>
                 <filter string="Dakprojecten" name="roof_only"
                         domain="[('roof_planning_id', '!=', False)]"/>
                 <group>
@@ -105,7 +105,7 @@
                     <filter string="Ploeg" name="group_roof_team"
                             context="{'group_by': 'roof_team_id'}"/>
                     <filter string="Medewerker" name="group_resource"
-                            context="{'group_by': 'resource_id'}"/>
+                            context="{'group_by': 'resource_ids'}"/>
                     <filter string="Startdatum" name="group_start"
                             context="{'group_by': 'start_datetime:day'}"/>
                 </group>

@@ -54,10 +54,10 @@ installed.
     },
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",
-    # Not ported to Odoo 20 Enterprise yet: its Planning app no longer has
-    # planning.slot.resource_id, which this module matches shifts on. Off so
-    # that it does not install itself (auto_install) and roll back the install
-    # of the other modules; see UPGRADE_NOTES.md.
+    # Installed by hand (no auto_install) on Odoo 20: Planning is Enterprise
+    # and its gantt could not be tested with this port, so a problem there
+    # only fails this module's own install, never that of the other Tectora
+    # modules. See UPGRADE_NOTES.md.
     "auto_install": False,
-    "installable": False,
+    "installable": True,
 }
