@@ -28,4 +28,38 @@
         </xpath>
     </template>
 
+    <!-- The roof plan next to the order on the customer portal: in the
+         sidebar on large screens (Odoo hides the sidebar on phones) and
+         above the order content on small screens. -->
+    <template id="sale_order_portal_roof_plan">
+        <div class="o_tectora_portal_roof_plan">
+            <strong class="smaller text-uppercase text-muted">Dakplan</strong>
+            <img t-att-src="roof_plan_src" class="img-fluid d-block mt-2 border rounded" alt="Dakplan"/>
+            <div class="d-flex flex-wrap column-gap-3 small text-muted mt-2">
+                <span><t t-out="'%.1f m²' % roof_plan_roof.total_area"/> dakoppervlakte</span>
+                <span><t t-out="'%.1f m' % roof_plan_roof.total_perimeter"/> omtrek</span>
+            </div>
+        </div>
+    </template>
+
+    <template id="sale_order_portal_template_roof_plan"
+              inherit_id="sale.sale_order_portal_template">
+        <xpath expr="//t[@t-set='entries']" position="before">
+            <t t-set="roof_plan_roof" t-value="sale_order.roof_project_id"/>
+            <t t-set="roof_plan_src"
+               t-value="roof_plan_roof and (roof_plan_roof.canvas_snapshot or roof_plan_roof.section_count) and roof_plan_roof._get_drawing_data_uri()"/>
+        </xpath>
+        <xpath expr="//div[@id='sidebar_loyalty_anchor']" position="before">
+            <div t-if="roof_plan_src">
+                <hr/>
+                <t t-call="tectora_roof.sale_order_portal_roof_plan"/>
+            </div>
+        </xpath>
+        <xpath expr="//div[@id='portal_sale_content']" position="before">
+            <div t-if="roof_plan_src" class="d-lg-none mb-4">
+                <t t-call="tectora_roof.sale_order_portal_roof_plan"/>
+            </div>
+        </xpath>
+    </template>
+
 </odoo>
