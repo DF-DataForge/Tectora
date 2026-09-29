@@ -419,6 +419,7 @@ export class RoofCanvasField extends Component {
         this.drag = null; // {mode: 'move'|'rect'|'pan', ...}
         this.draftPolygon = null; // [[x, y], ...]
         this._rawCache = undefined;
+        this._staleRaw = null;
         this._shapes = [];
         this.labelHits = []; // clickable measurement boxes, in world coordinates
         this.iconImages = {}; // product category id -> loaded icon (or null)
@@ -479,7 +480,9 @@ export class RoofCanvasField extends Component {
     // ------------------------------------------------------------- record I/O
     get shapes() {
         const raw = this.props.record.data[this.props.name] || "";
-        if (raw !== this._rawCache) {
+        if (raw === this._rawCache) {
+            this._staleRaw = null;
+        } else if (raw !== this._staleRaw) {
             this._rawCache = raw;
             try {
                 const parsed = JSON.parse(raw || "{}");
@@ -493,6 +496,10 @@ export class RoofCanvasField extends Component {
 
     commit() {
         const raw = JSON.stringify({ shapes: this._shapes });
+        // record.update() applies asynchronously: until it lands, the record
+        // still holds the previous drawing, which must not be re-read over
+        // the committed shapes (the snapshot below would show the old ones).
+        this._staleRaw = this.props.record.data[this.props.name] || "";
         this._rawCache = raw;
         const values = { [this.props.name]: raw };
         const snapshot = this.exportSnapshot();

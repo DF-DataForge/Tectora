@@ -107,6 +107,10 @@ in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
 5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
    EPC-attest (tectora.be/service), kwaliteitspunten en contact.
 
+Op het klantenportaal toont de order altijd de standaard Odoo-weergave van de
+offertelijnen, met het dakplan en de kerncijfers in de zijbalk (op een gsm
+boven de lijnen); de knop *Downloaden* geeft de pdf in de gekozen stijl.
+
 Op de verkooporder staat naast het dakproject het vinkje **Standaard
 offerte**: aangevinkt gaat de offerte als het standaard Odoo-document naar de
 klant (pdf, e-mail én klantenportaal), met het dakplan erachter als dat
