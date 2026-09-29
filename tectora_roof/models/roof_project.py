@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools.binary import BinaryBytes
+from odoo.tools.image import image_data_uri
 
 _logger = logging.getLogger(__name__)
 
@@ -1212,6 +1213,17 @@ class TectoraRoofProject(models.Model):
                 "Could not render the fallback drawing for %s", self.code
             )
             return False
+
+    def _get_drawing_data_uri(self):
+        """The drawing as a data URI for <img src>, or False without drawing.
+
+        Reports must not pass _get_drawing_png() to QWeb's image_data_uri():
+        when rendering a PDF that helper reads ``.mimetype`` from its
+        argument, which only a binary field value (BinaryValue) has.
+        """
+        self.ensure_one()
+        png = self._get_drawing_png()
+        return image_data_uri(png) if png else False
 
     def _render_drawing_fallback_png(self):
         self.ensure_one()

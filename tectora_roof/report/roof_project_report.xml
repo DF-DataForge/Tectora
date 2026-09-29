@@ -41,9 +41,9 @@
                         <t t-out="'%.4f m/pixel' % roof_doc.scale_m_per_px"/>
                     </div>
                 </div>
-                <t t-set="drawing_png" t-value="roof_doc._get_drawing_png()"/>
+                <t t-set="drawing_png" t-value="roof_doc._get_drawing_data_uri()"/>
                 <div t-if="drawing_png" class="text-center mb-2">
-                    <img t-att-src="image_data_uri(drawing_png)"
+                    <img t-att-src="drawing_png"
                          style="max-width: 100%; max-height: 115mm;"
                          alt="Dakmeting"/>
                 </div>
