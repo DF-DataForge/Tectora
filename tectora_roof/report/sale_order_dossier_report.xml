@@ -230,9 +230,9 @@
                 </div>
             </div>
             <t t-if="with_drawing">
-                <t t-set="glance_drawing" t-value="roof._get_drawing_png()"/>
+                <t t-set="glance_drawing" t-value="roof._get_drawing_data_uri()"/>
                 <div t-if="glance_drawing" t-attf-class="text-center tq-avoid #{hero and 'tq-hero' or ''}" style="margin-top: 4px;">
-                    <img t-att-src="image_data_uri(glance_drawing)"
+                    <img t-att-src="glance_drawing"
                          t-attf-style="max-width: 100%; max-height: #{drawing_height or '80mm'}; border: 1px solid #e3e7e9; border-radius: 4px;"
                          alt="Dakplan"/>
                     <div class="tq-muted" style="font-size: 9px;">Opmeting van uw dak<t t-if="with_plan"> — het volledige dakplan vindt u verder in dit dossier</t>.</div>
