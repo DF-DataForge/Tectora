@@ -125,3 +125,41 @@ On a fresh Odoo 20.0 community database (all modules except
 * **Upgrading an existing Odoo 19 database** (through Odoo's upgrade
   service). The module migrations are in place, but no real database was
   migrated.
+
+## Deploying a change: upgrade the modules
+
+New code alone is not enough. A change that adds fields (or models, views,
+data) needs the module **upgraded** in the database. Otherwise Odoo serves
+code that expects columns the database does not have yet. A new stored field
+on a model read on every request (`res.partner`, `res.users`) then stops every
+page with `UndefinedColumn: column ... does not exist`. This happened on
+staging on 2026-10-07: the code of DF-DataForge/Tectora#55 and #56 was
+deployed and Odoo restarted, but the modules were not upgraded.
+
+Rules for every change:
+
+1. **Bump the version** in `__manifest__.py` of every module whose fields,
+   models, views or data change. Cloudpepper's auto-upgrade decides from that
+   version which installed modules to upgrade.
+2. **Name the modules to upgrade** in the pull request description (section
+   "Deploy"), with their new version.
+3. **After the deploy, check the log** before anyone uses the instance. An
+   upgrade shows lines such as `loading tectora_roof/views/...` and
+   `module tectora_roof: Running migration`. A plain restart only shows
+   `Registry loaded in 1.2s`. Without upgrade lines, upgrade by hand
+   (Cloudpepper *Addons* → *Update*, or on the server):
+
+   ```bash
+   cd /var/odoo/<instance>
+   sudo -u odoo venv/bin/python3 src/odoo-bin -c odoo.conf -d <database> \
+       -u <module>[,<module>...] --stop-after-init
+   ```
+
+   Then restart Odoo from the Cloudpepper dashboard.
+
+Releases and the modules they need upgraded:
+
+| Pull request | Modules to upgrade (new version) |
+|---|---|
+| DF-DataForge/Tectora#55 | `tectora_roof` (20.0.3.21.0) |
+| DF-DataForge/Tectora#56 | `tectora_roof` (20.0.3.22.0), `tectora_portal` (20.0.1.2.0) |
