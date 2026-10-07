@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="utm_source_koude_prospectie_op_de_baan" model="utm.source">
+        <field name="name">koude prospectie op de baan</field>
+    </record>
+    <record id="utm_source_koude_prospectie_via_mail" model="utm.source">
+        <field name="name">koude prospectie via mail</field>
+    </record>
+    <record id="utm_source_lead_architect" model="utm.source">
+        <field name="name">Lead architect</field>
+    </record>
+    <record id="utm_source_lead_bobex" model="utm.source">
+        <field name="name">Lead Bobex</field>
+    </record>
+    <record id="utm_source_lead_bouwonderneming" model="utm.source">
+        <field name="name">Lead bouwonderneming</field>
+    </record>
+    <record id="utm_source_lead_facebook" model="utm.source">
+        <field name="name">Lead Facebook</field>
+    </record>
+    <record id="utm_source_lead_google" model="utm.source">
+        <field name="name">Lead Google</field>
+    </record>
+    <record id="utm_source_lead_homedeal" model="utm.source">
+        <field name="name">Lead Homedeal</field>
+    </record>
+    <record id="utm_source_lead_instagram" model="utm.source">
+        <field name="name">Lead Instagram</field>
+    </record>
+    <record id="utm_source_lead_syndicus" model="utm.source">
+        <field name="name">Lead syndicus</field>
+    </record>
+    <record id="utm_source_lead_trustlocal" model="utm.source">
+        <field name="name">Lead Trustlocal</field>
+    </record>
+    <record id="utm_source_lead_via_ai" model="utm.source">
+        <field name="name">Lead via AI</field>
+    </record>
+    <record id="utm_source_lead_via_mathias" model="utm.source">
+        <field name="name">Lead via Mathias</field>
+    </record>
+    <record id="utm_source_lead_website" model="utm.source">
+        <field name="name">Lead website</field>
+    </record>
+    <record id="utm_source_mond_aan_mond_reclame_visibility" model="utm.source">
+        <field name="name">mond aan mond reclame visibility</field>
+    </record>
+</odoo>
