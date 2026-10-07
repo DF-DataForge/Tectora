@@ -150,6 +150,38 @@
                     </group>
                     <notebook>
                         <page string="Tekening" name="drawing">
+                            <!-- One plan per roof: the list says which roof is on
+                                 the drawing; "Plan openen" puts another one there. -->
+                            <field name="active_roof_id" invisible="1"/>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <strong invisible="not active_roof_id">Plan van:</strong>
+                                <span invisible="not active_roof_id">
+                                    <field name="active_roof_id" readonly="1" nolabel="1"
+                                           options="{'no_open': True}" class="fw-bold"/>
+                                </span>
+                                <span class="text-muted" invisible="roof_count">
+                                    Eén plan voor het hele project. Bestaat het uit meerdere
+                                    daken, voeg ze toe: elk dak krijgt een eigen plan.
+                                </span>
+                                <field name="roof_count" invisible="1"/>
+                                <button name="action_add_roof" type="object"
+                                        string="Dak toevoegen" icon="add"
+                                        class="btn-secondary btn-sm ms-auto"/>
+                            </div>
+                            <field name="roof_ids" nolabel="1" invisible="not roof_count">
+                                <list editable="bottom" create="0">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="number" string="Nr."/>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="total_area" sum="Totaal"/>
+                                    <field name="total_perimeter" sum="Totaal"/>
+                                    <field name="is_active" widget="boolean" readonly="1"/>
+                                    <button name="action_open_plan" type="object"
+                                            string="Plan openen" icon="draw"
+                                            class="btn-link" invisible="is_active"/>
+                                </list>
+                            </field>
                             <field name="scale_m_per_px" invisible="1"/>
                             <field name="has_background_image" invisible="1"/>
                             <field name="canvas_snapshot" invisible="1"/>
@@ -160,6 +192,7 @@
                         <page string="Daksecties" name="sections">
                             <field name="section_ids">
                                 <list>
+                                    <field name="roof_id" optional="show"/>
                                     <field name="name"/>
                                     <field name="width"/>
                                     <field name="length"/>
