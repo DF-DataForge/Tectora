@@ -43,7 +43,8 @@ class ProductTemplate(models.Model):
         [("m", "m"), ("m2", "m²"), ("m3", "m³")],
         string="Reken-UoM",
         default="m2",
-        help="m: één stuk is L. m²: één stuk is L × B. m³: één stuk is L × B × H.",
+        help="m: één stuk is L (B en H staan er ter info). m²: één stuk is L × B. "
+        "m³: één stuk is L × B × H.",
     )
     tectora_length = fields.Float(string="Lengte (L)", digits=(16, 4), help="In meter.")
     tectora_width = fields.Float(string="Breedte (B)", digits=(16, 4), help="In meter.")
