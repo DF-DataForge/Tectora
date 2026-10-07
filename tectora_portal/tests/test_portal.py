@@ -89,37 +89,6 @@ class TestPortalAccess(TectoraPortalCase):
         self.assertFalse(Project.search(Project._tectora_portal_domain(self.outsider)))
         self.assertFalse(Project.search(Project._tectora_portal_domain(self.env["hr.employee"])))
 
-    def test_planning_horizon(self):
-        """A work block beyond the employee's horizon stays hidden: the site
-        it is on does not show, nor does the block, until it comes within a
-        week or a month."""
-        Project = self.env["tectora.roof.project"]
-        now = fields.Datetime.now().replace(minute=0, second=0, microsecond=0)
-        later = self.env["tectora.roof.planning"].create({
-            "project_id": self.other_project.id,
-            "employee_ids": [(6, 0, self.outsider.ids)],
-            "start_datetime": now + timedelta(days=20),
-            "end_datetime": now + timedelta(days=20, hours=8),
-            "state": "published",
-        })
-        self.assertEqual(self.outsider.tectora_portal_planning_horizon, "all")
-        self.assertIn(self.other_project, Project.search(Project._tectora_portal_domain(self.outsider)))
-        self.assertEqual(self.other_project._tectora_portal_visible_blocks(self.outsider), later)
-
-        self.outsider.tectora_portal_planning_horizon = "week"
-        self.assertNotIn(self.other_project, Project.search(Project._tectora_portal_domain(self.outsider)))
-        self.assertFalse(self.other_project._tectora_portal_visible_blocks(self.outsider))
-        self.assertFalse(self.other_project._tectora_portal_next_block(now, self.outsider))
-
-        self.outsider.tectora_portal_planning_horizon = "month"
-        self.assertIn(self.other_project, Project.search(Project._tectora_portal_domain(self.outsider)))
-        self.assertEqual(self.other_project._tectora_portal_next_block(now, self.outsider), later)
-
-        # Today's block stays visible on the shortest horizon.
-        self.leader.tectora_portal_planning_horizon = "week"
-        self.assertIn(self.project, Project.search(Project._tectora_portal_domain(self.leader)))
-        self.assertEqual(self.project._tectora_portal_visible_blocks(self.leader), self.block)
-
     def test_planned_employees(self):
         now = fields.Datetime.now()
         self.assertEqual(

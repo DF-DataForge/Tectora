@@ -18,41 +18,6 @@
                     <field name="roof_project_count" widget="statinfo" string="Dakprojecten"/>
                 </button>
             </xpath>
-            <!-- The source is asked on every lead, so it sits next to the
-                 tags instead of in the Marketing group of Extra Info. -->
-            <xpath expr="//sheet//field[@name='tag_ids']" position="after">
-                <field name="source_id" position="move"/>
-            </xpath>
-            <field name="source_id" position="attributes">
-                <attribute name="string">Bron</attribute>
-                <attribute name="options">{'no_create': True}</attribute>
-            </field>
-        </field>
-    </record>
-
-    <record id="crm_case_tree_view_oppor_inherit_tectora" model="ir.ui.view">
-        <field name="name">crm.lead.list.opportunity.inherit.tectora.roof</field>
-        <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
-        <field name="arch" type="xml">
-            <field name="source_id" position="attributes">
-                <attribute name="optional">show</attribute>
-            </field>
-        </field>
-    </record>
-
-    <record id="quick_create_opportunity_form_inherit_tectora" model="ir.ui.view">
-        <field name="name">crm.lead.form.quick_create.inherit.tectora.roof</field>
-        <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.quick_create_opportunity_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='expected_revenue']/.." position="after">
-                <div class="d-flex align-items-center" colspan="2">
-                    <i class="oi" data-icon="campaign" title="Bron"/>
-                    <field name="source_id" nolabel="1" placeholder="Bron"
-                           class="o_field_highlight" options="{'no_create': True}"/>
-                </div>
-            </xpath>
         </field>
     </record>
 

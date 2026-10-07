@@ -15,14 +15,6 @@ class TectoraRoofObject(models.Model):
         ondelete="cascade",
         index=True,
     )
-    roof_id = fields.Many2one(
-        "tectora.roof.project.roof",
-        string="Dak",
-        ondelete="cascade",
-        index=True,
-        domain="[('project_id', '=', project_id)]",
-        help="Het dak op wiens plan dit object getekend is.",
-    )
     company_id = fields.Many2one(related="project_id.company_id", store=True)
     currency_id = fields.Many2one(related="project_id.currency_id")
     object_type = fields.Selection(

@@ -18,7 +18,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -46,7 +46,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -66,7 +66,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -102,7 +102,7 @@
      "price": 2.1
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -138,6 +138,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00400",
      "quantity": 40.0,
      "optional": false,
@@ -170,6 +174,10 @@
      "price": 6.5
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -184,14 +192,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -273,7 +273,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -301,7 +301,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -321,7 +321,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -365,7 +365,7 @@
      "price": 2.1
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -399,6 +399,10 @@
      "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
      "uom": "m",
      "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
     },
     {
      "code": "S00097",
@@ -441,6 +445,10 @@
      "price": 6.5
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -455,14 +463,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -544,7 +544,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -572,7 +572,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -592,7 +592,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -628,7 +628,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -664,6 +664,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00076",
      "quantity": 40.0,
      "optional": false,
@@ -688,6 +692,10 @@
      "price": 24.97
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -702,14 +710,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -791,7 +791,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -819,7 +819,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -839,7 +839,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -875,7 +875,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -927,6 +927,10 @@
      "price": 24.81
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00077",
      "quantity": 40.0,
      "optional": false,
@@ -951,6 +955,10 @@
      "price": 45.4
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -965,14 +973,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -1054,7 +1054,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -1082,7 +1082,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -1102,7 +1102,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -1138,7 +1138,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -1182,6 +1182,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00068",
      "quantity": 12.0,
      "optional": false,
@@ -1214,6 +1218,10 @@
      "price": 35.85
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -1228,14 +1236,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -1317,7 +1317,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -1345,7 +1345,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -1365,7 +1365,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -1409,7 +1409,7 @@
      "price": 2.1
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -1445,6 +1445,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00068",
      "quantity": 12.0,
      "optional": false,
@@ -1477,6 +1481,10 @@
      "price": 84.76
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -1491,14 +1499,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -1580,7 +1580,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -1608,7 +1608,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -1628,7 +1628,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -1664,7 +1664,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -1700,6 +1700,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00078",
      "quantity": 40.0,
      "optional": false,
@@ -1724,6 +1728,10 @@
      "price": 45.4
     },
     {
+     "section": "Terrasafwerking",
+     "optional": false
+    },
+    {
      "code": "S00330",
      "quantity": 100.0,
      "optional": false,
@@ -1740,6 +1748,10 @@
      "price": 119.8
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -1754,14 +1766,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -1827,7 +1831,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -1855,7 +1859,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -1875,7 +1879,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -1903,7 +1907,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -1947,6 +1951,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00410",
      "quantity": 40.0,
      "optional": false,
@@ -1971,6 +1979,10 @@
      "price": 45.4
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00205",
      "quantity": 2.0,
      "optional": false,
@@ -1985,14 +1997,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -2074,7 +2078,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -2102,7 +2106,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -2122,7 +2126,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -2158,7 +2162,7 @@
      "price": 2.1
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -2194,6 +2198,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00071",
      "quantity": 40.0,
      "optional": false,
@@ -2226,6 +2234,10 @@
      "price": 6.5
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -2240,14 +2252,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -2313,7 +2317,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -2341,7 +2345,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -2361,7 +2365,7 @@
      "price": 9.5
     },
     {
-     "section": "AFBOUWWERKEN THV PLAT DAK",
+     "section": "Afbraakwerken",
      "optional": false
     },
     {
@@ -2397,7 +2401,7 @@
      "price": 22.15
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -2433,6 +2437,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00487",
      "quantity": 40.0,
      "optional": false,
@@ -2457,6 +2465,10 @@
      "price": 37.85
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 1.0,
      "optional": false,
@@ -2471,14 +2483,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -2544,7 +2548,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -2572,7 +2576,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -2592,7 +2596,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -2626,6 +2630,10 @@
      "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
      "uom": "m",
      "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
     },
     {
      "code": "S00068",
@@ -2668,6 +2676,10 @@
      "price": 6.5
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -2682,14 +2694,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -2771,7 +2775,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -2799,7 +2803,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -2819,7 +2823,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -2853,6 +2857,10 @@
      "label": "Leveren en plaatsen van de mechanische verankering thv de opstanden 'kimfixatie'",
      "uom": "m",
      "price": 19.29
+    },
+    {
+     "section": "Dakranden en hoeken",
+     "optional": false
     },
     {
      "code": "S00068",
@@ -2895,6 +2903,10 @@
      "price": 6.5
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -2909,14 +2921,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -2998,7 +3002,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -3026,7 +3030,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -3046,7 +3050,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -3082,6 +3086,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00130",
      "quantity": 40.0,
      "optional": false,
@@ -3114,6 +3122,10 @@
      "price": 24.97
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -3128,14 +3140,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -3217,7 +3221,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -3245,7 +3249,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -3265,7 +3269,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -3301,6 +3305,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00130",
      "quantity": 40.0,
      "optional": false,
@@ -3333,6 +3341,10 @@
      "price": 51.15
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -3347,14 +3359,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -3436,7 +3440,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -3464,7 +3468,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -3484,7 +3488,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -3528,6 +3532,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00068",
      "quantity": 12.0,
      "optional": false,
@@ -3560,6 +3568,10 @@
      "price": 35.85
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -3574,14 +3586,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -3663,7 +3667,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -3691,7 +3695,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -3711,7 +3715,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -3747,6 +3751,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00069",
      "quantity": 12.0,
      "optional": false,
@@ -3779,6 +3787,10 @@
      "price": 84.76
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -3793,14 +3805,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -3882,7 +3886,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -3910,7 +3914,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -3930,7 +3934,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -3982,6 +3986,10 @@
      "price": 24.81
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00077",
      "quantity": 40.0,
      "optional": false,
@@ -4006,6 +4014,10 @@
      "price": 45.4
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -4020,14 +4032,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -4109,7 +4113,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -4137,7 +4141,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -4157,7 +4161,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -4193,6 +4197,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00078",
      "quantity": 40.0,
      "optional": false,
@@ -4217,6 +4225,10 @@
      "price": 45.4
     },
     {
+     "section": "Terrasafwerking",
+     "optional": false
+    },
+    {
      "code": "S00330",
      "quantity": 100.0,
      "optional": false,
@@ -4233,6 +4245,10 @@
      "price": 119.8
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -4247,14 +4263,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -4320,7 +4328,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -4348,7 +4356,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -4368,7 +4376,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -4404,6 +4412,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00410",
      "quantity": 40.0,
      "optional": false,
@@ -4428,6 +4440,10 @@
      "price": 45.4
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 2.0,
      "optional": false,
@@ -4442,14 +4458,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",
@@ -4515,7 +4523,7 @@
    "note": "<p>Prijzen zijn geldig gedurende 30 dagen en exclusief btw. De hoeveelheden worden bevestigd na opmeting ter plaatse; de eindafrekening gebeurt volgens de werkelijk uitgevoerde hoeveelheden.</p><p>Werkuren in regie worden aangerekend aan het geldende uurtarief. Onvoorziene werken (bijkomende lagen dakbedekking, aangetaste draagstructuur, ...) worden vooraf gemeld en in meerwerk opgenomen.</p>",
    "lines": [
     {
-     "section": "ALGEMENE WERKEN",
+     "section": "Algemene werken",
      "optional": false
     },
     {
@@ -4543,7 +4551,7 @@
      "price": 125.0
     },
     {
-     "section": "VEILIGHEID",
+     "section": "Verplichte veiligheidsvoorzieningen",
      "optional": false
     },
     {
@@ -4563,7 +4571,7 @@
      "price": 9.5
     },
     {
-     "section": "OPBOUWWERKEN THV PLAT DAK",
+     "section": "Dakopbouw",
      "optional": false
     },
     {
@@ -4607,6 +4615,10 @@
      "price": 19.29
     },
     {
+     "section": "Dakranden en hoeken",
+     "optional": false
+    },
+    {
      "code": "S00481",
      "quantity": 40.0,
      "optional": false,
@@ -4631,6 +4643,10 @@
      "price": 37.85
     },
     {
+     "section": "Regenwaterafvoer",
+     "optional": false
+    },
+    {
      "code": "S00191",
      "quantity": 1.0,
      "optional": false,
@@ -4645,14 +4661,6 @@
      "label": "Leveren en plaatsen van het bolrooster (bladvanger) in de tapbuis dia: 80mm",
      "uom": "unit",
      "price": 7.82
-    },
-    {
-     "section": "COMMERCIËLE TEGEMOETKOMING",
-     "optional": false
-    },
-    {
-     "section": "ALGEMENE NOTA'S",
-     "optional": false
     },
     {
      "section": "Opties",

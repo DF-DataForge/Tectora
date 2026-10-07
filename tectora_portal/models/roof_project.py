@@ -46,19 +46,13 @@ class TectoraRoofProject(models.Model):
     @api.model
     def _tectora_portal_domain(self, employee):
         """The sites an employee sees on the portal: every roof project they
-        are planned on (a work block with them on it, starting within their
-        planning horizon), plus -- for a ploeg member or ploegbaas -- the
-        projects assigned to their team."""
+        are planned on (a work block with them on it), plus -- for a ploeg
+        member or ploegbaas -- the projects assigned to their team."""
         if not employee:
             return [("id", "=", False)]
-        block_domain = [("employee_ids", "in", employee.ids)]
-        horizon_end = employee._tectora_portal_horizon_end()
-        if horizon_end:
-            # Only blocks within the employee's planning horizon reveal a site.
-            block_domain.append(("start_datetime", "<", horizon_end))
         return [
             "|",
-            ("planning_ids", "any", block_domain),
+            ("planning_ids", "any", [("employee_ids", "in", employee.ids)]),
             "|",
             ("team_id.employee_ids", "in", employee.ids),
             ("team_id.leader_id", "in", employee.ids),
@@ -108,27 +102,10 @@ class TectoraRoofProject(models.Model):
             employees = self.team_id.member_ids
         return employees.filtered("active")
 
-    def _tectora_portal_visible_blocks(self, employee, moment=None):
-        """The work blocks of this project shown on ``employee``'s portal:
-        all of them, or those starting before the end of their planning
-        horizon (1 week, 1 month)."""
-        self.ensure_one()
-        blocks = self.planning_ids
-        horizon_end = employee._tectora_portal_horizon_end(moment) if employee else None
-        if horizon_end:
-            blocks = blocks.filtered(
-                lambda block: block.start_datetime and block.start_datetime < horizon_end
-            )
-        return blocks.sorted("start_datetime")
-
-    def _tectora_portal_next_block(self, moment=None, employee=None):
+    def _tectora_portal_next_block(self, moment=None):
         self.ensure_one()
         moment = moment or fields.Datetime.now()
-        blocks = (
-            self._tectora_portal_visible_blocks(employee, moment)
-            if employee else self.planning_ids
-        )
-        upcoming = blocks.filtered(
+        upcoming = self.planning_ids.filtered(
             lambda block: block.end_datetime and block.end_datetime >= moment
         ).sorted("start_datetime")
         return upcoming[:1]

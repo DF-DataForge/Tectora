@@ -417,37 +417,25 @@ def section(name, optional=False):
     return {"section": name, "optional": optional}
 
 
-# The fixed sections of every quotation, in this order. Renovation has its
-# demolition under AFBOUWWERKEN; every roof of a project gets a subsection
-# under AFBOUWWERKEN and OPBOUWWERKEN (tectora_roof, "Daken toevoegen").
-GENERAL = "ALGEMENE WERKEN"
-SAFETY_SECTION = "VEILIGHEID"
-DEMOLITION = "AFBOUWWERKEN THV PLAT DAK"
-BUILD_UP = "OPBOUWWERKEN THV PLAT DAK"
-COMMERCIAL = "COMMERCIËLE TEGEMOETKOMING"
-NOTES = "ALGEMENE NOTA'S"
-
-
 def build_one(spec, products):
     renovation = spec["kind"] == "renovatie"
     outlets = spec.get("outlets", OUTLETS)
     bitumen = spec.get("bitumen", False)
     label, profile, inner, outer, cap = EDGES[spec["edge"]]
 
-    lines = [section(GENERAL)]
+    lines = [section("Algemene werken")]
     general = GENERAL_RENOVATION if renovation else GENERAL_NEW_BUILD
     lines += [line(products, code, qty) for code, qty in general]
 
-    lines.append(section(SAFETY_SECTION))
+    lines.append(section("Verplichte veiligheidsvoorzieningen"))
     safety = SAFETY_BITUMEN if bitumen else SAFETY
     lines += [line(products, code, qty) for code, qty in safety]
 
     if renovation:
-        lines.append(section(DEMOLITION))
+        lines.append(section("Afbraakwerken"))
         lines += [line(products, code, qty) for code, qty in spec["demolition"]]
 
-    # Deck, edges and corners, terrace finish and drainage: one chapter.
-    lines.append(section(BUILD_UP))
+    lines.append(section("Dakopbouw"))
     for code, qty in spec.get("deck", []):
         lines.append(line(products, code, qty))
     lines.append(line(products, spec["vapour"], AREA))
@@ -457,6 +445,7 @@ def build_one(spec, products):
     for code, qty in spec.get("cover", []):
         lines.append(line(products, code, qty))
 
+    lines.append(section("Dakranden en hoeken"))
     for code, qty in spec.get("extras", []):
         lines.append(line(products, code, qty))
     lines.append(line(products, profile, PERIMETER))
@@ -466,16 +455,16 @@ def build_one(spec, products):
         lines.append(line(products, cap, 2.0))
 
     if spec.get("finish"):
+        lines.append(section("Terrasafwerking"))
         lines += [line(products, code, qty) for code, qty in spec["finish"]]
 
+    lines.append(section("Regenwaterafvoer"))
     drainage = DRAINAGE_BITUMEN if bitumen else DRAINAGE
     lines += [line(products, code, outlets) for code, _qty in drainage]
 
     options = spec.get("options", [])
     if options is not OPTIONS_COMMON:
         options = list(options) + list(OPTIONS_COMMON)
-    lines.append(section(COMMERCIAL))
-    lines.append(section(NOTES))
     lines.append(section("Opties", optional=True))
     lines += [line(products, code, qty, optional=True) for code, qty in options]
 

@@ -61,9 +61,6 @@ class SaleOrder(models.Model):
         "order, en klant, opportuniteit, verkoper, leverdatum en prijslijst "
         "blijven in beide richtingen gelijk.",
     )
-    tectora_roof_ids = fields.One2many(
-        related="roof_project_id.roof_ids", string="Daken", readonly=True,
-    )
     roof_project_state = fields.Selection(
         related="roof_project_id.state", string="Status dakproject", readonly=True
     )
@@ -480,21 +477,22 @@ class SaleOrder(models.Model):
         candidates = candidates._tectora_mirrorable().filtered(
             lambda line: line.order_id == self
         )
-        # Keyed on (product, roof): every roof has its own chapter lines.
+        measured_products = (
+            roof.section_ids.product_line_ids | roof.roof_object_ids.product_line_ids
+        ).product_id
         direct_by_product = {}
         for roof_line in roof.direct_line_ids:
-            direct_by_product.setdefault((roof_line.product_id, roof_line.roof_id), roof_line)
+            direct_by_product.setdefault(roof_line.product_id, roof_line)
         for line in candidates:
             roof_line = line.roof_line_id
             if roof_line and roof_line.project_id != roof:
                 roof_line = self.env["tectora.roof.section.product"]
-            line_roof = line.tectora_roof_id.filtered(lambda r: r.project_id == roof)
             if not roof_line:
-                if line.product_id in roof._tectora_measured_products(line_roof):
+                if line.product_id in measured_products:
                     # The drawing already prices this product; a manually
                     # added line is left to the user.
                     continue
-                roof_line = direct_by_product.get((line.product_id, line_roof))
+                roof_line = direct_by_product.get(line.product_id)
                 if roof_line and roof_line.sale_line_ids.filtered(
                     lambda sol: sol.order_id == self and sol != line
                 ):
@@ -506,12 +504,11 @@ class SaleOrder(models.Model):
                     # the line. The drawing overrides it when it changes.
                     roof_line = RoofLine.create({
                         "project_direct_id": roof.id,
-                        "roof_id": line_roof.id or False,
                         "product_id": line.product_id.id,
                         "coverage": coverage,
                         "quantity": line.product_uom_qty,
                     })
-                    direct_by_product[(line.product_id, line_roof)] = roof_line
+                    direct_by_product[line.product_id] = roof_line
                 line.with_context(tectora_sync=True).write(
                     {"roof_line_id": roof_line.id}
                 )
@@ -535,117 +532,6 @@ class SaleOrder(models.Model):
                 line.with_context(tectora_sync=True).write(
                     {"product_uom_qty": roof_line.quantity}
                 )
-        return True
-
-    # ----------------------------------------------------------------- roofs
-    # The fixed sections of a quotation in which every roof gets a subsection.
-    ROOF_CHAPTERS = (("afbouw", ("afbouw", "afbraak")), ("opbouw", ("opbouw",)))
-
-    @api.onchange("sale_order_template_id")
-    def _onchange_tectora_template_project_type(self):
-        """The template says renovatie or nieuwbouw: the order takes the
-        pricelist of that type, which the roof project follows."""
-        kind = self.sale_order_template_id.tectora_project_type
-        if not kind:
-            return
-        label = dict(self.env["sale.order.template"]._fields["tectora_project_type"].selection)[kind]
-        pricelist = self.env["product.pricelist"].search(
-            [("name", "=ilike", label), ("company_id", "in", [False, self.company_id.id])],
-            limit=1,
-        )
-        if pricelist and pricelist != self.pricelist_id:
-            self.pricelist_id = pricelist
-
-    def _tectora_check_roofs_allowed(self):
-        self.ensure_one()
-        if not self.sale_order_template_id:
-            raise UserError(_("Kies eerst een offertesjabloon; daarna kunnen de daken toegevoegd worden."))
-        if self.state not in ("draft", "sent"):
-            raise UserError(_("Daken worden toegevoegd op een offerte, niet op een bevestigde order."))
-
-    def action_tectora_add_roofs(self):
-        self.ensure_one()
-        self._tectora_check_roofs_allowed()
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Daken toevoegen"),
-            "res_model": "tectora.add.roofs.wizard",
-            "view_mode": "form",
-            "target": "new",
-            "context": {"default_order_id": self.id, "default_roof_count": 1},
-        }
-
-    def _tectora_roof_chapter_header(self, lines, keywords):
-        return lines.filtered(
-            lambda line: line.display_type == "line_section"
-            and not line.roof_measurement_line
-            and any(word in (line.name or "").lower() for word in keywords)
-        )[:1]
-
-    def _tectora_add_roof_subsections(self, roofs):
-        """Under the afbouw- and opbouwwerken, a subsection per roof with the
-        works of that chapter: the template's lines move into the first
-        roofs' subsections, every next roof gets the same lines. The roof
-        project gets them as lines of that roof, whose quantities follow the
-        roof's plan once it is drawn."""
-        self.ensure_one()
-        Line = self.env["sale.order.line"]
-        ordered = list(self.order_line.sorted(lambda l: (l.sequence, l.id)))
-        for _kind, keywords in self.ROOF_CHAPTERS:
-            lines = Line.union(ordered)
-            header = self._tectora_roof_chapter_header(lines, keywords)
-            if not header:
-                continue
-            start = ordered.index(header)
-            end = start + 1
-            while end < len(ordered) and ordered[end].display_type != "line_section":
-                end += 1
-            block = ordered[start + 1:end]
-            pattern = [
-                line for line in block
-                if not line.display_type and line.product_id
-                and not line.tectora_roof_id and not line.roof_measurement_line
-            ]
-            if not pattern:
-                # The chapter was split per roof before: a new roof gets the
-                # lines of the first roof.
-                first_roof = next((l.tectora_roof_id for l in block if l.tectora_roof_id), None)
-                if first_roof:
-                    pattern = [
-                        line for line in block
-                        if not line.display_type and line.tectora_roof_id == first_roof
-                    ]
-            values = []
-            for roof in roofs:
-                values.append({
-                    "order_id": self.id,
-                    "display_type": "line_subsection",
-                    "name": roof._subsection_name(),
-                    "tectora_roof_id": roof.id,
-                })
-                for line in pattern:
-                    values.append({
-                        "order_id": self.id,
-                        "product_id": line.product_id.id,
-                        "name": line.name,
-                        "product_uom_qty": line.product_uom_qty,
-                        "product_uom_id": line.product_uom_id.id,
-                        "price_unit": line.price_unit,
-                        "discount": line.discount,
-                        "tectora_roof_id": roof.id,
-                    })
-            new_lines = Line.create(values)
-            loose = [line for line in pattern if not line.tectora_roof_id]
-            ordered = ordered[:end] + list(new_lines) + ordered[end:]
-            if loose:
-                ordered = [line for line in ordered if line not in loose]
-                Line.union(loose).unlink()
-        ordered = [line for line in ordered if line.exists()]
-        for index, line in enumerate(ordered, start=1):
-            if line.sequence != index * 10:
-                line.with_context(tectora_sync=True).write({"sequence": index * 10})
-        if self.roof_project_id:
-            self.roof_project_id._tectora_mirror_to_order(self)
         return True
 
     # --------------------------------------------------------- field mirror
@@ -964,7 +850,7 @@ class SaleOrder(models.Model):
         factor = bom_quantity / (bom.product_qty or 1.0)
         _boms_done, lines_done = bom.explode(line.product_id, factor)
         return [
-            self._tectora_component_values(
+            self._tectora_material_values(
                 line,
                 bom_line.product_id,
                 self._tectora_exploded_quantity(bom, factor, bom_line, line_data),
@@ -973,16 +859,6 @@ class SaleOrder(models.Model):
             )
             for bom_line, line_data in lines_done
         ]
-
-    def _tectora_component_values(self, line, product, quantity, uom, bom_name):
-        """Material values of a component of a bill of materials. A component
-        with hercalculatie is counted in m² or m³ on the bill of materials
-        and needed in pieces: ``quantity`` is turned into pieces of the
-        product's own unit."""
-        if product.tectora_recalc:
-            quantity = product.product_tmpl_id._tectora_recalculate(quantity)
-            uom = product.uom_id
-        return self._tectora_material_values(line, product, quantity, uom, bom_name)
 
     def _tectora_exploded_quantity(self, bom, factor, bom_line, line_data):
         """Quantity of one exploded component; ``factor`` is how many times

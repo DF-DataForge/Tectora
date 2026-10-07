@@ -100,22 +100,17 @@ Twintig startpunten voor een offerte, opgebouwd uit dezelfde catalogus:
 onder **Verkoop → Configuratie → Offertesjablonen** en worden geladen via
 **Verkoop → Configuratie → Offertesjablonen laden**.
 
-Elk sjabloon heeft dezelfde vaste secties, in deze volgorde:
+Elk sjabloon heeft dezelfde ruggengraat, in secties:
 
 | Sectie | Inhoud |
 |---|---|
-| ALGEMENE WERKEN | Vaste kosten, verticaal transport (manueel bij renovatie, camionkraan bij nieuwbouw), afvalverwerking. |
-| VEILIGHEID | Twee permanente ankerpunten en tijdelijke balustrades over de volledige omtrek. |
-| AFBOUWWERKEN THV PLAT DAK | **Enkel bij renovatie**: de bestaande bedekking, de dakranden, de tapbuizen en wat daarbij hoort. |
-| OPBOUWWERKEN THV PLAT DAK | Eén dampscherm, één isolatie, één dakbedekking en de kimfixatie (bij een geballast systeem ook het grind met grindvangers); één dakrandtype met **de binnen- en buitenhoek die bij dat profiel horen**; bij een dakterras de terrasafwerking; de tapbuizen met bolrooster. |
-| COMMERCIËLE TEGEMOETKOMING | Leeg, voor een korting of gebaar op maat. |
-| ALGEMENE NOTA'S | Leeg, voor opmerkingen bij de offerte. |
+| Algemene werken | Vaste kosten, verticaal transport (manueel bij renovatie, camionkraan bij nieuwbouw), afvalverwerking. |
+| Verplichte veiligheidsvoorzieningen | Twee permanente ankerpunten en tijdelijke balustrades over de volledige omtrek. |
+| Afbraakwerken | **Enkel bij renovatie**: de bestaande bedekking, de dakranden, de tapbuizen en wat daarbij hoort. |
+| Dakopbouw | Eén dampscherm, één isolatie, één dakbedekking, plus de kimfixatie — en bij een geballast systeem het grind met grindvangers. |
+| Dakranden en hoeken | Eén dakrandtype met **de binnen- en buitenhoek die bij dat profiel horen**. |
+| Regenwaterafvoer | Tapbuizen met bolrooster. |
 | Opties | Koepel of dakraam, parkeervergunning, stelling en keuring, hoogwerker, noodspuwer, afvoerbuis. Optionele lijnen: ze staan op de offerte maar tellen niet mee. |
-
-Bestaat een project uit meerdere daken, dan krijgt elk dak met **Daken
-toevoegen** op de offerte (Tectora Dakmeting) een subsectie onder de
-afbouw- en opbouwwerken. Sjablonen die al in de database staan, krijgen de
-nieuwe secties pas na **Offertesjablonen laden** met vernieuwen.
 
 De twintig variëren in dakbedekking (Elevate EPDM 1,1 of 1,5 mm, verkleefd of
 geballast, en 2-laagse bitumineuze roofing), isolatie (PIR 10 tot 20 cm en
