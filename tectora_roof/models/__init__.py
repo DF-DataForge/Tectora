@@ -16,3 +16,4 @@ from . import product_category
 from . import product_template
 from . import project_task
 from . import crm_lead
+from . import res_partner

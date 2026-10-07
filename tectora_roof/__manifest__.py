@@ -67,6 +67,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/product_category_views.xml",
         "views/product_template_views.xml",
         "views/crm_lead_views.xml",
+        "views/res_partner_views.xml",
         "views/sale_portal_templates.xml",
         "report/roof_project_report.xml",
         "report/sale_order_report.xml",
