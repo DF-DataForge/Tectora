@@ -37,7 +37,7 @@ invitation e-mail is sent. The reports and the hour registrations are also
 visible in the back office, under Dakmeting and on the project dashboard's
 *Uitvoering* tab.
     """,
-    "version": "20.0.1.1.0",
+    "version": "20.0.1.2.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
