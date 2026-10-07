@@ -850,7 +850,7 @@ class SaleOrder(models.Model):
         factor = bom_quantity / (bom.product_qty or 1.0)
         _boms_done, lines_done = bom.explode(line.product_id, factor)
         return [
-            self._tectora_material_values(
+            self._tectora_component_values(
                 line,
                 bom_line.product_id,
                 self._tectora_exploded_quantity(bom, factor, bom_line, line_data),
@@ -859,6 +859,16 @@ class SaleOrder(models.Model):
             )
             for bom_line, line_data in lines_done
         ]
+
+    def _tectora_component_values(self, line, product, quantity, uom, bom_name):
+        """Material values of a component of a bill of materials. A component
+        with hercalculatie is counted in m² or m³ on the bill of materials
+        and needed in pieces: ``quantity`` is turned into pieces of the
+        product's own unit."""
+        if product.tectora_recalc:
+            quantity = product.product_tmpl_id._tectora_recalculate(quantity)
+            uom = product.uom_id
+        return self._tectora_material_values(line, product, quantity, uom, bom_name)
 
     def _tectora_exploded_quantity(self, bom, factor, bom_line, line_data):
         """Quantity of one exploded component; ``factor`` is how many times
