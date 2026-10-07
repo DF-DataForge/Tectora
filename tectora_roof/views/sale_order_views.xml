@@ -18,6 +18,23 @@
                             help="Zet het gekozen btw-tarief op elke productregel van deze offerte."/>
                 </div>
             </xpath>
+            <!-- First the template, then the roofs: every roof gets a plan on
+                 the roof project and a subsection under the afbouw- and
+                 opbouwwerken. -->
+            <xpath expr="//group[@name='partner_details']" position="inside">
+                <field name="sale_order_template_id" position="move"/>
+                <label for="tectora_roof_ids" string="Daken"
+                       invisible="not sale_order_template_id"/>
+                <div class="o_row" invisible="not sale_order_template_id">
+                    <field name="tectora_roof_ids" widget="many2many_tags" readonly="1"
+                           nolabel="1" invisible="not tectora_roof_ids"/>
+                    <button name="action_tectora_add_roofs" type="object"
+                            string="Daken toevoegen" icon="add"
+                            class="btn-link px-0"
+                            invisible="state not in ('draft', 'sent')"
+                            help="Geef op uit hoeveel daken het project bestaat, met een omschrijving per dak. Elk dak krijgt een eigen plan op het dakproject en een subsectie onder de afbouw- en opbouwwerken."/>
+                </div>
+            </xpath>
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="roof_project_id"
                        context="{'default_partner_id': partner_id}"/>

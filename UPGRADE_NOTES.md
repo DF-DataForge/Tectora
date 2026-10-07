@@ -145,7 +145,7 @@ Rules for every change:
    "Deploy"), with their new version.
 3. **After the deploy, check the log** before anyone uses the instance. An
    upgrade shows lines such as `loading tectora_roof/views/...` and
-   `module tectora_roof: Running migration`. A plain restart only shows
+   `module tectora_roof: Running upgrade`. A plain restart only shows
    `Registry loaded in 1.2s`. Without upgrade lines, upgrade by hand
    (Cloudpepper *Addons* → *Update*, or on the server):
 
@@ -163,3 +163,5 @@ Releases and the modules they need upgraded:
 |---|---|
 | DF-DataForge/Tectora#55 | `tectora_roof` (20.0.3.21.0) |
 | DF-DataForge/Tectora#56 | `tectora_roof` (20.0.3.22.0), `tectora_portal` (20.0.1.2.0) |
+| DF-DataForge/Tectora#58 | none: reverts #55 and #56 back to `tectora_roof` 20.0.3.20.0, `tectora_portal` 20.0.1.1.0 |
+| #55 and #56 back, without Contacttype | `tectora_roof` (20.0.3.23.0), `tectora_portal` (20.0.1.2.0) |
