@@ -1,3 +1,4 @@
+from . import roof_project_roof
 from . import roof_project
 from . import roof_section
 from . import roof_object
@@ -16,4 +17,5 @@ from . import product_category
 from . import product_template
 from . import project_task
 from . import crm_lead
+from . import sale_order_template
 from . import res_partner
