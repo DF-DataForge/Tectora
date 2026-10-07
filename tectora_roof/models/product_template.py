@@ -3,6 +3,7 @@ import math
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools.misc import formatLang
 
 
 class ProductTemplate(models.Model):
@@ -98,3 +99,26 @@ class ProductTemplate(models.Model):
         pieces = quantity / self.tectora_recalc_size
         # Up to whole pieces, without 20.000000001 becoming 21.
         return float(math.ceil(round(pieces, 6)))
+
+    def _tectora_recalc_explanation(self, quantity, rounded=False):
+        """How ``quantity`` in the Reken-UoM becomes pieces, as a line of
+        text for a bill of materials: "1,00 m² ÷ 0,72 m² per stuk = 1,39
+        stuks". With ``rounded``, the whole pieces the material list takes.
+        Empty when the product has no hercalculatie."""
+        self.ensure_one()
+        size = self.tectora_recalc_size
+        if not self.tectora_recalc or size <= 0.0:
+            return ""
+        unit = dict(self._fields["tectora_recalc_uom"].selection).get(self.tectora_recalc_uom, "")
+        exact = quantity / size
+        text = _(
+            "%(qty)s %(unit)s ÷ %(size)s %(unit)s per stuk = %(pieces)s stuks",
+            qty=formatLang(self.env, quantity, digits=2),
+            unit=unit,
+            size=formatLang(self.env, size, digits=4).rstrip("0").rstrip(",.") or "0",
+            pieces=formatLang(self.env, exact, digits=2),
+        )
+        if rounded:
+            text = _("%(text)s → %(whole)s stuks op de materiaallijst", text=text,
+                     whole=formatLang(self.env, self._tectora_recalculate(quantity), digits=0))
+        return text

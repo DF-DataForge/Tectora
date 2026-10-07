@@ -34,7 +34,7 @@ the material list is built. Nothing is stored until the dialog is saved.
 Ported from df_custom_bom_in_so (Odoo 18), rebuilt on Tectora's material
 list instead of rewriting stock moves.
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
