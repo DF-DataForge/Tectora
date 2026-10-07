@@ -167,3 +167,4 @@ Releases and the modules they need upgraded:
 | #55 and #56 back, without Contacttype | `tectora_roof` (20.0.3.23.0), `tectora_portal` (20.0.1.2.0) |
 | m as Reken-UoM for hercalculatie | `tectora_roof` (20.0.3.24.0) |
 | Hercalculatie per m shows L × B × H | `tectora_roof` (20.0.3.25.0) |
+| Conversion shown on bill of materials lines | `tectora_sale_bom` (20.0.1.1.0) |

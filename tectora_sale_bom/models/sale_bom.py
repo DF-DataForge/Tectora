@@ -372,6 +372,24 @@ class TectoraSaleBomLine(models.Model):
         currency_field="currency_id",
     )
 
+    tectora_recalc_info = fields.Char(
+        string="Omrekening",
+        compute="_compute_tectora_recalc_info",
+        help="Het component heeft een hercalculatie: de hoeveelheid is in "
+        "zijn Reken-UoM (m, m² of m³). Het totaal van de lijn gedeeld door de "
+        "maat van één stuk geeft de stuks, naar boven afgerond op de "
+        "materiaallijst.",
+    )
+
+    @api.depends("product_id", "total_quantity")
+    def _compute_tectora_recalc_info(self):
+        for line in self:
+            template = line.product_id.product_tmpl_id
+            line.tectora_recalc_info = (
+                template._tectora_recalc_explanation(line.total_quantity, rounded=True)
+                if template else ""
+            )
+
     @api.depends("product_id")
     def _compute_product_uom_id(self):
         for line in self:

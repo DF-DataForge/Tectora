@@ -228,6 +228,17 @@ class TestSaleBom(TransactionCase):
         self.assertAlmostEqual(template.tectora_recalc_size, 3.0)
         self.assertEqual(template._tectora_recalculate(10.0), 4.0)
         template.write({"tectora_recalc_uom": "m2", "tectora_length": 1.0})
+        # The bill of materials says how the m² become boards.
+        bom_line = self.demo_bom.bom_line_ids.filtered(lambda l: l.product_id == board)
+        self.assertIn("÷", bom_line.tectora_recalc_info)
+        self.assertIn("20", bom_line.tectora_recalc_info)
+        self.assertFalse(self.demo_bom.bom_line_ids.filtered(
+            lambda l: l.product_id == self.glue).tectora_recalc_info)
+        # 100 m² of boards of 0,72 m²: 138,89, so 139 on the material list.
+        template.write({"tectora_length": 1.2, "tectora_width": 0.6})
+        self.assertEqual(template._tectora_recalculate(100.0), 139.0)
+        self.assertIn("139", template._tectora_recalc_explanation(100.0, rounded=True))
+        template.write({"tectora_length": 1.0, "tectora_width": 0.5})
         self.order.action_confirm()
         self.assertEqual(self.materials()[board], 200.0)
         # In the dialog the board costs per m²: 6 per board of 0,5 m².
