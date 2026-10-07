@@ -165,3 +165,4 @@ Releases and the modules they need upgraded:
 | DF-DataForge/Tectora#56 | `tectora_roof` (20.0.3.22.0), `tectora_portal` (20.0.1.2.0) |
 | DF-DataForge/Tectora#58 | none: reverts #55 and #56 back to `tectora_roof` 20.0.3.20.0, `tectora_portal` 20.0.1.1.0 |
 | #55 and #56 back, without Contacttype | `tectora_roof` (20.0.3.23.0), `tectora_portal` (20.0.1.2.0) |
+| m as Reken-UoM for hercalculatie | `tectora_roof` (20.0.3.24.0) |

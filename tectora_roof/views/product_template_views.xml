@@ -36,14 +36,17 @@
                 <div name="tectora_recalc_dimensions" invisible="not tectora_recalc">
                     <field name="tectora_length" class="oe_inline" style="max-width:70px"
                            required="tectora_recalc"/>
-                    <span> × </span>
+                    <span invisible="tectora_recalc_uom == 'm'"> × </span>
                     <field name="tectora_width" class="oe_inline" style="max-width:70px"
-                           required="tectora_recalc"/>
-                    <span> × </span>
+                           invisible="tectora_recalc_uom == 'm'"
+                           required="tectora_recalc and tectora_recalc_uom in ('m2', 'm3')"/>
+                    <span invisible="tectora_recalc_uom == 'm'"> × </span>
                     <field name="tectora_height" class="oe_inline" style="max-width:70px"
+                           invisible="tectora_recalc_uom == 'm'"
                            required="tectora_recalc and tectora_recalc_uom == 'm3'"/>
                     <span> m = </span>
                     <field name="tectora_recalc_size" class="oe_inline"/>
+                    <span invisible="tectora_recalc_uom != 'm'"> m per stuk</span>
                     <span invisible="tectora_recalc_uom != 'm2'"> m² per stuk</span>
                     <span invisible="tectora_recalc_uom != 'm3'"> m³ per stuk</span>
                 </div>
