@@ -204,28 +204,3 @@ class TestSaleBom(TransactionCase):
         self.order._action_cancel()
         with self.assertRaises(UserError):
             custom.line_ids[:1].quantity = 5.0
-
-    def test_recalculation_turns_area_into_pieces(self):
-        """A component with hercalculatie is counted in m² on the bill of
-        materials and comes out in pieces: 1 m² of board per m² of roof,
-        boards of 1 m × 0,5 m, 100 m² sold = 200 boards."""
-        board = self.env["product.product"].create({
-            "name": "Isolatieplaat 1000x500", "type": "consu",
-            "uom_id": self.env.ref("uom.product_uom_unit").id,
-            "standard_price": 6.0,
-            "tectora_recalc": True, "tectora_recalc_uom": "m2",
-            "tectora_length": 1.0, "tectora_width": 0.5,
-        })
-        self.demo_bom.bom_line_ids = [
-            Command.create({"product_id": board.id, "product_qty": 10.0}),
-        ]
-        template = board.product_tmpl_id
-        self.assertAlmostEqual(template.tectora_recalc_size, 0.5)
-        self.assertEqual(template._tectora_recalculate(10.0), 20.0)
-        self.assertEqual(template._tectora_recalculate(10.1), 21.0, "rounded up")
-        self.order.action_confirm()
-        self.assertEqual(self.materials()[board], 200.0)
-        # In the dialog the board costs per m²: 6 per board of 0,5 m².
-        form = self.open_dialog()
-        component = form.line_ids.edit(2)
-        self.assertAlmostEqual(component.unit_cost, 12.0)

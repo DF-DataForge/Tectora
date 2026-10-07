@@ -23,15 +23,6 @@ class SaleOrderLine(models.Model):
         help="Lijn op het dakproject waarvan deze offertelijn de spiegel is; "
         "de hoeveelheid volgt de meting.",
     )
-    tectora_roof_id = fields.Many2one(
-        "tectora.roof.project.roof",
-        string="Dak",
-        ondelete="set null",
-        copy=False,
-        index=True,
-        help="Het dak van het dakproject waartoe deze lijn behoort: de "
-        "subsectie van dat dak en de lijnen eronder.",
-    )
     roof_measurement_line = fields.Boolean(
         string="Meetlijn",
         copy=False,

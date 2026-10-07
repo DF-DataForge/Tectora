@@ -28,7 +28,7 @@ class SaleOrder(models.Model):
             kit = kits.get(component.product_id)
             if not kit:
                 values.append(
-                    self._tectora_component_values(
+                    self._tectora_material_values(
                         line, component.product_id, quantity,
                         component.product_uom_id, name,
                     )
@@ -40,7 +40,7 @@ class SaleOrder(models.Model):
             _boms_done, lines_done = kit.explode(component.product_id, factor)
             for bom_line, line_data in lines_done:
                 values.append(
-                    self._tectora_component_values(
+                    self._tectora_material_values(
                         line,
                         bom_line.product_id,
                         self._tectora_exploded_quantity(kit, factor, bom_line, line_data),

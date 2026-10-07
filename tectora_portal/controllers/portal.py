@@ -104,15 +104,11 @@ class TectoraEmployeePortal(CustomerPortal):
         Project = request.env["tectora.roof.project"].sudo()
         now = fields.Datetime.now()
         day_start, day_end = Project._tectora_portal_day_bounds(now)
-        planned_domain = [("end_datetime", ">=", day_start)]
-        horizon_end = employee._tectora_portal_horizon_end(now)
-        if horizon_end:
-            planned_domain.append(("start_datetime", "<", horizon_end))
 
         searchbar_filters = {
             "planned": {
                 "label": _("Gepland"),
-                "domain": [("planning_ids", "any", planned_domain)],
+                "domain": [("planning_ids", "any", [("end_datetime", ">=", day_start)])],
             },
             "today": {
                 "label": _("Vandaag"),
@@ -175,10 +171,7 @@ class TectoraEmployeePortal(CustomerPortal):
             "employee": employee,
             "projects": projects,
             "now": now,
-            "next_blocks": {
-                project.id: project._tectora_portal_next_block(now, employee)
-                for project in projects
-            },
+            "next_blocks": {project.id: project._tectora_portal_next_block(now) for project in projects},
             "pager": pager,
             "default_url": "/my/werven",
             "searchbar_sortings": searchbar_sortings,
@@ -230,8 +223,8 @@ class TectoraEmployeePortal(CustomerPortal):
             "tab": tab if tab in TABS else "overview",
             "now": now,
             "today": fields.Date.context_today(request.env.user),
-            "blocks": project._tectora_portal_visible_blocks(employee, now),
-            "next_block": project._tectora_portal_next_block(now, employee),
+            "blocks": project.planning_ids.sorted("start_datetime"),
+            "next_block": project._tectora_portal_next_block(now),
             "planned_employees": project._tectora_portal_planned_employee_ids(),
             "today_employees": today_employees,
             "running_timer": running,

@@ -55,16 +55,6 @@ op de tab **Uitvoering** van het projectdashboard, samen met de
 uitvoeringsverslagen (*Dakmeting → Uitvoeringsverslagen*). Annuleren van een
 registratie verwijdert haar urenstaatlijnen.
 
-## Hoe ver vooruit de planning zichtbaar is
-
-Per medewerker, op het werknemersformulier (tabblad Werk, onder de ploeg):
-**Planning op het portaal** = *1 week*, *1 maand* of *Alles* (standaard).
-Werkblokken die later beginnen dan vandaag + die termijn staan niet bij de
-werkdagen van een werf, tellen niet mee voor "Gepland" en "volgende
-werkdag", en een werf die de medewerker enkel via zo'n blok zou zien,
-verschijnt pas wanneer het blok binnen de termijn valt. Wat voorbij is of
-vandaag loopt blijft zichtbaar; werven van de eigen ploeg ook.
-
 ## Technisch
 
 * Afhankelijkheden: `tectora_roof`, `portal`, `hr_timesheet`.

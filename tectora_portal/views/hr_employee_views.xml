@@ -27,10 +27,6 @@
                     </div>
                 </button>
             </xpath>
-            <xpath expr="//field[@name='roof_team_id']" position="after">
-                <field name="tectora_portal_planning_horizon" widget="radio"
-                       options="{'horizontal': true}" groups="hr.group_hr_user"/>
-            </xpath>
         </field>
     </record>
 

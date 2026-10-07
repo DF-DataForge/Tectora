@@ -389,10 +389,7 @@ class TectoraSaleBomLine(models.Model):
                 line.unit_cost = 0.0
                 continue
             cost = product.standard_price
-            if product.tectora_recalc and product.tectora_recalc_size > 0.0:
-                # Counted in m² or m³ here, bought per piece of that size.
-                cost /= product.tectora_recalc_size
-            elif line.product_uom_id and line.product_uom_id != product.uom_id:
+            if line.product_uom_id and line.product_uom_id != product.uom_id:
                 cost = product.uom_id._compute_price(cost, line.product_uom_id)
             line.unit_cost = cost
 

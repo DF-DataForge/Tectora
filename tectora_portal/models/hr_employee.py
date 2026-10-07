@@ -9,8 +9,6 @@ and sends the invitation.
 """
 import logging
 
-from dateutil.relativedelta import relativedelta
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import email_normalize
@@ -37,17 +35,6 @@ class HrEmployee(models.Model):
         compute="_compute_tectora_portal_access",
     )
 
-    tectora_portal_planning_horizon = fields.Selection(
-        [("week", "1 week"), ("month", "1 maand"), ("all", "Alles")],
-        string="Planning op het portaal",
-        default="all",
-        required=True,
-        help="Hoe ver vooruit de medewerker de planning ziet op het portaal: "
-        "werkblokken die later beginnen, en werven die hij alleen via zo'n "
-        "werkblok zou zien, blijven verborgen tot ze binnen die termijn "
-        "vallen. Wat al voorbij is of vandaag loopt, blijft zichtbaar.",
-    )
-
     @api.depends("user_id", "user_id.share", "user_id.active")
     def _compute_tectora_portal_access(self):
         for employee in self:
@@ -59,20 +46,6 @@ class HrEmployee(models.Model):
             else:
                 employee.tectora_portal_state = "internal"
             employee.tectora_portal_access = employee.tectora_portal_state == "portal"
-
-    def _tectora_portal_horizon_end(self, moment=None):
-        """UTC moment from which work blocks are hidden on this employee's
-        portal: the end of today plus a week or a month, counted from the
-        start of the local day; None when the whole planning is shown."""
-        self.ensure_one()
-        horizon = self.tectora_portal_planning_horizon or "all"
-        if horizon == "all":
-            return None
-        moment = moment or fields.Datetime.now()
-        day_start, _day_end = self.env["tectora.roof.project"]._tectora_portal_day_bounds(moment)
-        if horizon == "week":
-            return day_start + relativedelta(days=7)
-        return day_start + relativedelta(months=1)
 
     # ------------------------------------------------------------- portal user
     def _tectora_portal_email(self):
