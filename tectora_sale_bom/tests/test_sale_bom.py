@@ -223,6 +223,11 @@ class TestSaleBom(TransactionCase):
         self.assertAlmostEqual(template.tectora_recalc_size, 0.5)
         self.assertEqual(template._tectora_recalculate(10.0), 20.0)
         self.assertEqual(template._tectora_recalculate(10.1), 21.0, "rounded up")
+        # Per metre: a profile of 3 m, 10 m needed = 4 profiles.
+        template.write({"tectora_recalc_uom": "m", "tectora_length": 3.0})
+        self.assertAlmostEqual(template.tectora_recalc_size, 3.0)
+        self.assertEqual(template._tectora_recalculate(10.0), 4.0)
+        template.write({"tectora_recalc_uom": "m2", "tectora_length": 1.0})
         self.order.action_confirm()
         self.assertEqual(self.materials()[board], 200.0)
         # In the dialog the board costs per m²: 6 per board of 0,5 m².
