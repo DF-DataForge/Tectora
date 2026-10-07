@@ -14,6 +14,7 @@ class ResPartner(models.Model):
             ("syndicus", "Syndicus"),
             ("niet_particulier", "Niet particulieren"),
             ("stad_gemeente", "Steden en gemeentes"),
+            ("leverancier", "Leverancier"),
         ],
         string="Contacttype",
         tracking=True,
