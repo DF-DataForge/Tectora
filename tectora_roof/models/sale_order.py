@@ -186,6 +186,12 @@ class SaleOrder(models.Model):
         "op in de offerte-pdf en toon het bij de offerte op het klantenportaal.",
     )
 
+    @api.depends("partner_id", "company_id")
+    def _compute_note(self):
+        # Terms added as a PDF are printed on pages of their own after the
+        # quotation, not in its note.
+        super(SaleOrder, self.filtered(lambda order: order.company_id.terms_type != "pdf"))._compute_note()
+
     @api.model
     def _default_tectora_quotation_style(self):
         style = self.env["ir.config_parameter"].sudo().get_str(

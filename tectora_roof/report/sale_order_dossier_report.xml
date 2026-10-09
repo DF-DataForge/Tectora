@@ -450,7 +450,7 @@
                     <h3>Voorwaarden &amp; opmerkingen</h3>
                     <div t-field="doc.note" class="tq-muted"/>
                 </t>
-                <t t-if="company.invoice_terms and not company.terms_type == 'html'">
+                <t t-if="company.invoice_terms and company.terms_type not in ('html', 'pdf')">
                     <div t-field="company.invoice_terms" class="tq-muted" style="font-size: 9px; margin-top: 6px;"/>
                 </t>
             </div>
