@@ -25,6 +25,14 @@
     }
 }
 
+// The lines of quotations, orders and invoices: a little more air between
+// them than the table designs give (Light and Compact are tight), whatever
+// the design picked in the configurator.
+.o_report_layout_tectora table.o_main_table:not(.o_ignore_layout_styling) tbody td {
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+}
+
 .o_tectora_footer {
     border-top: 2px solid;
     padding-top: map-get($spacers, 2);

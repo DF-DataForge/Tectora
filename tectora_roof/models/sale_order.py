@@ -27,15 +27,6 @@ SYNC_PAIRS = [
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
 
-# The looks the quotation PDF can take (see report/sale_order_dossier_report.xml).
-QUOTATION_STYLES = [
-    ("dossier", "Projectdossier — voorblad, aanpak, offerte, dakplan, service"),
-    ("compact", "Compact — offerte voorop, kort en zakelijk"),
-    ("classic", "Klassiek — briefstijl met begeleidende tekst"),
-    ("visual", "Visueel — dakplan en kerncijfers voorop"),
-    ("minimal", "Minimalistisch — rustig, veel wit"),
-]
-
 
 def _differs(record, field_name, value):
     """Whether writing ``value`` (an id for relational fields) would change
@@ -152,23 +143,6 @@ class SaleOrder(models.Model):
             )
         return label
 
-    tectora_standard_quotation = fields.Boolean(
-        string="Standaard offerte",
-        default=lambda self: self._default_tectora_standard_quotation(),
-        help="Gebruik het standaard offertedocument van Odoo in plaats van de "
-        "Tectora-offerte (afdrukken, e-mail en klantenportaal). Het dakplan "
-        "kan er nog achter. De standaardkeuze voor nieuwe offertes staat in "
-        "Instellingen → Tectora Dakmeting.",
-    )
-    tectora_quotation_style = fields.Selection(
-        QUOTATION_STYLES,
-        string="Offertestijl",
-        default=lambda self: self._default_tectora_quotation_style(),
-        required=True,
-        help="De opmaak van de Tectora-offerte (afdrukken, e-mail, "
-        "klantenportaal); niet van toepassing bij een standaard offerte. De "
-        "standaardstijl staat in Instellingen → Tectora Dakmeting.",
-    )
     tectora_tax_id = fields.Many2one(
         "account.tax",
         string="Btw-tarief voor alle regels",
@@ -178,6 +152,17 @@ class SaleOrder(models.Model):
         "woning ouder dan 10 jaar. Kies het tarief en klik op 'Toepassen op "
         "alle regels': elke productregel krijgt dan dit tarief. Regels die "
         "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
+    )
+    tectora_follow_measurement = fields.Boolean(
+        string="Offerte volgt de meting",
+        copy=False,
+        help="Aangevinkt past de offerte zich automatisch aan bij elke "
+        "wijziging van de tekening of het dakproject: hoeveelheden volgen de "
+        "opgemeten oppervlakte en omtrek, meetlijnen worden herbouwd en lijnen "
+        "die op het dakproject wegvallen, verdwijnen van de offerte. "
+        "Uitgevinkt (standaard) blijft de offerte zoals je ze opmaakt en "
+        "dienen de dakplannen enkel als plan; 'Offerte bijwerken uit meting' "
+        "op het dakproject brengt ze dan na bevestiging eenmalig in lijn.",
     )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
@@ -191,19 +176,6 @@ class SaleOrder(models.Model):
         # Terms added as a PDF are printed on pages of their own after the
         # quotation, not in its note.
         super(SaleOrder, self.filtered(lambda order: order.company_id.terms_type != "pdf"))._compute_note()
-
-    @api.model
-    def _default_tectora_quotation_style(self):
-        style = self.env["ir.config_parameter"].sudo().get_str(
-            "tectora_roof.quotation_style"
-        )
-        return style if style in dict(QUOTATION_STYLES) else "dossier"
-
-    @api.model
-    def _default_tectora_standard_quotation(self):
-        return self.env["ir.config_parameter"].sudo().get_bool(
-            "tectora_roof.standard_quotation"
-        )
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi

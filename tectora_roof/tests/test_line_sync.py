@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Quantities and products stay equal between the roof project and its open
-quotation, in both directions, and edited quantities are kept."""
+quotation, in both directions, and edited quantities are kept, when the
+quotation follows the measurement; one that does not is never changed by the
+roof project."""
 from odoo.tests import TransactionCase, tagged
 
 
@@ -52,6 +54,7 @@ class TestLineSync(TransactionCase):
         cls.line_container = Line.create({"project_direct_id": cls.project.id, "product_id": cls.container.id})
         cls.project.action_create_sale_order()
         cls.order = cls.project.sale_order_id
+        cls.order.tectora_follow_measurement = True
 
     def order_line(self, roof_line):
         return self.order.order_line.filtered(lambda line: line.roof_line_id == roof_line)
@@ -175,6 +178,33 @@ class TestLineSync(TransactionCase):
         self.env.invalidate_all()
         expected = 100 * 30 + 40 * 12 + 2 * 250
         self.assertAlmostEqual(self.project.estimated_total, expected, places=2)
+
+    def test_quotation_not_following_is_left_alone(self):
+        """Without "Offerte volgt de meting" the measurement never touches the
+        quotation: not a quantity, not a measurement line, not a removal. Only
+        the explicit update does, and it leaves the flag as it was."""
+        self.order.tectora_follow_measurement = False
+        epdm_order_line = self.order_line(self.line_epdm)
+        container_order_line = self.order_line(self.line_container)
+        before = {line.id: line.product_uom_qty for line in self.order.order_line}
+        self.section.area = 150.0
+        self.line_container.quantity = 3.0
+        self.env["tectora.roof.section.product"].create(
+            {"project_direct_id": self.project.id, "product_id": self.skip.id}
+        )
+        self.line_container.unlink()
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertTrue(container_order_line.exists(), "a removal on the roof stays there")
+        self.assertEqual(
+            {line.id: line.product_uom_qty for line in self.order.order_line}, before,
+            "no line added, removed or changed",
+        )
+        self.project.action_create_sale_order()  # "Offerte bijwerken uit meting"
+        self.env.flush_all()
+        self.env.invalidate_all()
+        self.assertEqual(epdm_order_line.product_uom_qty, 150.0)
+        self.assertFalse(self.order.tectora_follow_measurement)
 
     def test_unlink_both_ways(self):
         container_order_line = self.order_line(self.line_container)

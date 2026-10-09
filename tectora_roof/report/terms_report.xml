@@ -15,7 +15,7 @@
         </t>
     </template>
 
-    <!-- Quotations and orders, in every style. -->
+    <!-- Quotations and orders. -->
     <template id="report_saleorder_document_dispatch_terms"
               inherit_id="tectora_roof.report_saleorder_document_dispatch">
         <xpath expr="/t" position="inside">

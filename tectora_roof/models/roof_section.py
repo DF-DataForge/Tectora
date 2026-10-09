@@ -402,11 +402,13 @@ class TectoraRoofSectionProduct(models.Model):
         return result
 
     def unlink(self):
-        """A removed line leaves the open quotation as well; the measurement
-        lines of the quotation are rebuilt afterwards."""
+        """A removed line leaves the open quotation as well when the quotation
+        follows the measurement; the measurement lines of the quotation are
+        rebuilt afterwards."""
         projects = self.project_id
         order_lines = self.sale_line_ids.filtered(
             lambda line: line.order_id.state in ("draft", "sent")
+            and line.order_id.tectora_follow_measurement
         )
         if order_lines:
             order_lines.with_context(tectora_sync=True).unlink()

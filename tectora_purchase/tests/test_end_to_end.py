@@ -14,7 +14,6 @@ from PIL import Image
 from odoo import Command
 from odoo.tests import TransactionCase, tagged
 
-from odoo.addons.tectora_roof.models.sale_order import QUOTATION_STYLES
 
 
 @tagged("post_install", "-at_install")
@@ -140,14 +139,9 @@ class TestEndToEnd(TransactionCase):
         self.assertEqual(self.roof._get_drawing_png(), png)
         data_uri = "data:image/png;base64," + base64.b64encode(png).decode()
         self.render("tectora_roof.report_roof_project", self.roof, data_uri)
-        self.order.write({"tectora_standard_quotation": False, "tectora_quotation_style": "dossier"})
         self.render("sale.action_report_saleorder", self.order, data_uri)
 
     def test_every_document_renders(self):
-        for style, _label in QUOTATION_STYLES:
-            self.order.write({"tectora_standard_quotation": False, "tectora_quotation_style": style})
-            self.render("sale.action_report_saleorder", self.order, "Peeters")
-        self.order.tectora_standard_quotation = True
         self.render("sale.action_report_saleorder", self.order, "Peeters")
         for report in (
             "tectora_roof.report_roof_project",

@@ -312,6 +312,10 @@ class TectoraRoofProject(models.Model):
     sale_order_state = fields.Selection(
         related="sale_order_id.state", string="Orderstatus", readonly=True
     )
+    sale_order_follow_measurement = fields.Boolean(
+        related="sale_order_id.tectora_follow_measurement",
+        readonly=False,
+    )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
     project_id = fields.Many2one(
@@ -1492,6 +1496,11 @@ class TectoraRoofProject(models.Model):
     def _tectora_mirror_to_order(self, order=None):
         """Roof project -> open quotation.
 
+        Only for a quotation that follows the measurement ("Offerte volgt de
+        meting"), or when the user asked for it ("Offerte maken" / "Offerte
+        bijwerken uit meting", context ``tectora_update_from_measurement``):
+        a quotation is never changed by the measurement behind the user's back.
+
         Chapter lines (project level) each keep one order line under the
         header of their chapter, with the quantity of the roof project; the
         measurement lines (sections, objects) are rebuilt from the drawing.
@@ -1503,6 +1512,11 @@ class TectoraRoofProject(models.Model):
         for project in self:
             target = order or project.sale_order_id
             if not target or target.state not in ("draft", "sent"):
+                continue
+            if not (
+                target.tectora_follow_measurement
+                or self.env.context.get("tectora_update_from_measurement")
+            ):
                 continue
             target = target.with_context(tectora_sync=True)
             superseded = project.direct_line_ids.filtered(
@@ -1720,7 +1734,8 @@ class TectoraRoofProject(models.Model):
                     order._get_html_link(),
                 )
             )
-        self._tectora_mirror_to_order(order)
+        # Asked for by the user (the update asks for confirmation first).
+        self.with_context(tectora_update_from_measurement=True)._tectora_mirror_to_order(order)
         # The meetblad is rendered as an extra page inside the quotation PDF
         # itself (see report_saleorder_inherit_tectora), so no separate
         # attachment is created here.

@@ -120,12 +120,20 @@ class ProductTemplate(models.Model):
         Matching is on the internal reference (``default_code``); entries
         without one are matched on name inside their category, so a file
         without references still imports without creating duplicates.
+
+        ``options["mode"] == "complete"`` only adds: missing products are
+        created, an existing product (also one with the same name and no
+        reference) only gets its empty reference and sales description.
         """
         options = options or {}
         root_name = options.get("root_category") or DEFAULT_ROOT_CATEGORY
         # A raw material is bought, not sold; only the works items are
         # quoted. The wizard can override this per import.
         sale_ok_goods = options.get("sale_ok_goods", False)
+        # "complete": create what is missing and fill an empty reference or
+        # sales description, never overwrite what the database already has
+        # (name, price, category, unit, vendor lines).
+        complete = options.get("mode") == "complete"
         Product = self.env["product.template"]
         SupplierInfo = self.env["product.supplierinfo"]
 
@@ -133,7 +141,8 @@ class ProductTemplate(models.Model):
         categories = {}
         vendors = {}
         tags = self._tectora_load_tags(entries)
-        counters = {"created": 0, "updated": 0, "vendor_lines": 0}
+        counters = {"created": 0, "updated": 0, "vendor_lines": 0,
+                    "completed": 0, "unchanged": 0, "descriptions": 0}
 
         for entry in entries:
             path = catalog_rules.branch_path(
@@ -187,12 +196,34 @@ class ProductTemplate(models.Model):
                     ],
                     limit=1,
                 )
+            if not product and complete:
+                # A product made by hand without a reference, under another
+                # category: the same name gets the reference instead of a twin.
+                product = Product.with_context(active_test=False).search(
+                    [("name", "=", entry["name"]), ("default_code", "=", False)],
+                    limit=1,
+                )
+            if product and complete:
+                fill = {}
+                if entry.get("code") and not product.default_code:
+                    fill["default_code"] = entry["code"]
+                if values["description_sale"] and not (product.description_sale or "").strip():
+                    fill["description_sale"] = values["description_sale"]
+                    counters["descriptions"] += 1
+                if fill:
+                    product.write(fill)
+                    counters["completed"] += 1
+                else:
+                    counters["unchanged"] += 1
+                continue
             if product:
                 product.write(values)
                 counters["updated"] += 1
             else:
                 product = Product.create(values)
                 counters["created"] += 1
+                if values["description_sale"]:
+                    counters["descriptions"] += 1
             if entry.get("standard_price"):
                 product.standard_price = entry["standard_price"]
 

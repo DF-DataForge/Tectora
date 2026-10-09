@@ -12,6 +12,7 @@ Products are classified with three signals, in order of reliability:
 3. keywords in the Dutch product name, then the supplier — whose assortment
    is homogeneous (Bendec sells roof edges, Cintralux domes, ...).
 """
+import html
 import re
 from collections import OrderedDict
 
@@ -42,6 +43,11 @@ COLUMN_ALIASES = OrderedDict([
     ("brand", ["merk", "brand"]),
     ("pack", ["aantal stuks per omdoos", "aantal per omdoos", "omdoos"]),
     ("type", ["product type", "producttype", "soort", "type"]),
+    # The long text of a works item (Simpla: HTML), shown under the product
+    # on the quotation. Not the bare "omschrijving": that can be the name.
+    ("description", ["lange omschrijving nl", "lange omschrijving",
+                     "verkoopomschrijving", "description_sale",
+                     "sales description"]),
 ])
 
 # Raw materials get the same chapter structure, but under their own branch:
@@ -239,6 +245,22 @@ def clean(value):
     return re.sub(r"\s+", " ", str(value or "").strip())
 
 
+def html_to_text(value):
+    """The text of an HTML description (Simpla wraps it in <p>, <em> and font
+    styling): paragraphs and line breaks become lines, list items get a dash,
+    tags, entities and empty lines go."""
+    text = str(value or "")
+    if not text.strip():
+        return ""
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)<li[^>]*>", "\n- ", text)
+    text = re.sub(r"(?i)</(p|div|tr|h[1-6])\s*>", "\n", text)
+    text = html.unescape(re.sub(r"<[^>]+>", "", text)).replace("\xa0", " ")
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
+    # Simpla puts every line in a <p> of its own, with a newline between.
+    return "\n".join(line for line in lines if line)
+
+
 def number(value):
     try:
         return float(str(value).replace(",", "."))
@@ -355,7 +377,8 @@ def parse_rows(header, rows, options=None):
     seen_codes = {}
     seen_barcodes = set()
     stats = {"signals": {}, "skipped": 0, "computed_prices": 0,
-             "services": 0, "goods": 0, "duplicates": 0}
+             "services": 0, "goods": 0, "duplicates": 0,
+             "duplicate_codes": []}
     suppliers = {}
 
     for row in rows:
@@ -366,6 +389,7 @@ def parse_rows(header, rows, options=None):
         code = clean(cell(row, "code"))
         if code and code in seen_codes:
             stats["duplicates"] += 1
+            stats["duplicate_codes"].append(code)
             continue
 
         supplier = clean(cell(row, "supplier"))
@@ -431,7 +455,11 @@ def parse_rows(header, rows, options=None):
             "is_service": is_service,
             "barcode": barcode,
             "weight": number(cell(row, "weight")),
-            "description": " · ".join(description),
+            # Sales description: the long text, then packaging and brand.
+            "description": "\n".join(
+                part for part in (html_to_text(cell(row, "description")),
+                                  " · ".join(description)) if part
+            ),
             "tags": (["Prijs berekend"] if price_source == "berekend" else [])
             + (["Prijs op aanvraag"] if sale <= 0 else []),
         }
