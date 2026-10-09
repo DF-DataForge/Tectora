@@ -41,11 +41,16 @@ class TestCatalogComplete(TransactionCase):
             "description_sale": "Eigen tekst",
         })
         without_code = Product.create({"name": "Afvalverwerking test forfaitair"})
+        archived = Product.create({
+            "name": "Gearchiveerde post", "default_code": "S90006",
+            "type": "service", "sale_ok": False, "active": False,
+        })
         rows = [
             ["S90002", "Post bestaand (Simpla)", 0, 0, "st", None, "ALGEMEEN", "<p>Uitleg</p>"],
             ["S90003", "Post met tekst", 0, 10, "st", None, "ALGEMEEN", "<p>Simpla-tekst</p>"],
             ["S90004", "Afvalverwerking test forfaitair", 0, 0, "st", None, "ALGEMEEN", ""],
             ["S90005", "Nieuwe post", 0, 120, "m²", None, "ISOLATIE", "<p>Nieuw</p>"],
+            ["S90006", "Gearchiveerde post", 0, 30, "st", None, "ALGEMEEN", ""],
         ]
         entries, _stats = catalog_rules.parse_rows(HEADER, rows, {})
         counters = Product._tectora_apply_catalog(entries, {"mode": "complete"})
@@ -61,6 +66,9 @@ class TestCatalogComplete(TransactionCase):
         self.assertEqual(new.list_price, 120.0)
         self.assertEqual(new.description_sale, "Nieuw")
         self.assertEqual(new.type, "service")
+        self.assertTrue(archived.active, "back in the catalogue")
+        self.assertTrue(archived.sale_ok, "a works item can be sold")
+        self.assertEqual(counters["reactivated"], ["S90006"])
         self.assertEqual(counters["created"], 1)
-        self.assertEqual(counters["completed"], 2)
+        self.assertEqual(counters["completed"], 3)
         self.assertEqual(counters["unchanged"], 1)

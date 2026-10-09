@@ -56,9 +56,13 @@ A4-origineel gemeten.
   (`web.company_address_list`, `web.external_layout_body`,
   `web.external_layout_footer_content`) met een eigen header-vorm.
 * Het tabelontwerp (Licht, Gestreept, ...) is sinds Odoo 20 een eigen keuze in
-  de documentlay-out; bij installatie (en bij de upgrade naar 20.0) krijgt een
-  bedrijf dat nog op de standaard staat *Gestreept*, het ontwerp waarmee de
-  lay-out getekend is.
+  de documentlay-out. Daar staat ook **Tectora**: koppen in de hoofdkleur met
+  een dikke lijn eronder, het totaal in een lichte tint, de informatieband
+  tussen twee lijnen en wat meer ruimte tussen de offertelijnen. Het is te
+  kiezen bij elke lay-out, en bij een Tectora-lay-out werken de andere
+  ontwerpen ook. Bij installatie krijgt een bedrijf op de standaard *Tectora*;
+  de upgrade naar 20.0.1.3.0 zet bedrijven met een Tectora-lay-out erop, zodat
+  hun documenten er uitzien zoals voorheen.
 * De dakrand staat als inline SVG in `tectora_header_shape`, getekend in de
   hoofdkleur; `static/src/img/header_bg.svg` is dezelfde tekening als los
   bestand. Wie liever de originele foto gebruikt, vervangt de `<svg>` in dat

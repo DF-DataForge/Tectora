@@ -2,6 +2,20 @@
 from odoo import api, fields, models
 
 
+def label_without_reference(label, product):
+    """The label of a quotation or invoice line as the customer reads it:
+    without the product's internal reference ("[S00053] ") in front of a
+    line, the way Odoo writes the product name into the line."""
+    code = product.default_code
+    if not label or not code:
+        return label or ""
+    prefix = "[%s]" % code
+    return "\n".join(
+        line[len(prefix):].lstrip() if line.startswith(prefix) else line
+        for line in label.split("\n")
+    )
+
+
 class SaleOrderLine(models.Model):
     """Order lines mirror the roof project.
 
@@ -13,6 +27,11 @@ class SaleOrderLine(models.Model):
     """
 
     _inherit = "sale.order.line"
+
+    def _tectora_report_label(self):
+        """The line's label on the quotation PDF, without the reference."""
+        self.ensure_one()
+        return label_without_reference(self.label, self.product_id)
 
     roof_line_id = fields.Many2one(
         "tectora.roof.section.product",

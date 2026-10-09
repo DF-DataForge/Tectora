@@ -71,8 +71,8 @@ class ProductCatalogImport(models.TransientModel):
         help="Bijwerken: naam, prijs, categorie, eenheid en omschrijving van "
         "bestaande producten komen uit het bestand. Aanvullen: bestaande "
         "producten houden alles wat ze hebben; ontbrekende producten worden "
-        "aangemaakt en een lege interne referentie of verkoopomschrijving "
-        "wordt ingevuld. Een product zonder referentie met dezelfde naam "
+        "aangemaakt, gearchiveerde producten uit het bestand komen terug en "
+        "een lege interne referentie of verkoopomschrijving wordt ingevuld. Een product zonder referentie met dezelfde naam "
         "krijgt de referentie, er komt geen tweede bij.",
     )
     services_only = fields.Boolean(
@@ -172,6 +172,12 @@ class ProductCatalogImport(models.TransientModel):
             lines.append(
                 _("%(new)s nieuwe producten, %(upd)s bijgewerkt",
                   new=counters["created"], upd=counters["updated"])
+            )
+        if counters["reactivated"]:
+            lines.append(
+                _("%(n)s gearchiveerde producten terug actief: %(codes)s",
+                  n=len(counters["reactivated"]),
+                  codes=", ".join(counters["reactivated"]))
             )
         lines += [
             _("%s verkoopomschrijvingen ingevuld", counters["descriptions"]),

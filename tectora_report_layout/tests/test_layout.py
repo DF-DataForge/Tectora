@@ -40,10 +40,44 @@ class TestTectoraLayout(TransactionCase):
         self.assertIn("#008B93", html)
         self.assertIn("o_tectora_footer", html)
 
+    def test_tectora_table_design(self):
+        """"Tectora" is a table design of its own, for any layout; another
+        design on a Tectora layout is honoured."""
+        selection = dict(self.env["res.company"]._fields["report_tables_id"].selection)
+        self.assertIn("tectora", selection)
+        self.company.write({
+            "external_report_layout_id": self.view.id,
+            "report_tables_id": "tectora",
+            "primary_color": "#008B93",
+        })
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "web.preview_externalreport", [self.company.id]
+        )
+        self.assertIn("o_table_tectora", str(html))
+        scss = str(self.env["ir.qweb"]._render("web.styles_company_report", {"company_ids": self.company}))
+        self.assertIn(".o_table_tectora", scss)
+
+        self.company.report_tables_id = "bold"
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "web.preview_externalreport", [self.company.id]
+        )
+        self.assertIn("o_table_bold", str(html))
+        self.assertNotIn("o_table_tectora", str(html))
+
+        # Any layout can take the Tectora tables.
+        self.company.write({
+            "external_report_layout_id": self.env.ref("web.external_layout_standard").id,
+            "report_tables_id": "tectora",
+        })
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "web.preview_externalreport", [self.company.id]
+        )
+        self.assertIn("o_table_tectora", str(html))
+
     def test_company_styles_carry_the_layout_rules(self):
         self.company.write({"external_report_layout_id": self.view.id, "primary_color": "#008B93"})
         scss = self.env["ir.qweb"]._render("web.styles_company_report", {"company_ids": self.company})
-        self.assertIn(".o_report_layout_tectora", str(scss))
+        self.assertIn(".o_tectora_footer", str(scss))
         self.assertIn("#008B93", str(scss))
 
 
@@ -140,4 +174,4 @@ class TestTectoraLetterhead(TransactionCase):
         view = self.env.ref("tectora_report_layout.external_layout_tectora_letterhead")
         self.company.external_report_layout_id = view
         scss = self.env["ir.qweb"]._render("web.styles_company_report", {"company_ids": self.company})
-        self.assertIn(".o_report_layout_tectora", str(scss))
+        self.assertIn(".o_tectora_footer", str(scss))

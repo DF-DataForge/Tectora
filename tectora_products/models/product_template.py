@@ -123,7 +123,9 @@ class ProductTemplate(models.Model):
 
         ``options["mode"] == "complete"`` only adds: missing products are
         created, an existing product (also one with the same name and no
-        reference) only gets its empty reference and sales description.
+        reference) only gets its empty reference and sales description, and
+        is brought back if it was archived (a works item also becomes
+        sellable again).
         """
         options = options or {}
         root_name = options.get("root_category") or DEFAULT_ROOT_CATEGORY
@@ -142,7 +144,8 @@ class ProductTemplate(models.Model):
         vendors = {}
         tags = self._tectora_load_tags(entries)
         counters = {"created": 0, "updated": 0, "vendor_lines": 0,
-                    "completed": 0, "unchanged": 0, "descriptions": 0}
+                    "completed": 0, "unchanged": 0, "descriptions": 0,
+                    "reactivated": []}
 
         for entry in entries:
             path = catalog_rules.branch_path(
@@ -205,6 +208,13 @@ class ProductTemplate(models.Model):
                 )
             if product and complete:
                 fill = {}
+                # In the file, so it belongs in the catalogue: an archived
+                # product comes back, a works item can be sold again.
+                if not product.active:
+                    fill["active"] = True
+                    counters["reactivated"].append(entry.get("code") or entry["name"])
+                if entry["is_service"] and not product.sale_ok:
+                    fill["sale_ok"] = True
                 if entry.get("code") and not product.default_code:
                     fill["default_code"] = entry["code"]
                 if values["description_sale"] and not (product.description_sale or "").strip():
