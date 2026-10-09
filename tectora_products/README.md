@@ -73,6 +73,20 @@ Het verschil tussen beide soorten in Odoo:
   en in de productkiezer van de tekening verschijnen — aan te vinken met
   *Grondstoffen ook verkoopbaar* als je ze toch wil kunnen offreren.
 
+**Bestaande producten: bijwerken of aanvullen.** *Bijwerken* (standaard)
+neemt naam, prijs, categorie, eenheid en omschrijving van bestaande producten
+uit het bestand. *Aanvullen* raakt bestaande producten niet aan: enkel
+ontbrekende producten worden aangemaakt, en een lege interne referentie of
+verkoopomschrijving wordt ingevuld. Een product dat al bestaat zonder
+referentie (zelfde naam) krijgt de referentie in plaats van een tweelingproduct.
+Met **Enkel verkoopproducten** worden de grondstoffen in het bestand
+overgeslagen. Zo vul je een productieomgeving aan vanuit de Simpla-export
+zonder er aangepaste prijzen te overschrijven.
+
+De **lange omschrijving** (`lange omschrijving NL`, HTML in Simpla) wordt de
+**verkoopomschrijving**: platte tekst, regel per regel, die op de offerte onder
+het product komt.
+
 Verder: producten worden gematcht op interne referentie (zonder referentie op
 naam binnen de categorie, dus geen dubbels), ontbrekende verkoopprijzen worden
 berekend met de instelbare marge-coëfficiënt (standaard 1,85), en na de import
