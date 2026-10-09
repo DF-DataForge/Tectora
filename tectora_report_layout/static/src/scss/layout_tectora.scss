@@ -29,3 +29,122 @@
     border-top: 2px solid;
     padding-top: map-get($spacers, 2);
 }
+
+// Tectora letterhead (tectora-briefpapier-A4): measured on the A4 artwork.
+// The band and footer run over the full page width, past the report margins.
+$o-tectora-lh-band-height: 27.6mm;
+$o-tectora-lh-footer-height: 27.8mm;
+$o-tectora-lh-side: 8.65mm;
+
+.o_tectora_lh_header,
+.o_tectora_rlh_header {
+    position: relative;
+    margin: (-$o-default-report-margins) (-$o-default-report-margins) 0;
+    height: $o-tectora-lh-band-height;
+    font-family: 'Montserrat', sans-serif;
+    color: #ffffff;
+}
+
+// Combined with the roof edge: the band comes down to the roof line, which is
+// lowest on the left (34mm) and highest at the peak (26mm).
+.o_tectora_rlh_header {
+    height: 40mm;
+
+    .o_tectora_rlh_shape {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// Second colour scheme: the light band, services in grey.
+.o_tectora_lh_header.o_tectora_lh_light {
+    background-color: #F4F6F6;
+    color: #515355;
+}
+
+.o_tectora_lh_logo {
+    position: absolute;
+    top: 8.07mm;
+    left: $o-tectora-lh-side;
+    width: 48.53mm;
+    height: auto;
+}
+
+.o_tectora_lh_services {
+    position: absolute;
+    top: 10.2mm;
+    right: $o-tectora-lh-side;
+    font-size: 8.9pt;
+    line-height: 12.4pt;
+    text-align: right;
+    white-space: nowrap;
+
+    p {
+        margin: 0;
+    }
+
+    .o_tectora_lh_website {
+        font-weight: 600;
+    }
+}
+
+.o_tectora_lh_footer {
+    position: relative;
+    margin: 0 (-$o-default-report-margins);
+    height: $o-tectora-lh-footer-height;
+    padding-top: 3.25mm;
+    background-color: #F4F6F6;
+    color: #231F20;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9pt;
+    line-height: 19.5pt;
+    text-align: center;
+
+    p {
+        margin: 0;
+    }
+
+    // In the PDF the footer area is the 32mm bottom margin of the paper
+    // format; the band fills its lower 27.8mm, down to the edge of the page.
+    &.o_tectora_lh_footer_pdf {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+    }
+}
+
+// Second colour scheme: the band in the primary colour (set inline), white
+// text and line.
+.o_tectora_lh_footer.o_tectora_lh_footer_inverse {
+    color: #ffffff;
+
+    .o_tectora_lh_accent {
+        background-color: #ffffff;
+    }
+
+    .o_tectora_lh_pager {
+        color: rgba(255, 255, 255, .75);
+    }
+}
+
+.o_tectora_lh_accent {
+    position: absolute;
+    top: 13.5mm;
+    right: 0;
+    width: 10.6mm;
+    height: .82mm;
+}
+
+.o_tectora_lh_pager {
+    position: absolute;
+    top: 3.25mm;
+    right: $o-tectora-lh-side;
+    font-size: 7pt;
+    color: #6c757d;
+}

@@ -183,7 +183,7 @@ class SaleOrder(models.Model):
         string="Dakplan toevoegen",
         default=True,
         help="Neem het dakplan (tekening, maten en producten per daksectie) "
-        "op in de offerte-pdf.",
+        "op in de offerte-pdf en toon het bij de offerte op het klantenportaal.",
     )
 
     @api.model
