@@ -5,7 +5,7 @@ come out with the roof-edge header at once. The layout stays a choice in
 Settings -> Configure Document Layout like any other.
 
 Since Odoo 20 the table design is a choice of its own (Light, Striped, ...);
-a company still on the default gets Striped, the design the layout was drawn
+a company still on the default gets Tectora, the design the layout was drawn
 with."""
 
 
@@ -18,5 +18,5 @@ def post_init_hook(env):
     for company in companies.filtered(lambda c: not c.primary_color):
         company.primary_color = "#008B93"
     companies.filtered(lambda c: c.report_tables_id == "light").write(
-        {"report_tables_id": "striped"}
+        {"report_tables_id": "tectora"}
     )

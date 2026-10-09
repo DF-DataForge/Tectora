@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import models
+from odoo import fields, models
 
 # What the letterhead prints on the right of its band when the company has no
 # tagline (Settings -> Configure Document Layout -> Company Tagline).
@@ -15,6 +15,13 @@ def _group_by_four(number):
 
 class ResCompany(models.Model):
     _inherit = "res.company"
+
+    # The table design the Tectora layouts were drawn with, as a choice of its
+    # own in Configure Document Layout -> Tables (and so for any layout).
+    report_tables_id = fields.Selection(
+        selection_add=[("tectora", "Tectora")],
+        ondelete={"tectora": "set default"},
+    )
 
     def _tectora_letterhead_services(self):
         """The services on the right of the letterhead band, when the company

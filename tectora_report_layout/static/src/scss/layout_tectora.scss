@@ -4,6 +4,17 @@
 }
 
 .o_report_layout_tectora {
+    h2 {
+        font-weight: 300;
+        letter-spacing: .02em;
+    }
+}
+
+// The "Tectora" table design (Configure Document Layout -> Tables), for any
+// layout: the information band between two lines, heads underlined and the
+// lines of quotations, orders and invoices with some air between them. The
+// company colours are in styles_company_report_tectora.
+.o_table_tectora {
     #informations {
         margin: 0 0 map-get($spacers, 4);
         padding: map-get($spacers, 2) $table-cell-padding-y;
@@ -19,18 +30,24 @@
         }
     }
 
-    h2 {
-        font-weight: 300;
-        letter-spacing: .02em;
-    }
-}
+    table:not(.o_ignore_layout_styling) {
+        th:first-child, td:first-child {
+            padding-left: map-get($spacers, 1);
+        }
 
-// The lines of quotations, orders and invoices: a little more air between
-// them than the table designs give (Light and Compact are tight), whatever
-// the design picked in the configurator.
-.o_report_layout_tectora table.o_main_table:not(.o_ignore_layout_styling) tbody td {
-    padding-top: .45rem;
-    padding-bottom: .45rem;
+        th:last-child, td:last-child {
+            padding-right: map-get($spacers, 1);
+        }
+
+        tbody td {
+            padding-top: .45rem;
+            padding-bottom: .45rem;
+        }
+    }
+
+    .o_total_table:not(.o_ignore_layout_styling) .o_total {
+        border-top: 1px solid $border-color;
+    }
 }
 
 .o_tectora_footer {
