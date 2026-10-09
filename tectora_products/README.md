@@ -77,7 +77,8 @@ Het verschil tussen beide soorten in Odoo:
 neemt naam, prijs, categorie, eenheid en omschrijving van bestaande producten
 uit het bestand. *Aanvullen* raakt bestaande producten niet aan: enkel
 ontbrekende producten worden aangemaakt, en een lege interne referentie of
-verkoopomschrijving wordt ingevuld. Een product dat al bestaat zonder
+verkoopomschrijving wordt ingevuld. Een gearchiveerd product uit het bestand
+komt terug (een verkoopproduct wordt weer verkoopbaar). Een product dat al bestaat zonder
 referentie (zelfde naam) krijgt de referentie in plaats van een tweelingproduct.
 Met **Enkel verkoopproducten** worden de grondstoffen in het bestand
 overgeslagen. Zo vul je een productieomgeving aan vanuit de Simpla-export
