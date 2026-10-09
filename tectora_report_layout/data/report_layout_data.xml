@@ -16,9 +16,14 @@
             <field name="sequence">2</field>
             <field name="view_id" ref="tectora_report_layout.external_layout_tectora_letterhead"/>
         </record>
+        <record id="report_layout_tectora_letterhead_light" model="report.layout">
+            <field name="name">Tectora Briefpapier licht</field>
+            <field name="sequence">3</field>
+            <field name="view_id" ref="tectora_report_layout.external_layout_tectora_letterhead_light"/>
+        </record>
         <record id="report_layout_tectora_roof_letterhead" model="report.layout">
             <field name="name">Tectora Briefpapier met dakrand</field>
-            <field name="sequence">3</field>
+            <field name="sequence">4</field>
             <field name="view_id" ref="tectora_report_layout.external_layout_tectora_roof_letterhead"/>
         </record>
     </data>

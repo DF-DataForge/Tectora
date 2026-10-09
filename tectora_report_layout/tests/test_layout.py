@@ -75,7 +75,11 @@ class TestTectoraLetterhead(TransactionCase):
 
     def test_layouts_are_configurator_choices(self):
         layouts = self.env["report.layout"].search([])
-        for xmlid in ("report_layout_tectora_letterhead", "report_layout_tectora_roof_letterhead"):
+        for xmlid in (
+            "report_layout_tectora_letterhead",
+            "report_layout_tectora_letterhead_light",
+            "report_layout_tectora_roof_letterhead",
+        ):
             self.assertIn(self.env.ref("tectora_report_layout." + xmlid), layouts)
 
     def test_footer_lines(self):
@@ -100,6 +104,14 @@ class TestTectoraLetterhead(TransactionCase):
         self.assertIn("BE 1031.956.670", html)
         self.assertIn("#2D8D8F", html)
         self.assertIn("o_report_layout_tectora", html)
+
+    def test_light_letterhead_renders(self):
+        html = self._render("tectora_report_layout.external_layout_tectora_letterhead_light")
+        self.assertIn("o_tectora_lh_light", html)
+        self.assertIn("tectora_logo.svg", html)
+        self.assertNotIn("tectora_logo_white.svg", html)
+        self.assertIn("o_tectora_lh_footer_inverse", html)
+        self.assertIn("background-color: #2D8D8F;", html)
 
     def test_roof_letterhead_renders(self):
         html = self._render("tectora_report_layout.external_layout_tectora_roof_letterhead")

@@ -71,31 +71,36 @@
     <!-- Briefpapier: the Tectora letterhead (tectora-briefpapier-A4) -->
     <!-- ============================================================ -->
 
-    <!-- The letterhead's brand: the white Tectora logo with its slogan on the
-         left, the services and the website on the right. Placed on a band of
-         the company's primary colour. -->
+    <!-- The letterhead's brand: the Tectora logo with its slogan on the left,
+         the services and the website on the right. White on the band of the
+         primary colour; on the light band (letterhead_light) the logo in its
+         own colours and the website in the primary colour. -->
     <template id="tectora_letterhead_brand">
-        <img class="o_tectora_lh_logo" src="/tectora_report_layout/static/src/img/tectora_logo_white.svg" alt="Tectora"/>
+        <img t-if="letterhead_light" class="o_tectora_lh_logo" src="/tectora_report_layout/static/src/img/tectora_logo.svg" alt="Tectora"/>
+        <img t-else="" class="o_tectora_lh_logo" src="/tectora_report_layout/static/src/img/tectora_logo_white.svg" alt="Tectora"/>
         <div class="o_tectora_lh_services">
             <div t-if="not is_html_empty(company.report_header)" t-field="company.report_header"/>
             <div t-else="" t-out="services_fallback"/>
-            <div t-if="company.website" class="o_tectora_lh_website">— <t t-out="company._tectora_letterhead_website()"/></div>
+            <div t-if="company.website" class="o_tectora_lh_website"
+                 t-att-style="letterhead_light and 'color: %s;' % tectora_color">— <t t-out="company._tectora_letterhead_website()"/></div>
         </div>
     </template>
 
     <!-- The letterhead's footer: a light band at the bottom of the page with
          the company data on three centred lines and a short line in the
-         primary colour running off the right edge. -->
+         primary colour running off the right edge. With letterhead_light the
+         colours swap: a band in the primary colour, text and line in white. -->
     <template id="tectora_letterhead_footer">
         <t t-set="footer_lines" t-value="company._tectora_letterhead_footer_lines()"/>
-        <div t-attf-class="o_tectora_lh_footer {{report_type == 'pdf' and 'o_tectora_lh_footer_pdf' or ''}}">
+        <div t-attf-class="o_tectora_lh_footer {{report_type == 'pdf' and 'o_tectora_lh_footer_pdf' or ''}} {{letterhead_light and 'o_tectora_lh_footer_inverse' or ''}}"
+             t-att-style="letterhead_light and 'background-color: %s;' % tectora_color">
             <div class="o_tectora_lh_footer_lines">
                 <div t-if="footer_lines['identity']" t-out="footer_lines['identity']"/>
                 <div t-if="not is_html_empty(company.report_footer)" t-field="company.report_footer" class="o_tectora_lh_footer_text"/>
                 <div t-elif="footer_lines['contact']" t-out="footer_lines['contact']"/>
                 <div t-if="footer_lines['banks']" t-out="footer_lines['banks']"/>
             </div>
-            <div class="o_tectora_lh_accent" t-attf-style="background-color: {{tectora_color}};"/>
+            <div class="o_tectora_lh_accent" t-att-style="not letterhead_light and 'background-color: %s;' % tectora_color"/>
             <div t-if="report_type == 'pdf'" class="o_tectora_lh_pager">Pagina <span class="page"/> / <span class="topage"/></div>
             <div t-if="is_preview" class="o_tectora_lh_pager">Pagina 1 / 1</div>
         </div>
@@ -111,6 +116,35 @@
         <!-- HEADER -->
         <div t-attf-class="header o_company_#{company.id}_layout">
             <div class="o_tectora_lh_header" t-attf-style="background-color: {{tectora_color}};">
+                <t t-call="tectora_report_layout.tectora_letterhead_brand"/>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" hide_title="True">
+            <div class="o_report_layout_tectora">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="tectora_report_layout.tectora_letterhead_footer"/>
+        </div>
+    </template>
+
+    <!-- The letterhead's second colour scheme (page 2 of the artwork): a light
+         band at the top with the logo in its own colours, the footer band in
+         the primary colour. -->
+    <template id="external_layout_tectora_letterhead_light">
+        <t t-set="tectora_color" t-value="company.primary_color or '#2D8D8F'"/>
+        <t t-set="services_fallback" t-value="company._tectora_letterhead_services()"/>
+        <t t-set="letterhead_light" t-value="True"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout">
+            <div class="o_tectora_lh_header o_tectora_lh_light">
                 <t t-call="tectora_report_layout.tectora_letterhead_brand"/>
             </div>
         </div>
@@ -181,6 +215,7 @@
             <t t-elif="layout in (
                 'tectora_report_layout.external_layout_tectora',
                 'tectora_report_layout.external_layout_tectora_letterhead',
+                'tectora_report_layout.external_layout_tectora_letterhead_light',
                 'tectora_report_layout.external_layout_tectora_roof_letterhead',
             )">
                 &amp; .o_report_layout_tectora {

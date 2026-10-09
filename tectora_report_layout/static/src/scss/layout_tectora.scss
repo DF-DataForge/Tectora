@@ -59,6 +59,12 @@ $o-tectora-lh-side: 8.65mm;
     }
 }
 
+// Second colour scheme: the light band, services in grey.
+.o_tectora_lh_header.o_tectora_lh_light {
+    background-color: #F4F6F6;
+    color: #515355;
+}
+
 .o_tectora_lh_logo {
     position: absolute;
     top: 8.07mm;
@@ -110,6 +116,20 @@ $o-tectora-lh-side: 8.65mm;
         left: 0;
         right: 0;
         margin: 0;
+    }
+}
+
+// Second colour scheme: the band in the primary colour (set inline), white
+// text and line.
+.o_tectora_lh_footer.o_tectora_lh_footer_inverse {
+    color: #ffffff;
+
+    .o_tectora_lh_accent {
+        background-color: #ffffff;
+    }
+
+    .o_tectora_lh_pager {
+        color: rgba(255, 255, 255, .75);
     }
 }
 
