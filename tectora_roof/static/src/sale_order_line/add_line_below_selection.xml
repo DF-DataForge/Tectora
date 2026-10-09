@@ -14,4 +14,11 @@
         </xpath>
     </t>
 
+    <!-- The catalog button tells the catalog where to insert its products. -->
+    <t t-inherit="sale_management.ListRenderer.CreateRow" t-inherit-mode="extension">
+        <xpath expr="//ViewButton" position="attributes">
+            <attribute name="clickParams">this.tectoraControlClickParams(control)</attribute>
+        </xpath>
+    </t>
+
 </templates>

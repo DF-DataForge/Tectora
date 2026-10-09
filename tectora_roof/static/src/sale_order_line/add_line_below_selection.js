@@ -11,7 +11,9 @@ import { onWillRender } from "@web/owl2/utils";
 //
 // The selected line is the last one in edition. It stays the anchor after
 // leaving the row, and a line added through the row becomes the new anchor, so
-// several lines can be added one after the other. An added line left empty is
+// several lines can be added one after the other. The catalog opened from that
+// row inserts its products there too (catalog_insert_position.js and
+// sale.order._catalog_prepare_new_line_vals()). An added line left empty is
 // dropped by Odoo; the anchor then falls back to the line before it. Without an
 // anchor (nothing selected yet, or the line is gone) the row stays at the
 // bottom, as in Odoo.
@@ -45,6 +47,23 @@ patch(SaleOrderLineListRenderer.prototype, {
 
     isTectoraAnchor(record) {
         return record === this.tectoraAnchorRecord;
+    },
+
+    /** The catalog button's parameters, with the selected line's position. */
+    tectoraControlClickParams(control) {
+        const params = control.clickParams;
+        const anchor = this.tectoraAnchorRecord;
+        const context = (params?.context || "{}").trim();
+        if (params?.name !== "action_add_from_catalog" || !anchor || !context.startsWith("{")) {
+            return params;
+        }
+        const list = this.props.list;
+        const index = list.offset + list.records.indexOf(anchor);
+        const rest = context.slice(1).trim();
+        return {
+            ...params,
+            context: `{'tectora_catalog_after_index': ${index}${rest.startsWith("}") ? "" : ", "}${rest}`,
+        };
     },
 
     async add(params) {

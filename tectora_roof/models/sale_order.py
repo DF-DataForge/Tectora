@@ -848,6 +848,53 @@ class SaleOrder(models.Model):
             labels.append("%s%%" % amount if tax.amount_type == "percent" else amount)
         return ", ".join(labels)
 
+    # --------------------------------------------------------------- catalog
+    # The "Catalog" button of the order lines can be shown under a selected
+    # line (static/src/sale_order_line/add_line_below_selection.js). It then
+    # passes that line's position in the context, and the products picked in
+    # the catalog are inserted right after it instead of at the bottom.
+
+    def _get_action_add_from_catalog_extra_context(self):
+        context = super()._get_action_add_from_catalog_extra_context()
+        after_index = self.env.context.get("tectora_catalog_after_index")
+        if isinstance(after_index, int) and after_index >= 0:
+            # Resolved to the line that follows now (the order was just saved),
+            # so it keeps pointing at the same place while lines are added.
+            lines = self._tectora_ordered_lines()
+            if after_index + 1 < len(lines):
+                context["tectora_catalog_before_line_id"] = lines[after_index + 1].id
+        return context
+
+    def _update_order_line_info(self, product, quantity, uom, child_field, **kwargs):
+        # Sent by the catalog (catalog_insert_position.js). Taken out of
+        # kwargs, which are passed on to the price computation.
+        before_line_id = kwargs.pop("tectora_before_line_id", False)
+        if before_line_id:
+            self = self.with_context(tectora_catalog_before_line_id=before_line_id)
+        return super()._update_order_line_info(product, quantity, uom, child_field, **kwargs)
+
+    def _catalog_prepare_new_line_vals(self, child_field, product, quantity, uom, **kwargs):
+        vals = super()._catalog_prepare_new_line_vals(
+            child_field, product, quantity, uom, **kwargs
+        )
+        before_line_id = self.env.context.get("tectora_catalog_before_line_id")
+        if child_field == "order_line" and before_line_id:
+            lines = self._tectora_ordered_lines()
+            before = lines.filtered(lambda line: line.id == before_line_id)
+            if before:
+                # Take the place of the line that follows and move it and every
+                # line after it one down. A line before it with the same
+                # sequence still comes first: the new line has the higher id.
+                following = lines[lines.ids.index(before.id):]
+                for sequence, group in following.grouped("sequence").items():
+                    group.sequence = sequence + 1
+                vals["sequence"] = before.sequence - 1
+        return vals
+
+    def _tectora_ordered_lines(self):
+        """The order lines in the order the quotation shows them."""
+        return self.order_line.sorted(lambda line: (line.sequence, line.id))
+
     # ---------------------------------------------------------- smart buttons
     def action_view_roof_project(self):
         """The roof project of this order (created on the spot if the order
