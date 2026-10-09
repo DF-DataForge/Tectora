@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import { SaleOrderLineListRenderer } from "@sale/js/sale_order_line_field/sale_order_line_field";
+import { makeContext } from "@web/core/context";
 import { patch } from "@web/core/utils/patch";
 import { onWillRender } from "@web/owl2/utils";
 
@@ -88,6 +89,9 @@ patch(SaleOrderLineListRenderer.prototype, {
         }
         // Inserts the new line right after records[index], resequencing the
         // lines below it (as the section menu's "Add a line" does).
-        await this.props.list.addNewRecordAtIndex(index, { context: params?.context });
+        // The controls' context is the arch string ("{'default_display_type':
+        // 'line_section'}"); evaluate it as the x2many field's onAdd does.
+        const context = makeContext([params?.context]);
+        await this.props.list.addNewRecordAtIndex(index, { context });
     },
 });
