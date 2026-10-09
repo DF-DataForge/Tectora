@@ -55,7 +55,9 @@ class TestRoofs(TransactionCase):
         form = Form(self.env["sale.order"])
         form.partner_id = self.partner
         form.sale_order_template_id = template or self.template
-        return form.save()
+        order = form.save()
+        order.tectora_follow_measurement = True
+        return order
 
     def add_roofs(self, order, *descriptions):
         action = order.action_tectora_add_roofs()

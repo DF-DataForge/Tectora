@@ -131,9 +131,9 @@ Eén dakproject staat tegenover één offerte/order, in beide richtingen:
   opent het; wie liever eerst tekent, maakt het dakproject en klikt daar op
   **Offerte maken**.
 * Een offerte kan dus vanuit de **standaard verkooporder** of vanuit het
-  **dakproject** opgemaakt worden. Zolang de offerte open staat vervangt
-  **Offerte bijwerken uit meting** haar lijnen door de meting; een bevestigde
-  order wordt niet meer overschreven. Een geannuleerde order blijft in de
+  **dakproject** opgemaakt worden. De meting past de offerte alleen aan als
+  **Offerte volgt de meting** aangevinkt is, of na bevestiging met **Offerte
+  bijwerken uit meting**; een bevestigde order wordt niet meer overschreven. Een geannuleerde order blijft in de
   historiek (**Offertes / Orders**) en maakt plaats voor een nieuwe.
 * Klant, opportuniteit, verkoper ↔ projectleider, leverdatum ↔ deadline en
   prijslijst ↔ projecttype blijven **gesynchroniseerd**: wat je op de ene kant
@@ -150,7 +150,18 @@ technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 
 ### Offerte volgt de meting (spiegeling)
 
-De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
+**De meting past een offerte nooit ongevraagd aan.** Een offerte kan gewoon met
+de standaard offertebouwer van Odoo (offertesjabloon, eigen lijnen) opgemaakt
+worden, met de dakplannen enkel als plan: zolang het vinkje **Offerte volgt de
+meting** op de offerte (ook zichtbaar op het dakproject) uit staat, en dat is
+standaard, verandert geen tekening, opmeting, projectlijn of verwijderd dak
+iets aan de offertelijnen. **Offerte bijwerken uit meting** op het dakproject
+brengt de offerte dan eenmalig in lijn, na een bevestiging. De offertelijnen
+worden wel nog projectlijnen op het dakproject (die richting raakt de offerte
+niet).
+
+Met het vinkje aan spiegelen de offerte en het dakproject elkaar, zolang de
+offerte open staat:
 
 * De **hoofdstuktabs** op het dakproject zijn de projectlijnen; elke regel
   staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
@@ -179,8 +190,9 @@ De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
   prijst, worden met rust gelaten; een lijn verwijderen op de offerte
   verwijdert de projectlijn, en omgekeerd.
 
-**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn;
-een bevestigde order wordt nooit meer aangepast. De tab **Werf** (voorheen
+**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn
+(na bevestiging, met of zonder vinkje); een bevestigde order wordt nooit meer
+aangepast. De tab **Werf** (voorheen
 *Projectinformatie*) bundelt de werfvoorbereiding.
 
 ## Project (Odoo Project) en projectdashboard

@@ -153,6 +153,17 @@ class SaleOrder(models.Model):
         "alle regels': elke productregel krijgt dan dit tarief. Regels die "
         "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
     )
+    tectora_follow_measurement = fields.Boolean(
+        string="Offerte volgt de meting",
+        copy=False,
+        help="Aangevinkt past de offerte zich automatisch aan bij elke "
+        "wijziging van de tekening of het dakproject: hoeveelheden volgen de "
+        "opgemeten oppervlakte en omtrek, meetlijnen worden herbouwd en lijnen "
+        "die op het dakproject wegvallen, verdwijnen van de offerte. "
+        "Uitgevinkt (standaard) blijft de offerte zoals je ze opmaakt en "
+        "dienen de dakplannen enkel als plan; 'Offerte bijwerken uit meting' "
+        "op het dakproject brengt ze dan na bevestiging eenmalig in lijn.",
+    )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
         default=True,

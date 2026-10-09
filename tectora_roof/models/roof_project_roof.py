@@ -159,9 +159,12 @@ class TectoraRoofProjectRoof(models.Model):
                     project.with_context(tectora_roof_switch=True).write(
                         {"active_roof_id": False}
                     )
+        # Only on a quotation that follows the measurement; otherwise its
+        # lines stay, as the user made them.
         lines = self.env["sale.order.line"].search([
             ("tectora_roof_id", "in", self.ids),
             ("order_id.state", "in", ("draft", "sent")),
+            ("order_id.tectora_follow_measurement", "=", True),
         ])
         if lines:
             lines.unlink()
