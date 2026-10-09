@@ -31,7 +31,7 @@ Installing the module switches every company to the Tectora layout (and gives a
 company without a primary colour the Tectora teal); another layout can be
 picked again at any time.
     """,
-    "version": "20.0.1.2.0",
+    "version": "20.0.1.2.1",
     "category": "Hidden/Tools",
     "license": "Other proprietary",
     "author": "Data Forge",
