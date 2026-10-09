@@ -117,3 +117,20 @@ al bestelde lijnen worden nooit meebesteld.
 Inkooporders aanmaken vraagt de groep *Inkoop / Gebruiker*; de knoppen zijn
 enkel voor die groep zichtbaar. Logistieke routes beheren vraagt *Inkoop /
 Beheerder*.
+
+## Bestelbon materialen (transport)
+
+Een inkooporder van een dakproject heeft een tweede document voor de
+leverancier, **Bestelbon materialen – leverancier** (Afdrukken → *Bestelbon
+materialen (transport)*). Wanneer de order naar de leverancier gemaild wordt
+(offerteaanvraag of inkooporder), gaat de bestelbon automatisch als tweede pdf
+mee.
+
+| Rubriek | Bron |
+|---|---|
+| 1. Projectgegevens | dakproject (code, klant, werfadres), referentie van de leverancier op de order, *Hoogte dak(en)* en *Bereikbaarheid dak (i.f.v. camionkraan)* uit de tab Werf, de geplande leverdatum van de order |
+| 2. Leveringsinstructies | *Materiaal rechtstreeks op het dak*, *Materialen op grond plaatsen* en *Afval mee te nemen door leverancier* uit de tab Werf (JA/NEE) |
+| 3. Fotomateriaal | de foto's *Bovenaanzicht*, *Gevelaanzicht* en *Transportvoorbeeld* uit de tab Werf (enkel die er zijn) |
+| 4. Lijst materialen bestelling | de producten op de inkooporder |
+| 5. Op te halen in loods | de projectmaterialen die uit het eigen magazijn komen: uit voorraad en geleverd aan het magazijn, met het adres van het magazijn |
+

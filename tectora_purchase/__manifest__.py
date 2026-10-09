@@ -61,10 +61,16 @@ and transfers behind it, tick boxes per line and the logistics responsible of
 the project. With the employee portal installed, the same lists are on the
 site's Materialen tab, with the PDF.
 
+The purchase order of a roof project carries a **transport order**
+(*Bestelbon materialen*): project data and delivery instructions from the
+site information of the roof project, its three photos (Bovenaanzicht,
+Gevelaanzicht, Transportvoorbeeld), the material on the order and what the
+crew fetches at the own warehouse. It is printable from the order and goes
+along as a second PDF whenever the order is mailed to the vendor.
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "20.0.1.2.0",
+    "version": "20.0.1.3.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -81,6 +87,7 @@ are installed.
         "views/purchase_order_views.xml",
         "report/purchase_order_report.xml",
         "report/logistics_lists_report.xml",
+        "report/transport_order_report.xml",
         "wizard/purchase_from_material_views.xml",
     ],
     "post_init_hook": "post_init_hook",

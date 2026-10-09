@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- "Bestelbon materialen": what the vendor of a roof project's order
+         needs to deliver on site. Project data and delivery instructions come
+         from the site information of the roof project (tab Werf), with its
+         three photos; then the material on this order and what the crew
+         fetches at the own warehouse. Mailed with the purchase order
+         (PurchaseOrder._process_attachments_for_template_post). -->
+    <record id="action_report_transport_order" model="ir.actions.report">
+        <field name="name">Bestelbon materialen (transport)</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_purchase.report_transport_order</field>
+        <field name="print_report_name">'Bestelbon materialen - %s' % object.name</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_transport_order">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="tectora_purchase.report_transport_order_document" t-lang="o.partner_id.lang"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_transport_order_document">
+        <t t-set="roof" t-value="o.tectora_roof_project_id"/>
+        <t t-set="vendor" t-value="o.partner_id.commercial_partner_id.name"/>
+        <t t-call="web.external_layout" o="o"
+           layout_document_title="'Bestelbon materialen – %s' % vendor">
+            <div class="page o_tectora_transport_order">
+                <style>
+                    .o_tectora_transport_order h5 { margin: 18px 0 6px; font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+                    .o_tectora_transport_order table.o_kv td { padding: 1px 0; }
+                    .o_tectora_transport_order table.o_kv td:first-child { width: 55%; }
+                    .o_tectora_transport_order .o_photo { page-break-inside: avoid; margin-bottom: 14px; }
+                    .o_tectora_transport_order .o_photo img { max-width: 100%; max-height: 95mm; }
+                    .o_tectora_transport_order table.o_list th { border-bottom: 1px solid #333; }
+                    .o_tectora_transport_order table.o_list td, .o_tectora_transport_order table.o_list th { padding: 3px 4px; }
+                </style>
+
+                <h5>1. Projectgegevens</h5>
+                <table class="table-borderless w-100 o_kv">
+                    <tr><td>Projectnummer Tectora:</td><td t-out="roof.code or roof.name"/></tr>
+                    <tr><td>Ordernummer <t t-out="vendor"/>:</td><td t-out="o.partner_ref or '-'"/></tr>
+                    <tr><td>Inkooporder Tectora:</td><td t-out="o.name"/></tr>
+                    <tr><td>Naam klant:</td><td t-out="roof.partner_id.name or '-'"/></tr>
+                    <tr><td>Werfadres:</td><td t-out="roof.address or '-'"/></tr>
+                    <tr><td>Geschatte hoogte dak (m):</td>
+                        <td t-out="('%.2f m' % roof.roof_height).replace('.', ',') if roof.roof_height else '-'"/></tr>
+                    <tr><td>Bereikbaarheid dak (i.f.v. camionkraan):</td><td t-out="roof.roof_access_crane or '-'"/></tr>
+                    <tr><td>Leverdatum gewenst:</td>
+                        <td><span t-if="o.date_planned" t-field="o.date_planned" t-options="{'widget': 'date'}"/><t t-else="">-</t></td></tr>
+                </table>
+
+                <h5>2. Leveringsinstructies</h5>
+                <table class="table-borderless w-100 o_kv">
+                    <tr><td>Materialen op dak plaatsen (JA/NEE):</td><td t-out="'JA' if roof.material_direct_roof else 'NEE'"/></tr>
+                    <tr><td>Materialen op grond plaatsen (JA/NEE):</td><td t-out="'JA' if roof.material_on_ground else 'NEE'"/></tr>
+                    <tr><td>Afval mee te nemen door <t t-out="vendor"/> (JA/NEE):</td><td t-out="'JA' if roof.supplier_takes_waste else 'NEE'"/></tr>
+                </table>
+
+                <h5>3. Fotomateriaal</h5>
+                <t t-set="photos" t-value="[(label, photo) for label, photo in (
+                    ('Bovenaanzicht', roof.site_photo_top),
+                    ('Gevelaanzicht', roof.site_photo_facade),
+                    ('Transportvoorbeeld', roof.site_photo_transport),
+                ) if photo]"/>
+                <div t-foreach="photos" t-as="photo" class="o_photo">
+                    <div class="fst-italic text-decoration-underline mb-1" t-out="photo[0]"/>
+                    <img t-att-src="image_data_uri(photo[1])" t-att-alt="photo[0]"/>
+                </div>
+                <p t-if="not photos" class="text-muted">Geen foto's toegevoegd.</p>
+
+                <h5>4. Lijst materialen bestelling <t t-out="vendor"/></h5>
+                <table class="w-100 o_list">
+                    <thead>
+                        <tr><th>Naam product</th><th class="text-end">Hoeveelheid</th><th>Eenheid</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="o._tectora_transport_order_lines()" t-as="line">
+                            <td t-out="line['name']"/>
+                            <td class="text-end"><span t-out="line['qty']" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/></td>
+                            <td t-out="line['uom']"/>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <t t-set="warehouse" t-value="o._tectora_transport_warehouse()"/>
+                <t t-set="pickup" t-value="o._tectora_transport_pickup_lines()"/>
+                <h5>5. Op te halen in loods <t t-out="o.company_id.name"/></h5>
+                <div t-if="warehouse.partner_id" class="mb-2"
+                     t-out="', '.join(part for part in (warehouse.partner_id.street, warehouse.partner_id.street2, ' '.join(p for p in (warehouse.partner_id.zip, warehouse.partner_id.city) if p)) if part)"/>
+                <table t-if="pickup" class="w-100 o_list">
+                    <thead>
+                        <tr><th>Naam product</th><th class="text-end">Hoeveelheid</th><th>Eenheid</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="pickup" t-as="line">
+                            <td t-out="line['name']"/>
+                            <td class="text-end"><span t-out="line['qty']" t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/></td>
+                            <td t-out="line['uom']"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-else="" class="text-muted">Niets op te halen in de loods voor dit project.</p>
+            </div>
+        </t>
+    </template>
+
+</odoo>
