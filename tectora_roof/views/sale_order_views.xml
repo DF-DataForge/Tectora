@@ -39,9 +39,6 @@
                 <field name="roof_project_id"
                        context="{'default_partner_id': partner_id}"/>
                 <field name="roof_project_state" invisible="1"/>
-                <field name="tectora_standard_quotation"/>
-                <field name="tectora_quotation_style"
-                       invisible="tectora_standard_quotation"/>
                 <field name="tectora_include_roof_plan"
                        invisible="not roof_project_id"/>
             </xpath>

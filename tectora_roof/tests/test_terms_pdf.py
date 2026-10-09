@@ -37,13 +37,10 @@ class TestTermsPdf(TransactionCase):
         self.assertFalse(self._order().note)
 
     def test_quotation_pdf_has_terms_page(self):
-        order = self._order()
-        for standard in (True, False):
-            order.tectora_standard_quotation = standard
-            html = self._html("sale.action_report_saleorder", order)
-            self.assertIn("o_tectora_terms", html)
-            self.assertIn("Artikel 1. Toepassingsgebied", html)
-            self.assertIn("Algemene voorwaarden", html)
+        html = self._html("sale.action_report_saleorder", self._order())
+        self.assertIn("o_tectora_terms", html)
+        self.assertIn("Artikel 1. Toepassingsgebied", html)
+        self.assertIn("Algemene voorwaarden", html)
 
     def test_invoice_has_terms_page_not_note(self):
         invoice = self.env["account.move"].create({
