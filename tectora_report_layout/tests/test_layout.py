@@ -119,6 +119,23 @@ class TestTectoraLetterhead(TransactionCase):
         self.assertIn("o_tectora_lh_footer", html)
         self.assertIn("tectora_logo_white.svg", html)
 
+    def test_configurator_previews_the_letterheads(self):
+        # The preview renders the layout with the configurator itself as
+        # `company`: the letterhead takes the address from the company it
+        # configures.
+        for xmlid in (
+            "report_layout_tectora_letterhead",
+            "report_layout_tectora_letterhead_light",
+            "report_layout_tectora_roof_letterhead",
+        ):
+            wizard = self.env["base.document.layout"].create({"company_id": self.company.id})
+            wizard.report_layout_id = self.env.ref("tectora_report_layout." + xmlid)
+            wizard._onchange_report_layout_id()
+            preview = wizard.preview
+            self.assertIn("o_tectora_lh_footer", preview)
+            self.assertIn("Vuurkruiserslaan 28, 8870 Izegem", preview)
+            self.assertIn("www.tectora.be", preview)
+
     def test_company_styles_cover_the_letterheads(self):
         view = self.env.ref("tectora_report_layout.external_layout_tectora_letterhead")
         self.company.external_report_layout_id = view

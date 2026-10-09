@@ -82,7 +82,7 @@
             <div t-if="not is_html_empty(company.report_header)" t-field="company.report_header"/>
             <div t-else="" t-out="services_fallback"/>
             <div t-if="company.website" class="o_tectora_lh_website"
-                 t-att-style="letterhead_light and 'color: %s;' % tectora_color">— <t t-out="company._tectora_letterhead_website()"/></div>
+                 t-att-style="letterhead_light and 'color: %s;' % tectora_color">— <t t-out="tectora_company._tectora_letterhead_website()"/></div>
         </div>
     </template>
 
@@ -91,7 +91,7 @@
          primary colour running off the right edge. With letterhead_light the
          colours swap: a band in the primary colour, text and line in white. -->
     <template id="tectora_letterhead_footer">
-        <t t-set="footer_lines" t-value="company._tectora_letterhead_footer_lines()"/>
+        <t t-set="footer_lines" t-value="tectora_company._tectora_letterhead_footer_lines()"/>
         <div t-attf-class="o_tectora_lh_footer {{report_type == 'pdf' and 'o_tectora_lh_footer_pdf' or ''}} {{letterhead_light and 'o_tectora_lh_footer_inverse' or ''}}"
              t-att-style="letterhead_light and 'background-color: %s;' % tectora_color">
             <div class="o_tectora_lh_footer_lines">
@@ -111,7 +111,11 @@
          is the one of the Tectora layout. -->
     <template id="external_layout_tectora_letterhead">
         <t t-set="tectora_color" t-value="company.primary_color or '#2D8D8F'"/>
-        <t t-set="services_fallback" t-value="company._tectora_letterhead_services()"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="tectora_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="tectora_company._tectora_letterhead_services()"/>
 
         <!-- HEADER -->
         <div t-attf-class="header o_company_#{company.id}_layout">
@@ -139,7 +143,11 @@
          the primary colour. -->
     <template id="external_layout_tectora_letterhead_light">
         <t t-set="tectora_color" t-value="company.primary_color or '#2D8D8F'"/>
-        <t t-set="services_fallback" t-value="company._tectora_letterhead_services()"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="tectora_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="tectora_company._tectora_letterhead_services()"/>
         <t t-set="letterhead_light" t-value="True"/>
 
         <!-- HEADER -->
@@ -184,7 +192,11 @@
          brand with the roof edge as its lower side, the letterhead's footer. -->
     <template id="external_layout_tectora_roof_letterhead">
         <t t-set="tectora_color" t-value="company.primary_color or '#2D8D8F'"/>
-        <t t-set="services_fallback" t-value="company._tectora_letterhead_services()"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="tectora_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="tectora_company._tectora_letterhead_services()"/>
 
         <!-- HEADER -->
         <div t-attf-class="header o_company_#{company.id}_layout">
