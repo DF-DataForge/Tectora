@@ -73,6 +73,20 @@ Het verschil tussen beide soorten in Odoo:
   en in de productkiezer van de tekening verschijnen — aan te vinken met
   *Grondstoffen ook verkoopbaar* als je ze toch wil kunnen offreren.
 
+**Bestaande producten: bijwerken of aanvullen.** *Bijwerken* (standaard)
+neemt naam, prijs, categorie, eenheid en omschrijving van bestaande producten
+uit het bestand. *Aanvullen* raakt bestaande producten niet aan: enkel
+ontbrekende producten worden aangemaakt, en een lege interne referentie of
+verkoopomschrijving wordt ingevuld. Een product dat al bestaat zonder
+referentie (zelfde naam) krijgt de referentie in plaats van een tweelingproduct.
+Met **Enkel verkoopproducten** worden de grondstoffen in het bestand
+overgeslagen. Zo vul je een productieomgeving aan vanuit de Simpla-export
+zonder er aangepaste prijzen te overschrijven.
+
+De **lange omschrijving** (`lange omschrijving NL`, HTML in Simpla) wordt de
+**verkoopomschrijving**: platte tekst, regel per regel, die op de offerte onder
+het product komt.
+
 Verder: producten worden gematcht op interne referentie (zonder referentie op
 naam binnen de categorie, dus geen dubbels), ontbrekende verkoopprijzen worden
 berekend met de instelbare marge-coëfficiënt (standaard 1,85), en na de import
@@ -100,17 +114,22 @@ Twintig startpunten voor een offerte, opgebouwd uit dezelfde catalogus:
 onder **Verkoop → Configuratie → Offertesjablonen** en worden geladen via
 **Verkoop → Configuratie → Offertesjablonen laden**.
 
-Elk sjabloon heeft dezelfde ruggengraat, in secties:
+Elk sjabloon heeft dezelfde vaste secties, in deze volgorde:
 
 | Sectie | Inhoud |
 |---|---|
-| Algemene werken | Vaste kosten, verticaal transport (manueel bij renovatie, camionkraan bij nieuwbouw), afvalverwerking. |
-| Verplichte veiligheidsvoorzieningen | Twee permanente ankerpunten en tijdelijke balustrades over de volledige omtrek. |
-| Afbraakwerken | **Enkel bij renovatie**: de bestaande bedekking, de dakranden, de tapbuizen en wat daarbij hoort. |
-| Dakopbouw | Eén dampscherm, één isolatie, één dakbedekking, plus de kimfixatie — en bij een geballast systeem het grind met grindvangers. |
-| Dakranden en hoeken | Eén dakrandtype met **de binnen- en buitenhoek die bij dat profiel horen**. |
-| Regenwaterafvoer | Tapbuizen met bolrooster. |
+| ALGEMENE WERKEN | Vaste kosten, verticaal transport (manueel bij renovatie, camionkraan bij nieuwbouw), afvalverwerking. |
+| VEILIGHEID | Twee permanente ankerpunten en tijdelijke balustrades over de volledige omtrek. |
+| AFBOUWWERKEN THV PLAT DAK | **Enkel bij renovatie**: de bestaande bedekking, de dakranden, de tapbuizen en wat daarbij hoort. |
+| OPBOUWWERKEN THV PLAT DAK | Eén dampscherm, één isolatie, één dakbedekking en de kimfixatie (bij een geballast systeem ook het grind met grindvangers); één dakrandtype met **de binnen- en buitenhoek die bij dat profiel horen**; bij een dakterras de terrasafwerking; de tapbuizen met bolrooster. |
+| COMMERCIËLE TEGEMOETKOMING | Leeg, voor een korting of gebaar op maat. |
+| ALGEMENE NOTA'S | Leeg, voor opmerkingen bij de offerte. |
 | Opties | Koepel of dakraam, parkeervergunning, stelling en keuring, hoogwerker, noodspuwer, afvoerbuis. Optionele lijnen: ze staan op de offerte maar tellen niet mee. |
+
+Bestaat een project uit meerdere daken, dan krijgt elk dak met **Daken
+toevoegen** op de offerte (Tectora Dakmeting) een subsectie onder de
+afbouw- en opbouwwerken. Sjablonen die al in de database staan, krijgen de
+nieuwe secties pas na **Offertesjablonen laden** met vernieuwen.
 
 De twintig variëren in dakbedekking (Elevate EPDM 1,1 of 1,5 mm, verkleefd of
 geballast, en 2-laagse bitumineuze roofing), isolatie (PIR 10 tot 20 cm en

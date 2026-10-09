@@ -45,3 +45,99 @@ class TestTectoraLayout(TransactionCase):
         scss = self.env["ir.qweb"]._render("web.styles_company_report", {"company_ids": self.company})
         self.assertIn(".o_report_layout_tectora", str(scss))
         self.assertIn("#008B93", str(scss))
+
+
+@tagged("post_install", "-at_install")
+class TestTectoraLetterhead(TransactionCase):
+
+    def setUp(self):
+        super().setUp()
+        self.company = self.env.company
+        self.company.write({
+            "name": "Tectora BV",
+            "street": "Vuurkruiserslaan 28",
+            "zip": "8870",
+            "city": "Izegem",
+            "vat": "BE1031956670",
+            "email": "info@tectora.be",
+            "phone": "0472 09 20 98",
+            "website": "https://www.tectora.be",
+            "primary_color": "#2D8D8F",
+        })
+
+    def _render(self, xmlid):
+        view = self.env.ref(xmlid)
+        self.company.external_report_layout_id = view
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "web.preview_externalreport", [self.company.id]
+        )
+        return html.decode() if isinstance(html, bytes) else str(html)
+
+    def test_layouts_are_configurator_choices(self):
+        layouts = self.env["report.layout"].search([])
+        for xmlid in (
+            "report_layout_tectora_letterhead",
+            "report_layout_tectora_letterhead_light",
+            "report_layout_tectora_roof_letterhead",
+        ):
+            self.assertIn(self.env.ref("tectora_report_layout." + xmlid), layouts)
+
+    def test_footer_lines(self):
+        self.env["res.partner.bank"].create({
+            "partner_id": self.company.partner_id.id,
+            "account_number": "BE62739028873261",
+            "bank_name": "KBC",
+        })
+        lines = self.company._tectora_letterhead_footer_lines()
+        self.assertEqual(
+            lines["identity"], "Tectora BV — Vuurkruiserslaan 28, 8870 Izegem — BE 1031.956.670"
+        )
+        self.assertEqual(lines["contact"], "info@tectora.be — 0472 09 20 98")
+        self.assertEqual(lines["banks"], "KBC BE62 7390 2887 3261")
+        self.assertEqual(self.company._tectora_letterhead_website(), "www.tectora.be")
+
+    def test_letterhead_renders(self):
+        html = self._render("tectora_report_layout.external_layout_tectora_letterhead")
+        self.assertIn("o_tectora_lh_header", html)
+        self.assertIn("tectora_logo_white.svg", html)
+        self.assertIn("www.tectora.be", html)
+        self.assertIn("BE 1031.956.670", html)
+        self.assertIn("#2D8D8F", html)
+        self.assertIn("o_report_layout_tectora", html)
+
+    def test_light_letterhead_renders(self):
+        html = self._render("tectora_report_layout.external_layout_tectora_letterhead_light")
+        self.assertIn("o_tectora_lh_light", html)
+        self.assertIn("tectora_logo.svg", html)
+        self.assertNotIn("tectora_logo_white.svg", html)
+        self.assertIn("o_tectora_lh_footer_inverse", html)
+        self.assertIn("background-color: #2D8D8F;", html)
+
+    def test_roof_letterhead_renders(self):
+        html = self._render("tectora_report_layout.external_layout_tectora_roof_letterhead")
+        self.assertIn("o_tectora_rlh_shape", html)
+        self.assertIn("o_tectora_lh_footer", html)
+        self.assertIn("tectora_logo_white.svg", html)
+
+    def test_configurator_previews_the_letterheads(self):
+        # The preview renders the layout with the configurator itself as
+        # `company`: the letterhead takes the address from the company it
+        # configures.
+        for xmlid in (
+            "report_layout_tectora_letterhead",
+            "report_layout_tectora_letterhead_light",
+            "report_layout_tectora_roof_letterhead",
+        ):
+            wizard = self.env["base.document.layout"].create({"company_id": self.company.id})
+            wizard.report_layout_id = self.env.ref("tectora_report_layout." + xmlid)
+            wizard._onchange_report_layout_id()
+            preview = wizard.preview
+            self.assertIn("o_tectora_lh_footer", preview)
+            self.assertIn("Vuurkruiserslaan 28, 8870 Izegem", preview)
+            self.assertIn("www.tectora.be", preview)
+
+    def test_company_styles_cover_the_letterheads(self):
+        view = self.env.ref("tectora_report_layout.external_layout_tectora_letterhead")
+        self.company.external_report_layout_id = view
+        scss = self.env["ir.qweb"]._render("web.styles_company_report", {"company_ids": self.company})
+        self.assertIn(".o_report_layout_tectora", str(scss))

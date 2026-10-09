@@ -51,7 +51,7 @@ the quotation. The data lives in ``data/quotation_templates.json``, generated
 and validated by ``tools/build_quotation_templates.py``; loading is idempotent
 and never overwrites the lines of a template the office has already tuned.
     """,
-    "version": "20.0.2.4.0",
+    "version": "20.0.2.5.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

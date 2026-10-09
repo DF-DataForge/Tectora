@@ -11,7 +11,9 @@
                         Laad de productenexport (.xlsx) op. Kolommen worden herkend op
                         hun naam: <b>interne referentie</b> (of productcode), naam,
                         <b>productcategorie</b>, aankoopprijs, verkoopprijs, eenheid,
-                        leverancier, leverancierscode, EAN en gewicht.
+                        leverancier, leverancierscode, EAN, gewicht en de
+                        <b>lange omschrijving</b> (wordt de verkoopomschrijving
+                        op de offerte).
                     </div>
                     <group>
                         <group string="Bestand">
@@ -27,6 +29,8 @@
                             <field name="markup"/>
                         </group>
                         <group string="Opties">
+                            <field name="mode"/>
+                            <field name="services_only"/>
                             <field name="sale_ok_goods"/>
                             <field name="archive_price_book"/>
                         </group>

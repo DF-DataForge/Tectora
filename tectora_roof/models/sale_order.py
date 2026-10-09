@@ -27,15 +27,6 @@ SYNC_PAIRS = [
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
 
-# The looks the quotation PDF can take (see report/sale_order_dossier_report.xml).
-QUOTATION_STYLES = [
-    ("dossier", "Projectdossier — voorblad, aanpak, offerte, dakplan, service"),
-    ("compact", "Compact — offerte voorop, kort en zakelijk"),
-    ("classic", "Klassiek — briefstijl met begeleidende tekst"),
-    ("visual", "Visueel — dakplan en kerncijfers voorop"),
-    ("minimal", "Minimalistisch — rustig, veel wit"),
-]
-
 
 def _differs(record, field_name, value):
     """Whether writing ``value`` (an id for relational fields) would change
@@ -60,6 +51,9 @@ class SaleOrder(models.Model):
         "Elke order heeft er precies één: het wordt mee aangemaakt met de "
         "order, en klant, opportuniteit, verkoper, leverdatum en prijslijst "
         "blijven in beide richtingen gelijk.",
+    )
+    tectora_roof_ids = fields.One2many(
+        related="roof_project_id.roof_ids", string="Daken", readonly=True,
     )
     roof_project_state = fields.Selection(
         related="roof_project_id.state", string="Status dakproject", readonly=True
@@ -149,23 +143,6 @@ class SaleOrder(models.Model):
             )
         return label
 
-    tectora_standard_quotation = fields.Boolean(
-        string="Standaard offerte",
-        default=lambda self: self._default_tectora_standard_quotation(),
-        help="Gebruik het standaard offertedocument van Odoo in plaats van de "
-        "Tectora-offerte (afdrukken, e-mail en klantenportaal). Het dakplan "
-        "kan er nog achter. De standaardkeuze voor nieuwe offertes staat in "
-        "Instellingen → Tectora Dakmeting.",
-    )
-    tectora_quotation_style = fields.Selection(
-        QUOTATION_STYLES,
-        string="Offertestijl",
-        default=lambda self: self._default_tectora_quotation_style(),
-        required=True,
-        help="De opmaak van de Tectora-offerte (afdrukken, e-mail, "
-        "klantenportaal); niet van toepassing bij een standaard offerte. De "
-        "standaardstijl staat in Instellingen → Tectora Dakmeting.",
-    )
     tectora_tax_id = fields.Many2one(
         "account.tax",
         string="Btw-tarief voor alle regels",
@@ -176,25 +153,29 @@ class SaleOrder(models.Model):
         "alle regels': elke productregel krijgt dan dit tarief. Regels die "
         "nadien bijkomen, houden de btw van hun product tot u opnieuw toepast.",
     )
+    tectora_follow_measurement = fields.Boolean(
+        string="Offerte volgt de meting",
+        copy=False,
+        help="Aangevinkt past de offerte zich automatisch aan bij elke "
+        "wijziging van de tekening of het dakproject: hoeveelheden volgen de "
+        "opgemeten oppervlakte en omtrek, meetlijnen worden herbouwd en lijnen "
+        "die op het dakproject wegvallen, verdwijnen van de offerte. "
+        "Uitgevinkt (standaard) blijft de offerte zoals je ze opmaakt en "
+        "dienen de dakplannen enkel als plan; 'Offerte bijwerken uit meting' "
+        "op het dakproject brengt ze dan na bevestiging eenmalig in lijn.",
+    )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
         default=True,
         help="Neem het dakplan (tekening, maten en producten per daksectie) "
-        "op in de offerte-pdf.",
+        "op in de offerte-pdf en toon het bij de offerte op het klantenportaal.",
     )
 
-    @api.model
-    def _default_tectora_quotation_style(self):
-        style = self.env["ir.config_parameter"].sudo().get_str(
-            "tectora_roof.quotation_style"
-        )
-        return style if style in dict(QUOTATION_STYLES) else "dossier"
-
-    @api.model
-    def _default_tectora_standard_quotation(self):
-        return self.env["ir.config_parameter"].sudo().get_bool(
-            "tectora_roof.standard_quotation"
-        )
+    @api.depends("partner_id", "company_id")
+    def _compute_note(self):
+        # Terms added as a PDF are printed on pages of their own after the
+        # quotation, not in its note.
+        super(SaleOrder, self.filtered(lambda order: order.company_id.terms_type != "pdf"))._compute_note()
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi
@@ -477,22 +458,21 @@ class SaleOrder(models.Model):
         candidates = candidates._tectora_mirrorable().filtered(
             lambda line: line.order_id == self
         )
-        measured_products = (
-            roof.section_ids.product_line_ids | roof.roof_object_ids.product_line_ids
-        ).product_id
+        # Keyed on (product, roof): every roof has its own chapter lines.
         direct_by_product = {}
         for roof_line in roof.direct_line_ids:
-            direct_by_product.setdefault(roof_line.product_id, roof_line)
+            direct_by_product.setdefault((roof_line.product_id, roof_line.roof_id), roof_line)
         for line in candidates:
             roof_line = line.roof_line_id
             if roof_line and roof_line.project_id != roof:
                 roof_line = self.env["tectora.roof.section.product"]
+            line_roof = line.tectora_roof_id.filtered(lambda r: r.project_id == roof)
             if not roof_line:
-                if line.product_id in measured_products:
+                if line.product_id in roof._tectora_measured_products(line_roof):
                     # The drawing already prices this product; a manually
                     # added line is left to the user.
                     continue
-                roof_line = direct_by_product.get(line.product_id)
+                roof_line = direct_by_product.get((line.product_id, line_roof))
                 if roof_line and roof_line.sale_line_ids.filtered(
                     lambda sol: sol.order_id == self and sol != line
                 ):
@@ -504,11 +484,12 @@ class SaleOrder(models.Model):
                     # the line. The drawing overrides it when it changes.
                     roof_line = RoofLine.create({
                         "project_direct_id": roof.id,
+                        "roof_id": line_roof.id or False,
                         "product_id": line.product_id.id,
                         "coverage": coverage,
                         "quantity": line.product_uom_qty,
                     })
-                    direct_by_product[line.product_id] = roof_line
+                    direct_by_product[(line.product_id, line_roof)] = roof_line
                 line.with_context(tectora_sync=True).write(
                     {"roof_line_id": roof_line.id}
                 )
@@ -532,6 +513,117 @@ class SaleOrder(models.Model):
                 line.with_context(tectora_sync=True).write(
                     {"product_uom_qty": roof_line.quantity}
                 )
+        return True
+
+    # ----------------------------------------------------------------- roofs
+    # The fixed sections of a quotation in which every roof gets a subsection.
+    ROOF_CHAPTERS = (("afbouw", ("afbouw", "afbraak")), ("opbouw", ("opbouw",)))
+
+    @api.onchange("sale_order_template_id")
+    def _onchange_tectora_template_project_type(self):
+        """The template says renovatie or nieuwbouw: the order takes the
+        pricelist of that type, which the roof project follows."""
+        kind = self.sale_order_template_id.tectora_project_type
+        if not kind:
+            return
+        label = dict(self.env["sale.order.template"]._fields["tectora_project_type"].selection)[kind]
+        pricelist = self.env["product.pricelist"].search(
+            [("name", "=ilike", label), ("company_id", "in", [False, self.company_id.id])],
+            limit=1,
+        )
+        if pricelist and pricelist != self.pricelist_id:
+            self.pricelist_id = pricelist
+
+    def _tectora_check_roofs_allowed(self):
+        self.ensure_one()
+        if not self.sale_order_template_id:
+            raise UserError(_("Kies eerst een offertesjabloon; daarna kunnen de daken toegevoegd worden."))
+        if self.state not in ("draft", "sent"):
+            raise UserError(_("Daken worden toegevoegd op een offerte, niet op een bevestigde order."))
+
+    def action_tectora_add_roofs(self):
+        self.ensure_one()
+        self._tectora_check_roofs_allowed()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Daken toevoegen"),
+            "res_model": "tectora.add.roofs.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_order_id": self.id, "default_roof_count": 1},
+        }
+
+    def _tectora_roof_chapter_header(self, lines, keywords):
+        return lines.filtered(
+            lambda line: line.display_type == "line_section"
+            and not line.roof_measurement_line
+            and any(word in (line.name or "").lower() for word in keywords)
+        )[:1]
+
+    def _tectora_add_roof_subsections(self, roofs):
+        """Under the afbouw- and opbouwwerken, a subsection per roof with the
+        works of that chapter: the template's lines move into the first
+        roofs' subsections, every next roof gets the same lines. The roof
+        project gets them as lines of that roof, whose quantities follow the
+        roof's plan once it is drawn."""
+        self.ensure_one()
+        Line = self.env["sale.order.line"]
+        ordered = list(self.order_line.sorted(lambda l: (l.sequence, l.id)))
+        for _kind, keywords in self.ROOF_CHAPTERS:
+            lines = Line.union(ordered)
+            header = self._tectora_roof_chapter_header(lines, keywords)
+            if not header:
+                continue
+            start = ordered.index(header)
+            end = start + 1
+            while end < len(ordered) and ordered[end].display_type != "line_section":
+                end += 1
+            block = ordered[start + 1:end]
+            pattern = [
+                line for line in block
+                if not line.display_type and line.product_id
+                and not line.tectora_roof_id and not line.roof_measurement_line
+            ]
+            if not pattern:
+                # The chapter was split per roof before: a new roof gets the
+                # lines of the first roof.
+                first_roof = next((l.tectora_roof_id for l in block if l.tectora_roof_id), None)
+                if first_roof:
+                    pattern = [
+                        line for line in block
+                        if not line.display_type and line.tectora_roof_id == first_roof
+                    ]
+            values = []
+            for roof in roofs:
+                values.append({
+                    "order_id": self.id,
+                    "display_type": "line_subsection",
+                    "name": roof._subsection_name(),
+                    "tectora_roof_id": roof.id,
+                })
+                for line in pattern:
+                    values.append({
+                        "order_id": self.id,
+                        "product_id": line.product_id.id,
+                        "name": line.name,
+                        "product_uom_qty": line.product_uom_qty,
+                        "product_uom_id": line.product_uom_id.id,
+                        "price_unit": line.price_unit,
+                        "discount": line.discount,
+                        "tectora_roof_id": roof.id,
+                    })
+            new_lines = Line.create(values)
+            loose = [line for line in pattern if not line.tectora_roof_id]
+            ordered = ordered[:end] + list(new_lines) + ordered[end:]
+            if loose:
+                ordered = [line for line in ordered if line not in loose]
+                Line.union(loose).unlink()
+        ordered = [line for line in ordered if line.exists()]
+        for index, line in enumerate(ordered, start=1):
+            if line.sequence != index * 10:
+                line.with_context(tectora_sync=True).write({"sequence": index * 10})
+        if self.roof_project_id:
+            self.roof_project_id._tectora_mirror_to_order(self)
         return True
 
     # --------------------------------------------------------- field mirror
@@ -734,6 +826,53 @@ class SaleOrder(models.Model):
             labels.append("%s%%" % amount if tax.amount_type == "percent" else amount)
         return ", ".join(labels)
 
+    # --------------------------------------------------------------- catalog
+    # The "Catalog" button of the order lines can be shown under a selected
+    # line (static/src/sale_order_line/add_line_below_selection.js). It then
+    # passes that line's position in the context, and the products picked in
+    # the catalog are inserted right after it instead of at the bottom.
+
+    def _get_action_add_from_catalog_extra_context(self):
+        context = super()._get_action_add_from_catalog_extra_context()
+        after_index = self.env.context.get("tectora_catalog_after_index")
+        if isinstance(after_index, int) and after_index >= 0:
+            # Resolved to the line that follows now (the order was just saved),
+            # so it keeps pointing at the same place while lines are added.
+            lines = self._tectora_ordered_lines()
+            if after_index + 1 < len(lines):
+                context["tectora_catalog_before_line_id"] = lines[after_index + 1].id
+        return context
+
+    def _update_order_line_info(self, product, quantity, uom, child_field, **kwargs):
+        # Sent by the catalog (catalog_insert_position.js). Taken out of
+        # kwargs, which are passed on to the price computation.
+        before_line_id = kwargs.pop("tectora_before_line_id", False)
+        if before_line_id:
+            self = self.with_context(tectora_catalog_before_line_id=before_line_id)
+        return super()._update_order_line_info(product, quantity, uom, child_field, **kwargs)
+
+    def _catalog_prepare_new_line_vals(self, child_field, product, quantity, uom, **kwargs):
+        vals = super()._catalog_prepare_new_line_vals(
+            child_field, product, quantity, uom, **kwargs
+        )
+        before_line_id = self.env.context.get("tectora_catalog_before_line_id")
+        if child_field == "order_line" and before_line_id:
+            lines = self._tectora_ordered_lines()
+            before = lines.filtered(lambda line: line.id == before_line_id)
+            if before:
+                # Take the place of the line that follows and move it and every
+                # line after it one down. A line before it with the same
+                # sequence still comes first: the new line has the higher id.
+                following = lines[lines.ids.index(before.id):]
+                for sequence, group in following.grouped("sequence").items():
+                    group.sequence = sequence + 1
+                vals["sequence"] = before.sequence - 1
+        return vals
+
+    def _tectora_ordered_lines(self):
+        """The order lines in the order the quotation shows them."""
+        return self.order_line.sorted(lambda line: (line.sequence, line.id))
+
     # ---------------------------------------------------------- smart buttons
     def action_view_roof_project(self):
         """The roof project of this order (created on the spot if the order
@@ -850,7 +989,7 @@ class SaleOrder(models.Model):
         factor = bom_quantity / (bom.product_qty or 1.0)
         _boms_done, lines_done = bom.explode(line.product_id, factor)
         return [
-            self._tectora_material_values(
+            self._tectora_component_values(
                 line,
                 bom_line.product_id,
                 self._tectora_exploded_quantity(bom, factor, bom_line, line_data),
@@ -859,6 +998,16 @@ class SaleOrder(models.Model):
             )
             for bom_line, line_data in lines_done
         ]
+
+    def _tectora_component_values(self, line, product, quantity, uom, bom_name):
+        """Material values of a component of a bill of materials. A component
+        with hercalculatie is counted in m² or m³ on the bill of materials
+        and needed in pieces: ``quantity`` is turned into pieces of the
+        product's own unit."""
+        if product.tectora_recalc:
+            quantity = product.product_tmpl_id._tectora_recalculate(quantity)
+            uom = product.uom_id
+        return self._tectora_material_values(line, product, quantity, uom, bom_name)
 
     def _tectora_exploded_quantity(self, bom, factor, bom_line, line_data):
         """Quantity of one exploded component; ``factor`` is how many times

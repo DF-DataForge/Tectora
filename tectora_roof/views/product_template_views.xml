@@ -2,7 +2,9 @@
 <odoo>
 
     <!-- The two time norms sit next to the prices: like them, a figure per
-         unit of the product. Hours, so 0,25 is a quarter of an hour. -->
+         unit of the product. Hours, so 0,25 is a quarter of an hour.
+         Hercalculatie follows: the size of one piece, used to turn the m² or
+         m³ of a bill of materials into pieces. -->
     <record id="product_template_form_view_inherit_tectora" model="ir.ui.view">
         <field name="name">product.template.form.inherit.tectora.roof</field>
         <field name="model">product.template</field>
@@ -24,6 +26,27 @@
                     <span> u per </span>
                     <field name="uom_id" class="oe_inline" readonly="1"
                            nolabel="1" options="{'no_open': True}"/>
+                </div>
+                <field name="tectora_recalc" invisible="type == 'combo'"/>
+                <field name="tectora_recalc_uom" invisible="not tectora_recalc"
+                       required="tectora_recalc" widget="radio"
+                       options="{'horizontal': true}"/>
+                <label for="tectora_length" string="Afmetingen (L × B × H)"
+                       invisible="not tectora_recalc"/>
+                <div name="tectora_recalc_dimensions" invisible="not tectora_recalc">
+                    <field name="tectora_length" class="oe_inline" style="max-width:70px"
+                           required="tectora_recalc"/>
+                    <span> × </span>
+                    <field name="tectora_width" class="oe_inline" style="max-width:70px"
+                           required="tectora_recalc and tectora_recalc_uom in ('m2', 'm3')"/>
+                    <span> × </span>
+                    <field name="tectora_height" class="oe_inline" style="max-width:70px"
+                           required="tectora_recalc and tectora_recalc_uom == 'm3'"/>
+                    <span> m = </span>
+                    <field name="tectora_recalc_size" class="oe_inline"/>
+                    <span invisible="tectora_recalc_uom != 'm'"> m per stuk</span>
+                    <span invisible="tectora_recalc_uom != 'm2'"> m² per stuk</span>
+                    <span invisible="tectora_recalc_uom != 'm3'"> m³ per stuk</span>
                 </div>
             </xpath>
         </field>

@@ -3,7 +3,8 @@
 
     <!-- The roof plan next to the order on the customer portal: in the
          sidebar on large screens (Odoo hides the sidebar on phones) and
-         above the order content on small screens. -->
+         above the order content on small screens. Only when the order
+         includes the roof plan ("Dakplan toevoegen"), as in the PDF. -->
     <template id="sale_order_portal_roof_plan">
         <div class="o_tectora_portal_roof_plan">
             <strong class="smaller text-uppercase text-muted">Dakplan</strong>
@@ -20,7 +21,7 @@
         <xpath expr="//t[@t-set='entries']" position="before">
             <t t-set="roof_plan_roof" t-value="sale_order.roof_project_id"/>
             <t t-set="roof_plan_src"
-               t-value="roof_plan_roof and (roof_plan_roof.canvas_snapshot or roof_plan_roof.section_count) and roof_plan_roof._get_drawing_data_uri()"/>
+               t-value="roof_plan_roof and sale_order.tectora_include_roof_plan and (roof_plan_roof.canvas_snapshot or roof_plan_roof.section_count) and roof_plan_roof._get_drawing_data_uri()"/>
         </xpath>
         <xpath expr="//div[@id='sidebar_loyalty_anchor']" position="before">
             <div t-if="roof_plan_src">

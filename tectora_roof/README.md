@@ -90,48 +90,25 @@ install on Odoo 17 or earlier without adjustments.
 - Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
   accounts for the retina factor by measuring the actual stored image width.
 
-## Offerte als Tectora-projectdossier
+## Offerte-pdf
 
-De offerte-pdf (afdrukken, e-mailen, klantenportaal) is een **projectdossier**
-in de huisstijl van Tectora (logo van het bedrijf, teal `#008B93`):
+De offerte-pdf (afdrukken, e-mailen, klantenportaal) is het standaard
+offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
+**Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
+dakproject), dan volgt het meetblad met tekening, maten en producten, en
+toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
+gsm boven de lijnen).
 
-1. **Voorblad** met klant, werfadres, contactpersoon, kerncijfers en, bij een
-   dakproject, het dak in één oogopslag (oppervlakte, omtrek, dakvlakken,
-   dakobjecten) met de tekening;
-2. **Onze aanpak**: de vijf stappen van kennismaking tot nazorg, waarom Tectora
-   en het dienstenaanbod (tectora.be/diensten);
-3. **De offerte**: lijnen gegroepeerd per hoofdstuk en daksectie met subtotalen,
-   totalen, opties, betalingsvoorwaarden, opmerkingen en het akkoordvak (met de
-   digitale handtekening zodra getekend);
-4. **Dakplan** (optioneel): het meetblad met tekening, maten en producten;
-5. **Service, garantie en kwaliteit**: 12 jaar garantie, premiebegeleiding en
-   EPC-attest (tectora.be/service), kwaliteitspunten en contact.
+## Algemene voorwaarden als pdf
 
-Op het klantenportaal toont de order altijd de standaard Odoo-weergave van de
-offertelijnen, met het dakplan en de kerncijfers in de zijbalk (op een gsm
-boven de lijnen); de knop *Downloaden* geeft de pdf in de gekozen stijl.
-
-Op de verkooporder staat naast het dakproject het vinkje **Standaard
-offerte**: aangevinkt gaat de offerte als het standaard Odoo-document naar de
-klant (pdf, e-mail én klantenportaal), met het dakplan erachter als dat
-aangevinkt blijft. Uitgevinkt kies je de **Offertestijl** van de
-Tectora-offerte en of het **Dakplan** meegaat. Er zijn vijf stijlen, opgebouwd
-uit dezelfde blokken
-(partijen, dak in één oogopslag, aanpak, diensten, offerte, opties,
-voorwaarden en akkoord, dakplan, service en garantie):
-
-| Stijl | Voor wie | Opbouw |
-|---|---|---|
-| **Projectdossier** | particulieren, volledig verhaal | voorblad in teal, aanpak en diensten, offerte, dakplan, service en contact |
-| **Compact** | aannemers, architecten, snelle beslissers | offerte voorop met totaal in beeld, korte servicestrook, dakplan achteraan |
-| **Klassiek** | formele briefwisseling | briefhoofd en aanhef, begeleidende tekst, monochrome tabel in serif, bijlage service |
-| **Visueel** | wie het dakplan wil zien | tekening groot voorop met kerncijfers, offerte per onderdeel, aanpak en service |
-| **Minimalistisch** | rustige, moderne uitstraling | veel wit, dunne lijnen, teal alleen op het totaal, servicestrook |
-
-De standaardkeuze voor nieuwe offertes (standaard offerte of niet, en de
-stijl) staat in *Instellingen → Tectora Dakmeting → Offerte-pdf*. De
-teksten staan in `report/sale_order_dossier_report.xml` (blokken
-`report_tq_block_*`) en zijn per blok aan te passen.
+*Instellingen → Facturatie → Standaard algemene voorwaarden* krijgt naast
+"Als tekst toevoegen" en "Link naar een webpagina toevoegen" een derde keuze:
+**Als pdf toevoegen**. De voorwaarden (het tekstvak eronder) komen dan niet
+meer in de notitie van offertes en facturen, maar op aparte pagina's
+achteraan de pdf van offertes, orders en
+klantfacturen/creditnota's: in kleine letters, onder de titel "Algemene
+voorwaarden", met de hoofding en voettekst van de gekozen documentlay-out, in
+de taal van de klant.
 
 ## Eén btw-tarief voor de hele offerte
 
@@ -154,9 +131,9 @@ Eén dakproject staat tegenover één offerte/order, in beide richtingen:
   opent het; wie liever eerst tekent, maakt het dakproject en klikt daar op
   **Offerte maken**.
 * Een offerte kan dus vanuit de **standaard verkooporder** of vanuit het
-  **dakproject** opgemaakt worden. Zolang de offerte open staat vervangt
-  **Offerte bijwerken uit meting** haar lijnen door de meting; een bevestigde
-  order wordt niet meer overschreven. Een geannuleerde order blijft in de
+  **dakproject** opgemaakt worden. De meting past de offerte alleen aan als
+  **Offerte volgt de meting** aangevinkt is, of na bevestiging met **Offerte
+  bijwerken uit meting**; een bevestigde order wordt niet meer overschreven. Een geannuleerde order blijft in de
   historiek (**Offertes / Orders**) en maakt plaats voor een nieuwe.
 * Klant, opportuniteit, verkoper ↔ projectleider, leverdatum ↔ deadline en
   prijslijst ↔ projecttype blijven **gesynchroniseerd**: wat je op de ene kant
@@ -173,7 +150,18 @@ technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 
 ### Offerte volgt de meting (spiegeling)
 
-De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
+**De meting past een offerte nooit ongevraagd aan.** Een offerte kan gewoon met
+de standaard offertebouwer van Odoo (offertesjabloon, eigen lijnen) opgemaakt
+worden, met de dakplannen enkel als plan: zolang het vinkje **Offerte volgt de
+meting** op de offerte (ook zichtbaar op het dakproject) uit staat, en dat is
+standaard, verandert geen tekening, opmeting, projectlijn of verwijderd dak
+iets aan de offertelijnen. **Offerte bijwerken uit meting** op het dakproject
+brengt de offerte dan eenmalig in lijn, na een bevestiging. De offertelijnen
+worden wel nog projectlijnen op het dakproject (die richting raakt de offerte
+niet).
+
+Met het vinkje aan spiegelen de offerte en het dakproject elkaar, zolang de
+offerte open staat:
 
 * De **hoofdstuktabs** op het dakproject zijn de projectlijnen; elke regel
   staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
@@ -202,8 +190,9 @@ De offerte en het dakproject spiegelen elkaar, zolang de offerte open staat:
   prijst, worden met rust gelaten; een lijn verwijderen op de offerte
   verwijdert de projectlijn, en omgekeerd.
 
-**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn;
-een bevestigde order wordt nooit meer aangepast. De tab **Werf** (voorheen
+**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn
+(na bevestiging, met of zonder vinkje); een bevestigde order wordt nooit meer
+aangepast. De tab **Werf** (voorheen
 *Projectinformatie*) bundelt de werfvoorbereiding.
 
 ## Project (Odoo Project) en projectdashboard

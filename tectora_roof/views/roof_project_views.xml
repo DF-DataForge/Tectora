@@ -17,7 +17,7 @@
                     <button name="action_create_sale_order" type="object"
                             string="Offerte bijwerken uit meting" class="btn-primary"
                             invisible="not section_ids or not sale_order_id or sale_order_state not in ('draft', 'sent')"
-                            confirm="De lijnen van de openstaande offerte worden vervangen door de meting. Doorgaan?"
+                            confirm="De lijnen van de openstaande offerte worden aangepast volgens de dakplannen: hoeveelheden volgen de meting en de meetlijnen worden herbouwd. Lijnen die je zelf toevoegde blijven staan. Doorgaan?"
                             help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,measured,quoted,confirmed"/>
@@ -140,6 +140,8 @@
                             <field name="sale_order_id"
                                    context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>
                             <field name="sale_order_state" invisible="1"/>
+                            <field name="sale_order_follow_measurement"
+                                   invisible="not sale_order_id or sale_order_state not in ('draft', 'sent')"/>
                             <field name="project_id" readonly="1"
                                    invisible="not project_id"/>
                             <field name="analytic_account_id" readonly="1"
@@ -150,6 +152,38 @@
                     </group>
                     <notebook>
                         <page string="Tekening" name="drawing">
+                            <!-- One plan per roof: the list says which roof is on
+                                 the drawing; "Plan openen" puts another one there. -->
+                            <field name="active_roof_id" invisible="1"/>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <strong invisible="not active_roof_id">Plan van:</strong>
+                                <span invisible="not active_roof_id">
+                                    <field name="active_roof_id" readonly="1" nolabel="1"
+                                           options="{'no_open': True}" class="fw-bold"/>
+                                </span>
+                                <span class="text-muted" invisible="roof_count">
+                                    Eén plan voor het hele project. Bestaat het uit meerdere
+                                    daken, voeg ze toe: elk dak krijgt een eigen plan.
+                                </span>
+                                <field name="roof_count" invisible="1"/>
+                                <button name="action_add_roof" type="object"
+                                        string="Dak toevoegen" icon="add"
+                                        class="btn-secondary btn-sm ms-auto"/>
+                            </div>
+                            <field name="roof_ids" nolabel="1" invisible="not roof_count">
+                                <list editable="bottom" create="0">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="number" string="Nr."/>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="total_area" sum="Totaal"/>
+                                    <field name="total_perimeter" sum="Totaal"/>
+                                    <field name="is_active" widget="boolean" readonly="1"/>
+                                    <button name="action_open_plan" type="object"
+                                            string="Plan openen" icon="draw"
+                                            class="btn-link" invisible="is_active"/>
+                                </list>
+                            </field>
                             <field name="scale_m_per_px" invisible="1"/>
                             <field name="has_background_image" invisible="1"/>
                             <field name="canvas_snapshot" invisible="1"/>
@@ -160,6 +194,7 @@
                         <page string="Daksecties" name="sections">
                             <field name="section_ids">
                                 <list>
+                                    <field name="roof_id" optional="show"/>
                                     <field name="name"/>
                                     <field name="width"/>
                                     <field name="length"/>

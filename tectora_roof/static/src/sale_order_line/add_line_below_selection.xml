@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- The order lines with the create row under the selected line
+         (add_line_below_selection.js) instead of under the last one. -->
+    <t t-name="tectora_roof.SaleOrderLineListRenderer.Rows" t-inherit="web.ListRenderer.Rows" t-inherit-mode="primary">
+        <xpath expr="//t[@t-foreach='list.records']" position="inside">
+            <t t-if="this.displayRowCreates and this.props.editable !== 'top' and this.isTectoraAnchor(record)">
+                <t t-call="{{ this.constructor.createRowTemplate }}"/>
+            </t>
+        </xpath>
+        <xpath expr="//t[@t-foreach='list.records']/following-sibling::t[1]" position="attributes">
+            <attribute name="t-if">this.displayRowCreates and this.props.editable !== 'top' and !this.tectoraAnchorRecord</attribute>
+        </xpath>
+    </t>
+
+    <!-- The catalog button tells the catalog where to insert its products. -->
+    <t t-inherit="sale_management.ListRenderer.CreateRow" t-inherit-mode="extension">
+        <xpath expr="//ViewButton" position="attributes">
+            <attribute name="clickParams">this.tectoraControlClickParams(control)</attribute>
+        </xpath>
+    </t>
+
+</templates>

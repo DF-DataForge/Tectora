@@ -17,3 +17,7 @@ access_tectora_roof_planning_user,tectora.roof.planning user,tectora.roof.planni
 access_tectora_roof_planning_sales,tectora.roof.planning sales,tectora.roof.planning,sales_team.group_sale_salesman,crud,
 access_tectora_roof_epdm_sheet_user,tectora.roof.epdm.sheet user,tectora.roof.epdm.sheet,base.group_user,r,
 access_tectora_roof_epdm_sheet_sales,tectora.roof.epdm.sheet sales,tectora.roof.epdm.sheet,sales_team.group_sale_salesman,crud,
+access_tectora_roof_project_roof_user,tectora.roof.project.roof user,tectora.roof.project.roof,base.group_user,r,
+access_tectora_roof_project_roof_sales,tectora.roof.project.roof sales,tectora.roof.project.roof,sales_team.group_sale_salesman,crud,
+access_tectora_add_roofs_wizard_sales,tectora.add.roofs.wizard sales,tectora.add.roofs.wizard,sales_team.group_sale_salesman,crud,
+access_tectora_add_roofs_wizard_line_sales,tectora.add.roofs.wizard.line sales,tectora.add.roofs.wizard.line,sales_team.group_sale_salesman,crud,

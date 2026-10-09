@@ -13,6 +13,8 @@ from odoo.exceptions import UserError
 from odoo.tools.binary import BinaryBytes
 from odoo.tools.image import image_data_uri
 
+from .roof_project_roof import DRAWING_FIELDS
+
 _logger = logging.getLogger(__name__)
 
 GOOGLE_GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
@@ -228,6 +230,22 @@ class TectoraRoofProject(models.Model):
         "vormen in canvas_data zelf geen producten kennen.",
     )
 
+    # --- Roofs: one plan each ------------------------------------------------
+    roof_ids = fields.One2many(
+        "tectora.roof.project.roof", "project_id", string="Daken",
+        help="De daken van dit project, elk met een eigen plan. Zonder daken "
+        "is de tekening die van het hele project.",
+    )
+    roof_count = fields.Integer(string="Aantal daken", compute="_compute_roof_count")
+    active_roof_id = fields.Many2one(
+        "tectora.roof.project.roof",
+        string="Dak op de tekening",
+        readonly=True,
+        copy=False,
+        help="Het dak waarvan het plan nu op de tekening staat; wat getekend "
+        "wordt, hoort bij dit dak.",
+    )
+
     section_ids = fields.One2many(
         "tectora.roof.section", "project_id", string="Daksecties"
     )
@@ -293,6 +311,10 @@ class TectoraRoofProject(models.Model):
     )
     sale_order_state = fields.Selection(
         related="sale_order_id.state", string="Orderstatus", readonly=True
+    )
+    sale_order_follow_measurement = fields.Boolean(
+        related="sale_order_id.tectora_follow_measurement",
+        readonly=False,
     )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
@@ -390,6 +412,8 @@ class TectoraRoofProject(models.Model):
             project.has_background_image = bool(project.background_image)
 
     @api.depends(
+        "active_roof_id",
+        "roof_object_ids.roof_id",
         "roof_object_ids.canvas_ref",
         "roof_object_ids.product_line_ids.product_id",
     )
@@ -403,7 +427,7 @@ class TectoraRoofProject(models.Model):
         """
         for project in self:
             icons = {}
-            for roof_object in project.roof_object_ids:
+            for roof_object in project._tectora_drawn_objects():
                 if not roof_object.canvas_ref:
                     continue
                 for line in roof_object.product_line_ids:
@@ -412,6 +436,11 @@ class TectoraRoofProject(models.Model):
                         icons[roof_object.canvas_ref] = category.id
                         break
             project.canvas_icons = json.dumps(icons)
+
+    @api.depends("roof_ids")
+    def _compute_roof_count(self):
+        for project in self:
+            project.roof_count = len(project.roof_ids)
 
     def _compute_sale_order_count(self):
         for project in self:
@@ -714,6 +743,13 @@ class TectoraRoofProject(models.Model):
 
     def write(self, vals):
         result = super().write(vals)
+        drawing = {name: vals[name] for name in DRAWING_FIELDS if name in vals}
+        if drawing and not self.env.context.get("tectora_roof_switch"):
+            # What is drawn belongs to the roof that is open on the drawing.
+            for project in self.filtered("active_roof_id"):
+                project.active_roof_id.with_context(tectora_roof_switch=True).write(
+                    {name: project[name] for name in drawing}
+                )
         if {"team_id", "planned_date_begin", "planned_date_end"} & set(vals):
             self._autogenerate_planning()
         if not self.env.context.get("tectora_sync"):
@@ -991,6 +1027,43 @@ class TectoraRoofProject(models.Model):
         return True
 
     # ------------------------------------------------------------- canvas sync
+    # ------------------------------------------------------------------ roofs
+    def _tectora_drawing_values(self):
+        """The plan on the drawing now, as values for a roof."""
+        self.ensure_one()
+        return {name: self[name] for name in DRAWING_FIELDS}
+
+    def _tectora_drawn_sections(self):
+        """The sections of the roof on the drawing (all of them for a
+        project without roofs)."""
+        self.ensure_one()
+        return self.section_ids.filtered(lambda s: s.roof_id == self.active_roof_id)
+
+    def _tectora_drawn_objects(self):
+        self.ensure_one()
+        return self.roof_object_ids.filtered(lambda o: o.roof_id == self.active_roof_id)
+
+    def _tectora_open_roof(self, roof, save_current=True):
+        """Put ``roof``'s plan on the drawing. The plan that was there is
+        already kept on its roof (every drawing write is copied); it is saved
+        once more for safety unless the roof is being removed."""
+        self.ensure_one()
+        current = self.active_roof_id
+        if save_current and current and current != roof:
+            current.with_context(tectora_roof_switch=True).write(
+                self._tectora_drawing_values()
+            )
+        values = {name: roof[name] for name in DRAWING_FIELDS}
+        values["active_roof_id"] = roof.id
+        self.with_context(tectora_roof_switch=True, tectora_sync=True).write(values)
+        return True
+
+    def action_add_roof(self):
+        """A new roof with an empty plan, opened on the drawing."""
+        self.ensure_one()
+        roof = self.env["tectora.roof.project.roof"].create({"project_id": self.id})
+        return roof.action_open_plan()
+
     def _parse_canvas_shapes(self):
         self.ensure_one()
         try:
@@ -1106,11 +1179,13 @@ class TectoraRoofProject(models.Model):
         section_shapes = [s for s in shapes if s["kind"] == "section"]
         object_shapes = [s for s in shapes if s["kind"] != "section"]
 
+        # Only the roof on the drawing: the other roofs keep their sections.
+        roof = self.active_roof_id
         sections_by_ref = {
-            s.canvas_ref: s for s in self.section_ids if s.canvas_ref
+            s.canvas_ref: s for s in self._tectora_drawn_sections() if s.canvas_ref
         }
         objects_by_ref = {
-            o.canvas_ref: o for o in self.roof_object_ids if o.canvas_ref
+            o.canvas_ref: o for o in self._tectora_drawn_objects() if o.canvas_ref
         }
 
         section_count = 0
@@ -1131,7 +1206,11 @@ class TectoraRoofProject(models.Model):
             if existing:
                 existing.write(values)
             else:
-                values.update({"project_id": self.id, "canvas_ref": shape["id"]})
+                values.update({
+                    "project_id": self.id,
+                    "roof_id": roof.id or False,
+                    "canvas_ref": shape["id"],
+                })
                 section = self.env["tectora.roof.section"].create(values)
                 origin = sections_by_ref.get(shape.get("split_from") or "")
                 if origin:
@@ -1156,7 +1235,11 @@ class TectoraRoofProject(models.Model):
             if existing:
                 existing.write(values)
             else:
-                values.update({"project_id": self.id, "canvas_ref": shape["id"]})
+                values.update({
+                    "project_id": self.id,
+                    "roof_id": roof.id or False,
+                    "canvas_ref": shape["id"],
+                })
                 if shape["kind"] == "chimney":
                     values.setdefault("height", 1.5)
                 self.env["tectora.roof.object"].create(values)
@@ -1347,12 +1430,18 @@ class TectoraRoofProject(models.Model):
                 })
             return values
 
+        def prefixed(target, header):
+            # With several roofs, a measurement block says which roof it is.
+            if target.roof_id and len(self.roof_ids) > 1:
+                return "%s · %s" % (target.roof_id.name, header)
+            return header
+
         blocks = []
         for target in self.section_ids.filtered("product_line_ids"):
             blocks.append((
-                "%s — %.2f m², omtrek %.2f m" % (
+                prefixed(target, "%s — %.2f m², omtrek %.2f m" % (
                     target.name, target.area, target.perimeter,
-                ),
+                )),
                 aggregated_order_lines(target.product_line_ids),
             ))
         for target in self.roof_object_ids.filtered("product_line_ids"):
@@ -1362,7 +1451,9 @@ class TectoraRoofProject(models.Model):
                 header = "%s — %.2f m², omtrek %.2f m" % (
                     target.name, target.area, target.perimeter,
                 )
-            blocks.append((header, aggregated_order_lines(target.product_line_ids)))
+            blocks.append((
+                prefixed(target, header), aggregated_order_lines(target.product_line_ids)
+            ))
         return blocks
 
     # ------------------------------------------------- quotation mirroring
@@ -1390,6 +1481,10 @@ class TectoraRoofProject(models.Model):
             return False
         if header == wanted:
             return True
+        # The fixed titles say "afbouwwerken" where the catalogue says
+        # "Afbraakwerken".
+        if "afbraak" in wanted and ("afbouw" in header or "afbraak" in header):
+            return True
         stop = {"werken", "plat", "dak", "en", "van", "de", "het", "verplichte"}
         for token in re.findall(r"[a-zà-ÿ]+", wanted):
             if len(token) >= 5 and token not in stop:
@@ -1400,6 +1495,11 @@ class TectoraRoofProject(models.Model):
 
     def _tectora_mirror_to_order(self, order=None):
         """Roof project -> open quotation.
+
+        Only for a quotation that follows the measurement ("Offerte volgt de
+        meting"), or when the user asked for it ("Offerte maken" / "Offerte
+        bijwerken uit meting", context ``tectora_update_from_measurement``):
+        a quotation is never changed by the measurement behind the user's back.
 
         Chapter lines (project level) each keep one order line under the
         header of their chapter, with the quantity of the roof project; the
@@ -1413,13 +1513,14 @@ class TectoraRoofProject(models.Model):
             target = order or project.sale_order_id
             if not target or target.state not in ("draft", "sent"):
                 continue
+            if not (
+                target.tectora_follow_measurement
+                or self.env.context.get("tectora_update_from_measurement")
+            ):
+                continue
             target = target.with_context(tectora_sync=True)
-            measured_products = (
-                project.section_ids.product_line_ids
-                | project.roof_object_ids.product_line_ids
-            ).product_id
             superseded = project.direct_line_ids.filtered(
-                lambda line: line.product_id in measured_products
+                lambda line: line.product_id in project._tectora_measured_products(line.roof_id)
             )
             if superseded:
                 superseded.with_context(tectora_sync=True).unlink()
@@ -1447,6 +1548,35 @@ class TectoraRoofProject(models.Model):
                     lambda l: l.display_type == "line_section"
                     and self._header_matches(l.name, label)
                 )[:1]
+                if roof_line.roof_id:
+                    # A roof's line goes into that roof's subsection, in its
+                    # chapter when the roof has one there.
+                    subsections = lines.filtered(
+                        lambda l: l.display_type == "line_subsection"
+                        and l.tectora_roof_id == roof_line.roof_id
+                    )
+                    in_chapter = subsections.filtered(
+                        lambda l: header and l.parent_id == header
+                    )
+                    anchor = (in_chapter or subsections)[:1]
+                    if anchor:
+                        block_end = anchor
+                        for line in lines.sorted(lambda l: (l.sequence, l.id)):
+                            if (line.sequence, line.id) <= (anchor.sequence, anchor.id):
+                                continue
+                            if line.display_type in ("line_section", "line_subsection"):
+                                break
+                            block_end = line
+                        new_line = Line.create({
+                            "order_id": target.id,
+                            "product_id": roof_line.product_id.id,
+                            "product_uom_qty": roof_line.quantity,
+                            "roof_line_id": roof_line.id,
+                            "tectora_roof_id": roof_line.roof_id.id,
+                            "sequence": block_end.sequence,
+                        })
+                        lines = self._insert_after(lines, block_end, new_line)
+                        continue
                 if not header:
                     header = Line.create({
                         "order_id": target.id,
@@ -1494,6 +1624,17 @@ class TectoraRoofProject(models.Model):
                 if line.sequence != index * 10:
                     line.with_context(tectora_sync=True).write({"sequence": index * 10})
         return True
+
+    def _tectora_measured_products(self, roof=None):
+        """Products the drawing prices: of ``roof`` when given, else of the
+        whole project. A chapter line of such a product is superseded."""
+        self.ensure_one()
+        sections = self.section_ids
+        objects = self.roof_object_ids
+        if roof:
+            sections = sections.filtered(lambda s: s.roof_id == roof)
+            objects = objects.filtered(lambda o: o.roof_id == roof)
+        return (sections.product_line_ids | objects.product_line_ids).product_id
 
     @api.model
     def _insert_after(self, lines, anchor, new_line):
@@ -1593,7 +1734,8 @@ class TectoraRoofProject(models.Model):
                     order._get_html_link(),
                 )
             )
-        self._tectora_mirror_to_order(order)
+        # Asked for by the user (the update asks for confirmation first).
+        self.with_context(tectora_update_from_measurement=True)._tectora_mirror_to_order(order)
         # The meetblad is rendered as an extra page inside the quotation PDF
         # itself (see report_saleorder_inherit_tectora), so no separate
         # attachment is created here.

@@ -204,3 +204,44 @@ class TestSaleBom(TransactionCase):
         self.order._action_cancel()
         with self.assertRaises(UserError):
             custom.line_ids[:1].quantity = 5.0
+
+    def test_recalculation_turns_area_into_pieces(self):
+        """A component with hercalculatie is counted in m² on the bill of
+        materials and comes out in pieces: 1 m² of board per m² of roof,
+        boards of 1 m × 0,5 m, 100 m² sold = 200 boards."""
+        board = self.env["product.product"].create({
+            "name": "Isolatieplaat 1000x500", "type": "consu",
+            "uom_id": self.env.ref("uom.product_uom_unit").id,
+            "standard_price": 6.0,
+            "tectora_recalc": True, "tectora_recalc_uom": "m2",
+            "tectora_length": 1.0, "tectora_width": 0.5,
+        })
+        self.demo_bom.bom_line_ids = [
+            Command.create({"product_id": board.id, "product_qty": 10.0}),
+        ]
+        template = board.product_tmpl_id
+        self.assertAlmostEqual(template.tectora_recalc_size, 0.5)
+        self.assertEqual(template._tectora_recalculate(10.0), 20.0)
+        self.assertEqual(template._tectora_recalculate(10.1), 21.0, "rounded up")
+        # Per metre: a profile of 3 m, 10 m needed = 4 profiles.
+        template.write({"tectora_recalc_uom": "m", "tectora_length": 3.0})
+        self.assertAlmostEqual(template.tectora_recalc_size, 3.0)
+        self.assertEqual(template._tectora_recalculate(10.0), 4.0)
+        template.write({"tectora_recalc_uom": "m2", "tectora_length": 1.0})
+        # The bill of materials says how the m² become boards.
+        bom_line = self.demo_bom.bom_line_ids.filtered(lambda l: l.product_id == board)
+        self.assertIn("÷", bom_line.tectora_recalc_info)
+        self.assertIn("20", bom_line.tectora_recalc_info)
+        self.assertFalse(self.demo_bom.bom_line_ids.filtered(
+            lambda l: l.product_id == self.glue).tectora_recalc_info)
+        # 100 m² of boards of 0,72 m²: 138,89, so 139 on the material list.
+        template.write({"tectora_length": 1.2, "tectora_width": 0.6})
+        self.assertEqual(template._tectora_recalculate(100.0), 139.0)
+        self.assertIn("139", template._tectora_recalc_explanation(100.0, rounded=True))
+        template.write({"tectora_length": 1.0, "tectora_width": 0.5})
+        self.order.action_confirm()
+        self.assertEqual(self.materials()[board], 200.0)
+        # In the dialog the board costs per m²: 6 per board of 0,5 m².
+        form = self.open_dialog()
+        component = form.line_ids.edit(2)
+        self.assertAlmostEqual(component.unit_cost, 12.0)

@@ -60,6 +60,27 @@ class ProductCatalogImport(models.TransientModel):
         "verkoopproducten (diensten) verschijnen dan in offertes en in de "
         "productkiezer van de tekening.",
     )
+    mode = fields.Selection(
+        [
+            ("update", "Bijwerken: bestaande producten overschrijven"),
+            ("complete", "Aanvullen: enkel ontbrekende producten en lege omschrijvingen"),
+        ],
+        string="Bestaande producten",
+        default="update",
+        required=True,
+        help="Bijwerken: naam, prijs, categorie, eenheid en omschrijving van "
+        "bestaande producten komen uit het bestand. Aanvullen: bestaande "
+        "producten houden alles wat ze hebben; ontbrekende producten worden "
+        "aangemaakt en een lege interne referentie of verkoopomschrijving "
+        "wordt ingevuld. Een product zonder referentie met dezelfde naam "
+        "krijgt de referentie, er komt geen tweede bij.",
+    )
+    services_only = fields.Boolean(
+        string="Enkel verkoopproducten",
+        default=False,
+        help="Neem enkel de verkoopproducten (diensten, de S-codes) uit het "
+        "bestand; grondstoffen worden overgeslagen.",
+    )
     archive_price_book = fields.Boolean(
         string="Oude prijsboekproducten archiveren",
         default=False,
@@ -124,11 +145,13 @@ class ProductCatalogImport(models.TransientModel):
             )
         except ValueError as error:
             raise UserError(str(error))
+        if self.services_only:
+            entries = [entry for entry in entries if entry["is_service"]]
         if not entries:
             raise UserError(_("Geen producten gevonden in het bestand."))
 
         counters = self.env["product.template"]._tectora_apply_catalog(
-            entries, {"sale_ok_goods": self.sale_ok_goods}
+            entries, {"sale_ok_goods": self.sale_ok_goods, "mode": self.mode}
         )
         archived = self.env["product.template"]._tectora_archive_price_book(
             self.archive_price_book
@@ -137,13 +160,25 @@ class ProductCatalogImport(models.TransientModel):
             "tectora_products: wizard import %s (%s)", self.filename, counters
         )
 
-        lines = [
-            _("Bestand: %s", self.filename or "-"),
-            _("%(new)s nieuwe producten, %(upd)s bijgewerkt",
-              new=counters["created"], upd=counters["updated"]),
+        lines = [_("Bestand: %s", self.filename or "-")]
+        if self.mode == "complete":
+            lines.append(
+                _("%(new)s nieuwe producten, %(done)s bestaande aangevuld, "
+                  "%(same)s ongewijzigd",
+                  new=counters["created"], done=counters["completed"],
+                  same=counters["unchanged"])
+            )
+        else:
+            lines.append(
+                _("%(new)s nieuwe producten, %(upd)s bijgewerkt",
+                  new=counters["created"], upd=counters["updated"])
+            )
+        lines += [
+            _("%s verkoopomschrijvingen ingevuld", counters["descriptions"]),
             _("%(svc)s verkoopproducten (diensten), %(goods)s grondstoffen "
-              "(voorraadproducten)",
-              svc=stats["services"], goods=stats["goods"]),
+              "(voorraadproducten)%(skip)s",
+              svc=stats["services"], goods=stats["goods"],
+              skip=_(" — grondstoffen overgeslagen") if self.services_only else ""),
             _("%s leverancierslijnen (aankoopprijs + leverancierscode)",
               counters["vendor_lines"]),
             _("%(n)s verkoopprijzen berekend (aankoop × %(factor).2f)",
@@ -165,7 +200,10 @@ class ProductCatalogImport(models.TransientModel):
             )
         if stats["duplicates"]:
             lines.append(
-                _("%s dubbele referenties overgeslagen") % stats["duplicates"]
+                _("%(n)s rijen met een referentie die al eerder in het bestand "
+                  "stond, overgeslagen (enkel de eerste telt): %(codes)s",
+                  n=stats["duplicates"],
+                  codes=", ".join(stats.get("duplicate_codes", [])))
             )
         if stats["skipped"]:
             lines.append(_("%s lege of placeholder-rijen overgeslagen")

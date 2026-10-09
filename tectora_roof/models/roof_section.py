@@ -27,6 +27,14 @@ class TectoraRoofSection(models.Model):
         ondelete="cascade",
         index=True,
     )
+    roof_id = fields.Many2one(
+        "tectora.roof.project.roof",
+        string="Dak",
+        ondelete="cascade",
+        index=True,
+        domain="[('project_id', '=', project_id)]",
+        help="Het dak op wiens plan deze sectie getekend is.",
+    )
     company_id = fields.Many2one(related="project_id.company_id", store=True)
     currency_id = fields.Many2one(related="project_id.currency_id")
     canvas_ref = fields.Char(
@@ -125,6 +133,7 @@ class TectoraRoofSection(models.Model):
         roof_object = self.env["tectora.roof.object"].create(
             {
                 "project_id": project.id,
+                "roof_id": self.roof_id.id,
                 "name": self.name,
                 "object_type": object_type,
                 "width": self.width,
@@ -192,6 +201,14 @@ class TectoraRoofSectionProduct(models.Model):
     )
     project_id = fields.Many2one(
         "tectora.roof.project", compute="_compute_project_id", store=True
+    )
+    roof_id = fields.Many2one(
+        "tectora.roof.project.roof",
+        string="Dak",
+        ondelete="cascade",
+        index=True,
+        help="Voor een projectlijn van één dak: de hoeveelheid volgt de "
+        "oppervlakte of omtrek van dat dak in plaats van het hele project.",
     )
     currency_id = fields.Many2one(related="project_id.currency_id")
     edge_index = fields.Integer(
@@ -285,6 +302,7 @@ class TectoraRoofSectionProduct(models.Model):
         "section_id.area", "section_id.perimeter",
         "object_id.area", "object_id.perimeter",
         "project_direct_id.total_area", "project_direct_id.total_perimeter",
+        "roof_id.total_area", "roof_id.total_perimeter",
     )
     def _compute_quantity(self):
         """Quantity from the measurement. Per-side lines keep the length the
@@ -295,11 +313,15 @@ class TectoraRoofSectionProduct(models.Model):
                 line.quantity = line.quantity or 1.0
                 continue
             if line.project_direct_id:
-                project = line.project_direct_id
-                if line.coverage == "surface":
-                    line.quantity = project.total_area
+                # A line of one roof follows that roof, as soon as its plan is
+                # drawn; until then it keeps the quantity it was given.
+                measure = line.roof_id or line.project_direct_id
+                if line.roof_id and not line.roof_id.total_area:
+                    line.quantity = line.quantity or 1.0
+                elif line.coverage == "surface":
+                    line.quantity = measure.total_area
                 elif line.coverage == "edges":
-                    line.quantity = project.total_perimeter
+                    line.quantity = measure.total_perimeter
                 else:
                     line.quantity = line.quantity or 1.0
                 continue
@@ -380,11 +402,13 @@ class TectoraRoofSectionProduct(models.Model):
         return result
 
     def unlink(self):
-        """A removed line leaves the open quotation as well; the measurement
-        lines of the quotation are rebuilt afterwards."""
+        """A removed line leaves the open quotation as well when the quotation
+        follows the measurement; the measurement lines of the quotation are
+        rebuilt afterwards."""
         projects = self.project_id
         order_lines = self.sale_line_ids.filtered(
             lambda line: line.order_id.state in ("draft", "sent")
+            and line.order_id.tectora_follow_measurement
         )
         if order_lines:
             order_lines.with_context(tectora_sync=True).unlink()

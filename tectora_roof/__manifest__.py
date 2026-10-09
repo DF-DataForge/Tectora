@@ -42,8 +42,15 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
 * Ploegen are configured on the employee (Employees -> Work -> Ploeg, and
   Employees -> Configuration -> Ploegen); the Employees app opens grouped per
   team.
+* A roof project can consist of several roofs (Daken), each with its own
+  plan: the drawing tab shows one roof at a time and "Plan openen" swaps in
+  another. On the quotation, after a template is chosen, "Daken toevoegen"
+  asks how many roofs and a description of each; every roof gets a
+  subsection under the afbouw- and opbouwwerken with the template's works,
+  whose quantities follow that roof's plan. The template's type
+  (renovatie / nieuwbouw) sets the pricelist and so the project type.
     """,
-    "version": "20.0.3.20.0",
+    "version": "20.0.3.32.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -54,6 +61,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "security/ir.access.csv",
         "data/ir_sequence_data.xml",
         "data/roof_usage_data.xml",
+        "data/utm_source_data.xml",
         "views/roof_project_views.xml",
         "views/roof_object_views.xml",
         "views/roof_material_views.xml",
@@ -61,6 +69,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "views/hr_employee_views.xml",
         "views/roof_planning_views.xml",
         "views/sale_order_views.xml",
+        "views/add_roofs_views.xml",
         "views/project_project_views.xml",
         "views/res_config_settings_views.xml",
         "views/product_category_views.xml",
@@ -70,12 +79,15 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "report/roof_project_report.xml",
         "report/sale_order_report.xml",
         "report/roof_project_info_report.xml",
-        "report/sale_order_dossier_report.xml",
+        "report/terms_report.xml",
         "views/menus.xml",
     ],
     "assets": {
         "web.assets_backend": [
             "tectora_roof/static/src/roof_form/chatter_bottom.js",
+            "tectora_roof/static/src/sale_order_line/add_line_below_selection.xml",
+            "tectora_roof/static/src/sale_order_line/add_line_below_selection.js",
+            "tectora_roof/static/src/sale_order_line/catalog_insert_position.js",
             "tectora_roof/static/src/roof_canvas/roof_canvas.scss",
             "tectora_roof/static/src/roof_canvas/roof_canvas.xml",
             "tectora_roof/static/src/roof_canvas/roof_canvas.js",
