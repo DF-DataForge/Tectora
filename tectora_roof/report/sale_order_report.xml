@@ -36,4 +36,23 @@
         </xpath>
     </template>
 
+    <!-- No internal reference ("[S00053] ") in front of the lines of the
+         quotation and the invoice: the customer reads the product name. -->
+    <template id="report_saleorder_document_line_label"
+              inherit_id="sale.report_saleorder_document">
+        <xpath expr="//td[@name='td_product_name']//span[@t-field='line.label']" position="attributes">
+            <attribute name="t-field"/>
+            <attribute name="t-out">line._tectora_report_label()</attribute>
+            <attribute name="t-options">{'widget': 'text'}</attribute>
+        </xpath>
+    </template>
+
+    <template id="report_invoice_document_line_label"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//td[@name='account_invoice_line_name']/span[@t-field='line.label']" position="attributes">
+            <attribute name="t-field"/>
+            <attribute name="t-out">line._tectora_report_label()</attribute>
+        </xpath>
+    </template>
+
 </odoo>
