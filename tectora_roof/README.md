@@ -133,6 +133,17 @@ stijl) staat in *Instellingen → Tectora Dakmeting → Offerte-pdf*. De
 teksten staan in `report/sale_order_dossier_report.xml` (blokken
 `report_tq_block_*`) en zijn per blok aan te passen.
 
+## Algemene voorwaarden als pdf
+
+*Instellingen → Facturatie → Standaard algemene voorwaarden* krijgt naast
+"Als tekst toevoegen" en "Link naar een webpagina toevoegen" een derde keuze:
+**Als pdf toevoegen**. De voorwaarden (het tekstvak eronder) komen dan niet
+meer in de notitie van offertes en facturen, maar op aparte pagina's
+achteraan de pdf van offertes, orders (in elke offertestijl) en
+klantfacturen/creditnota's: in kleine letters, onder de titel "Algemene
+voorwaarden", met de hoofding en voettekst van de gekozen documentlay-out, in
+de taal van de klant.
+
 ## Eén btw-tarief voor de hele offerte
 
 Op de tab *Overige info* van de order staat naast de fiscale positie het veld

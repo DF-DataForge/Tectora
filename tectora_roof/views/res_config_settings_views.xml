@@ -41,4 +41,20 @@
         <field name="context">{'module': 'tectora_roof'}</field>
     </record>
 
+    <!-- Terms added as a PDF: say where they end up. -->
+    <record id="res_config_settings_view_form_terms_pdf" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.tectora.terms.pdf</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_terms']" position="before">
+                <div class="text-muted mt-2" invisible="terms_type != 'pdf'">
+                    De voorwaarden komen op aparte pagina's achteraan de pdf van
+                    offertes, orders en facturen, in kleine letters en met de
+                    hoofding en voettekst van de documentlay-out.
+                </div>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>

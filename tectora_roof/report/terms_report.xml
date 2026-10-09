@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The terms and conditions on pages of their own, after a quotation,
+         order or invoice, when the company adds them as a PDF (Settings →
+         Invoicing → Default Terms & Conditions → "Als pdf toevoegen"). In
+         small print, with the header and footer of the document layout.
+         Expects `o` (the document) and `terms_lang`. -->
+    <template id="report_terms_pages">
+        <t t-set="terms" t-value="o.company_id._tectora_terms_pdf(terms_lang)"/>
+        <t t-if="terms" t-call="web.external_layout" layout_document_title="'Algemene voorwaarden'">
+            <div class="page o_tectora_terms" style="font-size: 7.5pt; line-height: 1.35; text-align: justify;">
+                <t t-out="terms"/>
+            </div>
+        </t>
+    </template>
+
+    <!-- Quotations and orders, in every style. -->
+    <template id="report_saleorder_document_dispatch_terms"
+              inherit_id="tectora_roof.report_saleorder_document_dispatch">
+        <xpath expr="/t" position="inside">
+            <t t-call="tectora_roof.report_terms_pages" o="doc" terms_lang="doc.partner_id.lang"/>
+        </xpath>
+    </template>
+
+    <!-- Customer invoices and credit notes. -->
+    <template id="report_invoice_terms" inherit_id="account.report_invoice">
+        <xpath expr="//t[@t-call='account.report_invoice_document']" position="after">
+            <t t-if="o.is_sale_document(include_receipts=True)"
+               t-call="tectora_roof.report_terms_pages" o="o" terms_lang="lang" t-lang="lang"/>
+        </xpath>
+    </template>
+
+</odoo>
