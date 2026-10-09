@@ -206,8 +206,34 @@
             </div>
         </div>
 
+        <!-- PARTIES: the company with the salesperson's contact details on the
+             left, the recipient and the site address on the right. -->
+        <t t-set="tectora_document"
+           t-value="o if o and o._name in ('sale.order', 'account.move', 'purchase.order') else None"/>
+        <t t-set="tectora_parties">
+            <t t-set="sender" t-value="tectora_company._tectora_letterhead_sender(tectora_document)"/>
+            <t t-set="site" t-value="tectora_company._tectora_letterhead_site(tectora_document)"/>
+            <div class="row mb-4 o_tectora_parties">
+                <div class="col-6" name="tectora_sender">
+                    <strong t-out="sender['name']"/>
+                    <div t-foreach="sender['address']" t-as="line" t-out="line"/>
+                    <div t-if="sender['contacts']" class="mt-3">
+                        <div t-foreach="sender['contacts']" t-as="contact"><t t-out="contact[0]"/>: <t t-out="contact[1]"/></div>
+                    </div>
+                </div>
+                <div class="col-5 offset-1" name="address">
+                    <div class="o_tectora_recipient"><t t-out="address"/></div>
+                    <t t-if="site">
+                        <strong class="d-block mt-3">Werfadres</strong>
+                        <div t-foreach="site" t-as="line" t-out="line"/>
+                    </t>
+                </div>
+            </div>
+        </t>
+
         <!-- BODY -->
-        <t t-call="web.external_layout_body" hide_title="True">
+        <t t-call="web.external_layout_body" hide_title="True"
+           customized_address_layout="address and tectora_parties">
             <div class="o_report_layout_tectora">
                 <h2 t-out="layout_document_title"/>
                 <t t-out="0"/>
