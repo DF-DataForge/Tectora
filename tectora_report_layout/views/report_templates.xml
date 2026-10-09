@@ -220,22 +220,29 @@
         </div>
     </template>
 
-    <!-- The company colours in the layout's own parts: title, information
-         band, table heads, totals and footer line. -->
+    <!-- The "Tectora" table design (Configure Document Layout -> Tables): a
+         choice of its own next to Light, Boxed, Striped, ..., for every
+         layout. Added after Odoo's chain of designs, which ends in ''. -->
+    <template id="external_layout_body_tectora_table" inherit_id="web.external_layout_body">
+        <xpath expr="//t[@t-set='external_layout_body_style_classes']" position="attributes">
+            <attribute name="t-value"
+                       add="(company.report_tables_id == 'tectora' and 'o_report_layout_tectora_table o_table_tectora' or '')"
+                       separator=" or "/>
+        </xpath>
+    </template>
+
+    <!-- The company colours in the layout's own part (the footer line) and
+         in the Tectora table design: information band, table heads and the
+         total. -->
     <template id="styles_company_report_tectora" inherit_id="web.styles_company_report">
-        <xpath expr="//t[@t-elif=&quot;layout == 'web.external_layout_lines'&quot;]" position="after">
-            <t t-elif="layout in (
-                'tectora_report_layout.external_layout_tectora',
-                'tectora_report_layout.external_layout_tectora_letterhead',
-                'tectora_report_layout.external_layout_tectora_letterhead_light',
-                'tectora_report_layout.external_layout_tectora_roof_letterhead',
-            )">
-                &amp; .o_report_layout_tectora {
+        <xpath expr="//t[@t-elif=&quot;company.report_tables_id == 'column'&quot;]" position="after">
+            <t t-elif="company.report_tables_id == 'tectora'">
+                &amp;.o_table_tectora {
                     #informations {
                         border-color: mix(white, <t t-out='primary'/>, 60%);
                     }
 
-                    .o_main_table thead th {
+                    table:not(.o_ignore_layout_styling) thead th {
                         border-bottom: 2px solid <t t-out='primary'/>;
                         color: <t t-out='primary'/>;
                     }
@@ -244,7 +251,15 @@
                         background-color: mix(white, <t t-out='primary'/>, 90%);
                     }
                 }
-
+            </t>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;layout == 'web.external_layout_lines'&quot;]" position="after">
+            <t t-elif="layout in (
+                'tectora_report_layout.external_layout_tectora',
+                'tectora_report_layout.external_layout_tectora_letterhead',
+                'tectora_report_layout.external_layout_tectora_letterhead_light',
+                'tectora_report_layout.external_layout_tectora_roof_letterhead',
+            )">
                 &amp; .o_tectora_footer {
                     border-color: <t t-out='primary'/>;
                 }
