@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_sale_bom.SaleBomButtonField">
+        <ViewButton record="this.props.record"
+                    clickParams="{ name: 'action_open_tectora_sale_bom', type: 'object' }"
+                    icon="'format_list_bulleted'"
+                    className="'p-0 ' + (this.hasOwnBom ? 'text-primary' : 'text-muted')"
+                    defaultRank="'btn-link'"
+                    title="this.title"
+                    onClick="this.onClick"/>
+    </t>
+
+</templates>
