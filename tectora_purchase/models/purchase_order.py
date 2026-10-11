@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import _, api, fields, models
+from odoo.tools import BinaryBytes
 
 
 class PurchaseOrder(models.Model):
@@ -69,6 +70,70 @@ class PurchaseOrder(models.Model):
                 order.order_line.tectora_material_ids.project_id
                 | order.tectora_roof_project_id
             )
+
+    # ---------------------------------------------------- transport order
+    # "Bestelbon materialen": the delivery instructions for the vendor of a
+    # project's order, from the site information of the roof project, sent
+    # with the purchase order (report/transport_order_report.xml).
+
+    def _tectora_has_transport_order(self):
+        """Orders of one roof project carry the transport order."""
+        self.ensure_one()
+        return bool(self.tectora_roof_project_id)
+
+    def _tectora_transport_order_lines(self):
+        """The material ordered from the vendor: the products on this order."""
+        self.ensure_one()
+        return [
+            {"name": line.product_id.name, "qty": line.product_qty, "uom": line.uom_id.name}
+            for line in self.order_line
+            if not line.display_type and line.product_id
+        ]
+
+    def _tectora_transport_pickup_lines(self):
+        """The project's own material that the crew fetches at the warehouse:
+        what comes from stock and what was delivered to the warehouse."""
+        self.ensure_one()
+        project = self.tectora_roof_project_id
+        materials = project.stock_material_line_ids | project.warehouse_material_line_ids
+        return [
+            {
+                "name": material.product_id.name,
+                "qty": material.quantity,
+                "uom": (material.product_uom_id or material.product_id.uom_id).name,
+            }
+            for material in materials.sorted(lambda m: (m.sequence, m.id))
+            if material.product_id and material.quantity
+        ]
+
+    def _tectora_transport_warehouse(self):
+        """The warehouse the crew fetches its material at."""
+        self.ensure_one()
+        return self.picking_type_id.warehouse_id.filtered("partner_id") or self.env[
+            "stock.warehouse"
+        ].search([("company_id", "=", self.company_id.id)], limit=1)
+
+    def _process_attachments_for_template_post(self, mail_template):
+        """The purchase order mailed to the vendor of a roof project carries
+        the transport order as a second PDF."""
+        result = super()._process_attachments_for_template_post(mail_template) or {}
+        order_reports = self.env["ir.actions.report"]
+        for xmlid in ("purchase.action_report_purchase_order", "purchase.report_purchase_quotation"):
+            order_reports |= self.env.ref(xmlid, raise_if_not_found=False) or order_reports
+        report = self.env.ref(
+            "tectora_purchase.action_report_transport_order", raise_if_not_found=False
+        )
+        if not report or not (mail_template.report_template_ids & order_reports):
+            return result
+        for order in self:
+            if not order._tectora_has_transport_order():
+                continue
+            content, _format = self.env["ir.actions.report"]._render_qweb_pdf(report, order.ids)
+            name = "Bestelbon materialen - %s.pdf" % order.name.replace("/", "-")
+            result.setdefault(order.id, {}).setdefault("attachments", []).append(
+                (name, BinaryBytes(content))
+            )
+        return result
 
     def action_view_tectora_materials(self):
         self.ensure_one()

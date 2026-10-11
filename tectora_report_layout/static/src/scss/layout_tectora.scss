@@ -173,3 +173,15 @@ $o-tectora-lh-side: 8.65mm;
     font-size: 7pt;
     color: #6c757d;
 }
+
+// The parties under the letterhead with the roof edge: the recipient's name
+// in bold, like the company's on the left.
+.o_tectora_parties .o_tectora_recipient {
+    address, p {
+        margin-bottom: 0;
+    }
+
+    span[itemprop="name"] {
+        font-weight: bold;
+    }
+}
