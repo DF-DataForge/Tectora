@@ -97,7 +97,10 @@ offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
 **Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
 dakproject), dan volgt het meetblad met tekening, maten en producten, en
 toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
-gsm boven de lijnen).
+gsm boven de lijnen). Heeft het project meerdere daken, dan krijgt elk dak zijn
+eigen plan: op het meetblad een pagina per dak (naam, tekening, maten en
+totalen, met het totaal van alle daken), op het portaal de plannen onder
+elkaar met hun oppervlakte en omtrek.
 
 ## Algemene voorwaarden als pdf
 

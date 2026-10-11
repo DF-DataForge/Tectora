@@ -130,6 +130,29 @@ class TestRoofs(TransactionCase):
         self.assertEqual(by_roof[second], 30.0, "the second roof's plan is drawn")
         self.assertEqual(by_roof[first], 100.0, "not drawn yet: the template's quantity")
 
+    def test_plans_per_roof(self):
+        """The meetblad and the portal show every roof's plan."""
+        order = self.make_order()
+        self.add_roofs(order, "Garage", "Achterbouw")
+        project = order.roof_project_id
+        first, second = project.roof_ids
+        self.env["tectora.roof.section"].create({
+            "project_id": project.id, "roof_id": second.id, "name": "Achterbouw",
+            "area": 30.0, "perimeter": 22.0,
+        })
+        plans = project._tectora_roof_plans()
+        self.assertEqual([plan["title"] for plan in plans],
+                         [first._subsection_name(), second._subsection_name()])
+        self.assertEqual(plans[1]["area"], 30.0)
+        self.assertEqual(plans[1]["sections"].mapped("name"), ["Achterbouw"])
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "tectora_roof.report_roof_project", project.ids
+        )
+        html = str(html)
+        self.assertIn(first._subsection_name(), html)
+        self.assertIn(second._subsection_name(), html)
+        self.assertIn("Totaal alle daken", html)
+
     def test_new_build_has_no_demolition(self):
         template = self.template.copy({"name": "Nieuwbouw plat dak test"})
         template.sale_order_template_line_ids.filtered(

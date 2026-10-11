@@ -4,14 +4,21 @@
     <!-- The roof plan next to the order on the customer portal: in the
          sidebar on large screens (Odoo hides the sidebar on phones) and
          above the order content on small screens. Only when the order
-         includes the roof plan ("Dakplan toevoegen"), as in the PDF. -->
+         includes the roof plan ("Dakplan toevoegen"), as in the PDF; with
+         several roofs, the plan of each. -->
     <template id="sale_order_portal_roof_plan">
         <div class="o_tectora_portal_roof_plan">
-            <strong class="smaller text-uppercase text-muted">Dakplan</strong>
-            <img t-att-src="roof_plan_src" class="img-fluid d-block mt-2 border rounded" alt="Dakplan"/>
-            <div class="d-flex flex-wrap column-gap-3 small text-muted mt-2">
-                <span><t t-out="'%.1f m²' % roof_plan_roof.total_area"/> dakoppervlakte</span>
-                <span><t t-out="'%.1f m' % roof_plan_roof.total_perimeter"/> omtrek</span>
+            <strong class="smaller text-uppercase text-muted">
+                <t t-if="len(roof_plans) &gt; 1">Dakplannen</t><t t-else="">Dakplan</t>
+            </strong>
+            <div t-foreach="roof_plans" t-as="plan" class="mt-2 mb-3">
+                <div t-if="plan['title']" class="small fw-bold" t-out="plan['title']"/>
+                <img t-att-src="plan['image']" class="img-fluid d-block mt-1 border rounded"
+                     t-att-alt="plan['title'] or 'Dakplan'"/>
+                <div class="d-flex flex-wrap column-gap-3 small text-muted mt-1">
+                    <span><t t-out="'%.1f m²' % plan['area']"/> dakoppervlakte</span>
+                    <span><t t-out="'%.1f m' % plan['perimeter']"/> omtrek</span>
+                </div>
             </div>
         </div>
     </template>
@@ -20,17 +27,19 @@
               inherit_id="sale.sale_order_portal_template">
         <xpath expr="//t[@t-set='entries']" position="before">
             <t t-set="roof_plan_roof" t-value="sale_order.roof_project_id"/>
-            <t t-set="roof_plan_src"
-               t-value="roof_plan_roof and sale_order.tectora_include_roof_plan and (roof_plan_roof.canvas_snapshot or roof_plan_roof.section_count) and roof_plan_roof._get_drawing_data_uri()"/>
+            <!-- Every roof's plan with something drawn on it (one for a
+                 project without roofs). -->
+            <t t-set="roof_plans"
+               t-value="[plan for plan in roof_plan_roof._tectora_roof_plans() if plan['image'] and (plan['sections'] or plan['objects'])] if roof_plan_roof and sale_order.tectora_include_roof_plan else []"/>
         </xpath>
         <xpath expr="//div[@id='sidebar_loyalty_anchor']" position="before">
-            <div t-if="roof_plan_src">
+            <div t-if="roof_plans">
                 <hr/>
                 <t t-call="tectora_roof.sale_order_portal_roof_plan"/>
             </div>
         </xpath>
         <xpath expr="//div[@id='portal_sale_content']" position="before">
-            <div t-if="roof_plan_src" class="d-lg-none mb-4">
+            <div t-if="roof_plans" class="d-lg-none mb-4">
                 <t t-call="tectora_roof.sale_order_portal_roof_plan"/>
             </div>
         </xpath>

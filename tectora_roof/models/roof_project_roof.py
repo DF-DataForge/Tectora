@@ -9,6 +9,7 @@ on the project for that roof's. Sections and objects carry their roof, so the
 measurement of every roof stays apart while the project totals all of them.
 """
 from odoo import _, api, fields, models
+from odoo.tools.image import image_data_uri
 
 DEFAULT_SCALE_M_PER_PX = 0.02
 
@@ -103,6 +104,17 @@ class TectoraRoofProjectRoof(models.Model):
         if description:
             return "%s – %s" % (name, description)
         return name
+
+    def _get_drawing_data_uri(self):
+        """This roof's plan as a data URI for <img src>, or False. The roof
+        open on the drawing has its latest plan on the project; the others
+        keep the snapshot taken when they were last drawn."""
+        self.ensure_one()
+        if self.project_id.active_roof_id == self:
+            return self.project_id._get_drawing_data_uri()
+        if self.canvas_snapshot:
+            return image_data_uri(self.canvas_snapshot.content)
+        return False
 
     # ------------------------------------------------------------ lifecycle
     @api.model_create_multi

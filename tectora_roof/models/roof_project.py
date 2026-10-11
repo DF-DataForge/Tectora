@@ -1297,6 +1297,45 @@ class TectoraRoofProject(models.Model):
             )
             return False
 
+    def _tectora_roof_plans(self):
+        """The plans of this project as they are printed and shown to the
+        customer: one per roof (its name, drawing, sections, objects and
+        totals), or the project's own plan when it has no roofs. Sections and
+        objects not tied to a roof close the list under "Overige"."""
+        self.ensure_one()
+        if not self.roof_ids:
+            return [{
+                "title": False,
+                "image": self._get_drawing_data_uri(),
+                "sections": self.section_ids,
+                "objects": self.roof_object_ids,
+                "area": self.total_area,
+                "perimeter": self.total_perimeter,
+            }]
+        plans = [
+            {
+                "title": roof._subsection_name(),
+                "image": roof._get_drawing_data_uri(),
+                "sections": roof.section_ids,
+                "objects": roof.roof_object_ids,
+                "area": roof.total_area,
+                "perimeter": roof.total_perimeter,
+            }
+            for roof in self.roof_ids
+        ]
+        loose_sections = self.section_ids.filtered(lambda section: not section.roof_id)
+        loose_objects = self.roof_object_ids.filtered(lambda obj: not obj.roof_id)
+        if loose_sections or loose_objects:
+            plans.append({
+                "title": _("Overige"),
+                "image": False,
+                "sections": loose_sections,
+                "objects": loose_objects,
+                "area": sum(loose_sections.mapped("area")),
+                "perimeter": sum(loose_sections.mapped("perimeter")),
+            })
+        return plans
+
     def _get_drawing_data_uri(self):
         """The drawing as a data URI for <img src>, or False without drawing.
 
