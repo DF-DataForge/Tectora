@@ -53,6 +53,10 @@ install on Odoo 17 or earlier without adjustments.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
+   While drawing, the dimensions show live: width, length and area of a
+   rectangle; every side of a polygon (also the one following the pointer)
+   with the area and perimeter it would have if closed now; the length of a
+   seam.
    A **naad** (seam) marks that two roof surfaces are separate: draw it with
    the *Naad* tool as an open dotted line (click points, double-click to
    finish). Every section the seam crosses is cut in two along it (the halves

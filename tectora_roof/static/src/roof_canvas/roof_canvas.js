@@ -418,6 +418,7 @@ export class RoofCanvasField extends Component {
         this.backgroundImage = null;
         this.drag = null; // {mode: 'move'|'rect'|'pan', ...}
         this.draftPolygon = null; // [[x, y], ...]
+        this.draftCursor = null; // where the side being drawn ends (pointer)
         this._rawCache = undefined;
         this._staleRaw = null;
         this._shapes = [];
@@ -786,6 +787,7 @@ export class RoofCanvasField extends Component {
     setTool(tool) {
         this.state.tool = tool;
         this.draftPolygon = null;
+        this.draftCursor = null;
         if (tool !== "select") {
             this.state.selectedId = null;
         }
@@ -939,6 +941,12 @@ export class RoofCanvasField extends Component {
     }
 
     onPointerMove(ev) {
+        if (!this.drag && this.draftPolygon) {
+            // Live dimensions: the side being drawn follows the pointer.
+            this.draftCursor = this.draftSnap(this.toWorld(ev));
+            this.draw();
+            return;
+        }
         if (!this.drag) {
             if (this.state.tool === "select" && this.canvasRef()) {
                 const hover = this.labelHitTest(this.toWorld(ev));
@@ -1072,6 +1080,7 @@ export class RoofCanvasField extends Component {
                 this.clearMultiSelect();
             } else if (this.draftPolygon) {
                 this.draftPolygon = null;
+                this.draftCursor = null;
             } else if (this.state.fullscreen) {
                 this.toggleFullscreen();
             }
@@ -1144,6 +1153,7 @@ export class RoofCanvasField extends Component {
     addPolygonPoint(point) {
         if (!this.draftPolygon) {
             this.draftPolygon = [point];
+            this.draftCursor = null;
         } else {
             const first = this.draftPolygon[0];
             const snap = CLOSE_SNAP_PX / this.view.zoom;
@@ -1174,6 +1184,7 @@ export class RoofCanvasField extends Component {
             this.addShape(this.draftPolygon);
         }
         this.draftPolygon = null;
+        this.draftCursor = null;
         this.updateStatus();
     }
 
@@ -2698,10 +2709,88 @@ export class RoofCanvasField extends Component {
             Math.abs(y2 - y1)
         );
         ctx.setLineDash([]);
+
+        // Live dimensions: width along the top, length along the side, the
+        // area in the middle.
+        const scale = this.scaleMPerPx;
+        const left = Math.min(x1, x2);
+        const top = Math.min(y1, y2);
+        const w = Math.abs(x2 - x1);
+        const h = Math.abs(y2 - y1);
+        if (w * this.view.zoom < 2 && h * this.view.zoom < 2) {
+            return;
+        }
+        const gap = 12 / this.view.zoom;
+        this.drawDimension(ctx, `${(w * scale).toFixed(2)} m`, left + w / 2, top - gap);
+        this.drawDimension(ctx, `${(h * scale).toFixed(2)} m`, left + w + gap, top + h / 2, "start");
+        this.drawDimension(
+            ctx,
+            `${(w * h * scale * scale).toFixed(2)} m²`,
+            left + w / 2,
+            top + h / 2,
+            "center",
+            true
+        );
+    }
+
+    // The point the next corner would land on: the first corner when the
+    // pointer is close enough to close the polygon.
+    draftSnap(point) {
+        const points = this.draftPolygon;
+        if (this.state.tool !== "seam" && points.length >= 3) {
+            const [fx, fy] = points[0];
+            if (Math.hypot(point[0] - fx, point[1] - fy) <= CLOSE_SNAP_PX / this.view.zoom) {
+                return [fx, fy];
+            }
+        }
+        return point;
+    }
+
+    // A dimension label while drawing: a small box with the text, centred on
+    // (x, y) or starting there ("start"). "strong" is the area/total.
+    drawDimension(ctx, text, x, y, align = "center", strong = false) {
+        const zoom = this.view.zoom;
+        const fontSize = 11 / zoom;
+        const height = 16 / zoom;
+        const padX = 5 / zoom;
+        ctx.font = `${strong ? 700 : 600} ${fontSize}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const width = ctx.measureText(text).width + padX * 2;
+        const left = align === "start" ? x : x - width / 2;
+        if (strong) {
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(left, y - height / 2, width, height, 3 / zoom);
+            } else {
+                ctx.rect(left, y - height / 2, width, height);
+            }
+            ctx.fillStyle = "#0a7483";
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(text, left + width / 2, y);
+        } else {
+            this.drawLabelBox(ctx, text, left, y - height / 2, width, height, "#0a7483");
+        }
+        ctx.textBaseline = "alphabetic";
+    }
+
+    // The length of a side while drawing, at its middle; skipped when the
+    // side is too short on screen to carry it.
+    drawDraftEdge(ctx, [ax, ay], [bx, by]) {
+        const length = Math.hypot(bx - ax, by - ay);
+        if (length * this.view.zoom < EDGE_LABEL_MIN_SCREEN_PX) {
+            return;
+        }
+        this.drawDimension(
+            ctx, `${(length * this.scaleMPerPx).toFixed(2)} m`, (ax + bx) / 2, (ay + by) / 2
+        );
     }
 
     drawDraftPolygon(ctx) {
         const points = this.draftPolygon;
+        const cursor = this.draftCursor;
+        const isSeamTool = this.state.tool === "seam";
         ctx.setLineDash([6 / this.view.zoom, 4 / this.view.zoom]);
         ctx.strokeStyle = "#0a7483";
         ctx.lineWidth = 2 / this.view.zoom;
@@ -2710,7 +2799,19 @@ export class RoofCanvasField extends Component {
         for (let i = 1; i < points.length; i++) {
             ctx.lineTo(points[i][0], points[i][1]);
         }
+        if (cursor) {
+            ctx.lineTo(cursor[0], cursor[1]);
+        }
         ctx.stroke();
+        if (cursor && !isSeamTool && points.length >= 2) {
+            // Where the polygon would close, faintly.
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.moveTo(cursor[0], cursor[1]);
+            ctx.lineTo(points[0][0], points[0][1]);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
         ctx.setLineDash([]);
         const r = 4 / this.view.zoom;
         ctx.fillStyle = "#0a7483";
@@ -2718,6 +2819,36 @@ export class RoofCanvasField extends Component {
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        // Live dimensions: every side drawn so far and the one following the
+        // pointer; from three corners on, the area and perimeter the polygon
+        // would have if closed now (for a seam, its length so far).
+        const all = cursor ? [...points, cursor] : points;
+        for (let i = 1; i < all.length; i++) {
+            this.drawDraftEdge(ctx, all[i - 1], all[i]);
+        }
+        const scale = this.scaleMPerPx;
+        const box = boundingBox(all);
+        const below = box.y + box.h + 18 / this.view.zoom;
+        if (isSeamTool) {
+            if (all.length >= 2) {
+                const length = polygonPerimeter(all, false) * scale;
+                this.drawDimension(
+                    ctx, `naad ${length.toFixed(2)} m`, box.x + box.w / 2, below, "center", true
+                );
+            }
+        } else if (all.length >= 3) {
+            const area = polygonArea(all) * scale * scale;
+            const perimeter = polygonPerimeter(all) * scale;
+            this.drawDimension(
+                ctx,
+                `${area.toFixed(2)} m² · omtrek ${perimeter.toFixed(2)} m`,
+                box.x + box.w / 2,
+                below,
+                "center",
+                true
+            );
         }
     }
 }
