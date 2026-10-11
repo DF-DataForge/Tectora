@@ -406,6 +406,9 @@ export class RoofCanvasField extends Component {
             status: "",
             contextMenu: null, // {x, y (px in wrapper), worldPoint}
             panel: null, // product card for the selected shape
+            // The element of the selected shape the side panel describes: its
+            // surface (or the whole dakobject / naad) or one side.
+            focus: null, // {type: "surface"|"edge", shapeId, kind, edgeIndex, hit}
             fullscreen: false,
             bgMenu: false, // the background menu (satellite, plan) is open
             bgBusy: false, // a background fetch/upload is running
@@ -917,12 +920,16 @@ export class RoofCanvasField extends Component {
                 return;
             }
             if (labelHit) {
-                this.openProducts(labelHit);
+                // Selects that side, surface or dakobject: the side panel
+                // describes it and lists its products (double-click opens
+                // the product picker straight away).
+                this.focusTarget(labelHit);
                 return;
             }
             const hit = this.hitTest(point);
             const wasSelected = hit && this.state.selectedId === hit.id;
             this.state.selectedId = hit ? hit.id : null;
+            this.state.focus = hit ? this.surfaceFocus(hit) : null;
             // Moving a whole shape requires selecting it first: the first
             // click only selects, dragging an already-selected shape moves.
             if (hit && wasSelected) {
@@ -1054,7 +1061,13 @@ export class RoofCanvasField extends Component {
         if ((this.state.tool === "polygon" || this.state.tool === "seam") && this.draftPolygon) {
             this.closePolygon();
         } else if (this.state.tool === "select") {
-            const hit = this.hitTest(this.toWorld(ev));
+            const point = this.toWorld(ev);
+            const labelHit = this.labelHitTest(point);
+            if (labelHit && ["surface", "edge", "seam"].includes(labelHit.type)) {
+                this.openProducts(labelHit);
+                return;
+            }
+            const hit = this.hitTest(point);
             if (hit) {
                 this.state.selectedId = hit.id;
                 this.renameSelected();
@@ -1063,6 +1076,9 @@ export class RoofCanvasField extends Component {
     }
 
     onKeyDown(ev) {
+        if (ev.target.tagName === "TEXTAREA") {
+            return; // typing a description, not drawing
+        }
         if (ev.key === "Delete" || ev.key === "Backspace") {
             if (ev.target.tagName !== "INPUT") {
                 ev.preventDefault();
@@ -1228,12 +1244,16 @@ export class RoofCanvasField extends Component {
                 continue;
             }
             const baseName = section.name || KIND_NAMES.section;
+            // Both halves keep the description of the surface, like its
+            // products; the sides are new, so their descriptions stay behind.
+            const surface = section.descriptions && section.descriptions.surface;
             const make = (points, suffix) => ({
                 id: makeId(),
                 kind: "section",
                 name: `${baseName} ${suffix}`,
                 points: points.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
                 splitFrom: section.id,
+                ...(surface ? { descriptions: { surface: { ...surface } } } : {}),
             });
             const index = shapes.indexOf(section);
             shapes.splice(index, 1, make(parts[0], "A"), make(parts[1], "B"));
@@ -1268,6 +1288,164 @@ export class RoofCanvasField extends Component {
         return null;
     }
 
+    // ------------------------------------------- selected element (drieluik)
+    // A side, a surface or a dakobject can be selected on its own; the side
+    // panel then shows three parts for it: the description of its original
+    // state, of its future state, and the products assigned to it. The
+    // descriptions are kept in the drawing, on the shape:
+    // shape.descriptions = {surface: {current, future}, edges: {i: {...}}}.
+
+    surfaceFocus(shape) {
+        const kind = shape.kind || "section";
+        return {
+            type: "surface",
+            shapeId: shape.id,
+            kind,
+            edgeIndex: null,
+            hit: {
+                type: isSeam(shape) ? "seam" : "surface",
+                shapeId: shape.id,
+                kind,
+                name: shape.name || "",
+            },
+        };
+    }
+
+    focusTarget(hit) {
+        this.state.selectedId = hit.shapeId;
+        this.state.focus = {
+            type: hit.type === "edge" ? "edge" : "surface",
+            shapeId: hit.shapeId,
+            kind: hit.kind || "section",
+            edgeIndex: hit.type === "edge" ? hit.edgeIndex : null,
+            hit,
+        };
+        this.updateStatus();
+        this.draw();
+        this.refreshPanel();
+    }
+
+    // The focus, only while its shape is the selected one.
+    get focus() {
+        const focus = this.state.focus;
+        return focus && focus.shapeId === this.state.selectedId && this.selectedShape
+            ? focus
+            : null;
+    }
+
+    get focusLabel() {
+        const focus = this.focus;
+        if (!focus) {
+            return "";
+        }
+        const shape = this.selectedShape;
+        return this.multiSelectLabel({ ...focus.hit, name: shape.name || "" });
+    }
+
+    // Where an element keeps its descriptions on its shape; ``focus`` is the
+    // element the panel was rendered for (the selection may have moved on by
+    // the time a textarea reports its change).
+    focusDescriptionEntry(focus = this.focus, create = false) {
+        const shape = focus && this.shapes.find((s) => s.id === focus.shapeId);
+        if (!shape) {
+            return {};
+        }
+        if (create && !shape.descriptions) {
+            shape.descriptions = {};
+        }
+        const descriptions = shape.descriptions || {};
+        if (focus.type === "edge") {
+            if (create && !descriptions.edges) {
+                descriptions.edges = {};
+            }
+            const edges = descriptions.edges || {};
+            const key = String(focus.edgeIndex);
+            if (create && !edges[key]) {
+                edges[key] = {};
+            }
+            return edges[key] || {};
+        }
+        if (create && !descriptions.surface) {
+            descriptions.surface = {};
+        }
+        return descriptions.surface || {};
+    }
+
+    focusDescription(key, focus = this.focus) {
+        return this.focusDescriptionEntry(focus)[key] || "";
+    }
+
+    setFocusDescription(focus, key, ev) {
+        const value = (ev.target.value || "").trim();
+        if (!focus || value === this.focusDescription(key, focus)) {
+            return;
+        }
+        const entry = this.focusDescriptionEntry(focus, true);
+        if (value) {
+            entry[key] = value;
+        } else {
+            delete entry[key];
+        }
+        this.commit();
+    }
+
+    // The products of the focused element: on a roof section, a side takes
+    // its own edge products and those along the whole perimeter, the surface
+    // everything else but edges and corners; a dakobject or naad all of its.
+    get focusLines() {
+        const focus = this.focus;
+        const panel = this.state.panel;
+        if (!focus || !panel || !panel.lines) {
+            return [];
+        }
+        if (focus.kind !== "section") {
+            return panel.lines;
+        }
+        if (focus.type === "edge") {
+            const side = focus.edgeIndex < 0 ? 0 : focus.edgeIndex + 1;
+            return panel.lines.filter(
+                (line) => line.coverage === "edges" && (!line.edge_index || line.edge_index === side)
+            );
+        }
+        return panel.lines.filter((line) => !["edges", "corners"].includes(line.coverage));
+    }
+
+    get focusTotal() {
+        return this.focusLines.reduce((sum, line) => sum + (line.price_subtotal || 0), 0);
+    }
+
+    addFocusProducts() {
+        const focus = this.focus;
+        if (focus) {
+            this.openProducts({ ...focus.hit, name: this.selectedShape.name || "" });
+        }
+    }
+
+    // The focused side drawn over the shape, so it is clear which one the
+    // panel describes.
+    drawFocus(ctx) {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        if (!focus || focus.type !== "edge" || !shape || focus.edgeIndex < 0) {
+            return;
+        }
+        const points = shape.points;
+        const a = points[focus.edgeIndex];
+        const b = points[(focus.edgeIndex + 1) % points.length];
+        if (!a || !b) {
+            return;
+        }
+        ctx.save();
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 5 / this.view.zoom;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+        ctx.restore();
+    }
+
     // ------------------------------------------------------- product panel
     coverageLabel(line) {
         const labels = {
@@ -1283,6 +1461,7 @@ export class RoofCanvasField extends Component {
 
     closePanel() {
         this.state.selectedId = null;
+        this.state.focus = null;
         this.state.panel = null;
         this.updateStatus();
         this.draw();
@@ -1576,7 +1755,7 @@ export class RoofCanvasField extends Component {
         const lines = await this.orm.searchRead(
             "tectora.roof.section.product",
             [[isObject ? "object_id" : "section_id", "=", targetIds[0]]],
-            ["product_id", "coverage", "side_display", "quantity", "uom_id", "price_subtotal"]
+            ["product_id", "coverage", "side_display", "edge_index", "quantity", "uom_id", "price_subtotal"]
         );
         if (this.selectedShape !== shape) {
             return;
@@ -2113,7 +2292,8 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 `${shape.name || "Naad"} — naad van ${length.toFixed(2)} m · ` +
                 `geselecteerd: sleep om te verplaatsen, versleep een punt om de ` +
-                `lijn aan te passen, klik op het label om naadproducten toe te wijzen`;
+                `lijn aan te passen, klik op het label om de naad te beschrijven, ` +
+                `dubbelklik erop om naadproducten toe te wijzen`;
         } else if (shape) {
             const m = this.measurements(shape.points);
             this.state.status =
@@ -2122,14 +2302,18 @@ export class RoofCanvasField extends Component {
                 `${m.perimeter.toFixed(2)} m · geselecteerd: sleep om te ` +
                 `verplaatsen, versleep een hoekpunt om de vorm aan te passen, ` +
                 `rechtsklik op een lengtelabel om de werkelijke maat in te ` +
-                `geven, stel rand en opstand per zijde in via het paneel rechts`;
+                `geven, klik op een lengte- of oppervlaktelabel om die zijde of ` +
+                `dat vlak te beschrijven (dubbelklik: producten toewijzen), stel ` +
+                `rand en opstand per zijde in via het paneel rechts`;
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool; de meting " +
                 "wordt automatisch bijgewerkt (bij een nieuw project: eerst " +
-                "opslaan). Klik op een lengte- of oppervlaktelabel of op een " +
-                "hoekpunt om producten toe te voegen (wit = buitenhoek, " +
-                "oranje = binnenhoek). Rechtsklik op een lengtelabel om de " +
+                "opslaan). Klik op een lengte- of oppervlaktelabel om die zijde " +
+                "of dat vlak te selecteren: rechts beschrijf je de originele en " +
+                "de toekomstige staat en zie je de producten. Dubbelklik op een " +
+                "label of klik op een hoekpunt om producten toe te voegen (wit = " +
+                "buitenhoek, oranje = binnenhoek). Rechtsklik op een lengtelabel om de " +
                 "werkelijke maat in te geven en de tekening te kalibreren; " +
                 "rechtsklik op de tekening om een dakobject toe te voegen. " +
                 "Teken een naad (stippellijn tussen twee dakvlakken) met de " +
@@ -2183,6 +2367,7 @@ export class RoofCanvasField extends Component {
                 console.warn("Roof canvas: could not label shape", shape, error);
             }
         }
+        this.drawFocus(ctx);
         if (this.drag && this.drag.mode === "rect") {
             this.drawDraftRect(ctx);
         }

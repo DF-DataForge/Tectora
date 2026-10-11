@@ -147,13 +147,39 @@
             </div>
             <div class="o_roof_canvas_sidebar">
                 <t t-if="this.state.panel">
-                    <div class="o_roof_canvas_panel card">
+                    <!-- The selected side, surface or dakobject in three
+                         parts: original state, future state, products. -->
+                    <t t-set="focus" t-value="this.focus"/>
+                    <div t-if="focus" class="o_roof_canvas_panel o_roof_canvas_focus card">
                         <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
-                            <strong class="text-truncate" t-out="this.state.panel.name"/>
+                            <strong class="text-truncate" t-out="this.focusLabel"/>
                             <button type="button" class="btn-close" title="Sluiten"
                                     t-on-click="this.closePanel"/>
                         </div>
+                        <div class="card-body p-2 border-bottom">
+                            <label class="form-label small fw-bold mb-1">1. Originele staat</label>
+                            <textarea class="form-control form-control-sm" rows="3"
+                                      placeholder="Hoe het er nu bij ligt…"
+                                      t-att-value="this.focusDescription('current', focus)"
+                                      t-on-change="(ev) => this.setFocusDescription(focus, 'current', ev)"/>
+                        </div>
+                        <div class="card-body p-2 border-bottom">
+                            <label class="form-label small fw-bold mb-1">2. Toekomstige staat</label>
+                            <textarea class="form-control form-control-sm" rows="3"
+                                      placeholder="Wat er komt…"
+                                      t-att-value="this.focusDescription('future', focus)"
+                                      t-on-change="(ev) => this.setFocusDescription(focus, 'future', ev)"/>
+                        </div>
                         <div class="card-body p-0">
+                            <div class="px-2 pt-2 d-flex justify-content-between align-items-center">
+                                <span class="small fw-bold">3. Producten</span>
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        t-att-disabled="this.state.panel.loading"
+                                        t-on-click="this.addFocusProducts"
+                                        title="Producten toewijzen (of dubbelklik op het label)">
+                                    <i class="oi" data-icon="add"/> Toevoegen
+                                </button>
+                            </div>
                             <t t-if="this.state.panel.loading">
                                 <div class="p-2 text-muted small">Laden…</div>
                             </t>
@@ -162,15 +188,12 @@
                                     Nog niet gesynchroniseerd — sla het project op.
                                 </div>
                             </t>
-                            <t t-elif="!this.state.panel.lines.length">
-                                <div class="p-2 text-muted small">
-                                    Nog geen producten toegewezen. Klik op een label,
-                                    rand of hoekpunt om producten toe te voegen.
-                                </div>
+                            <t t-elif="!this.focusLines.length">
+                                <div class="p-2 text-muted small">Nog geen producten toegewezen.</div>
                             </t>
                             <t t-else="">
                                 <ul class="list-group list-group-flush small">
-                                    <li t-foreach="this.state.panel.lines" t-as="line" t-key="line.id"
+                                    <li t-foreach="this.focusLines" t-as="line" t-key="line.id"
                                         class="list-group-item py-1 px-2">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <span class="fw-bold me-1" t-out="line.product_id[1]"/>
@@ -193,12 +216,66 @@
                                 </ul>
                             </t>
                         </div>
-                        <div t-if="this.state.panel.lines.length"
+                        <div t-if="this.focusLines.length"
                              class="card-footer py-1 px-2 d-flex justify-content-between small">
                             <strong>Totaal</strong>
-                            <strong t-out="this.state.panel.total.toFixed(2)"/>
+                            <strong t-out="this.focusTotal.toFixed(2)"/>
                         </div>
                     </div>
+                    <t t-else="">
+                        <div class="o_roof_canvas_panel card">
+                            <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
+                                <strong class="text-truncate" t-out="this.state.panel.name"/>
+                                <button type="button" class="btn-close" title="Sluiten"
+                                        t-on-click="this.closePanel"/>
+                            </div>
+                            <div class="card-body p-0">
+                                <t t-if="this.state.panel.loading">
+                                    <div class="p-2 text-muted small">Laden…</div>
+                                </t>
+                                <t t-elif="!this.state.panel.synced">
+                                    <div class="p-2 text-muted small">
+                                        Nog niet gesynchroniseerd — sla het project op.
+                                    </div>
+                                </t>
+                                <t t-elif="!this.state.panel.lines.length">
+                                    <div class="p-2 text-muted small">
+                                        Nog geen producten toegewezen. Dubbelklik op een
+                                        label of klik op een hoekpunt om producten toe te voegen.
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <ul class="list-group list-group-flush small">
+                                        <li t-foreach="this.state.panel.lines" t-as="line" t-key="line.id"
+                                            class="list-group-item py-1 px-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <span class="fw-bold me-1" t-out="line.product_id[1]"/>
+                                                <button type="button"
+                                                        class="btn btn-link text-danger p-0"
+                                                        title="Lijn verwijderen"
+                                                        t-on-click="() => this.removeLine(line)">
+                                                    <i class="oi" data-icon="delete"/>
+                                                </button>
+                                            </div>
+                                            <div class="d-flex justify-content-between text-muted">
+                                                <span t-out="this.coverageLabel(line)"/>
+                                                <span>
+                                                    <t t-out="line.quantity.toFixed(2)"/>
+                                                    <t t-out="line.uom_id ? line.uom_id[1] : ''"/>
+                                                    — <t t-out="line.price_subtotal.toFixed(2)"/>
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </t>
+                            </div>
+                            <div t-if="this.state.panel.lines.length"
+                                 class="card-footer py-1 px-2 d-flex justify-content-between small">
+                                <strong>Totaal</strong>
+                                <strong t-out="this.state.panel.total.toFixed(2)"/>
+                            </div>
+                        </div>
+                    </t>
                     <div t-if="this.state.panel.edges.length" class="o_roof_canvas_panel card">
                         <div class="card-header py-1 px-2">
                             <strong>Rand &amp; opstand per zijde (m)</strong>
@@ -266,8 +343,9 @@
                     </div>
                 </t>
                 <div t-else="" class="text-muted small p-2">
-                    Selecteer een vorm op de tekening om de toegewezen producten
-                    en aantallen te zien.
+                    Selecteer een vlak, zijde of dakobject op de tekening voor
+                    de beschrijving van de originele en de toekomstige staat en
+                    de toegewezen producten.
                 </div>
             </div>
             </div>

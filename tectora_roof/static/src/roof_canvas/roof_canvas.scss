@@ -58,6 +58,12 @@
         background: #fff;
     }
 
+    // The three parts of a selected side, surface or dakobject.
+    .o_roof_canvas_focus textarea {
+        resize: vertical;
+        font-size: 0.85rem;
+    }
+
     .o_roof_canvas_toolbar {
         border-bottom: 1px solid var(--border-color, #d8dadd);
         background: #f8f9fa;
