@@ -20,8 +20,8 @@
         </t>
     </template>
 
-    <!-- The meetblad itself, without layout, so the quotation dossier can
-         embed it as one of its pages. Expects `roof_doc`. -->
+    <!-- The meetblad itself, without layout. Expects `roof_doc`. With several
+         roofs, every roof's plan (drawing and measurements) starts a page. -->
     <template id="report_roof_project_content">
             <div class="page">
                 <h3 class="mb-1">
@@ -41,69 +41,81 @@
                         <t t-out="'%.4f m/pixel' % roof_doc.scale_m_per_px"/>
                     </div>
                 </div>
-                <t t-set="drawing_png" t-value="roof_doc._get_drawing_data_uri()"/>
-                <div t-if="drawing_png" class="text-center mb-2">
-                    <img t-att-src="drawing_png"
-                         style="max-width: 100%; max-height: 115mm;"
-                         alt="Dakmeting"/>
+                <!-- One plan per roof, each from a new page; a project
+                     without roofs has its one plan. -->
+                <t t-set="plans" t-value="roof_doc._tectora_roof_plans()"/>
+                <t t-foreach="plans" t-as="plan">
+                    <div t-att-style="'page-break-before: always;' if not plan_first else None">
+                        <h4 t-if="plan['title']" class="mt-2 mb-2" t-out="plan['title']"/>
+                        <div t-if="plan['image']" class="text-center mb-2">
+                            <img t-att-src="plan['image']"
+                                 style="max-width: 100%; max-height: 115mm;"
+                                 t-att-alt="plan['title'] or 'Dakmeting'"/>
+                        </div>
+                        <div t-else="" class="text-muted text-center mb-2">
+                            (geen tekening beschikbaar)
+                        </div>
+                        <table class="table table-sm small mb-2">
+                            <thead>
+                                <tr>
+                                    <th>Onderdeel</th>
+                                    <th class="text-end">Breedte (m)</th>
+                                    <th class="text-end">Lengte (m)</th>
+                                    <th class="text-end">Oppervlakte (m²)</th>
+                                    <th class="text-end">Omtrek (m)</th>
+                                    <th class="text-end">Binnenopp. (m²)</th>
+                                    <th class="text-end">Binnenomtrek (m)</th>
+                                    <th class="text-end">Opstandopp. (m²)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="plan['sections']" t-as="section">
+                                    <td t-out="section.name"/>
+                                    <td class="text-end" t-out="'%.2f' % section.width"/>
+                                    <td class="text-end" t-out="'%.2f' % section.length"/>
+                                    <td class="text-end" t-out="'%.2f' % section.area"/>
+                                    <td class="text-end" t-out="'%.2f' % section.perimeter"/>
+                                    <td class="text-end"
+                                        t-out="'%.2f' % section.inner_area if section.inner_area else '-'"/>
+                                    <td class="text-end"
+                                        t-out="'%.2f' % section.inner_perimeter if section.inner_perimeter else '-'"/>
+                                    <td class="text-end"
+                                        t-out="'%.2f' % section.upstand_area if section.upstand_area else '-'"/>
+                                </tr>
+                                <tr t-foreach="plan['objects']" t-as="roof_object">
+                                    <td>
+                                        <t t-out="roof_object.name"/>
+                                        <span class="text-muted"> (dakobject)</span>
+                                    </td>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.width"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.length"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.area"/>
+                                    <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">-</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Totaal daksecties</th>
+                                    <th/>
+                                    <th/>
+                                    <th class="text-end" t-out="'%.2f' % plan['area']"/>
+                                    <th class="text-end" t-out="'%.2f' % plan['perimeter']"/>
+                                    <th/>
+                                    <th/>
+                                    <th/>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </t>
+                <div t-if="len(plans) &gt; 1" class="text-end">
+                    <strong>Totaal alle daken:</strong>
+                    <t t-out="'%.2f m²' % roof_doc.total_area"/> —
+                    <t t-out="'%.2f m omtrek' % roof_doc.total_perimeter"/>
                 </div>
-                <div t-else="" class="text-muted text-center mb-2">
-                    (geen tekening beschikbaar)
-                </div>
-                <table class="table table-sm small mb-2">
-                    <thead>
-                        <tr>
-                            <th>Onderdeel</th>
-                            <th class="text-end">Breedte (m)</th>
-                            <th class="text-end">Lengte (m)</th>
-                            <th class="text-end">Oppervlakte (m²)</th>
-                            <th class="text-end">Omtrek (m)</th>
-                            <th class="text-end">Binnenopp. (m²)</th>
-                            <th class="text-end">Binnenomtrek (m)</th>
-                            <th class="text-end">Opstandopp. (m²)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr t-foreach="roof_doc.section_ids" t-as="section">
-                            <td t-out="section.name"/>
-                            <td class="text-end" t-out="'%.2f' % section.width"/>
-                            <td class="text-end" t-out="'%.2f' % section.length"/>
-                            <td class="text-end" t-out="'%.2f' % section.area"/>
-                            <td class="text-end" t-out="'%.2f' % section.perimeter"/>
-                            <td class="text-end"
-                                t-out="'%.2f' % section.inner_area if section.inner_area else '-'"/>
-                            <td class="text-end"
-                                t-out="'%.2f' % section.inner_perimeter if section.inner_perimeter else '-'"/>
-                            <td class="text-end"
-                                t-out="'%.2f' % section.upstand_area if section.upstand_area else '-'"/>
-                        </tr>
-                        <tr t-foreach="roof_doc.roof_object_ids" t-as="roof_object">
-                            <td>
-                                <t t-out="roof_object.name"/>
-                                <span class="text-muted"> (dakobject)</span>
-                            </td>
-                            <td class="text-end" t-out="'%.2f' % roof_object.width"/>
-                            <td class="text-end" t-out="'%.2f' % roof_object.length"/>
-                            <td class="text-end" t-out="'%.2f' % roof_object.area"/>
-                            <td class="text-end" t-out="'%.2f' % roof_object.perimeter"/>
-                            <td class="text-end">-</td>
-                            <td class="text-end">-</td>
-                            <td class="text-end">-</td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Totaal daksecties</th>
-                            <th/>
-                            <th/>
-                            <th class="text-end" t-out="'%.2f' % roof_doc.total_area"/>
-                            <th class="text-end" t-out="'%.2f' % roof_doc.total_perimeter"/>
-                            <th/>
-                            <th/>
-                            <th/>
-                        </tr>
-                    </tfoot>
-                </table>
                 <div class="text-end">
                     <strong>Geschat totaal (excl. btw):</strong>
                     <span t-out="roof_doc.estimated_total"

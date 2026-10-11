@@ -53,6 +53,16 @@ install on Odoo 17 or earlier without adjustments.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
+   Click a length or area label (or a shape, a dakobject, a naad) to select
+   that side, surface or object: the panel on the right shows it in three
+   parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
+   kept in the drawing per shape and per side) and **3. Producten**, the
+   products assigned to it, with *Toevoegen* to assign more. Double-click a
+   label to open the product picker straight away.
+   While drawing, the dimensions show live: width, length and area of a
+   rectangle; every side of a polygon (also the one following the pointer)
+   with the area and perimeter it would have if closed now; the length of a
+   seam.
    A **naad** (seam) marks that two roof surfaces are separate: draw it with
    the *Naad* tool as an open dotted line (click points, double-click to
    finish). Every section the seam crosses is cut in two along it (the halves
@@ -97,7 +107,10 @@ offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
 **Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
 dakproject), dan volgt het meetblad met tekening, maten en producten, en
 toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
-gsm boven de lijnen).
+gsm boven de lijnen). Heeft het project meerdere daken, dan krijgt elk dak zijn
+eigen plan: op het meetblad een pagina per dak (naam, tekening, maten en
+totalen, met het totaal van alle daken), op het portaal de plannen onder
+elkaar met hun oppervlakte en omtrek.
 
 ## Algemene voorwaarden als pdf
 
