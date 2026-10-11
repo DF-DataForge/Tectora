@@ -352,6 +352,18 @@
                             </button>
                         </div>
                     </div>
+                    <!-- A dakobject: its measurements (the plan shows its name only). -->
+                    <t t-elif="this.focusObjectMeasures">
+                        <t t-set="measures" t-value="this.focusObjectMeasures"/>
+                        <div class="o_roof_canvas_panel card">
+                            <div class="card-header py-1 px-2"><strong>Afmetingen</strong></div>
+                            <div class="card-body p-2 small">
+                                <div class="d-flex justify-content-between"><span>Afmeting</span><span t-out="measures.size"/></div>
+                                <div class="d-flex justify-content-between"><span>Oppervlakte</span><span><t t-out="measures.area.toFixed(2)"/> m²</span></div>
+                                <div class="d-flex justify-content-between"><span>Omtrek</span><span><t t-out="measures.perimeter.toFixed(2)"/> m</span></div>
+                            </div>
+                        </div>
+                    </t>
                     <!-- The surface of a section: its inner measure and upstands. -->
                     <div t-elif="focus and focus.type === 'surface' and (this.state.panel.inner or this.state.panel.upstand)"
                          class="o_roof_canvas_panel card">
