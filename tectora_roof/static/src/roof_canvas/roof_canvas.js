@@ -412,6 +412,9 @@ export class RoofCanvasField extends Component {
             // Other sides of the focused shape ticked to get the same
             // description (edge indexes).
             copyTargets: [],
+            // Tekenmodus: the plan, its toolbar and the side panel fixed on
+            // the screen under Odoo's menu bar, to draw, assign products and
+            // describe without the form scrolling away.
             fullscreen: false,
             bgMenu: false, // the background menu (satellite, plan) is open
             bgBusy: false, // a background fetch/upload is running
@@ -640,9 +643,25 @@ export class RoofCanvasField extends Component {
 
     toggleFullscreen() {
         this.state.fullscreen = !this.state.fullscreen;
+        const wrapper = this.wrapperRef();
+        if (wrapper) {
+            // Under Odoo's menu bar, which stays usable.
+            const navbar = document.querySelector(".o_main_navbar");
+            const top = this.state.fullscreen && navbar ? navbar.getBoundingClientRect().bottom : 0;
+            wrapper.style.setProperty("--o-roof-mode-top", `${Math.max(top, 0)}px`);
+            if (this.state.fullscreen) {
+                wrapper.focus({ preventScroll: true }); // keyboard shortcuts work at once
+            }
+        }
         // The canvas is sized in pixels, so re-measure once the new layout
         // has been painted.
         requestAnimationFrame(() => this.resizeCanvas());
+    }
+
+    // "DAK/2026/0023 — Plat dak garages" in the toolbar of the tekenmodus.
+    get modeTitle() {
+        const data = this.props.record.data;
+        return [data.code, data.name].filter((part) => part && typeof part === "string").join(" — ");
     }
 
     // ------------------------------------------------------------ background
@@ -2395,7 +2414,9 @@ export class RoofCanvasField extends Component {
                 "werkelijke maat in te geven en de tekening te kalibreren; " +
                 "rechtsklik op de tekening om een dakobject toe te voegen. " +
                 "Teken een naad (stippellijn tussen twee dakvlakken) met de " +
-                "naadtool. Scroll om te zoomen, F voor volledig scherm.";
+                "naadtool. Scroll om te zoomen, F of de knop Tekenmodus om " +
+                "de tekening met de werkbalk en het paneel vast op het scherm " +
+                "te zetten.";
         }
     }
 

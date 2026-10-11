@@ -61,6 +61,11 @@ install on Odoo 17 or earlier without adjustments.
    *Beschrijving ook toepassen op* copies its description to other sides of
    the shape (tick them, or *Alle zijden*, then *Toepassen*). Double-click a
    label to open the product picker straight away.
+   **Tekenmodus** (button at the start of the toolbar, or F; Esc leaves it)
+   fixes the plan on the screen under Odoo's menu bar: the toolbar and status
+   bar stay in view, the plan fills the screen and the side panel (selected
+   element, products, sides) scrolls on its own, to draw, assign products and
+   describe without the form scrolling away. Changes are saved as you go.
    While drawing, the dimensions show live: width, length and area of a
    rectangle; every side of a polygon (also the one following the pointer)
    with the area and perimeter it would have if closed now; the length of a

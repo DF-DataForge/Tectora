@@ -8,6 +8,14 @@
             <div class="o_roof_canvas_main flex-grow-1" t-ref="this.mainRef" style="min-width: 0;">
             <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1"
                  t-ref="this.toolbarRef">
+                <button type="button" class="btn btn-sm me-1 o_roof_canvas_mode_btn"
+                        t-att-class="this.state.fullscreen ? 'btn-primary' : 'btn-outline-primary'"
+                        t-on-click="this.toggleFullscreen"
+                        t-att-title="this.state.fullscreen ? 'Terug naar het formulier met tabbladen (Esc)' : 'Tekening, werkbalk en paneel vast op het scherm: tekenen, producten toekennen en beschrijven (F)'">
+                    <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
+                    <t t-if="this.state.fullscreen"> Tekenmodus verlaten</t>
+                    <t t-else=""> Tekenmodus</t>
+                </button>
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'select' }"
@@ -52,12 +60,6 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
                         <i class="oi" data-icon="open_with"/>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: this.state.fullscreen }"
-                            t-on-click="this.toggleFullscreen"
-                            t-att-title="this.state.fullscreen ? 'Terug naar overzicht met tabbladen (Esc)' : 'Tekening op volledig scherm (F)'">
-                        <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
@@ -129,6 +131,9 @@
                         </div>
                     </div>
                 </div>
+                <strong t-if="this.state.fullscreen and this.modeTitle"
+                        class="ms-2 small text-truncate o_roof_canvas_mode_title"
+                        t-out="this.modeTitle"/>
                 <span class="ms-auto text-muted small pe-2">
                     Schaal: <t t-out="this.scaleLabel"/>
                     <t t-if="this.state.showGrid"> · raster <t t-out="this.state.gridStep"/> m</t>
