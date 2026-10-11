@@ -1363,6 +1363,10 @@ export class RoofCanvasField extends Component {
             return "";
         }
         const shape = this.selectedShape;
+        if (focus.type === "edge" && focus.edgeIndex >= 0) {
+            const name = shape.name || KIND_NAMES[shape.kind || "section"] || "Naamloos";
+            return `${name} — ${this.edgeName(shape, focus.edgeIndex)}`;
+        }
         return this.multiSelectLabel({ ...focus.hit, name: shape.name || "" });
     }
 
@@ -1435,7 +1439,7 @@ export class RoofCanvasField extends Component {
             const lengthM = Math.hypot(bx - ax, by - ay) * this.scaleMPerPx;
             options.push({
                 index: i,
-                label: `Zijde ${i + 1} (${lengthM.toFixed(2)} m)`,
+                label: `${this.edgeName(shape, i)} (${lengthM.toFixed(2)} m)`,
                 checked: this.state.copyTargets.includes(i),
                 described: Boolean(
                     this.focusDescription("current", { ...focus, edgeIndex: i }) ||
@@ -1582,7 +1586,8 @@ export class RoofCanvasField extends Component {
             const next = shape.points[(index + 1) % n];
             return {
                 index,
-                label: `Zijde ${index + 1}`,
+                label: this.edgeName(shape, index),
+                customName: (shape.edgeNames && shape.edgeNames[index]) || "",
                 lengthM:
                     Math.hypot(next[0] - point[0], next[1] - point[1]) * scale,
                 width: this.edgeWidth(shape, index),
@@ -1682,6 +1687,37 @@ export class RoofCanvasField extends Component {
                 "leeg staat, blijft op de andere zijden ongewijzigd.",
             { values: parts.join(" en "), count }
         );
+    }
+
+    setEdgeName(edge, ev) {
+        const shape = this.selectedShape;
+        if (!shape) {
+            return;
+        }
+        const value = (ev.target.value || "").trim();
+        const names = { ...(shape.edgeNames || {}) };
+        if (value) {
+            names[edge.index] = value;
+        } else {
+            delete names[edge.index];
+        }
+        if (Object.keys(names).length) {
+            shape.edgeNames = names;
+        } else {
+            delete shape.edgeNames;
+        }
+        this.commit();
+        this.refreshPanel();
+    }
+
+    // The focused side's row of the panel geometry (width, upstand, length).
+    get focusEdge() {
+        const focus = this.focus;
+        const panel = this.state.panel;
+        if (!focus || focus.type !== "edge" || !panel || !panel.edges) {
+            return null;
+        }
+        return panel.edges.find((edge) => edge.index === focus.edgeIndex) || null;
     }
 
     setEdgeValue(key, edge, ev) {
@@ -2356,6 +2392,12 @@ export class RoofCanvasField extends Component {
         return hasWidth ? insetPolygon(shape.points, widths) : null;
     }
 
+    // A side's name: the one given in the side panel, else "Z1", "Z2", ...
+    edgeName(shape, edgeIndex) {
+        const name = shape.edgeNames && shape.edgeNames[edgeIndex];
+        return (name && String(name).trim()) || `Z${edgeIndex + 1}`;
+    }
+
     edgeWidth(shape, edgeIndex) {
         const value = shape.edgeWidths && shape.edgeWidths[edgeIndex];
         return parseFloat(value) || 0;
@@ -2400,8 +2442,9 @@ export class RoofCanvasField extends Component {
                 `verplaatsen, versleep een hoekpunt om de vorm aan te passen, ` +
                 `rechtsklik op een lengtelabel om de werkelijke maat in te ` +
                 `geven, klik op een lengte- of oppervlaktelabel om die zijde of ` +
-                `dat vlak te beschrijven (dubbelklik: producten toewijzen), stel ` +
-                `rand en opstand per zijde in via het paneel rechts`;
+                `dat vlak te beschrijven (dubbelklik: producten toewijzen); ` +
+                `naam, rand en opstand van een zijde stel je in het paneel ` +
+                `rechts in na een klik op die zijde`;
         } else {
             this.state.status =
                 "Teken secties met de rechthoek- of polygoontool; de meting " +
@@ -2651,15 +2694,9 @@ export class RoofCanvasField extends Component {
                 continue;
             }
             const lengthM = lengthPx * scale;
-            const sideWidth = this.edgeWidth(shape, i);
-            const sideUpstand = this.edgeUpstand(shape, i);
-            let label = `${lengthM.toFixed(2)} m`;
-            if (sideWidth) {
-                label += ` · b ${sideWidth.toFixed(2)}`;
-            }
-            if (sideUpstand) {
-                label += ` · h ${sideUpstand.toFixed(2)}`;
-            }
+            // Name and length; width, upstand and the rest of the side are
+            // in the side panel once the side is clicked.
+            const label = `${this.edgeName(shape, i)} · ${lengthM.toFixed(2)} m`;
             const width = ctx.measureText(label).width + padX * 2;
             const cx = (x1 + x2) / 2;
             const cy = (y1 + y2) / 2;
