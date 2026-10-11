@@ -53,6 +53,9 @@ install on Odoo 17 or earlier without adjustments.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
+   Every side shows its name and length on the plan ("Z1 · 6.50 m", or the
+   name given to it); its details (name, length, rand width, opstand) are in
+   the side panel once the side is clicked.
    Click a length or area label (or a shape, a dakobject, a naad) to select
    that side, surface or object: the panel on the right shows it in three
    parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
