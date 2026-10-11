@@ -170,6 +170,28 @@
                                       t-att-value="this.focusDescription('future', focus)"
                                       t-on-change="(ev) => this.setFocusDescription(focus, 'future', ev)"/>
                         </div>
+                        <t t-set="side_options" t-value="this.focusSideOptions"/>
+                        <div t-if="side_options.length" class="card-body p-2 border-bottom">
+                            <div class="small fw-bold mb-1">Beschrijving ook toepassen op</div>
+                            <div class="d-flex flex-wrap column-gap-3 small">
+                                <label t-foreach="side_options" t-as="side" t-key="side.index"
+                                       class="form-check m-0"
+                                       t-att-title="side.described ? 'Heeft al een beschrijving: wordt overschreven' : ''">
+                                    <input type="checkbox" class="form-check-input"
+                                           t-att-checked="side.checked"
+                                           t-on-change="() => this.toggleCopyTarget(side.index)"/>
+                                    <span t-out="side.label"/>
+                                    <span t-if="side.described" class="text-muted">*</span>
+                                </label>
+                            </div>
+                            <div class="d-flex gap-2 mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0"
+                                        t-on-click="this.selectAllCopyTargets">Alle zijden</button>
+                                <button type="button" class="btn btn-sm btn-primary py-0"
+                                        t-att-disabled="!this.state.copyTargets.length"
+                                        t-on-click="() => this.applyDescriptionToSides(focus)">Toepassen</button>
+                            </div>
+                        </div>
                         <div class="card-body p-0">
                             <div class="px-2 pt-2 d-flex justify-content-between align-items-center">
                                 <span class="small fw-bold">3. Producten</span>

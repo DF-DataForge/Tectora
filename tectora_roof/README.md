@@ -57,7 +57,9 @@ install on Odoo 17 or earlier without adjustments.
    that side, surface or object: the panel on the right shows it in three
    parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
    kept in the drawing per shape and per side) and **3. Producten**, the
-   products assigned to it, with *Toevoegen* to assign more. Double-click a
+   products assigned to it, with *Toevoegen* to assign more. For a side,
+   *Beschrijving ook toepassen op* copies its description to other sides of
+   the shape (tick them, or *Alle zijden*, then *Toepassen*). Double-click a
    label to open the product picker straight away.
    While drawing, the dimensions show live: width, length and area of a
    rectangle; every side of a polygon (also the one following the pointer)

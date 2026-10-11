@@ -409,6 +409,9 @@ export class RoofCanvasField extends Component {
             // The element of the selected shape the side panel describes: its
             // surface (or the whole dakobject / naad) or one side.
             focus: null, // {type: "surface"|"edge", shapeId, kind, edgeIndex, hit}
+            // Other sides of the focused shape ticked to get the same
+            // description (edge indexes).
+            copyTargets: [],
             fullscreen: false,
             bgMenu: false, // the background menu (satellite, plan) is open
             bgBusy: false, // a background fetch/upload is running
@@ -930,6 +933,7 @@ export class RoofCanvasField extends Component {
             const wasSelected = hit && this.state.selectedId === hit.id;
             this.state.selectedId = hit ? hit.id : null;
             this.state.focus = hit ? this.surfaceFocus(hit) : null;
+            this.state.copyTargets = [];
             // Moving a whole shape requires selecting it first: the first
             // click only selects, dragging an already-selected shape moves.
             if (hit && wasSelected) {
@@ -1313,6 +1317,7 @@ export class RoofCanvasField extends Component {
 
     focusTarget(hit) {
         this.state.selectedId = hit.shapeId;
+        this.state.copyTargets = [];
         this.state.focus = {
             type: hit.type === "edge" ? "edge" : "surface",
             shapeId: hit.shapeId,
@@ -1387,6 +1392,79 @@ export class RoofCanvasField extends Component {
             delete entry[key];
         }
         this.commit();
+    }
+
+    // The other sides of the focused side's shape, to give them the same
+    // description; none for a circle or a naad (no separate sides).
+    get focusSideOptions() {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        if (
+            !focus || focus.type !== "edge" || focus.edgeIndex < 0 ||
+            !shape || shape.shape === "circle" || isSeam(shape)
+        ) {
+            return [];
+        }
+        const points = shape.points;
+        const options = [];
+        for (let i = 0; i < points.length; i++) {
+            if (i === focus.edgeIndex) {
+                continue;
+            }
+            const [ax, ay] = points[i];
+            const [bx, by] = points[(i + 1) % points.length];
+            const lengthM = Math.hypot(bx - ax, by - ay) * this.scaleMPerPx;
+            options.push({
+                index: i,
+                label: `Zijde ${i + 1} (${lengthM.toFixed(2)} m)`,
+                checked: this.state.copyTargets.includes(i),
+                described: Boolean(
+                    this.focusDescription("current", { ...focus, edgeIndex: i }) ||
+                    this.focusDescription("future", { ...focus, edgeIndex: i })
+                ),
+            });
+        }
+        return options;
+    }
+
+    toggleCopyTarget(index) {
+        const targets = this.state.copyTargets;
+        this.state.copyTargets = targets.includes(index)
+            ? targets.filter((i) => i !== index)
+            : [...targets, index];
+    }
+
+    selectAllCopyTargets() {
+        const options = this.focusSideOptions;
+        const all = options.length && options.every((option) => option.checked);
+        this.state.copyTargets = all ? [] : options.map((option) => option.index);
+    }
+
+    // Give the ticked sides the description (original and future state) of
+    // ``focus``; an empty part empties theirs too, so they end up the same.
+    applyDescriptionToSides(focus) {
+        const targets = [...this.state.copyTargets];
+        if (!focus || !targets.length) {
+            return;
+        }
+        const current = this.focusDescription("current", focus);
+        const future = this.focusDescription("future", focus);
+        for (const index of targets) {
+            const entry = this.focusDescriptionEntry({ ...focus, edgeIndex: index }, true);
+            for (const [key, value] of [["current", current], ["future", future]]) {
+                if (value) {
+                    entry[key] = value;
+                } else {
+                    delete entry[key];
+                }
+            }
+        }
+        this.state.copyTargets = [];
+        this.commit();
+        this.notification.add(
+            _t("Beschrijving toegepast op %s zijde(n).", targets.length),
+            { type: "success" }
+        );
     }
 
     // The products of the focused element: on a roof section, a side takes
