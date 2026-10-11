@@ -5,11 +5,13 @@
     background: #fff;
     outline: none;
 
-    // Fullscreen drawing: covers the form (but stays below Odoo's dialogs,
-    // so the product picker keeps working).
+    // Tekenmodus: the plan, its toolbar, the status bar and the side panel
+    // fixed on the screen, under Odoo's menu bar (--o-roof-mode-top, set by
+    // the widget) and below Odoo's dialogs, so the product picker works.
+    // The toolbar and status bar stay put, the panel scrolls on its own.
     &.o_roof_canvas_fullscreen {
         position: fixed;
-        inset: 0;
+        inset: var(--o-roof-mode-top, 0px) 0 0 0;
         z-index: 1030;
         border: 0;
         border-radius: 0;
@@ -24,9 +26,26 @@
             flex-direction: column;
             height: 100%;
 
+            .o_roof_canvas_toolbar,
+            .o_roof_canvas_status {
+                flex: 0 0 auto;
+                border-radius: 0;
+            }
+
             canvas {
                 flex: 1 1 auto;
             }
+        }
+
+        .o_roof_canvas_sidebar {
+            flex-basis: 380px;
+            width: 380px;
+            height: 100%;
+            overscroll-behavior: contain;
+        }
+
+        .o_roof_canvas_mode_title {
+            max-width: 30vw;
         }
     }
 

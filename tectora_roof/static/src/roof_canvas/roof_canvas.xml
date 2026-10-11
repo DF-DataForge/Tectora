@@ -8,6 +8,14 @@
             <div class="o_roof_canvas_main flex-grow-1" t-ref="this.mainRef" style="min-width: 0;">
             <div class="o_roof_canvas_toolbar d-flex align-items-center flex-wrap gap-1 p-1"
                  t-ref="this.toolbarRef">
+                <button type="button" class="btn btn-sm me-1 o_roof_canvas_mode_btn"
+                        t-att-class="this.state.fullscreen ? 'btn-primary' : 'btn-outline-primary'"
+                        t-on-click="this.toggleFullscreen"
+                        t-att-title="this.state.fullscreen ? 'Terug naar het formulier met tabbladen (Esc)' : 'Tekening, werkbalk en paneel vast op het scherm: tekenen, producten toekennen en beschrijven (F)'">
+                    <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
+                    <t t-if="this.state.fullscreen"> Tekenmodus verlaten</t>
+                    <t t-else=""> Tekenmodus</t>
+                </button>
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'select' }"
@@ -52,12 +60,6 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
                         <i class="oi" data-icon="open_with"/>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary"
-                            t-att-class="{ active: this.state.fullscreen }"
-                            t-on-click="this.toggleFullscreen"
-                            t-att-title="this.state.fullscreen ? 'Terug naar overzicht met tabbladen (Esc)' : 'Tekening op volledig scherm (F)'">
-                        <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
@@ -129,6 +131,9 @@
                         </div>
                     </div>
                 </div>
+                <strong t-if="this.state.fullscreen and this.modeTitle"
+                        class="ms-2 small text-truncate o_roof_canvas_mode_title"
+                        t-out="this.modeTitle"/>
                 <span class="ms-auto text-muted small pe-2">
                     Schaal: <t t-out="this.scaleLabel"/>
                     <t t-if="this.state.showGrid"> · raster <t t-out="this.state.gridStep"/> m</t>
@@ -169,6 +174,28 @@
                                       placeholder="Wat er komt…"
                                       t-att-value="this.focusDescription('future', focus)"
                                       t-on-change="(ev) => this.setFocusDescription(focus, 'future', ev)"/>
+                        </div>
+                        <t t-set="side_options" t-value="this.focusSideOptions"/>
+                        <div t-if="side_options.length" class="card-body p-2 border-bottom">
+                            <div class="small fw-bold mb-1">Beschrijving ook toepassen op</div>
+                            <div class="d-flex flex-wrap column-gap-3 small">
+                                <label t-foreach="side_options" t-as="side" t-key="side.index"
+                                       class="form-check m-0"
+                                       t-att-title="side.described ? 'Heeft al een beschrijving: wordt overschreven' : ''">
+                                    <input type="checkbox" class="form-check-input"
+                                           t-att-checked="side.checked"
+                                           t-on-change="() => this.toggleCopyTarget(side.index)"/>
+                                    <span t-out="side.label"/>
+                                    <span t-if="side.described" class="text-muted">*</span>
+                                </label>
+                            </div>
+                            <div class="d-flex gap-2 mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0"
+                                        t-on-click="this.selectAllCopyTargets">Alle zijden</button>
+                                <button type="button" class="btn btn-sm btn-primary py-0"
+                                        t-att-disabled="!this.state.copyTargets.length"
+                                        t-on-click="() => this.applyDescriptionToSides(focus)">Toepassen</button>
+                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="px-2 pt-2 d-flex justify-content-between align-items-center">
