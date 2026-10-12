@@ -109,6 +109,27 @@
                                 </tr>
                             </tfoot>
                         </table>
+                        <!-- What the drawing's side panel says about the
+                             surfaces, sides and dakobjecten of this plan. -->
+                        <t t-if="plan['descriptions']">
+                            <h6 class="mt-3 mb-1">Beschrijvingen</h6>
+                            <table class="table table-sm small mb-2">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 24%;">Element</th>
+                                        <th style="width: 38%;">Originele staat</th>
+                                        <th style="width: 38%;">Toekomstige staat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="plan['descriptions']" t-as="row">
+                                        <td t-out="row['element']"/>
+                                        <td style="white-space: pre-line;" t-out="row['current'] or '-'"/>
+                                        <td style="white-space: pre-line;" t-out="row['future'] or '-'"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
                     </div>
                 </t>
                 <div t-if="len(plans) &gt; 1" class="text-end">

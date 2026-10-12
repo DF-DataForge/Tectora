@@ -62,6 +62,10 @@ install on Odoo 17 or earlier without adjustments.
    plan follows the length and width, the height is kept on the dakobject,
    and the panel computes the footprint (m²), the side faces (perimeter ×
    height, m²) and the volume (m³).
+   A dakobject is dragged to another place at once (on its shape or its
+   name); a roof section is selected first, then dragged. The descriptions
+   are printed on the meetblad, under each roof's measurements (*Beschrijvingen*:
+   element, original state, future state).
    Click a length or area label (or a shape, a dakobject, a naad) to select
    that side, surface or object: the panel on the right shows it in three
    parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
