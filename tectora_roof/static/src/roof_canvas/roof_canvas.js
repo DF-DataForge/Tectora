@@ -946,6 +946,19 @@ export class RoofCanvasField extends Component {
                 // describes it and lists its products (double-click opens
                 // the product picker straight away).
                 this.focusTarget(labelHit);
+                // A dakobject's name label is also where it is grabbed.
+                const grabbed = labelHit.type === "surface" &&
+                    (labelHit.kind || "section") !== "section" &&
+                    this.shapes.find((s) => s.id === labelHit.shapeId);
+                if (grabbed) {
+                    this.drag = {
+                        mode: "move",
+                        start: point,
+                        original: grabbed.points.map((p) => [...p]),
+                        shape: grabbed,
+                        moved: false,
+                    };
+                }
                 return;
             }
             const hit = this.hitTest(point);
@@ -953,9 +966,12 @@ export class RoofCanvasField extends Component {
             this.state.selectedId = hit ? hit.id : null;
             this.state.focus = hit ? this.surfaceFocus(hit) : null;
             this.state.copyTargets = [];
-            // Moving a whole shape requires selecting it first: the first
-            // click only selects, dragging an already-selected shape moves.
-            if (hit && wasSelected) {
+            // Moving a roof section requires selecting it first: the first
+            // click only selects, dragging an already-selected one moves. A
+            // dakobject (chimney, skylight) moves at once: it is small and
+            // is placed, not drawn.
+            const isObjectHit = hit && !["section", "seam"].includes(hit.kind || "section");
+            if (hit && (wasSelected || isObjectHit)) {
                 this.drag = {
                     mode: "move",
                     start: point,
@@ -979,12 +995,19 @@ export class RoofCanvasField extends Component {
         }
         if (!this.drag) {
             if (this.state.tool === "select" && this.canvasRef()) {
-                const hover = this.labelHitTest(this.toWorld(ev));
-                this.canvasRef().style.cursor = !hover
-                    ? ""
-                    : hover.type === "corner" || hover.type === "radius"
-                    ? "move"
-                    : "pointer";
+                const world = this.toWorld(ev);
+                const hover = this.labelHitTest(world);
+                const isObject = (item) => item && !["section", "seam"].includes(item.kind || "section");
+                let cursor = "";
+                if (hover) {
+                    cursor = hover.type === "corner" || hover.type === "radius" ||
+                        (hover.type === "surface" && isObject(hover))
+                        ? "move"
+                        : "pointer";
+                } else if (isObject(this.hitTest(world))) {
+                    cursor = "move"; // a dakobject is dragged at once
+                }
+                this.canvasRef().style.cursor = cursor;
             }
             return;
         }
@@ -1301,6 +1324,15 @@ export class RoofCanvasField extends Component {
         for (let i = shapes.length - 1; i >= 0; i--) {
             if (isSeam(shapes[i]) && distanceToPolyline(point, shapes[i].points) <= seamTolerance) {
                 return shapes[i];
+            }
+        }
+        // Then dakobjecten, which lie on a section: the chimney under the
+        // pointer is grabbed, not the roof around it.
+        for (let i = shapes.length - 1; i >= 0; i--) {
+            const shape = shapes[i];
+            if ((shape.kind || "section") !== "section" && !isSeam(shape) &&
+                pointInPolygon(point, shape.points)) {
+                return shape;
             }
         }
         for (let i = shapes.length - 1; i >= 0; i--) {

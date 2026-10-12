@@ -153,6 +153,36 @@ class TestRoofs(TransactionCase):
         self.assertIn(second._subsection_name(), html)
         self.assertIn("Totaal alle daken", html)
 
+    def test_descriptions_on_the_meetblad(self):
+        """What the drawing's side panel says about surfaces and sides is
+        printed under the plan."""
+        project = self.env["tectora.roof.project"].create({
+            "name": "Beschreven dak", "partner_id": self.partner.id,
+            "canvas_data": json.dumps({"shapes": [{
+                "id": "s1", "kind": "section", "name": "Hoofddak",
+                "points": [[0, 0], [100, 0], [100, 50], [0, 50]],
+                "edgeNames": {"1": "Gevel straat"},
+                "descriptions": {
+                    "surface": {"current": "Oude roofing", "future": "EPDM 1,5 mm"},
+                    "edges": {"0": {"current": "Zinken dakrand"}, "1": {"future": "Nieuwe opstand"}},
+                },
+            }, {
+                "id": "c1", "kind": "chimney", "name": "",
+                "points": [[10, 10], [20, 10], [20, 20], [10, 20]],
+                "descriptions": {"surface": {"current": "Lood rot"}},
+            }]}),
+        })
+        rows = project._tectora_roof_plans()[0]["descriptions"]
+        self.assertEqual([row["element"] for row in rows], [
+            "Hoofddak", "Hoofddak — Z1", "Hoofddak — Gevel straat", "Schoorsteen",
+        ])
+        self.assertEqual(rows[0]["future"], "EPDM 1,5 mm")
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "tectora_roof.report_roof_project", project.ids
+        )
+        self.assertIn("Beschrijvingen", str(html))
+        self.assertIn("Nieuwe opstand", str(html))
+
     def test_new_build_has_no_demolition(self):
         template = self.template.copy({"name": "Nieuwbouw plat dak test"})
         template.sale_order_template_line_ids.filtered(
