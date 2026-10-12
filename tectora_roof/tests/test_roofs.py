@@ -130,6 +130,59 @@ class TestRoofs(TransactionCase):
         self.assertEqual(by_roof[second], 30.0, "the second roof's plan is drawn")
         self.assertEqual(by_roof[first], 100.0, "not drawn yet: the template's quantity")
 
+    def test_plans_per_roof(self):
+        """The meetblad and the portal show every roof's plan."""
+        order = self.make_order()
+        self.add_roofs(order, "Garage", "Achterbouw")
+        project = order.roof_project_id
+        first, second = project.roof_ids
+        self.env["tectora.roof.section"].create({
+            "project_id": project.id, "roof_id": second.id, "name": "Achterbouw",
+            "area": 30.0, "perimeter": 22.0,
+        })
+        plans = project._tectora_roof_plans()
+        self.assertEqual([plan["title"] for plan in plans],
+                         [first._subsection_name(), second._subsection_name()])
+        self.assertEqual(plans[1]["area"], 30.0)
+        self.assertEqual(plans[1]["sections"].mapped("name"), ["Achterbouw"])
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "tectora_roof.report_roof_project", project.ids
+        )
+        html = str(html)
+        self.assertIn(first._subsection_name(), html)
+        self.assertIn(second._subsection_name(), html)
+        self.assertIn("Totaal alle daken", html)
+
+    def test_descriptions_on_the_meetblad(self):
+        """What the drawing's side panel says about surfaces and sides is
+        printed under the plan."""
+        project = self.env["tectora.roof.project"].create({
+            "name": "Beschreven dak", "partner_id": self.partner.id,
+            "canvas_data": json.dumps({"shapes": [{
+                "id": "s1", "kind": "section", "name": "Hoofddak",
+                "points": [[0, 0], [100, 0], [100, 50], [0, 50]],
+                "edgeNames": {"1": "Gevel straat"},
+                "descriptions": {
+                    "surface": {"current": "Oude roofing", "future": "EPDM 1,5 mm"},
+                    "edges": {"0": {"current": "Zinken dakrand"}, "1": {"future": "Nieuwe opstand"}},
+                },
+            }, {
+                "id": "c1", "kind": "chimney", "name": "",
+                "points": [[10, 10], [20, 10], [20, 20], [10, 20]],
+                "descriptions": {"surface": {"current": "Lood rot"}},
+            }]}),
+        })
+        rows = project._tectora_roof_plans()[0]["descriptions"]
+        self.assertEqual([row["element"] for row in rows], [
+            "Hoofddak", "Hoofddak — Z1", "Hoofddak — Gevel straat", "Schoorsteen",
+        ])
+        self.assertEqual(rows[0]["future"], "EPDM 1,5 mm")
+        html, _type = self.env["ir.actions.report"]._render_qweb_html(
+            "tectora_roof.report_roof_project", project.ids
+        )
+        self.assertIn("Beschrijvingen", str(html))
+        self.assertIn("Nieuwe opstand", str(html))
+
     def test_new_build_has_no_demolition(self):
         template = self.template.copy({"name": "Nieuwbouw plat dak test"})
         template.sale_order_template_line_ids.filtered(

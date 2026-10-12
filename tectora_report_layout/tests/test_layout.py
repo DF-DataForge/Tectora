@@ -147,8 +147,21 @@ class TestTectoraLetterhead(TransactionCase):
         self.assertIn("o_tectora_lh_footer_inverse", html)
         self.assertIn("background-color: #2D8D8F;", html)
 
+    def test_sender_block(self):
+        sender = self.company._tectora_letterhead_sender()
+        self.assertEqual(sender["name"], "Tectora BV")
+        self.assertEqual(sender["address"], ["Vuurkruiserslaan 28", "8870 Izegem"])
+        self.assertEqual(sender["contacts"], [
+            ("Telefoon", "0472 09 20 98"),
+            ("E-mail", "info@tectora.be"),
+            ("Website", "www.tectora.be"),
+        ])
+        self.assertEqual(self.company._tectora_letterhead_site(), [])
+
     def test_roof_letterhead_renders(self):
         html = self._render("tectora_report_layout.external_layout_tectora_roof_letterhead")
+        self.assertIn("o_tectora_parties", html)
+        self.assertIn("Vuurkruiserslaan 28", html)
         self.assertIn("o_tectora_rlh_shape", html)
         self.assertIn("o_tectora_lh_footer", html)
         self.assertIn("tectora_logo_white.svg", html)

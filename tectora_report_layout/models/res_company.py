@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import _, fields, models
 
 # What the letterhead prints on the right of its band when the company has no
 # tagline (Settings -> Configure Document Layout -> Company Tagline).
@@ -44,6 +44,52 @@ class ResCompany(models.Model):
             if website.startswith(scheme):
                 website = website[len(scheme):]
         return website.rstrip("/")
+
+    def _tectora_letterhead_sender(self, document=None):
+        """The sender block of the letterhead with the roof edge: the company
+        (name and address) and how to reach it, with the contact details of
+        the person behind ``document`` (the salesperson of a quotation or
+        invoice, the buyer of a purchase order) next to the company's."""
+        self.ensure_one()
+        seller = self.env["res.users"]
+        if document:
+            for field in ("user_id", "invoice_user_id"):
+                if field in document._fields and document[field]:
+                    seller = document[field]
+                    break
+        contacts = []
+
+        def add(label, value):
+            value = (value or "").strip()
+            if value and value not in [known for _label, known in contacts]:
+                contacts.append((label, value))
+
+        add(_("Telefoon"), self.phone)
+        add(_("Telefoon"), seller.partner_id.phone)
+        add(_("E-mail"), seller.partner_id.email or seller.email or self.email)
+        add(_("Website"), self._tectora_letterhead_website())
+        place = " ".join(part for part in (self.zip, self.city) if part)
+        return {
+            "name": self.name,
+            "address": [line for line in (self.street, self.street2, place) if line],
+            "contacts": contacts,
+        }
+
+    def _tectora_letterhead_site(self, document=None):
+        """The site address (werfadres) of ``document``, as lines: the address
+        of its roof project when it has one, else its delivery address."""
+        self.ensure_one()
+        if not document:
+            return []
+        roof = "roof_project_id" in document._fields and document.roof_project_id
+        if roof and roof.address:
+            street, _sep, place = roof.address.partition(", ")
+            return [line for line in (street, place) if line]
+        shipping = "partner_shipping_id" in document._fields and document.partner_shipping_id
+        if shipping:
+            place = " ".join(part for part in (shipping.zip, shipping.city) if part)
+            return [line for line in (shipping.street, shipping.street2, place) if line]
+        return []
 
     def _tectora_letterhead_footer_lines(self):
         """The three lines of the letterhead footer, from the company data.

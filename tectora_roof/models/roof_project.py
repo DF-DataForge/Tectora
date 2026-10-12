@@ -1297,6 +1297,98 @@ class TectoraRoofProject(models.Model):
             )
             return False
 
+    def _tectora_roof_plans(self):
+        """The plans of this project as they are printed and shown to the
+        customer: one per roof (its name, drawing, sections, objects and
+        totals), or the project's own plan when it has no roofs. Sections and
+        objects not tied to a roof close the list under "Overige"."""
+        self.ensure_one()
+        if not self.roof_ids:
+            return [{
+                "title": False,
+                "image": self._get_drawing_data_uri(),
+                "descriptions": self._tectora_description_rows(self.canvas_data),
+                "sections": self.section_ids,
+                "objects": self.roof_object_ids,
+                "area": self.total_area,
+                "perimeter": self.total_perimeter,
+            }]
+        plans = [
+            {
+                "title": roof._subsection_name(),
+                "image": roof._get_drawing_data_uri(),
+                # The roof open on the drawing has its latest plan on the project.
+                "descriptions": self._tectora_description_rows(
+                    self.canvas_data if self.active_roof_id == roof else roof.canvas_data
+                ),
+                "sections": roof.section_ids,
+                "objects": roof.roof_object_ids,
+                "area": roof.total_area,
+                "perimeter": roof.total_perimeter,
+            }
+            for roof in self.roof_ids
+        ]
+        loose_sections = self.section_ids.filtered(lambda section: not section.roof_id)
+        loose_objects = self.roof_object_ids.filtered(lambda obj: not obj.roof_id)
+        if loose_sections or loose_objects:
+            plans.append({
+                "title": _("Overige"),
+                "image": False,
+                "descriptions": [],
+                "sections": loose_sections,
+                "objects": loose_objects,
+                "area": sum(loose_sections.mapped("area")),
+                "perimeter": sum(loose_sections.mapped("perimeter")),
+            })
+        return plans
+
+    @api.model
+    def _tectora_description_rows(self, canvas_data):
+        """The descriptions given on a drawing (side panel of the drawing:
+        original and future state), as rows for the meetblad: one per
+        surface, dakobject or naad and one per side that has any, in the
+        drawing's order. ``canvas_data`` is the drawing's JSON."""
+        try:
+            data = json.loads(canvas_data or "{}")
+        except (ValueError, TypeError):
+            return []
+        kind_names = {"section": _("Sectie"), "chimney": _("Schoorsteen"),
+                      "skylight": _("Koepel"), "seam": _("Naad")}
+        rows = []
+
+        def add(element, entry):
+            entry = entry if isinstance(entry, dict) else {}
+            current = (entry.get("current") or "").strip()
+            future = (entry.get("future") or "").strip()
+            if current or future:
+                rows.append({"element": element, "current": current, "future": future})
+
+        for shape in data.get("shapes", []) if isinstance(data, dict) else []:
+            descriptions = shape.get("descriptions") or {}
+            if not isinstance(descriptions, dict):
+                continue
+            kind = shape.get("kind") or "section"
+            name = (shape.get("name") or "").strip() or kind_names.get(kind, _("Sectie"))
+            add(name, descriptions.get("surface"))
+            edge_names = shape.get("edgeNames") or {}
+            edges = descriptions.get("edges") or {}
+
+            def edge_order(key):
+                try:
+                    return int(key)
+                except (TypeError, ValueError):
+                    return 10 ** 6
+
+            for key in sorted(edges, key=edge_order):
+                index = edge_order(key)
+                if index < 0:
+                    side = _("omtrek")
+                else:
+                    side = (str(edge_names.get(str(index)) or "").strip()
+                            or "Z%s" % (index + 1))
+                add("%s — %s" % (name, side), edges[key])
+        return rows
+
     def _get_drawing_data_uri(self):
         """The drawing as a data URI for <img src>, or False without drawing.
 

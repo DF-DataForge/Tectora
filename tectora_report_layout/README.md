@@ -32,6 +32,12 @@ Drie lay-outs volgen het Tectora-briefpapier (`tectora-briefpapier-A4`):
   onderkant van de band is de dakrand (laagst links, de nok op driekwart),
   met de lichte dakrandband en de noklijn eronder.
 
+**Tectora Briefpapier met dakrand** zet bovenaan het document ook de
+partijen: links Tectora (naam, adres, telefoon) met de contactgegevens van de
+verkoper (telefoon, e-mail; bij een inkooporder de aankoper) en de website,
+rechts de klant en het **werfadres** (het adres van het dakproject, anders het
+leveradres).
+
 Wat er staat, komt uit de bedrijfsgegevens:
 
 | Plaats | Bron |

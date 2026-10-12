@@ -53,6 +53,36 @@ install on Odoo 17 or earlier without adjustments.
 3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
    tool. Shapes show live real-world dimensions (m, m²). Select to move,
    double-click to rename, Delete to remove.
+   Every side shows its name and length on the plan ("Z1 · 6.50 m", or the
+   name given to it); its details (name, length, rand width, opstand) are in
+   the side panel once the side is clicked. A dakobject (chimney, skylight)
+   shows only its name; its measurements are in the side panel when it is
+   clicked, and its handles appear once it is selected. For a chimney the
+   panel takes its length, width (or diameter) and height: the shape on the
+   plan follows the length and width, the height is kept on the dakobject,
+   and the panel computes the footprint (m²), the side faces (perimeter ×
+   height, m²) and the volume (m³).
+   A dakobject is dragged to another place at once (on its shape or its
+   name); a roof section is selected first, then dragged. The descriptions
+   are printed on the meetblad, under each roof's measurements (*Beschrijvingen*:
+   element, original state, future state).
+   Click a length or area label (or a shape, a dakobject, a naad) to select
+   that side, surface or object: the panel on the right shows it in three
+   parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
+   kept in the drawing per shape and per side) and **3. Producten**, the
+   products assigned to it, with *Toevoegen* to assign more. For a side,
+   *Beschrijving ook toepassen op* copies its description to other sides of
+   the shape (tick them, or *Alle zijden*, then *Toepassen*). Double-click a
+   label to open the product picker straight away.
+   **Tekenmodus** (button at the start of the toolbar, or F; Esc leaves it)
+   fixes the plan on the screen under Odoo's menu bar: the toolbar and status
+   bar stay in view, the plan fills the screen and the side panel (selected
+   element, products, sides) scrolls on its own, to draw, assign products and
+   describe without the form scrolling away. Changes are saved as you go.
+   While drawing, the dimensions show live: width, length and area of a
+   rectangle; every side of a polygon (also the one following the pointer)
+   with the area and perimeter it would have if closed now; the length of a
+   seam.
    A **naad** (seam) marks that two roof surfaces are separate: draw it with
    the *Naad* tool as an open dotted line (click points, double-click to
    finish). Every section the seam crosses is cut in two along it (the halves
@@ -97,7 +127,10 @@ offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
 **Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
 dakproject), dan volgt het meetblad met tekening, maten en producten, en
 toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
-gsm boven de lijnen).
+gsm boven de lijnen). Heeft het project meerdere daken, dan krijgt elk dak zijn
+eigen plan: op het meetblad een pagina per dak (naam, tekening, maten en
+totalen, met het totaal van alle daken), op het portaal de plannen onder
+elkaar met hun oppervlakte en omtrek.
 
 ## Algemene voorwaarden als pdf
 

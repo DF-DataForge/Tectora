@@ -64,6 +64,21 @@ class TectoraRoofProject(models.Model):
     )
     transport_over_building = fields.Boolean(string="Transport overheen gebouw nodig")
 
+    # --- levering door de leverancier (bestelbon transport) ------------------
+    material_on_ground = fields.Boolean(string="Materialen op grond plaatsen")
+    supplier_takes_waste = fields.Boolean(string="Afval mee te nemen door leverancier")
+    roof_access_crane = fields.Char(
+        string="Bereikbaarheid dak (i.f.v. camionkraan)",
+        help="bv. levering op het dak, kraan aan de straatkant, ...",
+    )
+    # Photos for the vendor: they go on the transport order sent with the
+    # purchase order (tectora_purchase).
+    site_photo_top = fields.Image(string="Bovenaanzicht", max_width=1600, max_height=1600)
+    site_photo_facade = fields.Image(string="Gevelaanzicht", max_width=1600, max_height=1600)
+    site_photo_transport = fields.Image(
+        string="Transportvoorbeeld", max_width=1600, max_height=1600
+    )
+
     # --- extra's te voorzien -------------------------------------------------
     scaffolding_needed = fields.Boolean(string="Stelling nodig")
     mobile_scaffolding_needed = fields.Boolean(string="Rolstelling nodig")
@@ -142,6 +157,8 @@ class TectoraRoofProject(models.Model):
                 ("Materiaal rechtstreeks op het dak", *flag("material_direct_roof")),
                 ("Materiaal doorheen het gebouw", *flag("material_through_building")),
                 ("Materiaal via zijkant gebouw", *flag("material_via_side")),
+                ("Materialen op grond plaatsen", *flag("material_on_ground")),
+                ("Bereikbaarheid dak (camionkraan)", *text(self.roof_access_crane)),
                 ("Hoogwerker nodig", *(text(lift) if lift else flag("aerial_lift_needed"))),
             ]),
             ("Transport", [
@@ -149,6 +166,7 @@ class TectoraRoofProject(models.Model):
                 ("Afval afvoer via", *text(self.waste_disposal)),
                 ("Geschat uur levering / ophaling", *text(self.supplier_pickup_time)),
                 ("Transport overheen gebouw", *flag("transport_over_building")),
+                ("Afval mee met leverancier", *flag("supplier_takes_waste")),
             ]),
             ("Bereikbaarheid werf", [
                 ("Makkelijk parkeren", *flag("easy_parking")),
