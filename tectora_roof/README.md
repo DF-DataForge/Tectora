@@ -55,7 +55,13 @@ install on Odoo 17 or earlier without adjustments.
    double-click to rename, Delete to remove.
    Every side shows its name and length on the plan ("Z1 · 6.50 m", or the
    name given to it); its details (name, length, rand width, opstand) are in
-   the side panel once the side is clicked.
+   the side panel once the side is clicked. A dakobject (chimney, skylight)
+   shows only its name; its measurements are in the side panel when it is
+   clicked, and its handles appear once it is selected. For a chimney the
+   panel takes its length, width (or diameter) and height: the shape on the
+   plan follows the length and width, the height is kept on the dakobject,
+   and the panel computes the footprint (m²), the side faces (perimeter ×
+   height, m²) and the volume (m³).
    Click a length or area label (or a shape, a dakobject, a naad) to select
    that side, surface or object: the panel on the right shows it in three
    parts — **1. Originele staat** and **2. Toekomstige staat** (free text,

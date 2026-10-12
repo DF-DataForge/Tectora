@@ -352,6 +352,70 @@
                             </button>
                         </div>
                     </div>
+                    <!-- A dakobject: its measurements (the plan shows its name only). -->
+                    <t t-elif="this.focusObjectMeasures">
+                        <t t-set="measures" t-value="this.focusObjectMeasures"/>
+                        <div class="o_roof_canvas_panel card">
+                            <div class="card-header py-1 px-2"><strong>Afmetingen</strong></div>
+                            <!-- A chimney: length, width and height to fill in,
+                                 m² and m³ computed. -->
+                            <div t-if="measures.kind === 'chimney'" class="card-body p-2 small">
+                                <t t-if="measures.isCircle">
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <label class="col-5 col-form-label py-0">Diameter (m)</label>
+                                        <div class="col-7">
+                                            <input type="number" step="0.01" min="0.01"
+                                                   class="form-control form-control-sm text-end"
+                                                   t-att-value="measures.width.toFixed(2)"
+                                                   t-on-change="(ev) => this.setObjectSize('width', ev)"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <label class="col-5 col-form-label py-0">Lengte (m)</label>
+                                        <div class="col-7">
+                                            <input type="number" step="0.01" min="0.01"
+                                                   class="form-control form-control-sm text-end"
+                                                   t-att-value="measures.length.toFixed(2)"
+                                                   t-on-change="(ev) => this.setObjectSize('length', ev)"/>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <label class="col-5 col-form-label py-0">Breedte (m)</label>
+                                        <div class="col-7">
+                                            <input type="number" step="0.01" min="0.01"
+                                                   class="form-control form-control-sm text-end"
+                                                   t-att-value="measures.width.toFixed(2)"
+                                                   t-on-change="(ev) => this.setObjectSize('width', ev)"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                <div class="row g-2 align-items-center mb-2">
+                                    <label class="col-5 col-form-label py-0">Hoogte (m)</label>
+                                    <div class="col-7">
+                                        <input type="number" step="0.01" min="0"
+                                               class="form-control form-control-sm text-end"
+                                               t-att-disabled="!measures.editableHeight"
+                                               t-att-title="measures.editableHeight ? '' : 'Sla het project eerst op.'"
+                                               t-att-value="measures.height.toFixed(2)"
+                                               t-on-change="(ev) => this.setObjectHeight(ev)"/>
+                                    </div>
+                                </div>
+                                <div class="border-top pt-1">
+                                    <div class="d-flex justify-content-between"><span>Grondvlak</span><span><t t-out="measures.area.toFixed(2)"/> m²</span></div>
+                                    <div class="d-flex justify-content-between"><span>Zijvlakken (omtrek × hoogte)</span><span><t t-out="measures.sideArea.toFixed(2)"/> m²</span></div>
+                                    <div class="d-flex justify-content-between fw-bold"><span>Inhoud</span><span><t t-out="measures.volume.toFixed(2)"/> m³</span></div>
+                                    <div class="d-flex justify-content-between text-muted"><span>Omtrek</span><span><t t-out="measures.perimeter.toFixed(2)"/> m</span></div>
+                                </div>
+                            </div>
+                            <div t-else="" class="card-body p-2 small">
+                                <div class="d-flex justify-content-between"><span>Afmeting</span><span t-out="measures.size"/></div>
+                                <div class="d-flex justify-content-between"><span>Oppervlakte</span><span><t t-out="measures.area.toFixed(2)"/> m²</span></div>
+                                <div class="d-flex justify-content-between"><span>Omtrek</span><span><t t-out="measures.perimeter.toFixed(2)"/> m</span></div>
+                            </div>
+                        </div>
+                    </t>
                     <!-- The surface of a section: its inner measure and upstands. -->
                     <div t-elif="focus and focus.type === 'surface' and (this.state.panel.inner or this.state.panel.upstand)"
                          class="o_roof_canvas_panel card">

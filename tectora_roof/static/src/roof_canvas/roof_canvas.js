@@ -1710,6 +1710,82 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
     }
 
+    // The measurements of a selected dakobject, for the side panel.
+    get focusObjectMeasures() {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        if (!focus || focus.kind === "section" || !shape || isSeam(shape)) {
+            return null;
+        }
+        const m = this.measurements(shape.points);
+        const object = this.state.panel && this.state.panel.object;
+        const height = object ? object.height : 0;
+        return {
+            kind: shape.kind,
+            isCircle: shape.shape === "circle",
+            size: shape.shape === "circle"
+                ? `Ø ${m.width.toFixed(2)} m`
+                : `${m.width.toFixed(2)} × ${m.length.toFixed(2)} m`,
+            width: m.width,
+            length: m.length,
+            area: m.area,
+            perimeter: m.perimeter,
+            editableHeight: Boolean(object),
+            height,
+            sideArea: m.perimeter * height,
+            volume: m.area * height,
+        };
+    }
+
+    // Lengte / breedte of a dakobject typed in the panel: the shape is
+    // stretched around its centre (a circle keeps its shape: the diameter).
+    setObjectSize(dimension, ev) {
+        const shape = this.selectedShape;
+        const meters = parseFloat(ev.target.value);
+        if (!shape || !(meters > 0)) {
+            return;
+        }
+        const target = meters / this.scaleMPerPx;
+        const box = boundingBox(shape.points);
+        const cx = box.x + box.w / 2;
+        const cy = box.y + box.h / 2;
+        if (shape.shape === "circle") {
+            shape.points = circlePoints(cx, cy, target / 2);
+        } else if (dimension === "width" && box.w > 0) {
+            const factor = target / box.w;
+            shape.points = shape.points.map(([x, y]) => [cx + (x - cx) * factor, y]);
+        } else if (dimension === "length" && box.h > 0) {
+            const factor = target / box.h;
+            shape.points = shape.points.map(([x, y]) => [x, cy + (y - cy) * factor]);
+        } else {
+            return;
+        }
+        shape.points = shape.points.map(([x, y]) => [
+            Math.round(x * 100) / 100, Math.round(y * 100) / 100,
+        ]);
+        this.updateStatus();
+        this.commit();
+        this.refreshPanel();
+    }
+
+    // Hoogte of a dakobject, written on its record.
+    async setObjectHeight(ev) {
+        const object = this.state.panel && this.state.panel.object;
+        const value = parseFloat(ev.target.value);
+        if (!object || !(value >= 0)) {
+            return;
+        }
+        try {
+            await this.orm.write("tectora.roof.object", [object.id], {
+                height: Math.round(value * 100) / 100,
+            });
+        } catch (error) {
+            console.warn("Roof canvas: could not save the height", error);
+            return;
+        }
+        await this.refreshPanel();
+    }
+
     // The focused side's row of the panel geometry (width, upstand, length).
     get focusEdge() {
         const focus = this.focus;
@@ -1890,12 +1966,19 @@ export class RoofCanvasField extends Component {
             [[isObject ? "object_id" : "section_id", "=", targetIds[0]]],
             ["product_id", "coverage", "side_display", "edge_index", "quantity", "uom_id", "price_subtotal"]
         );
+        // A dakobject's height lives on its record (the drawing is 2D).
+        let object = null;
+        if (isObject) {
+            const [row] = await this.orm.read("tectora.roof.object", [targetIds[0]], ["height"]);
+            object = { id: targetIds[0], height: (row && row.height) || 0 };
+        }
         if (this.selectedShape !== shape) {
             return;
         }
         this.state.panel = {
             name: shape.name || "Naamloos",
             lines,
+            object,
             total: lines.reduce((sum, line) => sum + (line.price_subtotal || 0), 0),
             loading: false,
             synced: true,
@@ -2593,15 +2676,17 @@ export class RoofCanvasField extends Component {
         }
 
         // Clickable name box at the shape's center (assigns surface
-        // products), with only the area as plain text underneath.
+        // products), with only the area as plain text underneath. A dakobject
+        // (chimney, skylight) shows its name only: its measurements are in
+        // the side panel once it is clicked, its handles once it is selected.
         const m = this.measurements(points);
         const bbox = boundingBox(points);
+        const isObject = (shape.kind || "section") !== "section";
+        const selected = shape.id === this.state.selectedId;
         {
-            const title =
-                (style.label
-                    ? `${style.label}: ${shape.name || ""}`
-                    : shape.name || ""
-                ).trim() || "Naamloos";
+            const title = isObject
+                ? (shape.name || style.label || "Naamloos").trim()
+                : (shape.name || "").trim() || "Naamloos";
             const width = ctx.measureText(title).width + padX * 2;
             const cx = bbox.x + bbox.w / 2;
             const cy = bbox.y + bbox.h / 2 - boxHeight * 0.2;
@@ -2624,6 +2709,9 @@ export class RoofCanvasField extends Component {
                 h: boxHeight,
                 areaM2: m.area,
             });
+            if (isObject) {
+                // the name only
+            } else {
             ctx.font = `${fontSize}px sans-serif`;
             ctx.fillStyle = "#0b1f24";
             const innerPoints = this.innerPolygon(shape);
@@ -2634,11 +2722,18 @@ export class RoofCanvasField extends Component {
                 : `${m.area.toFixed(1)} m²`;
             ctx.fillText(areaText, cx, cy + boxHeight * 1.1);
             ctx.font = `600 ${fontSize}px sans-serif`;
+            }
+        }
+        if (isObject && !selected) {
+            ctx.textBaseline = "alphabetic";
+            return; // no lengths, and handles only once selected
         }
 
         if (shape.shape === "circle") {
             // One circumference label at the top plus a radius drag handle;
-            // circles have no discrete edges or corners.
+            // circles have no discrete edges or corners. A dakobject gets the
+            // handle only.
+            if (!isObject) {
             const label = `${m.perimeter.toFixed(2)} m`;
             const width = ctx.measureText(label).width + padX * 2;
             const cx = bbox.x + bbox.w / 2;
@@ -2662,6 +2757,7 @@ export class RoofCanvasField extends Component {
                 h: boxHeight,
                 lengthM: m.perimeter,
             });
+            }
             const handleSize = 5 / zoom;
             const hx = bbox.x + bbox.w;
             const hy = bbox.y + bbox.h / 2;
@@ -2685,8 +2781,8 @@ export class RoofCanvasField extends Component {
             return;
         }
 
-        // Length box on every edge.
-        for (let i = 0; i < n; i++) {
+        // Length box on every edge (not on a dakobject: name only).
+        for (let i = 0; i < (isObject ? 0 : n); i++) {
             const [x1, y1] = points[i];
             const [x2, y2] = points[(i + 1) % n];
             const lengthPx = Math.hypot(x2 - x1, y2 - y1);
