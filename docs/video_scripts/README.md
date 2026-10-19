@@ -1,54 +1,59 @@
-# Videoscripts — Tectora Dakmeting
+# Videoscripts — Tectora in Odoo
 
-Scripts voor een reeks korte uitlegvideo's (1 à 2 minuten) over het platform.
-Elke video staat op zichzelf, maar samen volgen ze één werf van opportuniteit
-tot uren op de werf.
+Scripts voor een reeks korte uitlegvideo's (1 à 2 minuten) over het
+platform: de standaard Odoo-apps zoals Tectora ze gebruikt, plus de BOM
+builder en het medewerkersportaal. Samen volgen ze één klant, van eerste
+contact tot uren op de werf.
 
 | # | Video | Duur | Voor wie |
 |---|---|---|---|
-| 01 | [Tectora in één minuut](01_tectora_in_een_minuut.md) | 1:00 | iedereen, prospecten |
-| 02 | [Een dakproject starten](02_dakproject_starten.md) | 1:15 | verkoop |
-| 03 | [Een dak opmeten op het satellietbeeld](03_dak_opmeten.md) | 2:00 | verkoop, calculatie |
-| 04 | [Producten toewijzen op de tekening](04_producten_toewijzen.md) | 1:45 | verkoop, calculatie |
-| 05 | [Van meting naar offerte](05_van_meting_naar_offerte.md) | 1:45 | verkoop |
-| 06 | [Stuklijst op maat op de offerte](06_stuklijst_op_maat.md) | 1:30 | calculatie |
-| 07 | [Bevestigen: project en dashboard](07_project_en_dashboard.md) | 1:30 | projectleiding, zaakvoerder |
-| 08 | [Ploegen en planning](08_ploegen_en_planning.md) | 1:30 | planning |
-| 09 | [Materiaal: levering en inkoop](09_materiaal_en_inkoop.md) | 1:45 | magazijn, aankoop |
-| 10 | [Het medewerkersportaal](10_medewerkersportaal.md) | 1:45 | dakwerkers, ploegbazen |
+| 01 | [CRM: van lead tot opportuniteit](01_crm.md) | 1:30 | verkoop |
+| 02 | [Een afspraak inplannen](02_afspraak_inplannen.md) | 1:15 | verkoop |
+| 03 | [Een offerte aanmaken](03_offerte_aanmaken.md) | 1:45 | verkoop |
+| 04 | [Een offerte verzenden](04_offerte_verzenden.md) | 1:00 | verkoop |
+| 05 | [Het klantportaal](05_klantportaal.md) | 1:15 | verkoop, ook voor klanten |
+| 06 | [Offertesjablonen instellen](06_offertesjablonen.md) | 1:45 | verkoopbeheer |
+| 07 | [Kop- en voetteksten](07_kop_en_voetteksten.md) | 1:45 | verkoopbeheer, administratie |
+| 08 | [De BOM builder](08_bom_builder.md) | 1:45 | calculatie |
+| 09 | [Projectbeheer](09_projectbeheer.md) | 1:45 | projectleiding |
+| 10 | [Projectplanning](10_projectplanning.md) | 1:30 | planning |
+| 11 | [Het medewerkersportaal](11_medewerkersportaal.md) | 1:45 | dakwerkers, ploegbazen |
+
+De scripts over de tekenmodule (Dakmeting: opmeten op het satellietbeeld,
+producten op de tekening, het projectdashboard) staan apart in
+[`dakmeting/`](dakmeting/) voor een latere reeks.
 
 ## Conventies
 
 * **Taal**: Nederlands (Vlaams), u-vorm in de voice-over, korte zinnen.
-  Knoppen en menu's staan **vet**, precies zoals ze in Odoo verschijnen.
-* **Tempo**: ± 130 woorden per minuut. De tijdscodes zijn richtwaarden; de
+  Knoppen en menu's staan **vet**.
+* **Knopnamen nakijken**: de namen volgen de Nederlandse Odoo-interface,
+  maar Odoo vertaalt per versie anders. Loop ze vóór de opname na in de
+  eigen database (Odoo 20, taal Nederlands) en pas het script aan waar ze
+  afwijken.
+* **Tempo**: ± 130 woorden per minuut. De tijdcodes zijn richtwaarden; de
   voice-over bepaalt de uiteindelijke duur.
-* **Kolommen**: *Beeld* = wat er op het scherm gebeurt (schermopname, zoom,
-  animatie); *Voice-over* = de gesproken tekst; *Tekst in beeld* = titel of
-  ondertitel die als overlay verschijnt.
+* **Kolommen**: *Beeld* = wat er op het scherm gebeurt; *Voice-over* = de
+  gesproken tekst; *Tekst in beeld* = titel of ondertitel als overlay.
 * **Opname**: schermopname op 1920 × 1080, browser op 100 %, Odoo-menubalk
   zichtbaar. Muisklikken accentueren (cirkel), inzoomen op het veld of de
-  knop die genoemd wordt. Rustige achtergrondmuziek, uit tijdens de
-  voice-over-pieken.
-* **Huisstijl**: Tectora-teal `#2D8D8F`, lettertype Montserrat (zoals het
-  briefpapier, zie `tectora_report_layout`). Openings- en eindkaart met het
-  Tectora-logo; eindkaart met de verwijzing naar de volgende video.
+  knop die genoemd wordt. Portaalbeelden (video 05 en 11) in een mobiele
+  weergave of op een echte smartphone.
+* **Huisstijl**: Tectora-teal `#2D8D8F`, lettertype Montserrat. Openings- en
+  eindkaart met het Tectora-logo; de eindkaart verwijst naar de volgende
+  video.
 
 ## Demodata (dezelfde in alle video's)
 
-Zet vóór de opnames één demowerf klaar, zodat de reeks één verhaal vertelt:
-
-* **Klant**: Familie Peeters (fictief), werfadres Kerkstraat 14, 8870 Izegem
-  — een adres met een duidelijk zichtbaar plat dak op het satellietbeeld.
-* **Opportuniteit**: "Renovatie plat dak Peeters" in CRM.
-* **Projecttype**: Renovatie (prijslijst Renovatie).
-* **Dak**: hoofddak (± 85 m²) + aanbouw (± 20 m²), één schoorsteen, één
-  lichtkoepel, een naad tussen hoofddak en aanbouw.
-* **Ploeg**: Ploeg 1 met ploegbaas en twee dakwerkers; één dakwerker met
-  portaaltoegang (voor video 10).
-* **Instellingen**: Google Maps-sleutel ingevuld, productcategorieën met
-  *Kan gebruikt worden voor* correct aangevinkt, Tectora-documentlay-out
-  actief, apps Planning, Voorraad, Inkoop en Dropshipping geïnstalleerd.
-
-Bronnen: de handleiding (`docs/Tectora_Dakmeting_Handleiding_NL.pdf`) en de
-README's van de modules.
+* **Klant**: Familie Peeters (fictief), Kerkstraat 14, 8870 Izegem, met een
+  e-mailadres waarvan je de inbox kan tonen (voor video 04 en 05).
+* **Opportuniteit**: "Renovatie plat dak Peeters", ± 100 m², verwachte
+  omzet € 14.500.
+* **Offertesjabloon**: een van de renovatiesjablonen uit de
+  productcatalogus (bv. Renovatie plat dak — PIR — EPDM), met de
+  optionele lijnen lichtkoepel, stelling en hoogwerker.
+* **Medewerkers**: projectleider, ploegbaas en twee dakwerkers; één
+  dakwerker met portaaltoegang en een smartphone voor video 11.
+* **Apps**: CRM, Agenda, Verkoop, Project, Urenstaten, Planning, Productie
+  (voor de stuklijsten); online ondertekenen en betalen aan in de
+  Verkoop-instellingen; documentlay-out Tectora Briefpapier actief.
