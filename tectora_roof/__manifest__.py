@@ -50,12 +50,12 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   whose quantities follow that roof's plan. The template's type
   (renovatie / nieuwbouw) sets the pricelist and so the project type.
     """,
-    "version": "20.0.3.43.0",
+    "version": "20.0.3.44.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["sale_management", "crm", "project", "sale_project", "hr"],
+    "depends": ["sale_management", "crm", "sale_crm", "project", "sale_project", "hr"],
     "external_dependencies": {"python": ["requests", "PIL"]},
     "data": [
         "security/ir.access.csv",

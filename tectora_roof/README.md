@@ -178,6 +178,13 @@ Eén dakproject staat tegenover één offerte/order, in beide richtingen:
 * Bij het bevestigen van de order gaat het dakproject naar **Order bevestigd**;
   annuleren zet het terug op *Offerte gemaakt*.
 
+Een offerte (**Nieuwe offerte**) of een dakproject gemaakt vanuit een
+opportuniteit heeft altijd de klant: heeft de opportuniteit enkel
+contactgegevens (bv. een aanvraag via de website), dan wordt het bestaande
+contact met dat e-mailadres gekoppeld, of anders een nieuw contact aangemaakt
+uit de opportuniteit. Enkel zonder enige contactgegevens vraagt Odoo wie de
+klant is.
+
 Elke order zonder dakproject krijgt er een bij het aanmaken; wie dat voor een
 technische import niet wil, geeft de context `tectora_no_roof_project` mee.
 

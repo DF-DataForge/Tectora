@@ -14,9 +14,29 @@ class CrmLead(models.Model):
         for lead in self:
             lead.roof_project_count = len(lead.roof_project_ids)
 
+    def _tectora_ensure_customer(self):
+        """An opportunity that has contact details (a web request: name,
+        email, address) but no customer gets one: the existing contact with
+        that email, else a new contact made from the opportunity. So the
+        quotation and the roof project made from it have their customer.
+        Without any contact details nothing is guessed."""
+        for lead in self.filtered(lambda lead: not lead.partner_id):
+            partner = lead._find_matching_partner()
+            if partner:
+                lead.partner_id = partner
+            elif lead.contact_name or lead.partner_name or lead.email_from:
+                lead._handle_partner_assignment(create_missing=True)
+
+    def action_sale_quotations_new(self):
+        # Odoo asks who the customer is when the opportunity has none; with
+        # contact details on it, the customer is linked straight away.
+        self._tectora_ensure_customer()
+        return super().action_sale_quotations_new()
+
     def action_create_roof_project(self):
         """Create a roof measurement project prefilled from the opportunity."""
         self.ensure_one()
+        self._tectora_ensure_customer()
         street = " ".join(filter(None, [self.street, self.street2]))
         locality = " ".join(filter(None, [self.zip, self.city]))
         address = ", ".join(filter(None, [street, locality]))
