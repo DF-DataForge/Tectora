@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Order list block on the project dashboard -->
+    <t t-name="tectora_project_order_list.OrderListWidget">
+        <div class="o_tectora_order_list card" t-if="this.state.data">
+            <t t-set="data" t-value="this.state.data"/>
+            <div class="card-header d-flex align-items-center">
+                <i class="oi me-2" data-icon="list_alt"/>
+                <h4 class="mb-0">Bestellijst</h4>
+                <t t-if="data.total">
+                    <span class="badge text-bg-light border ms-2"><t t-out="data.done"/> / <t t-out="data.total"/></span>
+                    <span t-if="data.late" class="badge text-bg-danger ms-1"><t t-out="data.late"/> te laat</span>
+                    <button class="btn btn-sm btn-primary ms-auto" t-on-click="() => this.openOrderBoard()">
+                        Openen <i class="oi ms-1" data-icon="arrow_forward"/>
+                    </button>
+                </t>
+            </div>
+            <div class="card-body">
+                <t t-if="!data.total">
+                    <div t-if="data.project.can_create" class="d-flex align-items-center justify-content-between gap-3">
+                        <span class="text-muted">Dit project heeft nog geen bestellijst.</span>
+                        <button class="btn btn-primary text-nowrap" t-on-click="() => this.createOrderList()">
+                            Bestellijst aanmaken
+                        </button>
+                    </div>
+                    <div t-else="" class="text-muted">
+                        Nog geen bestellijst-onderdelen ingesteld. Maak ze aan in
+                        <b>Dakmeting › Projectopvolging › Bestellijst-onderdelen</b>; elk
+                        nieuw project krijgt dan een bestellijst met die onderdelen.
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="progress mb-3" style="height: 6px;">
+                        <div class="progress-bar bg-success" t-att-style="'width: ' + data.progress + '%'"/>
+                    </div>
+                    <div class="small text-muted mb-1">Volgende onderdelen</div>
+                    <ul class="list-unstyled o_tectora_order_summary mb-0">
+                        <t t-foreach="this.openLines" t-as="line" t-key="line.id">
+                            <li>
+                                <input type="checkbox" class="form-check-input o_tectora_check me-2"
+                                       t-att-checked="line.checked ? true : undefined"
+                                       t-on-change="() => this.toggleLine(line)"/>
+                                <span t-att-class="'badge me-2 ' + (line.action === 'stock_first' ? 'text-bg-warning' : 'text-bg-info')"
+                                      t-att-title="line.action_label"
+                                      t-out="line.action === 'stock_first' ? 'S' : 'B'"/>
+                                <a href="#" class="flex-grow-1 o_tectora_order_name" t-on-click.prevent="() => this.openOrderBoard()">
+                                    <t t-out="line.name"/>
+                                    <span class="small text-muted" t-if="line.partner_name"> · <t t-out="line.partner_name"/></span>
+                                </a>
+                                <span t-att-class="'badge ' + (line.late ? 'text-bg-danger' : 'text-bg-light border')" t-out="line.status_label"/>
+                            </li>
+                        </t>
+                        <li t-if="!this.openLines.length" class="text-muted">Alles is afgevinkt.</li>
+                    </ul>
+                </t>
+            </div>
+        </div>
+    </t>
+
+    <!-- Order list page -->
+    <t t-name="tectora_project_order_list.OrderBoard">
+        <div class="o_action o_tectora_order_board">
+            <Layout display="{ controlPanel: {} }">
+                <t t-set-slot="control-panel-buttons">
+                    <div class="d-flex gap-1" t-if="this.state.data">
+                        <button t-att-class="'btn ' + (this.state.onlyOpen ? 'btn-primary' : 'btn-secondary')"
+                                t-on-click="() => { this.state.onlyOpen = !this.state.onlyOpen; }">
+                            <i class="oi me-1" data-icon="filter_alt"/>Enkel open
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.openList()">
+                            <i class="oi me-1" data-icon="view_list"/>Lijstweergave
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.refresh()" title="Vernieuwen">
+                            <i class="oi" data-icon="refresh"/>
+                        </button>
+                    </div>
+                </t>
+
+                <div class="o_tectora_board_content" t-if="this.state.data">
+                    <t t-set="data" t-value="this.state.data"/>
+                    <div t-if="!data.total" class="alert alert-info d-flex align-items-center justify-content-between">
+                        <t t-if="data.project.can_create">
+                            <span>Dit project heeft nog geen bestellijst.</span>
+                            <button class="btn btn-primary" t-on-click="() => this.createOrderList()">Bestellijst aanmaken</button>
+                        </t>
+                        <span t-else="">Nog geen bestellijst-onderdelen ingesteld (Dakmeting › Projectopvolging › Bestellijst-onderdelen).</span>
+                    </div>
+                    <t t-else="">
+                        <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                            <h3 class="mb-0">Bestellijst</h3>
+                            <span class="badge text-bg-light border"><t t-out="data.done"/> / <t t-out="data.total"/> afgevinkt</span>
+                            <span class="small"><span class="badge text-bg-info">Bestellen</span> altijd een bestelling voor dit project</span>
+                            <span class="small"><span class="badge text-bg-warning">Stock eerst</span> eerst de stock controleren; enkel het tekort bestellen</span>
+                        </div>
+                        <div class="small text-muted mb-2">Van boven naar onder afwerken: bovenaan staat wat de langste levertijd heeft.</div>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle o_tectora_order_table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 3rem;">OK</th>
+                                        <th style="width: 2.5rem;">#</th>
+                                        <th>Onderdeel</th>
+                                        <th>Actie</th>
+                                        <th>Leverancier</th>
+                                        <th>Besteldatum</th>
+                                        <th>Verwachte levering</th>
+                                        <th>Status</th>
+                                        <th class="text-end"/>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="this.visibleLines" t-as="line" t-key="line.id">
+                                        <tr t-att-class="(line.checked ? 'o_tectora_done ' : '') + (line.late ? 'table-danger' : '')">
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input o_tectora_check"
+                                                       t-att-checked="line.checked ? true : undefined"
+                                                       t-on-change="() => this.toggleLine(line)"/>
+                                            </td>
+                                            <td class="text-muted" t-out="this.lineNumber(line)"/>
+                                            <td>
+                                                <a href="#" class="fw-bold o_tectora_order_name" t-on-click.prevent="() => this.openLine(line)" t-out="line.name"/>
+                                                <div class="small text-muted o_tectora_supplier_note" t-out="line.supplier_note"/>
+                                            </td>
+                                            <td>
+                                                <span t-att-class="'badge ' + (line.action === 'stock_first' ? 'text-bg-warning' : 'text-bg-info')" t-out="line.action_label"/>
+                                                <div t-if="line.action === 'stock_first' and line.product_count"
+                                                     t-att-class="'small ' + (line.shortage ? 'text-danger' : 'text-success')">
+                                                    <t t-if="line.shortage">tekort</t><t t-else="">op voorraad</t>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" t-on-change="(ev) => this.onSupplierChange(line, ev)">
+                                                    <option value="" t-att-selected="line.partner_id ? undefined : true">— kies —</option>
+                                                    <t t-foreach="line.suppliers" t-as="supplier" t-key="supplier.id">
+                                                        <option t-att-value="supplier.id"
+                                                                t-att-selected="supplier.id === line.partner_id ? true : undefined"
+                                                                t-out="supplier.name"/>
+                                                    </t>
+                                                    <option value="other">Andere leverancier…</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="date" class="form-control form-control-sm" t-att-value="line.order_date"
+                                                       t-on-change="(ev) => this.onDateChange(line, 'order_date', ev)"/>
+                                            </td>
+                                            <td>
+                                                <input type="date" class="form-control form-control-sm" t-att-value="line.expected_date"
+                                                       t-on-change="(ev) => this.onDateChange(line, 'expected_date', ev)"/>
+                                            </td>
+                                            <td>
+                                                <span t-att-class="'badge ' + this.statusClass(line.status)" t-out="line.status_label"/>
+                                                <span t-if="line.late" class="badge text-bg-danger ms-1">te laat</span>
+                                            </td>
+                                            <td class="text-end text-nowrap">
+                                                <button t-if="line.purchase_count" class="btn btn-sm btn-link"
+                                                        t-on-click="() => this.openPurchases(line)" title="Inkooporders">
+                                                    <i class="oi" data-icon="shopping_cart"/> <t t-out="line.purchase_count"/>
+                                                </button>
+                                                <button t-if="!line.checked" class="btn btn-sm btn-secondary"
+                                                        t-on-click="() => this.createPurchase(line)" title="Bestelling (prijsaanvraag) aanmaken">
+                                                    <i class="oi me-1" data-icon="add_shopping_cart"/>Bestellen
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div t-if="!this.visibleLines.length" class="text-muted">Niets te tonen.</div>
+                    </t>
+                </div>
+            </Layout>
+        </div>
+    </t>
+
+</templates>

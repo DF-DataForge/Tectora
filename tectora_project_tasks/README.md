@@ -7,7 +7,7 @@ fills them in itself.
 
 ## Configuration
 
-*Dakmeting › Taakopvolging* (or *Project › Configuratie*):
+*Dakmeting › Projectopvolging* (or *Project › Configuratie*):
 
 - **Projectfases**: name, short description, order, and optionally a
   deadline for the phase milestone relative to the project's start or end date.

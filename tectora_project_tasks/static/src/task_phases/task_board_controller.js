@@ -1,4 +1,5 @@
 import { Mutex } from "@web/core/utils/concurrency";
+import { notifyProjectBoardChanged } from "./board_bus";
 
 /**
  * Shared by the dashboard block and the task page: loads the task data of
@@ -7,6 +8,7 @@ import { Mutex } from "@web/core/utils/concurrency";
 export class TaskBoardController {
     constructor(component, { orm, action, getProjectId, onLoaded }) {
         this.component = component;
+        this.env = component.env;
         this.orm = orm;
         this.action = action;
         this.getProjectId = getProjectId;
@@ -39,7 +41,13 @@ export class TaskBoardController {
                 return this.action.doAction(result);
             }
             await this.load(state);
+            notifyProjectBoardChanged(this.env, this.getProjectId(), this);
         });
+    }
+
+    /** Reload after a change made elsewhere, in turn with this block's own changes. */
+    reload(state) {
+        return this.mutex.exec(() => this.load(state));
     }
 
     callProject(state, method, args = []) {

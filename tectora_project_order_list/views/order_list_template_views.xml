@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_order_list_template_list" model="ir.ui.view">
+        <field name="name">tectora.order.list.template.list</field>
+        <field name="model">tectora.order.list.template</field>
+        <field name="arch" type="xml">
+            <list string="Bestellijst-onderdelen">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="order_action" widget="badge"
+                       decoration-info="order_action == 'order'"
+                       decoration-warning="order_action == 'stock_first'"/>
+                <field name="partner_ids" widget="many2many_tags"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_order_list_template_form" model="ir.ui.view">
+        <field name="name">tectora.order.list.template.form</field>
+        <field name="model">tectora.order.list.template</field>
+        <field name="arch" type="xml">
+            <form string="Bestellijst-onderdeel">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Onderdeel"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="order_action" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="partner_ids" widget="many2many_tags"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Leveranciers volgens de bestellijst">
+                        <field name="supplier_note" nolabel="1" colspan="2"
+                               placeholder="Toelichting bij de leveranciers, bv. wie levert wat en met welke levertijd."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_order_list_template" model="ir.actions.act_window">
+        <field name="name">Bestellijst-onderdelen</field>
+        <field name="res_model">tectora.order.list.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak een bestellijst-onderdeel aan</p>
+            <p>Elk nieuw project krijgt een bestellijst met deze onderdelen, in
+               deze volgorde: bovenaan wat de langste levertijd heeft.</p>
+        </field>
+    </record>
+
+</odoo>

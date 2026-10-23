@@ -1,6 +1,7 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { useProjectBoardChanged } from "./board_bus";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { LABELS } from "./labels";
 import { PhaseTimeline } from "./phase_timeline";
@@ -25,6 +26,9 @@ export class TaskPhasesWidget extends Component {
             getProjectId: () => this.props.record.resId,
         });
         onWillStart(() => this.board.load(this.state));
+        useProjectBoardChanged(this.env, () => this.props.record.resId, this.board, () =>
+            this.board.reload(this.state)
+        );
     }
 
     get currentPhase() {

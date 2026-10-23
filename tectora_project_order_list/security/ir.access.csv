@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_order_list_template_user,tectora.order.list.template user,tectora.order.list.template,base.group_user,r,
+access_tectora_order_list_template_manager,tectora.order.list.template manager,tectora.order.list.template,project.group_project_manager,crud,
+access_tectora_project_order_line_user,tectora.project.order.line user,tectora.project.order.line,project.group_project_user,crud,
+access_tectora_project_order_product_user,tectora.project.order.product user,tectora.project.order.product,project.group_project_user,crud,

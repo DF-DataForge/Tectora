@@ -9,7 +9,7 @@ Data Forge Dakmeting — Taakopvolging per fase
 Task follow-up per project phase, as on the Congristruct project dashboard,
 starting from an empty task template.
 
-* **Projectfases** (Dakmeting -> Taakopvolging): every phase becomes a
+* **Projectfases** (Dakmeting -> Projectopvolging): every phase becomes a
   milestone on each new project.
 * **Taaksjablonen**: per phase the tasks and their subtasks, optional tasks
   (switched off by default, switched on per project) and deadlines relative to
@@ -47,6 +47,7 @@ dashboard.
             "tectora_project_tasks/static/src/task_phases/task_phases.scss",
             "tectora_project_tasks/static/src/task_phases/task_phases.xml",
             "tectora_project_tasks/static/src/task_phases/labels.js",
+            "tectora_project_tasks/static/src/task_phases/board_bus.js",
             "tectora_project_tasks/static/src/task_phases/task_board_controller.js",
             "tectora_project_tasks/static/src/task_phases/phase_timeline.js",
             "tectora_project_tasks/static/src/task_phases/task_phases_widget.js",

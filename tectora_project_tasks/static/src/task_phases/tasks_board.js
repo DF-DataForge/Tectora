@@ -1,6 +1,7 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { useProjectBoardChanged } from "./board_bus";
 import { Layout } from "@web/search/layout";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
 import { LABELS } from "./labels";
@@ -28,6 +29,9 @@ export class TectoraTasksBoard extends Component {
             onLoaded: () => this.onLoaded(),
         });
         onWillStart(() => this.board.load(this.state));
+        useProjectBoardChanged(this.env, () => this.projectId, this.board, () =>
+            this.board.reload(this.state)
+        );
     }
 
     get params() {
@@ -98,6 +102,10 @@ export class TectoraTasksBoard extends Component {
 
     openTask(task) {
         return this.board.openTask(task.id);
+    }
+
+    openLink(task) {
+        return this.board.callProject(this.state, task.link.method);
     }
 
     refresh() {

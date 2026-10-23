@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Dakmeting -> Taakopvolging: the phases and the (empty) task
+    <!-- Dakmeting -> Projectopvolging: the phases and the (empty) task
          templates every new project starts from. -->
     <menuitem id="menu_tectora_task_phases"
-              name="Taakopvolging"
+              name="Projectopvolging"
               parent="tectora_roof.menu_tectora_root"
               groups="project.group_project_manager"
               sequence="85"/>

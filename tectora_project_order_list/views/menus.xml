@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Dakmeting -> Bestellijst: the order lists of all projects. -->
+    <menuitem id="menu_tectora_order_lists"
+              name="Bestellijst"
+              parent="tectora_roof.menu_tectora_root"
+              sequence="26"/>
+
+    <menuitem id="menu_tectora_order_lines_project"
+              name="Per project"
+              parent="menu_tectora_order_lists"
+              action="action_tectora_project_order_line"
+              sequence="10"/>
+
+    <menuitem id="menu_tectora_order_lines_supplier"
+              name="Per leverancier"
+              parent="menu_tectora_order_lists"
+              action="action_tectora_project_order_line_supplier"
+              sequence="20"/>
+
+    <!-- Configuration of the (empty) standard parts, next to the phases
+         and task templates. -->
+    <menuitem id="menu_tectora_order_list_templates"
+              name="Bestellijst-onderdelen"
+              parent="tectora_project_tasks.menu_tectora_task_phases"
+              action="action_tectora_order_list_template"
+              sequence="30"/>
+
+    <menuitem id="menu_project_config_tectora_order_list_templates"
+              name="Bestellijst-onderdelen"
+              parent="project.menu_project_config"
+              action="action_tectora_order_list_template"
+              sequence="42"/>
+
+</odoo>
