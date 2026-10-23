@@ -1,6 +1,7 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { useProjectBoardChanged } from "@tectora_project_tasks/task_phases/board_bus";
 import { Layout } from "@web/search/layout";
 import { standardActionServiceProps } from "@web/webclient/actions/action_plugin";
 import { OrderListController } from "./order_list_controller";
@@ -24,11 +25,15 @@ export class TectoraOrderBoard extends Component {
         this.notification = useService("notification");
         this.state = proxy({ data: null, onlyOpen: false });
         this.board = new OrderListController({
+            env: this.env,
             orm: useService("orm"),
             action: useService("action"),
             getProjectId: () => this.projectId,
         });
         onWillStart(() => this.board.load(this.state));
+        useProjectBoardChanged(this.env, () => this.projectId, this.board, () =>
+            this.board.reload(this.state)
+        );
     }
 
     get projectId() {

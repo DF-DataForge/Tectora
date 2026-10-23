@@ -1,6 +1,7 @@
 import { Component, onWillStart, proxy, useProps } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { useProjectBoardChanged } from "@tectora_project_tasks/task_phases/board_bus";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { OrderListController } from "./order_list_controller";
 
@@ -15,11 +16,15 @@ export class OrderListWidget extends Component {
     setup() {
         this.state = proxy({ data: null });
         this.board = new OrderListController({
+            env: this.env,
             orm: useService("orm"),
             action: useService("action"),
             getProjectId: () => this.props.record.resId,
         });
         onWillStart(() => this.board.load(this.state));
+        useProjectBoardChanged(this.env, () => this.props.record.resId, this.board, () =>
+            this.board.reload(this.state)
+        );
     }
 
     get openLines() {

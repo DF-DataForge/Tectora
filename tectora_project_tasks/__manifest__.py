@@ -47,6 +47,7 @@ dashboard.
             "tectora_project_tasks/static/src/task_phases/task_phases.scss",
             "tectora_project_tasks/static/src/task_phases/task_phases.xml",
             "tectora_project_tasks/static/src/task_phases/labels.js",
+            "tectora_project_tasks/static/src/task_phases/board_bus.js",
             "tectora_project_tasks/static/src/task_phases/task_board_controller.js",
             "tectora_project_tasks/static/src/task_phases/phase_timeline.js",
             "tectora_project_tasks/static/src/task_phases/task_phases_widget.js",

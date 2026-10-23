@@ -1,11 +1,13 @@
 import { Mutex } from "@web/core/utils/concurrency";
+import { notifyProjectBoardChanged } from "@tectora_project_tasks/task_phases/board_bus";
 
 /**
  * Shared by the dashboard block and the order list page: loads the order
  * list of the project and runs the changes one after the other.
  */
 export class OrderListController {
-    constructor({ orm, action, getProjectId }) {
+    constructor({ env, orm, action, getProjectId }) {
+        this.env = env;
         this.orm = orm;
         this.action = action;
         this.getProjectId = getProjectId;
@@ -32,7 +34,13 @@ export class OrderListController {
                 return this.action.doAction(result);
             }
             await this.load(state);
+            notifyProjectBoardChanged(this.env, this.getProjectId(), this);
         });
+    }
+
+    /** Reload after a change made elsewhere, in turn with this block's own changes. */
+    reload(state) {
+        return this.mutex.exec(() => this.load(state));
     }
 
     callProject(state, method, args = []) {
