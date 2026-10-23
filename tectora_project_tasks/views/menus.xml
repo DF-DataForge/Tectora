@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Dakmeting -> Taakopvolging: the phases and the (empty) task
+         templates every new project starts from. -->
+    <menuitem id="menu_tectora_task_phases"
+              name="Taakopvolging"
+              parent="tectora_roof.menu_tectora_root"
+              groups="project.group_project_manager"
+              sequence="85"/>
+
+    <menuitem id="menu_tectora_project_phases"
+              name="Projectfases"
+              parent="menu_tectora_task_phases"
+              action="action_tectora_project_phase"
+              sequence="10"/>
+
+    <menuitem id="menu_tectora_task_templates"
+              name="Taaksjablonen"
+              parent="menu_tectora_task_phases"
+              action="action_tectora_task_template"
+              sequence="20"/>
+
+    <!-- The same, in Project -> Configuration. -->
+    <menuitem id="menu_project_config_tectora_phases"
+              name="Projectfases"
+              parent="project.menu_project_config"
+              action="action_tectora_project_phase"
+              sequence="40"/>
+
+    <menuitem id="menu_project_config_tectora_task_templates"
+              name="Taaksjablonen"
+              parent="project.menu_project_config"
+              action="action_tectora_task_template"
+              sequence="41"/>
+
+</odoo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_task_list_tectora_phases" model="ir.ui.view">
+        <field name="name">project.task.list.tectora.phases</field>
+        <field name="model">project.task</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <list string="Taken per fase" decoration-muted="state == '1_done'">
+                <field name="sequence" widget="handle"/>
+                <field name="project_id" optional="hide"/>
+                <field name="tectora_phase_id" optional="hide"/>
+                <field name="parent_id" optional="hide"/>
+                <field name="name"/>
+                <field name="tectora_optional" optional="show"/>
+                <field name="user_ids" widget="many2many_avatar_user" optional="show"/>
+                <field name="date_deadline" widget="remaining_days" optional="show"/>
+                <field name="subtask_count" string="Subtaken" optional="show"/>
+                <field name="state" widget="project_task_state_selection" nolabel="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_task_search_inherit_tectora_phases" model="ir.ui.view">
+        <field name="name">project.task.search.inherit.tectora.phases</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form_base"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="tectora_phase_id"/>
+                <filter name="tectora_group_phase" string="Projectfase"
+                        context="{'group_by': 'tectora_phase_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_task_form_inherit_tectora_phases" model="ir.ui.view">
+        <field name="name">project.task.form.inherit.tectora.phases</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="(//field[@name='milestone_id'])[1]" position="after">
+                <field name="tectora_phase_id" invisible="not tectora_phase_id"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
