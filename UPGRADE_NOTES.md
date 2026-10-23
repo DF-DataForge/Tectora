@@ -168,4 +168,4 @@ Releases and the modules they need upgraded:
 | m as Reken-UoM for hercalculatie | `tectora_roof` (20.0.3.24.0) |
 | Hercalculatie per m shows L × B × H | `tectora_roof` (20.0.3.25.0) |
 | Conversion shown on bill of materials lines | `tectora_sale_bom` (20.0.1.1.0) |
-| Taakopvolging per fase (new module) | install `tectora_project_tasks` (20.0.1.0.0): a new module is not installed by an upgrade, install it from Apps (or `-i tectora_project_tasks`) |
+| Taakopvolging per fase and Bestellijst (new modules) | install `tectora_project_tasks` (20.0.1.0.0) and `tectora_project_order_list` (20.0.1.0.0): new modules are not installed by an upgrade, install them from Apps (or `-i tectora_project_tasks,tectora_project_order_list`) |

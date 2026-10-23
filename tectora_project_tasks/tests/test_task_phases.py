@@ -13,8 +13,8 @@ class TestTaskPhases(TransactionCase):
         Phase = cls.env["tectora.project.phase"]
         Template = cls.env["tectora.task.template"]
         # Start from an empty template, as the module ships it.
-        Template.search([]).unlink()
-        Phase.search([]).unlink()
+        Template.search([]).action_archive()
+        Phase.search([]).action_archive()
         cls.phase_1 = Phase.create({"name": "Voorbereiding", "sequence": 1})
         cls.phase_2 = Phase.create({
             "name": "Uitvoering", "sequence": 2,
@@ -84,7 +84,7 @@ class TestTaskPhases(TransactionCase):
         self.assertEqual([t["name"] for t in data["current_tasks"]], ["Plannen"])
 
     def test_without_phases_nothing_starts(self):
-        self.env["tectora.project.phase"].search([]).unlink()
+        self.env["tectora.project.phase"].search([]).action_archive()
         project = self._project()
         self.assertFalse(project.tectora_task_phases)
         data = project.tectora_get_task_board_data()

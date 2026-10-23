@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_task_template_form_inherit_order_list" model="ir.ui.view">
+        <field name="name">tectora.task.template.form.inherit.order.list</field>
+        <field name="model">tectora.task.template</field>
+        <field name="inherit_id" ref="tectora_project_tasks.view_tectora_task_template_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='deadline_reference']" position="before">
+                <field name="order_list_auto" invisible="parent_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_task_template_list_inherit_order_list" model="ir.ui.view">
+        <field name="name">tectora.task.template.list.inherit.order.list</field>
+        <field name="model">tectora.task.template</field>
+        <field name="inherit_id" ref="tectora_project_tasks.view_tectora_task_template_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='optional']" position="after">
+                <field name="order_list_auto" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

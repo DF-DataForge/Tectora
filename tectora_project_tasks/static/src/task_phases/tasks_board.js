@@ -100,6 +100,10 @@ export class TectoraTasksBoard extends Component {
         return this.board.openTask(task.id);
     }
 
+    openLink(task) {
+        return this.board.callProject(this.state, task.link.method);
+    }
+
     refresh() {
         return this.board.load(this.state);
     }

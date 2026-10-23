@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The order list block next to the task block on the dashboard. -->
+    <record id="view_project_project_tectora_dashboard_inherit_order_list" model="ir.ui.view">
+        <field name="name">project.project.form.tectora.dashboard.order.list</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="tectora_project_tasks.view_project_project_tectora_dashboard_inherit_tasks"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('o_tectora_task_phases_row')]" position="inside">
+                <widget name="tectora_order_list"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_project_form_inherit_tectora_order_list" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.tectora.order.list</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_tectora_open_order_board" type="object"
+                        class="oe_stat_button" icon="list_alt"
+                        invisible="not tectora_order_total_count">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="tectora_order_done_count" readonly="1"/> /
+                            <field name="tectora_order_total_count" readonly="1"/>
+                        </span>
+                        <span class="o_stat_text">Bestellijst</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

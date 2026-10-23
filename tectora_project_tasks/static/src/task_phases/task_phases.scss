@@ -324,3 +324,12 @@
         }
     }
 }
+
+// The dashboard row holding the task block (and the blocks of extensions,
+// such as the order list) side by side.
+.o_tectora_task_phases_row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+    gap: 0.75rem;
+    align-items: start;
+}

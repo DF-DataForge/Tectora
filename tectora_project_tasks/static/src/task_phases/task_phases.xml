@@ -60,7 +60,7 @@
                     </div>
                     <div t-else="" class="text-muted">
                         Nog geen projectfases ingesteld. Maak ze aan in
-                        <b>Dakmeting › Taakopvolging › Projectfases</b> en vul de
+                        <b>Dakmeting › Projectopvolging › Projectfases</b> en vul de
                         <b>Taaksjablonen</b> aan; elk nieuw project krijgt dan per fase
                         een mijlpaal met de taken en subtaken.
                     </div>
@@ -135,7 +135,7 @@
                                 <span>De taakopvolging per fase is nog niet gestart voor dit project.</span>
                                 <button class="btn btn-primary" t-on-click="() => this.startTaskPhases()">Taakopvolging starten</button>
                             </t>
-                            <span t-else="">Nog geen projectfases ingesteld (Dakmeting › Taakopvolging › Projectfases).</span>
+                            <span t-else="">Nog geen projectfases ingesteld (Dakmeting › Projectopvolging › Projectfases).</span>
                         </div>
                         <t t-else="">
                             <div class="card mb-3">
@@ -186,6 +186,8 @@
                                                 <div class="o_tectora_task_main">
                                                     <a href="#" class="o_tectora_task_name" t-on-click.prevent="() => this.openTask(task)" t-out="task.name"/>
                                                     <span t-if="task.optional" class="badge rounded-pill text-bg-warning ms-2">optie</span>
+                                                    <a href="#" t-if="task.link" class="badge rounded-pill text-bg-info ms-2"
+                                                       t-on-click.prevent="() => this.openLink(task)" t-out="task.link.label"/>
                                                 </div>
                                                 <div class="o_tectora_task_meta">
                                                     <span class="o_tectora_meta_sub">

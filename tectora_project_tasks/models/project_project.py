@@ -209,6 +209,9 @@ class ProjectProject(models.Model):
                 and task.date_deadline.date() < today
             ),
             "users": ", ".join(task.user_ids.mapped("name")),
+            # {"label", "method"}: a badge on the task page calling a
+            # project method (an extension links a task to its own page).
+            "link": False,
         }
 
     def tectora_get_task_board_data(self):
