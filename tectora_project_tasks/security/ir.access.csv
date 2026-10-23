@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_project_phase_user,tectora.project.phase user,tectora.project.phase,base.group_user,r,
+access_tectora_project_phase_manager,tectora.project.phase manager,tectora.project.phase,project.group_project_manager,crud,
+access_tectora_task_template_user,tectora.task.template user,tectora.task.template,base.group_user,r,
+access_tectora_task_template_manager,tectora.task.template manager,tectora.task.template,project.group_project_manager,crud,
