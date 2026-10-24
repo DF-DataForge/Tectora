@@ -37,7 +37,8 @@ class QuotationDocument(models.Model):
     )
     tectora_customer_name = fields.Boolean(
         string="Naam klant op de eerste pagina",
-        help="Drukt de naam van de klant op de eerste pagina van deze pdf af, "
+        help="Drukt de naam van de klant, met de aanspreektitel ervoor "
+        "(Dhr., Mevr., ...), op de eerste pagina van deze pdf af, "
         "gecentreerd (bv. onder 'Voorstel op maat' op de voorpagina). Enkel "
         "voor de eerste kop van de offerte.",
     )

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- The usual salutations; to change or extend in
+         Verkoop › Configuratie › Aanspreektitels. -->
+    <record id="partner_title_mister" model="tectora.partner.title">
+        <field name="name">De heer</field>
+        <field name="shortcut">Dhr.</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="partner_title_madam" model="tectora.partner.title">
+        <field name="name">Mevrouw</field>
+        <field name="shortcut">Mevr.</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="partner_title_mister_madam" model="tectora.partner.title">
+        <field name="name">De heer en mevrouw</field>
+        <field name="shortcut">Dhr. en Mevr.</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="partner_title_family" model="tectora.partner.title">
+        <field name="name">Familie</field>
+        <field name="shortcut">Fam.</field>
+        <field name="sequence">40</field>
+    </record>
+
+</odoo>

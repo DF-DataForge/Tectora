@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The salutation on the contact, above the job position. -->
+    <record id="view_partner_form_inherit_tectora_title" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.tectora.title</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='function']" position="before">
+                <field name="tectora_title_id" options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_partner_title_list" model="ir.ui.view">
+        <field name="name">tectora.partner.title.list</field>
+        <field name="model">tectora.partner.title</field>
+        <field name="arch" type="xml">
+            <list string="Aanspreektitels" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="shortcut"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_tectora_partner_title" model="ir.actions.act_window">
+        <field name="name">Aanspreektitels</field>
+        <field name="res_model">tectora.partner.title</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_tectora_partner_title"
+              name="Aanspreektitels"
+              parent="sale.menu_sale_config"
+              action="action_tectora_partner_title"
+              groups="sales_team.group_sale_manager"
+              sequence="60"/>
+
+</odoo>

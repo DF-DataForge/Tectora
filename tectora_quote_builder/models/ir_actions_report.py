@@ -154,8 +154,9 @@ class IrActionsReport(models.Model):
 
     @api.model
     def _tectora_stamp_customer_name(self, content, order, top_mm):
-        """The customer's name, centred on the first page, `top_mm` from its
-        top, in the company's primary colour."""
+        """The customer's name with the salutation ("Dhr. Michiels
+        Philippe"), centred on the first page, `top_mm` from its top, in the
+        company's primary colour."""
         reader = PdfFileReader(io.BytesIO(content), strict=False)
         writer = PdfFileWriter()
         for index, page in enumerate(reader.pages):
@@ -166,7 +167,7 @@ class IrActionsReport(models.Model):
                 pdf = canvas.Canvas(overlay, pagesize=(width, height))
                 pdf.setFillColor(HexColor(order.company_id.primary_color or "#008B93"))
                 pdf.setFont("Helvetica-Bold", 20)
-                name = order.partner_id.name or order.partner_id.display_name or ""
+                name = order.partner_id._tectora_name_with_title()
                 pdf.drawCentredString(width / 2, height - top_mm * MM, name)
                 pdf.save()
                 stamp = PdfFileReader(io.BytesIO(overlay.getvalue())).pages[0]
