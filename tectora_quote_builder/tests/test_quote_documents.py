@@ -76,13 +76,9 @@ class TestQuoteDocuments(TransactionCase):
     def _order(self, **values):
         return self.env["sale.order"].create({"partner_id": self.partner.id, **values})
 
-    def _frame(self, order):
-        return {"pdf": self.frame, "margin_top": 52 * MM, "margin_bottom": 32 * MM}
-
-    def test_fit_into_frame(self):
-        result = self.Report._tectora_fit_into_frame(
+    def test_put_in_frame(self):
+        result = self.Report._tectora_put_in_frame(
             self.source, self.frame, crop_top=28 * MM, crop_bottom=24 * MM,
-            body_top=52 * MM, body_bottom=32 * MM,
         )
         pages = PdfFileReader(io.BytesIO(result)).pages
         self.assertEqual(len(pages), 2, "one framed page per page of the document")
@@ -90,21 +86,21 @@ class TestQuoteDocuments(TransactionCase):
         first = text_positions(pages[0])
         self.assertIn("LAYOUT KOP", first)
         self.assertIn("LAYOUT VOET", first)
-        body_top, body_bottom = HEIGHT - 52 * MM, 32 * MM
-        self.assertTrue(body_bottom <= first["VOORSTEL OP MAAT"] <= body_top)
+        # Full size: the content stays where it is on the original page.
+        self.assertAlmostEqual(first["VOORSTEL OP MAAT"], HEIGHT - 216 * MM, delta=1)
         second = text_positions(pages[1])
-        self.assertTrue(body_bottom <= second["Welkom bij Tectora"] <= body_top,
-                        "content right under the old band lands under the layout header")
+        self.assertAlmostEqual(second["Welkom bij Tectora"], HEIGHT - 40 * MM, delta=1)
+        content = pages[0].get_contents().get_data()
         # Only the page between its own band (28 mm) and footer (24 mm) is
         # drawn: the clipping rectangle starts 24 mm from the bottom and is
         # 297 - 28 - 24 = 245 mm high.
-        content = pages[0].get_contents().get_data()
         self.assertRegex(content, rb"0(\.0+)? 68\.03\d* 595\.27\d* 694\.4\d* re\s+W\s+n")
+        # The layout's header and footer are drawn over the page.
+        self.assertGreater(content.index(b"LAYOUT KOP"), content.index(b"VOORSTEL OP MAAT"))
 
     def test_footer_crop_only_on_given_pages(self):
-        result = self.Report._tectora_fit_into_frame(
-            self.source, self.frame, crop_top=28 * MM, crop_bottom=24 * MM,
-            body_top=52 * MM, body_bottom=32 * MM, crop_bottom_pages={1},
+        result = self.Report._tectora_put_in_frame(
+            self.source, self.frame, crop_top=28 * MM, crop_bottom=24 * MM, crop_bottom_pages={1},
         )
         first, second = PdfFileReader(io.BytesIO(result)).pages
         # page 1: clipped from 24 mm; page 2 (no footer band of its own): from 0
@@ -127,6 +123,26 @@ class TestQuoteDocuments(TransactionCase):
         self.assertAlmostEqual(first["Dhr. Michiels Philippe"], HEIGHT - 232 * MM, delta=1)
         self.assertNotIn("Dhr. Michiels Philippe", second)
 
+    def test_site_address_under_name(self):
+        site = self.env["res.partner"].create({
+            "name": "Werf", "parent_id": self.partner.id, "type": "delivery",
+            "street": "Lostraat 15", "zip": "1703", "city": "Schepdaal",
+        })
+        order = self._order(partner_shipping_id=site.id)
+        result = self.Report._tectora_stamp_customer_name(self.source, order, 232)
+        first = text_positions(PdfFileReader(io.BytesIO(result)).pages[0])
+        self.assertIn("Werfadres: Lostraat 15, 1703 Schepdaal", first)
+        self.assertAlmostEqual(
+            first["Werfadres: Lostraat 15, 1703 Schepdaal"], HEIGHT - 240 * MM, delta=1
+        )
+        # without an address, only the name
+        no_address = self.env["res.partner"].create({"name": "Zonder Adres"})
+        bare = self.Report._tectora_stamp_customer_name(
+            self.source, self._order(partner_id=no_address.id), 232
+        )
+        self.assertFalse([t for t in text_positions(PdfFileReader(io.BytesIO(bare)).pages[0])
+                          if t.startswith("Werfadres")])
+
     def test_customer_name_without_title(self):
         self.partner.tectora_title_id = False
         result = self.Report._tectora_stamp_customer_name(self.source, self._order(), 232)
@@ -138,7 +154,7 @@ class TestQuoteDocuments(TransactionCase):
         order = self._order(quotation_document_ids=[(6, 0, (self.header | self.footer).ids)])
         writer = PdfFileWriter()
         with patch.object(type(self.Report), "_tectora_layout_frame", lambda self, order: {
-            "pdf": TestQuoteDocuments.frame, "margin_top": 52 * MM, "margin_bottom": 32 * MM,
+            "pdf": TestQuoteDocuments.frame,
         }):
             report = self.Report.with_context(tectora_layout_frames={})
             for document in (self.header, self.footer):

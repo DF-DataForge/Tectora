@@ -28,16 +28,20 @@ offerte zelf. Per document (tab *Afdrukken in de documentlay-out*):
 | Eigen voet weglaten (mm) | 24 | de voetband van de pdf zelf |
 | Eigen voet enkel op pagina's | leeg = alle | bv. `1,4`: enkel die pagina's hebben een voetband |
 
-Wat tussen de eigen kop en voet ligt, wordt verkleind tot het tussen de kop en
-de voet van de lay-out past (gecentreerd, bovenaan uitgelijnd), zodat er niets
-wegvalt.
+De pagina blijft **op ware grootte** (geen witte randen); de kop en voet van de
+lay-out komen erover. Onder de eigen band van de pdf (die wegvalt) staat dus de
+kop of voet van de lay-out. Is de voet van de lay-out lager dan de eigen voet
+van de pdf, dan blijft daar wit; zet *Eigen voet weglaten* op 0 om de voetband
+van de pdf zelf te houden.
 
 ## Naam klant op de voorpagina
 
 *Naam klant op de eerste pagina* (enkel bij een kop): de naam van de klant,
 met de **aanspreektitel** van het contact ervoor ("Dhr. Michiels Philippe";
 contact › *Aanspreektitel*, lijst in Verkoop › Configuratie ›
-Aanspreektitels), komt gecentreerd op de eerste pagina, in de hoofdkleur van het bedrijf, op
+Aanspreektitels), en eronder het **werfadres** (het afleveradres van de
+offerte, bv. "Werfadres: Lostraat 15, 1703 Schepdaal"), komt gecentreerd op de
+eerste pagina, in de hoofdkleur van het bedrijf, op
 *Positie naam klant* mm van de bovenkant van de oorspronkelijke pagina
 (standaard 232 mm: onder "Voorstel op maat"). Enkel voor de eerste kop van de
 offerte.
@@ -54,10 +58,9 @@ offerte.
 ## Technisch
 
 - Het rapport *Lay-outkader offerte* (`report_layout_frame`) drukt per order
-  de kop en voet van de lay-out rond een lege pagina (zonder adres of titel).
-  De pagina's van de kop- en voetteksten worden daarop geplaatst
-  (`ir.actions.report._tectora_fit_into_frame`); de ruimte ertussen volgt de
-  marges van het papierformaat van dat rapport.
+  de kop en voet van de lay-out op een verder lege, doorzichtige pagina (zonder
+  adres of titel). Die wordt over elke pagina van de kop- en voetteksten gelegd
+  (`ir.actions.report._tectora_put_in_frame`).
 - wkhtmltopdf drukt geen kop en voet op een pagina met een lege body; het
   kader heeft daarom een onzichtbare lijn van 1 px.
 - Kan het kader niet gemaakt worden, dan wordt het document afgedrukt zoals

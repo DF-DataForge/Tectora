@@ -13,9 +13,8 @@ class QuotationDocument(models.Model):
         string="In de documentlay-out",
         default=True,
         help="Elke pagina krijgt de kop en voet van de documentlay-out "
-        "(Instellingen › Documentlay-out). De eigen band van de pdf wordt "
-        "weggelaten en de inhoud ertussen past tussen de kop en de voet van "
-        "de lay-out.",
+        "(Instellingen › Documentlay-out), over de pagina heen. De pagina "
+        "blijft op ware grootte; de eigen band van de pdf valt weg.",
     )
     tectora_crop_top = fields.Float(
         string="Eigen kop weglaten (mm)",
@@ -38,7 +37,8 @@ class QuotationDocument(models.Model):
     tectora_customer_name = fields.Boolean(
         string="Naam klant op de eerste pagina",
         help="Drukt de naam van de klant, met de aanspreektitel ervoor "
-        "(Dhr., Mevr., ...), op de eerste pagina van deze pdf af, "
+        "(Dhr., Mevr., ...), en eronder het werfadres (het afleveradres van "
+        "de offerte) op de eerste pagina van deze pdf af, "
         "gecentreerd (bv. onder 'Voorstel op maat' op de voorpagina). Enkel "
         "voor de eerste kop van de offerte.",
     )
