@@ -10,7 +10,9 @@
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout" o="doc" hide_recipient_address="True"
                    layout_document_title="''">
-                    <div class="page"/>
+                    <!-- wkhtmltopdf draws no header and footer on a page
+                         whose body is empty: an invisible line of 1px. -->
+                    <div class="page"><div style="height: 1px;"/></div>
                 </t>
             </t>
         </t>

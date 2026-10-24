@@ -19,11 +19,12 @@ Footers, Odoo's Quote Builder) as the structure of every quotation:
   document, by default 28 mm at the top and 24 mm at the bottom) is left out
   and what lies between is scaled into the space between the layout's header
   and footer. Per document this can be switched off.
-* **Customer name**: the first header can print the customer's name on its
+* **Customer name**: the first header can print the customer's name, with
+  the salutation of the contact in front (Dhr., Mevr., ...), on its
   first page (e.g. under "Voorstel op maat" on the cover), centred, in the
   company's primary colour, at a height set on the document.
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

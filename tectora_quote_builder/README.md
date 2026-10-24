@@ -34,8 +34,10 @@ wegvalt.
 
 ## Naam klant op de voorpagina
 
-*Naam klant op de eerste pagina* (enkel bij een kop): de naam van de klant
-komt gecentreerd op de eerste pagina, in de hoofdkleur van het bedrijf, op
+*Naam klant op de eerste pagina* (enkel bij een kop): de naam van de klant,
+met de **aanspreektitel** van het contact ervoor ("Dhr. Michiels Philippe";
+contact › *Aanspreektitel*, lijst in Verkoop › Configuratie ›
+Aanspreektitels), komt gecentreerd op de eerste pagina, in de hoofdkleur van het bedrijf, op
 *Positie naam klant* mm van de bovenkant van de oorspronkelijke pagina
 (standaard 232 mm: onder "Voorstel op maat"). Enkel voor de eerste kop van de
 offerte.
@@ -56,6 +58,8 @@ offerte.
   De pagina's van de kop- en voetteksten worden daarop geplaatst
   (`ir.actions.report._tectora_fit_into_frame`); de ruimte ertussen volgt de
   marges van het papierformaat van dat rapport.
+- wkhtmltopdf drukt geen kop en voet op een pagina met een lege body; het
+  kader heeft daarom een onzichtbare lijn van 1 px.
 - Kan het kader niet gemaakt worden, dan wordt het document afgedrukt zoals
   het is (en staat de fout in het log).
 - Formuliervelden in een kop- of voettekst worden niet ondersteund wanneer die

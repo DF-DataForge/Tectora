@@ -171,3 +171,4 @@ Releases and the modules they need upgraded:
 | Taakopvolging per fase and Bestellijst (new modules) | install `tectora_project_tasks` (20.0.1.0.0) and `tectora_project_order_list` (20.0.1.0.0): new modules are not installed by an upgrade, install them from Apps (or `-i tectora_project_tasks,tectora_project_order_list`) |
 | Kop- en voetteksten offerte in de documentlay-out (new module) | install `tectora_quote_builder` (20.0.1.0.0); it also installs `sale_pdf_quote_builder` if missing |
 | Enter on an order line adds a line under it | `tectora_roof` (20.0.3.44.0) |
+| Aanspreektitel op het contact en de voorpagina; kop en voet van de lay-out op de kop- en voetteksten | `tectora_roof` (20.0.3.45.0), `tectora_quote_builder` (20.0.1.1.0) |

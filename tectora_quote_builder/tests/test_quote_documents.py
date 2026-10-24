@@ -48,7 +48,10 @@ class TestQuoteDocuments(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.Report = cls.env["ir.actions.report"]
-        cls.partner = cls.env["res.partner"].create({"name": "Dhr. Michiels Philippe"})
+        cls.partner = cls.env["res.partner"].create({
+            "name": "Michiels Philippe",
+            "tectora_title_id": cls.env.ref("tectora_roof.partner_title_mister").id,
+        })
         cls.source = make_pdf([
             [("OUDE BAND", 10), ("VOORSTEL OP MAAT", 216), ("OUDE VOET", 290)],
             [("OUDE BAND", 10), ("Welkom bij Tectora", 40), ("OUDE VOET", 290)],
@@ -124,6 +127,13 @@ class TestQuoteDocuments(TransactionCase):
         self.assertAlmostEqual(first["Dhr. Michiels Philippe"], HEIGHT - 232 * MM, delta=1)
         self.assertNotIn("Dhr. Michiels Philippe", second)
 
+    def test_customer_name_without_title(self):
+        self.partner.tectora_title_id = False
+        result = self.Report._tectora_stamp_customer_name(self.source, self._order(), 232)
+        first = text_positions(PdfFileReader(io.BytesIO(result)).pages[0])
+        self.assertIn("Michiels Philippe", first)
+        self.assertNotIn("Dhr. Michiels Philippe", first)
+
     def test_documents_printed_in_layout(self):
         order = self._order(quotation_document_ids=[(6, 0, (self.header | self.footer).ids)])
         writer = PdfFileWriter()
@@ -186,4 +196,6 @@ class TestQuoteDocuments(TransactionCase):
             "tectora_quote_builder.action_report_layout_frame", order.ids
         )
         self.assertIn(b'class="page"', html)
+        # wkhtmltopdf leaves out the header and footer of an empty page
+        self.assertIn(b'height: 1px', html)
         self.assertNotIn(self.partner.name.encode(), html, "no recipient address in the frame")
