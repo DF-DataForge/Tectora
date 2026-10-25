@@ -114,6 +114,10 @@ class IrActionsReport(models.Model):
                     crop_top=quotation_document.tectora_crop_top * MM,
                     crop_bottom=quotation_document.tectora_crop_bottom * MM,
                     crop_bottom_pages=quotation_document._tectora_crop_bottom_page_numbers(),
+                    crop_top_pages=quotation_document._tectora_page_numbers("tectora_crop_top_pages"),
+                    fit_pages=quotation_document._tectora_page_numbers("tectora_fit_pages") or (),
+                    body_top=frame["margin_top"],
+                    body_bottom=frame["margin_bottom"],
                 )
         return content
 
@@ -125,8 +129,9 @@ class IrActionsReport(models.Model):
     @api.model
     def _tectora_layout_frame(self, order):
         """The page with only the header and footer of the document layout
-        for this order ({"pdf": bytes}). False when it cannot be rendered: the
-        document is then printed as it is."""
+        for this order, with the margins (in points) of the space between
+        them: {"pdf", "margin_top", "margin_bottom"}. False when it cannot be
+        rendered: the document is then printed as it is."""
         frames = self.env.context.get("tectora_layout_frames")
         if frames is not None and order.id in frames:
             return frames[order.id]
@@ -138,7 +143,12 @@ class IrActionsReport(models.Model):
         try:
             report = clean.env.ref(FRAME_REPORT)
             pdf, _report_type = clean._render_qweb_pdf(report, order.ids)
-            frame = {"pdf": pdf}
+            paperformat = report.get_paperformat()
+            frame = {
+                "pdf": pdf,
+                "margin_top": (paperformat.margin_top or 0) * MM,
+                "margin_bottom": (paperformat.margin_bottom or 0) * MM,
+            }
         except Exception:
             _logger.exception("Lay-outkader voor offerte %s kon niet gemaakt worden", order.name)
         if frames is not None:
@@ -184,16 +194,25 @@ class IrActionsReport(models.Model):
         return ", ".join(part for part in (partner.street, partner.street2, city) if part)
 
     @api.model
-    def _tectora_put_in_frame(self, content, frame_pdf, crop_top, crop_bottom, crop_bottom_pages=None):
-        """Every page of `content` at full size with the frame on top: the
-        page without `crop_top` and `crop_bottom` points (its own header and
-        footer band) and over it the header and footer of the document
-        layout. A page of another width than the frame is scaled to its
-        width. `crop_bottom_pages`: the page numbers (1-based) that have a
-        footer band of their own; None for all."""
+    def _tectora_put_in_frame(
+        self, content, frame_pdf, crop_top, crop_bottom, crop_bottom_pages=None,
+        crop_top_pages=None, fit_pages=(), body_top=0.0, body_bottom=0.0,
+    ):
+        """Every page of `content` with the frame (the header and footer of
+        the document layout) on top, without `crop_top` and `crop_bottom`
+        points (the page's own header and footer band).
+
+        A page is printed at full size, scaled to the frame's width if it
+        has another one; a page in `fit_pages` (its content runs up to the
+        edge) is scaled down to fit between `body_top` and `body_bottom`
+        points, the space between the layout's header and footer. Page
+        numbers are 1-based; `crop_top_pages` / `crop_bottom_pages`: the
+        pages with a band of their own, None for all.
+        """
         reader = PdfFileReader(io.BytesIO(content), strict=False)
         writer = PdfFileWriter()
         for number, page in enumerate(reader.pages, start=1):
+            page_crop_top = crop_top if crop_top_pages is None or number in crop_top_pages else 0.0
             page_crop_bottom = (
                 crop_bottom if crop_bottom_pages is None or number in crop_bottom_pages else 0.0
             )
@@ -203,17 +222,22 @@ class IrActionsReport(models.Model):
             box = page.mediabox
             left, width = float(box.left), float(box.width)
             bottom = float(box.bottom) + page_crop_bottom
-            top = float(box.top) - crop_top
+            top = float(box.top) - page_crop_top
             if top <= bottom:
                 bottom, top = float(box.bottom), float(box.top)
             self._tectora_clip_page(page, left, bottom, width, top - bottom)
-            scale = frame_width / width
+            body_height = frame_height - body_top - body_bottom
+            if number in fit_pages and body_height > 0:
+                scale = min(frame_width / width, body_height / (top - bottom))
+                offset_x = (frame_width - width * scale) / 2 - left * scale
+                offset_y = frame_height - body_top - top * scale
+            else:
+                scale = frame_width / width
+                offset_x = -left * scale
+                offset_y = frame_height - float(box.top) * scale
             sheet = PageObject.create_blank_page(width=frame_width, height=frame_height)
             sheet.merge_transformed_page(
-                page,
-                Transformation().scale(scale, scale).translate(
-                    -left * scale, frame_height - float(box.top) * scale
-                ),
+                page, Transformation().scale(scale, scale).translate(offset_x, offset_y)
             )
             # The layout's header and footer over the page: the frame is
             # transparent between them.
