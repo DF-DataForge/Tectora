@@ -35,6 +35,7 @@ shots:
       - fill: {field: source_id, value: website, pick: Lead website}
       - highlight: {field: source_id, seconds: 1.5}
       - click: {button: Toevoegen}
+      - key: Escape          # close the next, empty quick-create card
       - wait: 0.8
       - click: {selector: ".o_kanban_group:first-child .o_kanban_record:has-text('Renovatie plat dak Peeters')"}
 

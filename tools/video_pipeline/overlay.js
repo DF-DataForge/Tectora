@@ -7,6 +7,13 @@
     if (window.__tv) {
         return;
     }
+    // Notifications "denied": otherwise Odoo counts "enable notifications"
+    // as unread in the navbar (or, when granted, fails on push registration).
+    try {
+        Object.defineProperty(window.Notification, "permission", { get: () => "denied" });
+    } catch {
+        // No Notification API: nothing to hide.
+    }
     if (window.top !== window) {
         // Inside the phone frame: the cursor lives on the top page, so pass
         // the mouse up, converted to top-page coordinates.
@@ -64,7 +71,7 @@
             justify-content: center; background: radial-gradient(circle at 30% 20%, #e9f4f4, #cfe5e5);
             opacity: 0; transition: opacity .45s; }
         #tv-phone.tv-on { opacity: 1; }
-        #tv-phone .tv-device { width: 390px; height: 844px; padding: 14px; border-radius: 54px; background: #111;
+        #tv-phone .tv-device { box-sizing: content-box; width: 390px; height: 844px; padding: 14px; border-radius: 54px; background: #111;
             box-shadow: 0 30px 80px rgba(0,0,0,.35); transform: scale(1.12); }
         #tv-phone iframe { width: 390px; height: 844px; border: 0; border-radius: 42px; background: #fff; }
         body.tv-zoomable { transition: transform .8s cubic-bezier(.4, 0, .2, 1); }

@@ -1,0 +1,78 @@
+# Storyboard for docs/video_scripts/standaard/02_behoeften_vastleggen.md
+script: docs/video_scripts/standaard/02_behoeften_vastleggen.md
+name: standaard_02_behoeften_vastleggen
+series: Tectora · de standaardflow
+stage: lead
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 3
+start: /odoo/crm
+pronunciation:
+  CRM: C R M
+
+shots:
+  1:
+    card: title
+
+  2:
+    setup:
+      - click: {selector: ".o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+    steps:
+      - wait: 1.0
+      - highlight: {selector: ".o_form_view .oe_title", seconds: 2.5}
+      - wait: 1.0
+      - hover: {selector: ".o_notebook .nav-link:has-text('Notities')"}
+
+  3:
+    steps:
+      - click: {selector: ".o_notebook .nav-link:has-text('Notities')"}
+      - fill:
+          field: description
+          delay: 30
+          value: "Dak: plat, ± 100 m², bestaande roofing 1 laag.\nProbleem: lekt aan de lichtkoepel.\nWens: isoleren + EPDM.\nExtra: lichtkoepel vervangen.\nToegang: via de oprit, geen stelling nodig.\nTiming: vóór de winter.\nBudget: ± € 15.000."
+      - wait: 0.8
+      - highlight: {field: description, seconds: 2.5}
+
+  4:
+    steps:
+      - fill: {field: tag_ids, value: Renov, pick: Renovatie}
+      - fill: {field: tag_ids, value: Lichtk, pick: Lichtkoepel}
+      - highlight: {field: tag_ids, seconds: 1.2}
+      - save:
+      - click: {selector: ".o_breadcrumb a:has-text('Pijplijn')"}
+      - click: {selector: ".o_switch_view.o_list"}
+      - click: {selector: ".o_searchview_input"}
+      - type: Lichtk
+      - wait: 0.6
+      - click: {selector: ".o_searchview_autocomplete li:has-text('Zoeken Label voor')"}
+      - wait: 1.0
+      - hover: {selector: ".o_data_row:has-text('Renovatie plat dak Peeters')"}
+
+  5:
+    steps:
+      - click: {selector: ".o_data_row:has-text('Renovatie plat dak Peeters') td[name=name]"}
+      - click: {button: Notitie loggen}
+      - highlight: {selector: ".o-mail-Composer button[title='Bestanden toevoegen']", seconds: 1.8}
+      - click: {selector: ".o-mail-Composer-input"}
+      - type: "Foto's van het dak en de lichtkoepel ontvangen. @Els"
+      - wait: 0.8
+      - click: {selector: ".o-mail-Composer-suggestion:has-text('Els Vermeulen')"}
+      - type: "kijk jij naar de toegang?"
+      - wait: 0.5
+      - click: {selector: ".o-mail-Composer-send"}
+
+  6:
+    steps:
+      - click: {button: Activiteit}
+      - click: {text: Bellen, in: ".modal [name=activity_type_id]"}
+      - click: {selector: ".modal [name=summary] input"}
+      - key: "Control+a"
+      - type: Plaatsbezoek afspreken
+      - click: {selector: ".modal [name=date_deadline]"}
+      - click: {selector: ".o_datetime_picker .o_today >> xpath=following::div[contains(@class,'o_date_item_cell')][1]"}
+      - wait: 0.4
+      - click: {selector: ".modal button:has-text('Opslaan')"}
+
+  7:
+    card: title

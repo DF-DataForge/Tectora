@@ -282,6 +282,14 @@ if "tectora_portal_planning_horizon" in foreman._fields:
 if not foreman.user_id:
     foreman.action_tectora_grant_portal_access()
 foreman.user_id.sudo().write({"password": FOREMAN_PASSWORD, "lang": "nl_BE", "tz": "Europe/Brussels"})
+# An office colleague to @mention in the chatter (video 02).
+if not env["res.users"].with_context(active_test=False).search([("login", "=", "els.vermeulen@tectora.example")]):
+    env["res.users"].with_context(no_reset_password=True).create({
+        "name": "Els Vermeulen", "login": "els.vermeulen@tectora.example", "email": "els.vermeulen@tectora.example",
+        "lang": "nl_BE", "tz": "Europe/Brussels", "company_id": company.id, "company_ids": [(6, 0, company.ids)],
+        "group_ids" if "group_ids" in env["res.users"]._fields else "groups_id": [(6, 0, ref("base.group_user").ids)]})
+# Notified in Odoo, not by mail: no failed-mail icon on the message.
+env["res.users"].search([("login", "=", "els.vermeulen@tectora.example")]).notification_type = "inbox"
 
 # -------------------------------------------------------------- the opportunity
 if stage != "lead_new":
@@ -336,12 +344,25 @@ if stage in ("project", "timer"):
             "start_datetime": datetime.now() - timedelta(hours=6, minutes=30),
             "started_by_id": foreman.id, "employee_ids": [(6, 0, (foreman | roofer | roofer2).ids)],
         })
+    # The portal header (video 11) shows the company logo: Tectora, not "Your logo".
+    logo = os.path.join(ASSETS or "", "tectora_logo.png")
+    if stage == "timer" and ASSETS and os.path.exists(logo):
+        from odoo.tools.binary import BinaryBytes
+        with open(logo, "rb") as handle:
+            company.logo = BinaryBytes(handle.read())
 
 # Nothing unread in the navbar during a take.
 env.flush_all()
 env.invalidate_all()
 env["mail.notification"].search([("res_partner_id", "=", user.partner_id.id),
                                  ("is_read", "=", False)]).write({"is_read": True})
+# The demo has no mail server: failed mails would show as a counter too.
+env["mail.notification"].search([("notification_status", "in", ("exception", "bounce"))]).unlink()
+for member in env["discuss.channel.member"].search([("partner_id", "=", user.partner_id.id)]):
+    last = env["mail.message"].search([("model", "=", "discuss.channel"),
+                                       ("res_id", "=", member.channel_id.id)], order="id desc", limit=1)
+    if last:
+        member._mark_as_read(last.id)
 
 env.cr.commit()
 print(f"Demo data ready (stage {stage})")
