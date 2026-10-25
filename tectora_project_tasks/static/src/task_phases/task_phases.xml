@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Compact phase timeline -->
+    <t t-name="tectora_project_tasks.PhaseTimeline">
+        <div t-att-class="'o_tectora_timeline' + (this.props.compact ? ' o_tectora_timeline_compact' : '')">
+            <ol class="o_tectora_steps">
+                <li t-if="this.props.showAll"
+                    t-att-class="'o_tectora_step o_tectora_step_all' + (this.props.selectedId ? '' : ' o_tectora_step_selected')"
+                    role="button" t-on-click="() => this.props.onSelect(false)">
+                    <span class="o_tectora_step_dot"><i class="oi" data-icon="format_list_bulleted"/></span>
+                    <span class="o_tectora_step_label">
+                        <span class="o_tectora_step_name" t-out="this.labels.allPhases"/>
+                        <span class="o_tectora_step_meta"><t t-out="this.totalDone"/>/<t t-out="this.totalTasks"/></span>
+                    </span>
+                </li>
+                <t t-foreach="this.props.phases" t-as="phase" t-key="phase.id">
+                    <li t-att-class="'o_tectora_step ' + this.stepClass(phase)" t-att-title="this.stepTitle(phase)"
+                        role="button" t-on-click="() => this.props.onSelect(phase.id)">
+                        <span class="o_tectora_step_dot">
+                            <i t-if="phase.reached" class="oi" data-icon="check"/>
+                            <t t-else="" t-out="phase.sequence"/>
+                        </span>
+                        <span class="o_tectora_step_label">
+                            <span class="o_tectora_step_name" t-out="phase.name"/>
+                            <span class="o_tectora_step_meta">
+                                <t t-out="phase.done"/>/<t t-out="phase.total"/>
+                                <t t-if="!this.props.compact and !phase.reached and phase.deadline"> · <i class="oi" data-icon="flag"/> <t t-out="phase.deadline"/></t>
+                            </span>
+                        </span>
+                    </li>
+                </t>
+            </ol>
+        </div>
+    </t>
+
+    <!-- Task block on the project dashboard -->
+    <t t-name="tectora_project_tasks.TaskPhasesWidget">
+        <div class="o_tectora_task_phases card" t-if="this.state.data">
+            <t t-set="data" t-value="this.state.data"/>
+            <div class="card-header d-flex align-items-center">
+                <i class="oi me-2" data-icon="check_box"/>
+                <h4 class="mb-0" t-out="this.labels.tasks"/>
+                <t t-if="data.project.started">
+                    <span class="badge text-bg-light border ms-2"><t t-out="data.open_count"/> open</span>
+                    <span t-if="data.late_count" class="badge text-bg-danger ms-1"><t t-out="data.late_count"/> te laat</span>
+                    <button class="btn btn-sm btn-primary ms-auto"
+                            t-on-click="() => this.openTaskBoard(this.currentPhase and this.currentPhase.id)">
+                        Openen <i class="oi ms-1" data-icon="arrow_forward"/>
+                    </button>
+                </t>
+            </div>
+            <div class="card-body">
+                <t t-if="!data.project.started">
+                    <div t-if="data.project.can_start" class="d-flex align-items-center justify-content-between gap-3">
+                        <span class="text-muted">De taakopvolging per fase is nog niet gestart voor dit project.</span>
+                        <button class="btn btn-primary text-nowrap" t-on-click="() => this.startTaskPhases()">
+                            Taakopvolging starten
+                        </button>
+                    </div>
+                    <div t-else="" class="text-muted">
+                        Nog geen projectfases ingesteld. Maak ze aan in
+                        <b>Dakmeting › Projectopvolging › Projectfases</b> en vul de
+                        <b>Taaksjablonen</b> aan; elk nieuw project krijgt dan per fase
+                        een mijlpaal met de taken en subtaken.
+                    </div>
+                </t>
+                <t t-else="">
+                    <PhaseTimeline phases="data.phases"
+                                   selectedId="this.currentPhase ? this.currentPhase.id : false"
+                                   compact="true"
+                                   onSelect="(phaseId) => this.openTaskBoard(phaseId)"/>
+                    <t t-if="this.currentPhase">
+                        <div class="d-flex align-items-baseline mt-3 mb-1">
+                            <span class="fw-bold">Huidige fase: <t t-out="this.currentPhase.name"/></span>
+                            <span class="ms-auto small text-muted"><t t-out="this.currentPhase.done"/> / <t t-out="this.currentPhase.total"/></span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar" t-att-style="'width: ' + this.currentPhase.progress + '%'"/>
+                        </div>
+                    </t>
+                    <ul class="list-unstyled o_tectora_summary_list mb-0">
+                        <t t-foreach="data.current_tasks" t-as="task" t-key="task.id">
+                            <li>
+                                <input type="checkbox" class="form-check-input o_tectora_check me-2"
+                                       t-att-checked="task.done ? true : undefined"
+                                       t-on-change="() => this.toggleTask(task)"/>
+                                <a href="#" class="flex-grow-1 o_tectora_task_name"
+                                   t-att-class="task.done ? 'o_tectora_done' : ''"
+                                   t-on-click.prevent="() => this.openTask(task)" t-out="task.name"/>
+                                <span t-if="task.deadline"
+                                      t-att-class="'small ' + (task.late ? 'text-danger fw-bold' : 'text-muted')"
+                                      t-out="task.deadline"/>
+                            </li>
+                        </t>
+                        <li t-if="!data.current_tasks.length" class="text-muted">
+                            <t t-if="data.phases.length">Alles in deze fase is afgewerkt.</t>
+                            <t t-else="">Er zijn geen fases voor dit project.</t>
+                        </li>
+                    </ul>
+                </t>
+            </div>
+        </div>
+    </t>
+
+    <!-- Task page -->
+    <t t-name="tectora_project_tasks.TasksBoard">
+        <div class="o_action o_tectora_tasks_board">
+            <Layout display="{ controlPanel: {} }">
+                <t t-set-slot="control-panel-buttons">
+                    <div class="d-flex gap-1" t-if="this.state.data and this.state.data.project.started">
+                        <button t-att-class="'btn ' + (this.state.onlyOpen ? 'btn-primary' : 'btn-secondary')"
+                                t-on-click="() => { this.state.onlyOpen = !this.state.onlyOpen; }">
+                            <i class="oi me-1" data-icon="filter_alt"/>Enkel open
+                        </button>
+                        <button t-if="this.disabledOptionCount or this.state.showDisabled"
+                                t-att-class="'btn ' + (this.state.showDisabled ? 'btn-primary' : 'btn-secondary')"
+                                t-on-click="() => { this.state.showDisabled = !this.state.showDisabled; }">
+                            <i class="oi me-1" data-icon="toggle_off"/>Uitgezette opties
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.openList()">
+                            <i class="oi me-1" data-icon="view_list"/>Lijst
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.refresh()" title="Vernieuwen">
+                            <i class="oi" data-icon="refresh"/>
+                        </button>
+                    </div>
+                </t>
+
+                <div class="o_tectora_board_content" t-if="this.state.data">
+                    <t t-set="data" t-value="this.state.data"/>
+                    <div class="o_tectora_tasks_inner">
+                        <div t-if="!data.project.started" class="alert alert-info d-flex align-items-center justify-content-between">
+                            <t t-if="data.project.can_start">
+                                <span>De taakopvolging per fase is nog niet gestart voor dit project.</span>
+                                <button class="btn btn-primary" t-on-click="() => this.startTaskPhases()">Taakopvolging starten</button>
+                            </t>
+                            <span t-else="">Nog geen projectfases ingesteld (Dakmeting › Projectopvolging › Projectfases).</span>
+                        </div>
+                        <t t-else="">
+                            <div class="card mb-3">
+                                <div class="card-body py-3 px-3">
+                                    <PhaseTimeline phases="data.phases" selectedId="this.state.phaseId" showAll="true"
+                                                   onSelect="(phaseId) => this.selectPhase(phaseId)"/>
+                                </div>
+                            </div>
+
+                            <t t-foreach="this.visiblePhases" t-as="phase" t-key="phase.id">
+                                <section t-att-class="'o_tectora_phase_card card mb-3' + (phase.reached ? ' o_tectora_phase_reached' : '')">
+                                    <header class="o_tectora_phase_head">
+                                        <span class="o_tectora_phase_num">
+                                            <i t-if="phase.reached" class="oi" data-icon="check"/>
+                                            <t t-else="" t-out="phase.sequence"/>
+                                        </span>
+                                        <div class="o_tectora_phase_title">
+                                            <h3 t-out="phase.name"/>
+                                            <span class="text-muted" t-out="phase.subtitle"/>
+                                        </div>
+                                        <div class="o_tectora_phase_progress">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span class="text-muted"><t t-out="phase.done"/> van <t t-out="phase.total"/> afgewerkt</span>
+                                                <span t-if="phase.reached" class="text-success"><i class="oi me-1" data-icon="flag"/><t t-out="phase.reached_date"/></span>
+                                                <span t-elif="phase.deadline" t-att-class="phase.late ? 'text-danger fw-bold' : 'text-muted'">
+                                                    <i class="oi me-1" data-icon="flag"/><t t-out="phase.deadline"/>
+                                                </span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div t-att-class="'progress-bar' + (phase.reached ? ' bg-success' : '')"
+                                                     t-att-style="'width: ' + phase.progress + '%'"/>
+                                            </div>
+                                        </div>
+                                        <button t-att-class="'btn btn-sm text-nowrap ' + (phase.reached ? 'btn-light' : 'btn-primary')"
+                                                t-on-click="() => this.togglePhaseReached(phase)">
+                                            <t t-if="phase.reached"><i class="oi me-1" data-icon="undo"/>Heropenen</t>
+                                            <t t-else=""><i class="oi me-1" data-icon="sports_score"/>Fase afronden</t>
+                                        </button>
+                                    </header>
+
+                                    <ul class="o_tectora_task_list list-unstyled mb-0">
+                                        <t t-foreach="this.tasksOf(phase)" t-as="task" t-key="task.id">
+                                            <li t-att-class="'o_tectora_task_row' + (task.done ? ' o_tectora_done' : '') + (task.enabled ? '' : ' o_tectora_disabled')">
+                                                <input type="checkbox" class="form-check-input o_tectora_check"
+                                                       t-att-checked="task.done ? true : undefined"
+                                                       t-att-disabled="task.enabled ? undefined : true"
+                                                       t-on-change="() => this.toggleTask(task)"/>
+                                                <div class="o_tectora_task_main">
+                                                    <a href="#" class="o_tectora_task_name" t-on-click.prevent="() => this.openTask(task)" t-out="task.name"/>
+                                                    <span t-if="task.optional" class="badge rounded-pill text-bg-warning ms-2">optie</span>
+                                                    <a href="#" t-if="task.link" class="badge rounded-pill text-bg-info ms-2"
+                                                       t-on-click.prevent="() => this.openLink(task)" t-out="task.link.label"/>
+                                                </div>
+                                                <div class="o_tectora_task_meta">
+                                                    <span class="o_tectora_meta_sub">
+                                                        <t t-if="task.children.length"><t t-out="task.children_done"/>/<t t-out="task.children.length"/> subtaken</t>
+                                                    </span>
+                                                    <span class="o_tectora_meta_user text-truncate" t-att-title="task.users">
+                                                        <t t-if="task.users"><i class="oi me-1" data-icon="person"/><t t-out="task.users"/></t>
+                                                    </span>
+                                                    <span t-att-class="'o_tectora_meta_date' + (task.late ? ' text-danger fw-bold' : '')">
+                                                        <t t-if="task.deadline"><i class="oi me-1" data-icon="schedule"/><t t-out="task.deadline"/></t>
+                                                    </span>
+                                                    <span class="o_tectora_meta_toggle">
+                                                        <button t-if="task.optional" class="btn btn-link p-0"
+                                                                t-on-click="() => this.toggleTaskEnabled(task)"
+                                                                t-att-title="task.enabled ? 'Optie uitzetten voor dit project' : 'Optie aanzetten voor dit project'">
+                                                            <i t-att-class="'oi ' + (task.enabled ? 'text-success' : 'text-muted')"
+                                                               t-att-data-icon="task.enabled ? 'toggle_on' : 'toggle_off'"/>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </li>
+                                            <t t-foreach="task.children" t-as="child" t-key="child.id">
+                                                <li t-att-class="'o_tectora_task_row o_tectora_subtask_row' + (child.done ? ' o_tectora_done' : '') + (child.enabled ? '' : ' o_tectora_disabled')">
+                                                    <input type="checkbox" class="form-check-input o_tectora_check"
+                                                           t-att-checked="child.done ? true : undefined"
+                                                           t-att-disabled="child.enabled ? undefined : true"
+                                                           t-on-change="() => this.toggleTask(child, task)"/>
+                                                    <div class="o_tectora_task_main">
+                                                        <a href="#" class="o_tectora_task_name" t-on-click.prevent="() => this.openTask(child)" t-out="child.name"/>
+                                                    </div>
+                                                    <div class="o_tectora_task_meta">
+                                                        <span class="o_tectora_meta_sub"/>
+                                                        <span class="o_tectora_meta_user text-truncate" t-att-title="child.users">
+                                                            <t t-if="child.users"><i class="oi me-1" data-icon="person"/><t t-out="child.users"/></t>
+                                                        </span>
+                                                        <span t-att-class="'o_tectora_meta_date' + (child.late ? ' text-danger fw-bold' : '')">
+                                                            <t t-if="child.deadline"><i class="oi me-1" data-icon="schedule"/><t t-out="child.deadline"/></t>
+                                                        </span>
+                                                        <span class="o_tectora_meta_toggle"/>
+                                                    </div>
+                                                </li>
+                                            </t>
+                                        </t>
+                                        <li t-if="!this.tasksOf(phase).length" class="o_tectora_task_empty text-muted">
+                                            Geen openstaande items in deze fase.
+                                        </li>
+                                    </ul>
+                                </section>
+                            </t>
+                            <div t-if="!data.phases.length" class="text-muted">Er zijn geen fases voor dit project.</div>
+                        </t>
+                    </div>
+                </div>
+            </Layout>
+        </div>
+    </t>
+
+</templates>

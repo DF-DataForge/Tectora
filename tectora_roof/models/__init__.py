@@ -7,6 +7,7 @@ from . import roof_epdm_sheet
 from . import roof_project_info
 from . import roof_team
 from . import hr_employee
+from . import res_partner
 from . import roof_planning
 from . import res_company
 from . import account_move

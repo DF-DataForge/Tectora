@@ -1,0 +1,59 @@
+// Order list: the block on the project dashboard and the order list page.
+.o_tectora_order_list,
+.o_tectora_order_board {
+    .card-header {
+        background-color: transparent;
+        h4 {
+            font-size: 1.1rem;
+        }
+    }
+    .o_tectora_check {
+        width: 1.2em;
+        height: 1.2em;
+        margin: 0;
+        flex: 0 0 auto;
+        cursor: pointer;
+    }
+    .o_tectora_order_name {
+        color: $body-color;
+        &:hover {
+            color: $o-brand-primary;
+        }
+    }
+}
+
+.o_tectora_order_list .o_tectora_order_summary li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.25rem;
+    border-bottom: 1px solid $border-color;
+    &:hover {
+        background-color: rgba($o-brand-primary, 0.06);
+    }
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.o_tectora_order_board {
+    .o_tectora_board_content {
+        padding: 1rem;
+        overflow: auto;
+        height: 100%;
+    }
+    .o_tectora_order_table {
+        .o_tectora_supplier_note {
+            white-space: pre-line;
+        }
+        select,
+        input[type="date"] {
+            min-width: 9rem;
+        }
+        tr.o_tectora_done .o_tectora_order_name {
+            color: $text-muted;
+            text-decoration: line-through;
+            font-weight: 400;
+        }
+    }
+}

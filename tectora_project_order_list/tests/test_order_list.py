@@ -1,0 +1,125 @@
+# -*- coding: utf-8 -*-
+from odoo.exceptions import UserError
+from odoo.tests import TransactionCase, tagged
+
+
+@tagged("post_install", "-at_install")
+class TestOrderList(TransactionCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Start from an empty configuration, as the module ships it.
+        cls.env["tectora.order.list.template"].search([]).action_archive()
+        cls.env["tectora.task.template"].search([]).action_archive()
+        cls.env["tectora.project.phase"].search([]).action_archive()
+        cls.supplier = cls.env["res.partner"].create({"name": "Dakmaterialen NV"})
+        cls.other_supplier = cls.env["res.partner"].create({"name": "Isolatie BV"})
+        Template = cls.env["tectora.order.list.template"]
+        cls.part_order = Template.create({
+            "name": "Dakbedekking", "sequence": 1, "order_action": "order",
+            "partner_ids": [(6, 0, (cls.supplier | cls.other_supplier).ids)],
+            "supplier_note": "Levertijd 2 weken",
+        })
+        cls.part_stock = Template.create({
+            "name": "Isolatie", "sequence": 2, "order_action": "stock_first",
+        })
+        phase = cls.env["tectora.project.phase"].create({"name": "Voorbereiding"})
+        cls.task_template = cls.env["tectora.task.template"].create({
+            "name": "Alles besteld volgens de bestellijst",
+            "phase_id": phase.id, "order_list_auto": True,
+        })
+        cls.product = cls.env["product.product"].create({
+            "name": "EPDM", "is_storable": True, "purchase_ok": True,
+        })
+
+    def _project(self):
+        return self.env["project.project"].create({"name": "Werf"})
+
+    def test_new_project_gets_order_list(self):
+        project = self._project()
+        lines = project.tectora_order_line_ids
+        self.assertEqual(lines.mapped("name"), ["Dakbedekking", "Isolatie"])
+        first = lines[0]
+        self.assertEqual(first.partner_id, self.supplier, "first suggested supplier by default")
+        self.assertEqual(first.supplier_note, "Levertijd 2 weken")
+        self.assertEqual(first.status, "todo")
+        self.assertEqual(project.tectora_order_progress, 0)
+
+    def test_order_list_task_follows_the_list(self):
+        project = self._project()
+        task = self.env["project.task"].search([
+            ("project_id", "=", project.id), ("tectora_template_id", "=", self.task_template.id),
+        ])
+        lines = project.tectora_order_line_ids
+        lines[0].checked = True
+        self.assertNotEqual(task.state, "1_done")
+        lines[1].checked = True
+        self.assertEqual(task.state, "1_done")
+        self.assertTrue(task.milestone_id.is_reached)
+        lines[1].action_tectora_toggle_checked()
+        self.assertNotEqual(task.state, "1_done")
+        data = project._tectora_task_data(task)
+        self.assertEqual(data["link"]["method"], "action_tectora_open_order_board")
+
+    def test_purchase_from_line(self):
+        project = self._project()
+        line = project.tectora_order_line_ids[0]
+        self.env["tectora.project.order.product"].create({
+            "order_line_id": line.id, "product_id": self.product.id, "quantity": 5,
+        })
+        action = line.action_tectora_create_purchase()
+        order = self.env["purchase.order"].browse(action["res_id"])
+        self.assertEqual(order.project_id, project)
+        self.assertEqual(order.tectora_order_line_id, line)
+        self.assertEqual(order.order_line.product_qty, 5)
+        self.assertEqual(line.status, "rfq")
+        self.assertTrue(line.order_date)
+        order.button_confirm()
+        line.invalidate_recordset(["status"])
+        self.assertEqual(line.status, "ordered")
+
+    def test_stock_first_orders_only_the_shortage(self):
+        project = self._project()
+        line = project.tectora_order_line_ids[1]
+        line.partner_id = self.supplier
+        self.env["stock.quant"]._update_available_quantity(
+            self.product, self.env.ref("stock.stock_location_stock"), 3
+        )
+        self.env["tectora.project.order.product"].create({
+            "order_line_id": line.id, "product_id": self.product.id, "quantity": 5,
+        })
+        self.assertEqual(line.product_line_ids.shortage_qty, 2)
+        action = line.action_tectora_create_purchase()
+        order = self.env["purchase.order"].browse(action["res_id"])
+        self.assertEqual(order.order_line.product_qty, 2)
+
+        line.product_line_ids.quantity = 2
+        self.assertEqual(line.status, "rfq")
+        order.button_cancel()
+        line.invalidate_recordset(["status"])
+        self.assertEqual(line.status, "stock")
+        with self.assertRaises(UserError):
+            line.action_tectora_create_purchase()
+
+    def test_board_data_and_empty_configuration(self):
+        project = self._project()
+        data = project.tectora_get_order_list_data()
+        self.assertEqual(data["total"], 2)
+        self.assertEqual(
+            [s["name"] for s in data["lines"][0]["suppliers"]], ["Dakmaterialen NV", "Isolatie BV"]
+        )
+        self.env["tectora.order.list.template"].search([]).action_archive()
+        empty = self._project()
+        data = empty.tectora_get_order_list_data()
+        self.assertEqual(data["total"], 0)
+        self.assertFalse(data["project"]["can_create"])
+
+    def test_copy_does_not_build_a_second_list(self):
+        project = self._project()
+        copy = project.copy()
+        self.assertFalse(copy.tectora_order_line_ids)
+        copy.action_tectora_create_order_list()
+        self.assertEqual(len(copy.tectora_order_line_ids), 2)
+        copy.action_tectora_create_order_list()
+        self.assertEqual(len(copy.tectora_order_line_ids), 2)

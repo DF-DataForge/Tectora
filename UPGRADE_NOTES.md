@@ -168,3 +168,12 @@ Releases and the modules they need upgraded:
 | m as Reken-UoM for hercalculatie | `tectora_roof` (20.0.3.24.0) |
 | Hercalculatie per m shows L × B × H | `tectora_roof` (20.0.3.25.0) |
 | Conversion shown on bill of materials lines | `tectora_sale_bom` (20.0.1.1.0) |
+| Taakopvolging per fase and Bestellijst (new modules) | install `tectora_project_tasks` (20.0.1.0.0) and `tectora_project_order_list` (20.0.1.0.0): new modules are not installed by an upgrade, install them from Apps (or `-i tectora_project_tasks,tectora_project_order_list`) |
+| Kop- en voetteksten offerte in de documentlay-out (new module) | install `tectora_quote_builder` (20.0.1.0.0); it also installs `sale_pdf_quote_builder` if missing |
+| Enter on an order line adds a line under it | `tectora_roof` (20.0.3.44.0) |
+| Aanspreektitel op het contact en de voorpagina; kop en voet van de lay-out op de kop- en voetteksten | `tectora_roof` (20.0.3.45.0), `tectora_quote_builder` (20.0.1.1.0) |
+| Kop- en voetteksten op ware grootte, werfadres op de voorpagina | `tectora_quote_builder` (20.0.1.2.0) |
+| Taaksjablonen en bestellijst importeren uit Excel | `tectora_project_tasks` (20.0.1.1.0), `tectora_project_order_list` (20.0.1.1.0) |
+| Kop- en voetteksten: eigen kop per pagina, pagina's verkleinen | `tectora_quote_builder` (20.0.1.3.0) |
+| Afmetingen hercalculatie in mm; hercalculatie aanzetten vanuit een component | `tectora_roof` (20.0.3.46.0) |
+| Hercalculatie: veiligheidsmarge; stuklijstlijnen in de Reken-UoM | `tectora_roof` (20.0.3.47.0), `tectora_sale_bom` (20.0.1.3.0) |

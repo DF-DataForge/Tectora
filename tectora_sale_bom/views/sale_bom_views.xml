@@ -46,11 +46,11 @@
                             <field name="quantity"/>
                             <field name="fixed_quantity" string="Vast" width="60px"/>
                             <field name="total_quantity"/>
-                            <field name="tectora_recalc_info" readonly="1" optional="show"
-                                   class="text-muted"/>
                             <field name="product_uom_id" groups="uom.group_uom"
                                    options="{'no_create': True, 'no_open': True}"
                                    widget="many2one_uom"/>
+                            <field name="tectora_recalc_info" readonly="1" optional="show"
+                                   class="text-muted"/>
                             <field name="unit_cost"/>
                             <field name="cost_subtotal" sum="Totaal"/>
                         </list>
