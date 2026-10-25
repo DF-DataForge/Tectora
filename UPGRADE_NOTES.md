@@ -175,3 +175,4 @@ Releases and the modules they need upgraded:
 | Kop- en voetteksten op ware grootte, werfadres op de voorpagina | `tectora_quote_builder` (20.0.1.2.0) |
 | Taaksjablonen en bestellijst importeren uit Excel | `tectora_project_tasks` (20.0.1.1.0), `tectora_project_order_list` (20.0.1.1.0) |
 | Kop- en voetteksten: eigen kop per pagina, pagina's verkleinen | `tectora_quote_builder` (20.0.1.3.0) |
+| Afmetingen hercalculatie in mm; hercalculatie aanzetten vanuit een component | `tectora_roof` (20.0.3.46.0) |
