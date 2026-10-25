@@ -7,6 +7,32 @@
     if (window.__tv) {
         return;
     }
+    if (window.top !== window) {
+        // Inside the phone frame: the cursor lives on the top page, so pass
+        // the mouse up, converted to top-page coordinates.
+        const toTop = (ev) => {
+            const frame = window.frameElement;
+            if (!frame || !window.top.__tv) {
+                return null;
+            }
+            const r = frame.getBoundingClientRect();
+            const scale = r.width / frame.clientWidth;
+            return [r.left + ev.clientX * scale, r.top + ev.clientY * scale];
+        };
+        window.addEventListener("mousemove", (ev) => {
+            const p = toTop(ev);
+            if (p) {
+                window.top.__tv.cursorAt(...p);
+            }
+        }, true);
+        window.addEventListener("mousedown", (ev) => {
+            const p = toTop(ev);
+            if (p) {
+                window.top.__tv.ripple(...p);
+            }
+        }, true);
+        return;
+    }
     const BRAND = "#2D8D8F";
     const FONT = "'Montserrat', 'Segoe UI', Arial, sans-serif";
     const LOGO_WHITE = "/tectora_report_layout/static/src/img/tectora_logo_white.svg";
@@ -34,6 +60,13 @@
         #tv-highlight { position: fixed; border: 4px solid ${BRAND}; border-radius: 10px;
             box-shadow: 0 0 0 9999px rgba(15, 30, 30, .35); opacity: 0; transition: all .35s ease; }
         #tv-highlight.tv-on { opacity: 1; }
+        #tv-phone { position: fixed; inset: 0; pointer-events: auto; display: flex; align-items: center;
+            justify-content: center; background: radial-gradient(circle at 30% 20%, #e9f4f4, #cfe5e5);
+            opacity: 0; transition: opacity .45s; }
+        #tv-phone.tv-on { opacity: 1; }
+        #tv-phone .tv-device { width: 390px; height: 844px; padding: 14px; border-radius: 54px; background: #111;
+            box-shadow: 0 30px 80px rgba(0,0,0,.35); transform: scale(1.12); }
+        #tv-phone iframe { width: 390px; height: 844px; border: 0; border-radius: 42px; background: #fff; }
         body.tv-zoomable { transition: transform .8s cubic-bezier(.4, 0, .2, 1); }
     `;
     const CURSOR_SVG = `<svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 2l16 10.5-7.2 1.4 4.3 7.6-3 1.6-4.3-7.7L4 20.5z"
@@ -85,25 +118,47 @@
         }
     }
 
-    window.addEventListener("mousemove", (ev) => {
-        window.__tvLastMouse = [ev.clientX, ev.clientY];
+    function cursorAt(x, y) {
+        window.__tvLastMouse = [x, y];
         if (cursor) {
-            cursor.style.left = `${ev.clientX}px`;
-            cursor.style.top = `${ev.clientY}px`;
+            cursor.style.left = `${x}px`;
+            cursor.style.top = `${y}px`;
         }
-    }, true);
-    window.addEventListener("mousedown", (ev) => {
+    }
+    function ripple(x, y) {
         mount();
-        const ripple = document.createElement("div");
-        ripple.className = "tv-ripple";
-        ripple.style.left = `${ev.clientX}px`;
-        ripple.style.top = `${ev.clientY}px`;
-        root.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 700);
-    }, true);
+        const dot = document.createElement("div");
+        dot.className = "tv-ripple";
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+        root.appendChild(dot);
+        setTimeout(() => dot.remove(), 700);
+    }
+    window.addEventListener("mousemove", (ev) => cursorAt(ev.clientX, ev.clientY), true);
+    window.addEventListener("mousedown", (ev) => ripple(ev.clientX, ev.clientY), true);
 
     const api = {
         mount,
+        cursorAt,
+        ripple,
+        phone(src) {
+            mount();
+            let phone = root.querySelector("#tv-phone");
+            if (!phone) {
+                phone = document.createElement("div");
+                phone.id = "tv-phone";
+                phone.innerHTML = `<div class="tv-device"><iframe></iframe></div>`;
+                root.insertBefore(phone, root.querySelector("#tv-highlight"));
+            }
+            phone.querySelector("iframe").src = src;
+            requestAnimationFrame(() => phone.classList.add("tv-on"));
+        },
+        hidePhone() {
+            const phone = root && root.querySelector("#tv-phone");
+            if (phone) {
+                phone.remove();
+            }
+        },
         caption(text, instant) {
             mount();
             saveState({ caption: text });

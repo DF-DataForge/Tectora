@@ -41,7 +41,12 @@ def main():
     parser.add_argument("--display", help="record an existing X display instead of a private Xvfb")
     parser.add_argument("--chromium", default=os.environ.get("CHROMIUM_PATH"),
                         help="Chromium executable (default: Playwright's own)")
-    parser.add_argument("--reset", help="shell command run before recording, e.g. the demo seed")
+    parser.add_argument("--db", default=os.environ.get("ODOO_DB"),
+                        help="database to log in to, when the server hosts several")
+    parser.add_argument("--bumper", help="logo shown before and after the video "
+                        "(default: the storyboard's `bumper`)")
+    parser.add_argument("--reset", help="shell command run before recording, e.g. the demo seed; "
+                        "it gets the storyboard's `stage` in $VIDEO_STAGE")
     parser.add_argument("--voice-only", action="store_true",
                         help="only synthesise the voice-over and print the timing")
     args = parser.parse_args()
@@ -77,22 +82,27 @@ def main():
 
     # 2. Demo data back to its starting point
     if args.reset:
-        print(f"reset: {args.reset}")
-        subprocess.run(args.reset, shell=True, check=True)
+        stage = str(board.get("stage", ""))
+        print(f"reset (stage {stage or '-'}): {args.reset}")
+        subprocess.run(args.reset, shell=True, check=True, env={**os.environ, "VIDEO_STAGE": stage,
+                                 "VIDEO_ASSETS": os.path.join(HERE, "assets")})
 
     # 3. Record
     from recorder import record
     from assemble import assemble
 
     meta = record(script, board, clips, out_dir, args.url, args.login, args.password,
-                  capture=args.capture, display=args.display, chromium=args.chromium)
+                  capture=args.capture, display=args.display, chromium=args.chromium, db=args.db)
     if args.capture == "none":
         print("rehearsal OK: every step found its target")
         return
 
     # 4. Assemble
+    bumper = args.bumper or board.get("bumper")
+    if bumper and not os.path.isabs(bumper):
+        bumper = os.path.join(REPO, bumper)
     result = assemble(meta, out_dir, name, music=args.music or board.get("music"),
-                      thumbnail_shot=board.get("thumbnail_shot"))
+                      thumbnail_shot=board.get("thumbnail_shot"), bumper=bumper)
     print(json.dumps(result, indent=2))
 
 

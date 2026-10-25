@@ -6,6 +6,38 @@ import subprocess
 import wave
 
 FADE = 0.4
+BUMPER_SECONDS = 2.6
+
+
+def make_bumper(logo, path, seconds=BUMPER_SECONDS):
+    """White screen with a logo fading in and out, with silent audio."""
+    fade = 0.5
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error",
+         "-f", "lavfi", "-i", f"color=c=white:s=1920x1080:r=30:d={seconds}",
+         "-loop", "1", "-t", str(seconds), "-i", logo,
+         "-f", "lavfi", "-t", str(seconds), "-i", "anullsrc=r=48000:cl=mono",
+         "-filter_complex",
+         f"[1:v]scale=1100:-1,format=rgba,fade=t=in:st=0.15:d={fade}:alpha=1,"
+         f"fade=t=out:st={seconds - fade - 0.15:.2f}:d={fade}:alpha=1[logo];"
+         "[0:v][logo]overlay=(W-w)/2:(H-h)/2:format=auto,format=yuv420p[v]",
+         "-map", "[v]", "-map", "2:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
+         "-r", "30", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "1", path],
+        check=True,
+    )
+    return path
+
+
+def add_bumpers(body, bumper, out):
+    """bumper + body + bumper, re-encoded as one file."""
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", bumper, "-i", body, "-i", bumper,
+         "-filter_complex", "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[v][a]",
+         "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
+         "-r", "30", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "1",
+         "-movflags", "+faststart", out],
+        check=True,
+    )
 
 
 def _fmt_srt(seconds):
@@ -38,7 +70,7 @@ def build_voice_track(shots, t0, total, path):
     return path
 
 
-def write_srt(shots, t0, path, max_chars=84):
+def write_srt(shots, t0, path, max_chars=84, offset=0.0):
     """Subtitles from the voice-over, sentence by sentence.
 
     A shot's clip is split over its sentences in proportion to their length,
@@ -57,7 +89,7 @@ def write_srt(shots, t0, path, max_chars=84):
             else:
                 merged.append(sentence)
         total_chars = sum(len(s) for s in merged)
-        cursor = shot["voice_start"] - t0
+        cursor = shot["voice_start"] - t0 + offset
         for sentence in merged:
             span = shot["voice_duration"] * len(sentence) / total_chars
             cues.append((cursor, cursor + span, sentence))
@@ -68,7 +100,7 @@ def write_srt(shots, t0, path, max_chars=84):
     return path
 
 
-def assemble(meta, out_dir, name, music=None, music_volume=0.18, thumbnail_shot=None):
+def assemble(meta, out_dir, name, music=None, music_volume=0.18, thumbnail_shot=None, bumper=None):
     shots = meta["shots"]
     t0 = shots[0]["start"]
     total = shots[-1]["end"] - t0
@@ -77,7 +109,8 @@ def assemble(meta, out_dir, name, music=None, music_volume=0.18, thumbnail_shot=
         raise SystemExit("recording started after the first shot; timeline is unusable")
 
     voice = build_voice_track(shots, t0, total, os.path.join(out_dir, "voice.wav"))
-    mp4 = os.path.join(out_dir, f"{name}.mp4")
+    final = os.path.join(out_dir, f"{name}.mp4")
+    mp4 = os.path.join(out_dir, "body.mp4") if bumper else final
 
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{offset:.3f}", "-t", f"{total:.3f}",
            "-i", meta["video"]]
@@ -100,16 +133,24 @@ def assemble(meta, out_dir, name, music=None, music_volume=0.18, thumbnail_shot=
     elif voice:
         cmd += ["-map", "0:v", "-map", "1:a"]
     cmd += ["-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-r", "30",
-            "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "1", "-movflags", "+faststart",
             "-t", f"{total:.3f}", mp4]
     subprocess.run(cmd, check=True)
 
-    srt = write_srt(shots, t0, os.path.join(out_dir, f"{name}.srt"))
+    lead = 0.0
+    if bumper:
+        clip = make_bumper(bumper, os.path.join(out_dir, "bumper.mp4"))
+        add_bumpers(mp4, clip, final)
+        lead = BUMPER_SECONDS
+        total += 2 * BUMPER_SECONDS
+    mp4 = final
+
+    srt = write_srt(shots, t0, os.path.join(out_dir, f"{name}.srt"), offset=lead)
 
     thumb_at = 1.0
     for shot in shots:
         if shot["shot"] == thumbnail_shot:
-            thumb_at = (shot["start"] + shot["end"]) / 2 - t0
+            thumb_at = (shot["start"] + shot["end"]) / 2 - t0 + lead
     thumb = os.path.join(out_dir, f"{name}.jpg")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{thumb_at:.2f}", "-i", mp4,
                     "-frames:v", "1", "-q:v", "3", thumb], check=True)

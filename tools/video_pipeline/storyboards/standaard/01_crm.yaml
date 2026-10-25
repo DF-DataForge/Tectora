@@ -1,0 +1,74 @@
+# Storyboard for docs/video_scripts/standaard/01_crm.md
+script: docs/video_scripts/standaard/01_crm.md
+name: standaard_01_crm
+series: Tectora · de standaardflow
+stage: lead_new
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 3
+start: /odoo/crm
+pronunciation:
+  CRM: C R M
+
+shots:
+  1:
+    card: title
+
+  2:
+    steps:
+      - wait: 1.5
+      - hover: {selector: ".o_kanban_group:nth-child(1) .o_column_title"}
+      - wait: 1.2
+      - hover: {selector: ".o_kanban_group:nth-child(2) .o_column_title"}
+      - wait: 1.2
+      - hover: {selector: ".o_kanban_group:nth-child(3) .o_column_title"}
+      - wait: 1.2
+      - hover: {selector: ".o_kanban_group:nth-child(4) .o_column_title"}
+
+  3:
+    steps:
+      - click: {selector: ".o_kanban_group:first-child .o_kanban_quick_add"}
+      - fill: {field: name, value: Renovatie plat dak Peeters}
+      - fill: {field: partner_id, value: Peeters, pick: Familie Peeters}
+      - fill: {field: expected_revenue, value: "14500"}
+      - fill: {field: source_id, value: website, pick: Lead website}
+      - highlight: {field: source_id, seconds: 1.5}
+      - click: {button: Toevoegen}
+      - wait: 0.8
+      - click: {selector: ".o_kanban_group:first-child .o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+
+  4:
+    steps:
+      - hover: {selector: ".o_field_widget[name=partner_id] input"}
+      - click: {selector: ".o_field_widget[name=partner_id] .o_external_button"}
+      - fill: {field: tectora_title_id, value: Fam, pick: Familie}
+      - highlight: {field: tectora_title_id, seconds: 1.5}
+      - highlight: {selector: ".o_address_format", seconds: 2}
+      - save:
+      - click: {selector: ".o_breadcrumb a:has-text('Renovatie plat dak Peeters')"}
+
+  5:
+    steps:
+      - click: {selector: ".o_field_widget[name=priority] .o_priority_star >> nth=1"}
+      - fill: {field: tag_ids, value: Renov, pick: Renovatie}
+      - highlight: {field: user_id, seconds: 1.2}
+      - save:
+      - click: {selector: ".o_breadcrumb a:has-text('Pijplijn')"}
+      - drag:
+          from: {selector: ".o_kanban_group:nth-child(1) .o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+          to: {selector: ".o_kanban_group:nth-child(2) .o_kanban_record:last-child"}
+          dy: 90
+
+  6:
+    steps:
+      - click: {selector: ".o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+      - highlight: {button: Nieuwe offerte, seconds: 1.2}
+      - highlight: {button: Gewonnen, seconds: 1.2}
+      - highlight: {button: Verloren, seconds: 1.2}
+      - click: {button: Notitie loggen}
+      - type: "Klant stuurt vandaag nog foto's van de lichtkoepel."
+      - click: {selector: ".o-mail-Composer-send"}
+
+  7:
+    card: title

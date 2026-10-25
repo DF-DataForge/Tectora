@@ -52,7 +52,11 @@ class X11Capture:
 
     def launch_env(self):
         if not self.display:
-            self.display = ":97"
+            # A free display number, so several recordings can run at once.
+            number = next(n for n in range(97, 160)
+                          if not os.path.exists(f"/tmp/.X{n}-lock")
+                          and not os.path.exists(f"/tmp/.X11-unix/X{n}"))
+            self.display = f":{number}"
             self.xvfb = subprocess.Popen(
                 ["Xvfb", self.display, "-screen", "0", f"{WIDTH}x{HEIGHT}x24", "-nolisten", "tcp"],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -151,14 +155,25 @@ class NoCapture:
 class Director:
     """Runs storyboard steps on an Odoo page, with a visible cursor."""
 
-    def __init__(self, page, base_url):
+    def __init__(self, page, base_url, db=None):
         self.page = page
         self.base_url = base_url.rstrip("/")
+        self.db = db
+        self.phone = None  # FrameLocator of the phone frame while it is shown
+
+    @property
+    def scope(self):
+        return self.phone or self.page
 
     # -- helpers
     def ready(self, settle=0.6):
         page = self.page
-        page.wait_for_selector(".o_main_navbar", timeout=30000)
+        if self.phone:
+            self.phone.locator("body").wait_for(timeout=30000)
+            page.wait_for_timeout(int(settle * 1000) + 300)
+            return
+        # Backend (navbar) or a portal/website page (#wrapwrap).
+        page.wait_for_selector(".o_main_navbar, #wrapwrap", timeout=30000)
         try:
             page.wait_for_function(READY_JS, timeout=15000)
         except Exception:
@@ -172,16 +187,17 @@ class Director:
         A dict picks the kind: {field: name}, {selector: css}, {text: …},
         {button: …}; ``in`` scopes it to a CSS container.
         """
-        page = scope or self.page
+        page = scope or self.scope
         if isinstance(spec, dict) and "in" in spec:
-            page = self.page.locator(spec["in"]).first
+            page = self.scope.locator(spec["in"]).first
             spec = {k: v for k, v in spec.items() if k != "in"}
         if isinstance(spec, str):
             spec = {"text": spec}
         if "selector" in spec:
             loc = page.locator(spec["selector"])
         elif "field" in spec:
-            loc = page.locator(f".o_form_view .o_field_widget[name='{spec['field']}']")
+            loc = page.locator(f".o_form_view .o_field_widget[name='{spec['field']}'], "
+                               f".modal .o_field_widget[name='{spec['field']}']")
         elif "button" in spec:
             loc = page.get_by_role("button", name=spec["button"], exact=True)
         else:
@@ -251,13 +267,19 @@ class Director:
             select.first.select_option(label=spec["value"])
             self.page.wait_for_timeout(300)
             return
+        editor = widget.locator("[contenteditable='true']")
+        if editor.count():
+            # HTML field (Notities …): click into the editor and type.
+            self._click(editor.first)
+            self.step_type({"text": spec["value"], "delay": spec.get("delay", 35)})
+            return
         field = widget.locator("input, textarea").filter(visible=True).first
         self._click(field)
         if spec.get("clear", True):
             field.fill("")
         field.press_sequentially(str(spec["value"]), delay=spec.get("delay", 65))
-        classes = widget.get_attribute("class") or ""
-        if "o_field_many2one" in classes or "o_field_many2one" in (widget.inner_html() or ""):
+        # Many2one, many2many tags …: anything with an autocomplete dropdown.
+        if "o-autocomplete--input" in (field.get_attribute("class") or "") or spec.get("pick"):
             menu = self.page.locator(".o-autocomplete--dropdown-menu").filter(visible=True).first
             menu.wait_for(timeout=10000)
             self.page.wait_for_timeout(500)
@@ -298,6 +320,121 @@ class Director:
         self.page.keyboard.press(key)
         self.ready(settle=0.3)
 
+    def step_type(self, spec):
+        """Type into whatever has the focus: "text" or {text, delay}."""
+        if isinstance(spec, str):
+            spec = {"text": spec}
+        for n, line in enumerate(str(spec["text"]).split("\n")):
+            if n:
+                self.page.keyboard.press(spec.get("newline", "Enter"))
+            self.page.keyboard.type(line, delay=spec.get("delay", 45))
+        self.page.wait_for_timeout(300)
+
+    def step_drag(self, spec):
+        """{from: target, to: target}: press, glide, release."""
+        start = self.move_to(self.target(spec["from"]))
+        self.page.mouse.down()
+        end_box = self.target(spec["to"]).bounding_box()
+        x = end_box["x"] + end_box["width"] / 2 + spec.get("dx", 0)
+        y = end_box["y"] + end_box["height"] / 2 + spec.get("dy", 0)
+        # A small first move so the drag library notices the drag.
+        self.page.mouse.move(start[0] + 8, start[1] + 8, steps=4)
+        self.page.mouse.move(x, y, steps=spec.get("steps", 40))
+        self.page.wait_for_timeout(250)
+        self.page.mouse.up()
+        self.ready(settle=0.6)
+
+    def step_edit_cell(self, spec):
+        """{row: text in the row, column: field name, value: …} in a list."""
+        scope = self.scope.locator(spec.get("in", ".o_list_renderer")).first
+        row = scope.locator("tr.o_data_row").filter(has_text=spec["row"]).first
+        cell = row.locator(f"td[name='{spec['column']}']")
+        self._click(cell)
+        self.page.wait_for_timeout(300)
+        field = row.locator(f"td[name='{spec['column']}'] input").first
+        field.wait_for(timeout=5000)
+        field.select_text()
+        field.press_sequentially(str(spec["value"]), delay=spec.get("delay", 90))
+        if spec.get("confirm", True):
+            self.page.keyboard.press(spec.get("confirm_key", "Tab"))
+        self.ready(settle=0.5)
+
+    def step_scroll(self, spec):
+        """{target…, dy: 400}: wheel-scroll over an element (default: page)."""
+        spec = dict(spec)
+        dy = spec.pop("dy", 400)
+        if spec:
+            self.move_to(self.target(spec), steps=15)
+        for _ in range(8):
+            self.page.mouse.wheel(0, dy / 8)
+            self.page.wait_for_timeout(45)
+        self.page.wait_for_timeout(400)
+
+    def step_card(self, spec):
+        """A card in the middle of a shot, e.g. to cover a user switch."""
+        options = dict(spec or {})
+        options.setdefault("light", bool(options.get("html")))
+        self.page.evaluate("o => window.__tv.card(o)", options)
+        self.page.wait_for_timeout(500)
+
+    def step_hide_card(self, _=None):
+        self.page.evaluate("() => window.__tv.hideCard()")
+        self.page.wait_for_timeout(500)
+
+    def step_login(self, spec):
+        """{login, password, path}: switch user (cover it with a card)."""
+        page = self.page
+        page.goto(self.base_url + "/web/session/logout")
+        page.goto(self.base_url + "/web/login" + (f"?db={self.db}" if self.db else ""))
+        page.fill("input[name=login]", spec["login"])
+        page.fill("input[name=password]", spec.get("password", spec["login"]))
+        page.click("button[type=submit]")
+        page.wait_for_load_state("domcontentloaded")
+        if spec.get("path"):
+            page.goto(self.base_url + spec["path"])
+        page.wait_for_timeout(800)
+
+    def step_phone(self, spec):
+        """Show a page in a smartphone frame: "/my/werven" or {path}."""
+        path = spec if isinstance(spec, str) else spec["path"]
+        self.page.evaluate("src => window.__tv.phone(src)", self.base_url + path)
+        self.phone = self.page.frame_locator("#tv-phone iframe")
+        self.ready(settle=1.0)
+
+    def step_phone_close(self, _=None):
+        self.page.evaluate("() => window.__tv.hidePhone()")
+        self.phone = None
+        self.page.wait_for_timeout(500)
+
+    def step_show_pdf(self, spec):
+        """{url, pages: [1, 2], title}: a printed report, page by page."""
+        import base64
+        import tempfile
+
+        response = self.page.request.get(self.base_url + spec["url"])
+        if not response.ok:
+            raise StepError(f"report {spec['url']}: HTTP {response.status}")
+        pages = spec.get("pages", [1])
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf = os.path.join(tmp, "report.pdf")
+            with open(pdf, "wb") as handle:
+                handle.write(response.body())
+            images = []
+            for number in pages:
+                out = os.path.join(tmp, f"p{number}")
+                subprocess.run(["pdftoppm", "-png", "-r", "110", "-f", str(number), "-l", str(number),
+                                "-singlefile", pdf, out], check=True)
+                with open(out + ".png", "rb") as handle:
+                    images.append(base64.b64encode(handle.read()).decode())
+        height = spec.get("height", 960)
+        tags = "".join(
+            f'<img src="data:image/png;base64,{img}" style="height:{height}px;box-shadow:0 12px 40px '
+            f'rgba(0,0,0,.25);border-radius:4px;background:#fff"/>' for img in images)
+        self.step_card({"html": f'<div style="display:flex;gap:36px;align-items:center">{tags}</div>',
+                        "light": True})
+        if spec.get("seconds"):
+            self.page.wait_for_timeout(int(spec["seconds"] * 1000))
+
     def run(self, steps):
         for step in steps or []:
             if not isinstance(step, dict) or len(step) != 1:
@@ -311,7 +448,7 @@ class Director:
 
 # ---------------------------------------------------------------- record
 def record(script, storyboard, voice_clips, out_dir, base_url, login, password,
-           capture="x11", display=None, chromium=None, slow_mo=0):
+           capture="x11", display=None, chromium=None, slow_mo=0, db=None):
     """Record all shots; returns the timeline (one dict per shot)."""
     os.makedirs(out_dir, exist_ok=True)
     for stale in ("error.png", "timeline.json"):
@@ -329,7 +466,7 @@ def record(script, storyboard, voice_clips, out_dir, base_url, login, password,
     try:
         with sync_playwright() as pw:
             browser = _launch(pw, cap, capture, chromium, slow_mo)
-            state = _login(browser, base_url, login, password)
+            state = _login(browser, base_url, login, password, db)
             ctx_opts = {"storage_state": state, "locale": "nl-BE", "no_viewport": capture == "x11"}
             if capture != "x11":
                 ctx_opts["viewport"] = {"width": WIDTH, "height": HEIGHT}
@@ -340,7 +477,7 @@ def record(script, storyboard, voice_clips, out_dir, base_url, login, password,
             page = context.new_page()
             if capture == "x11":
                 _fullscreen(context, page)
-            director = Director(page, base_url)
+            director = Director(page, base_url, db)
 
             # Starting screen, under the opening card, before the tape runs.
             first = script.shots[0]
@@ -392,11 +529,11 @@ def _fullscreen(context, page):
     page.wait_for_timeout(500)
 
 
-def _login(browser, base_url, login, password):
+def _login(browser, base_url, login, password, db=None):
     """Log in outside the recording; the session is handed to the recording."""
     context = browser.new_context(viewport={"width": WIDTH, "height": HEIGHT})
     page = context.new_page()
-    page.goto(base_url.rstrip("/") + "/web/login")
+    page.goto(base_url.rstrip("/") + "/web/login" + (f"?db={db}" if db else ""))
     page.fill("input[name=login]", login)
     page.fill("input[name=password]", password)
     page.click("button[type=submit]")
