@@ -11,9 +11,21 @@
     // as unread in the navbar (or, when granted, fails on push registration).
     try {
         Object.defineProperty(window.Notification, "permission", { get: () => "denied" });
+        // Odoo's mail asks the Permissions API, not Notification.permission.
+        const query = navigator.permissions.query.bind(navigator.permissions);
+        navigator.permissions.query = (desc) =>
+            desc && desc.name === "notifications"
+                ? Promise.resolve({ state: "denied", onchange: null, addEventListener() {} })
+                : query(desc);
     } catch {
-        // No Notification API: nothing to hide.
+        // No Notification or Permissions API: nothing to hide.
     }
+    // No red spell-check underlines under Dutch words while typing.
+    document.addEventListener("focusin", (ev) => {
+        if (ev.target && "spellcheck" in ev.target) {
+            ev.target.spellcheck = false;
+        }
+    }, true);
     if (window.top !== window) {
         // Inside the phone frame: the cursor lives on the top page, so pass
         // the mouse up, converted to top-page coordinates.

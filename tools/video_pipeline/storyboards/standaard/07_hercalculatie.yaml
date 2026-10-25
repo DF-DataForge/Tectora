@@ -1,0 +1,106 @@
+# Storyboard for docs/video_scripts/standaard/07_hercalculatie.md
+script: docs/video_scripts/standaard/07_hercalculatie.md
+name: standaard_07_hercalculatie
+series: Tectora · de standaardflow
+stage: quote_norecalc
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 5
+start: /odoo/action-purchase.product_normal_action_puchased
+
+shots:
+  1:
+    card: title
+
+  2:
+    card:
+      kind: html
+      html: |
+        <div style="display:flex;align-items:center;gap:80px;font-family:Montserrat,sans-serif;color:#1d2b2b">
+          <div style="width:470px;padding:40px 36px;border-radius:22px;background:#fff;border:5px solid #2D8D8F;box-shadow:0 18px 40px rgba(0,0,0,.12)">
+            <div style="font-size:24px;font-weight:600;color:#2D8D8F">Offertelijn</div>
+            <div style="font-size:38px;font-weight:700;line-height:1.25;margin-top:10px">Isolatie PIR 12 cm</div>
+            <div style="font-size:64px;font-weight:700;margin-top:18px">100 m²</div>
+          </div>
+          <div style="font-size:90px;color:#2D8D8F;font-weight:700">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:22px">
+            <div style="position:relative;width:360px;height:250px">
+              <div style="position:absolute;left:0;top:0;width:330px;height:46px;border-radius:6px;background:#e9c46a;border:3px solid #b8892b"></div>
+              <div style="position:absolute;left:10px;top:50px;width:330px;height:46px;border-radius:6px;background:#e9c46a;border:3px solid #b8892b"></div>
+              <div style="position:absolute;left:20px;top:100px;width:330px;height:46px;border-radius:6px;background:#e9c46a;border:3px solid #b8892b"></div>
+              <div style="position:absolute;left:30px;top:150px;width:330px;height:46px;border-radius:6px;background:#e9c46a;border:3px solid #b8892b"></div>
+              <div style="position:absolute;left:40px;top:200px;width:330px;height:46px;border-radius:6px;background:#e9c46a;border:3px solid #b8892b"></div>
+            </div>
+            <div style="font-size:34px;font-weight:700">PIR-platen 1200 × 600 mm</div>
+            <div style="font-size:64px;font-weight:700;color:#2D8D8F">? stuks</div>
+          </div>
+        </div>
+
+  3:
+    # Behind the card of shot 2: the PIR board's product form.
+    setup:
+      - click: {selector: ".o_searchview_input"}
+      - type: P00512
+      - key: Enter
+      - click: {selector: ".o_kanban_record:has-text('UTHERM ROOF L 120MM')"}
+    steps:
+      - wait: 0.6
+      - click: {selector: ".o_field_widget[name=tectora_recalc] input"}
+      - wait: 0.6
+      - click: {selector: ".o_field_widget[name=tectora_recalc_uom] input[data-value=m2]"}
+      - highlight: {field: tectora_recalc_uom, seconds: 1.2}
+      - fill: {field: tectora_length_mm, value: "1200"}
+      - fill: {field: tectora_width_mm, value: "600"}
+      - click: {selector: "label:has-text('Veiligheidsmarge')"}
+      - zoom: {selector: "div[name=tectora_recalc_dimensions]", scale: 1.8, seconds: 2.2}
+      - fill: {field: tectora_recalc_margin, value: "3"}
+      - click: {selector: "label:has-text('Veiligheidsmarge')"}
+      - highlight: {selector: "div[name=standard_price_uom]", seconds: 1.8}
+      - save:
+
+  4:
+    steps:
+      - click: {selector: ".o_breadcrumb a:has-text('Producten')"}
+      - click: {selector: ".o_searchview_input"}
+      - key: Backspace
+      - type: P00483
+      - key: Enter
+      - click: {selector: ".o_kanban_record:has-text('BASISPROFIEL BRUT 3M')"}
+      - wait: 0.5
+      - highlight: {field: tectora_recalc_uom, seconds: 1.4}
+      - highlight: {selector: "div[name=tectora_recalc_dimensions]", seconds: 1.8}
+      - highlight: {selector: "div[name=tectora_recalc_margin]", seconds: 1.4}
+
+  5:
+    steps:
+      - app: Productie
+      - menu: Producten
+      - click: {selector: ".o-dropdown--menu .dropdown-item:has-text('Stuklijsten')"}
+      - click: {selector: ".o_searchview_input"}
+      - type: S00139
+      - key: Enter
+      - click: {selector: ".o_data_row:has-text('S00139') td.o_data_cell >> nth=1"}
+      - unclip: {selector: "tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]"}
+      - highlight: {selector: "tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]", seconds: 2.4}
+      - app: Verkoop
+      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+      - scroll: {selector: ".o_form_sheet_bg", dy: 700}
+      - click: {selector: "tr.o_data_row:has-text('S00139') td[name=tectora_has_sale_bom] button"}
+      - unclip: {selector: ".modal tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]"}
+      - highlight: {selector: ".modal tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]", seconds: 3.0}
+      - click: {selector: ".modal-footer button:has-text('Sluiten')"}
+
+  6:
+    steps:
+      - click: {button: Bevestigen}
+      - wait: 0.8
+      - click: {selector: ".oe_stat_button:has-text('Projectdashboard')"}
+      - click: Materiaallijst
+      - scroll: {selector: ".o_notebook .nav-tabs", dy: 520}
+      - highlight: {selector: ".tab-pane.active tr.o_data_row:has-text('P00512')", seconds: 2.4}
+      - scroll: {selector: ".tab-pane.active tr.o_data_row:has-text('P00512')", dy: 460}
+      - highlight: {selector: ".tab-pane.active tr.o_data_row:has-text('P00483')", seconds: 2.4}
+
+  7:
+    card: title

@@ -19,7 +19,7 @@ zonder de tekenmodule Dakmeting (die krijgt een eigen reeks in
 | 08 | [Van offerte naar project](08_project_aanmaken.md) | 1:30 | projectleiding, zaakvoerder |
 | 09 | [Taakopvolging per fase](09_taakopvolging.md) | 1:45 | projectleiding |
 | 10 | [De bestellijst](10_bestellijsten.md) | 1:45 | projectleiding, aankoop |
-| 11 | [Het werknemersportaal](11_werknemersportaal.md) | 1:45 | dakwerkers, ploegbazen |
+| 11 | [Het werknemersportaal](11_werknemersportaal.md) | 2:00 | dakwerkers, ploegbazen |
 
 ## Conventies
 

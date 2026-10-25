@@ -265,7 +265,8 @@ for piece, size in ((pir, 0.72), (edge, 3.0)):
     if units and piece.uom_id != units:
         try:
             with env.cr.savepoint():
-                piece.write({"uom_id": units.id, "standard_price": round(piece.standard_price * size, 2)})
+                piece.write({"uom_id": units.id, "standard_price": round(piece.standard_price * size, 2),
+                             "list_price": round(piece.list_price * size, 2)})
         except Exception as exc:   # e.g. stock moves in the old unit
             print(f"{piece.default_code} stays in {piece.uom_id.name}: {exc}")
 
@@ -389,6 +390,11 @@ if stage in ("project", "timer"):
         from odoo.tools.binary import BinaryBytes
         with open(logo, "rb") as handle:
             company.logo = BinaryBytes(handle.read())
+# The customer preview of the quotation (video 04) shows the logo too.
+if stage == "lead_notes" and ASSETS and os.path.exists(os.path.join(ASSETS, "tectora_logo.png")):
+    from odoo.tools.binary import BinaryBytes
+    with open(os.path.join(ASSETS, "tectora_logo.png"), "rb") as handle:
+        company.logo = BinaryBytes(handle.read())
 
 # Nothing unread in the navbar during a take.
 env.flush_all()

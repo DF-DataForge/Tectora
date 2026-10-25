@@ -473,6 +473,21 @@ class Director:
         self.target(spec).evaluate("el => el.scrollIntoView({block: 'center', behavior: 'smooth'})")
         self.page.wait_for_timeout(900)
 
+    def step_open_here(self, spec):
+        """Click a button that opens a new tab (Voorbeeld: the customer
+        preview) and show that page in this tab instead; `key: Alt+ArrowLeft`
+        goes back."""
+        loc = self.target(spec)
+        self.page.evaluate("() => { window.open = (url) => { window.location.assign(url); return window; }; }")
+        self._click(loc)
+        self.page.wait_for_load_state("domcontentloaded")
+        self.ready(settle=1.0)
+
+    def step_back(self, _=None):
+        """The browser's back button (e.g. from the customer preview)."""
+        self.page.go_back()
+        self.ready(settle=0.8)
+
     def run(self, steps):
         for step in steps or []:
             if not isinstance(step, dict) or len(step) != 1:

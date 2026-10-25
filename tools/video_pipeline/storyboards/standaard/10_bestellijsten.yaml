@@ -68,8 +68,8 @@ shots:
       - wait: 0.5
       - click: {selector: ".o_breadcrumb a >> nth=-1"}
       - click: {selector: ".o_tectora_task_phases .card-header button"}
-      - wait: 0.4
-      - highlight: {selector: ".o_tectora_task_row:has-text('Bestellijst afgevinkt')", seconds: 1.6}
+      - wait: 1.0
+      - highlight: {selector: ".o_tectora_task_row:has-text('Bestellijst afgevinkt')", seconds: 1.4}
       - menu: Bestellijst
       - click: Per leverancier
       - click: {selector: ".o_searchview_facet:has-text('Nog af te vinken') .o_facet_remove"}
