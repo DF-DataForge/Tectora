@@ -169,8 +169,14 @@ class Director:
     def ready(self, settle=0.6):
         page = self.page
         if self.phone:
-            self.phone.locator("body").wait_for(timeout=30000)
-            page.wait_for_timeout(int(settle * 1000) + 300)
+            # A click may start a page load in the frame: let it begin, then
+            # wait until the new page is loaded.
+            page.wait_for_timeout(300)
+            frame = page.locator("#tv-phone iframe").element_handle().content_frame()
+            if frame:
+                frame.wait_for_load_state("load", timeout=30000)
+            self.phone.locator("#wrapwrap").wait_for(timeout=30000)
+            page.wait_for_timeout(int(settle * 1000))
             return
         # Backend (navbar) or a portal/website page (#wrapwrap).
         page.wait_for_selector(".o_main_navbar, #wrapwrap", timeout=30000)
@@ -214,6 +220,12 @@ class Director:
             loc.wait_for(state="visible", timeout=15000)
         except Exception as exc:
             raise StepError(f"not found on screen: {spec}") from exc
+        if self.phone:
+            # The phone screen is small: scroll the target into it first.
+            if loc.evaluate("e => { const r = e.getBoundingClientRect(); const out = r.top < 0 "
+                            "|| r.bottom > innerHeight; if (out) e.scrollIntoView("
+                            "{behavior: 'smooth', block: 'center'}); return out; }"):
+                self.page.wait_for_timeout(900)
         return loc
 
     def move_to(self, loc, steps=28):

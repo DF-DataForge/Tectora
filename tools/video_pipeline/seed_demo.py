@@ -259,6 +259,11 @@ for line in env["mrp.bom"].search([("product_tmpl_id", "=", insulation.product_t
     if line.product_id.product_tmpl_id == pir:
         line.product_qty = 1.0
 
+# Video 06: a waste container, added as a fixed component in the BOM builder.
+upsert("product.template", [("default_code", "=", "P90001")], {
+    "name": "Container afval 10 m³ (plaatsen en ophalen)", "default_code": "P90001", "type": "consu",
+    "standard_price": 350.0, "list_price": 450.0, "sale_ok": False, "purchase_ok": True, "active": True})
+
 # ----------------------------------------------------------------- employees
 def employee(name, job, email=None):
     return upsert("hr.employee", [("name", "=", name)], {
@@ -333,17 +338,25 @@ if stage in ("project", "timer"):
     lead.stage_id = stage_won
     if roof and "tectora.roof.planning" in env:
         # Today's work block, so the site shows on the portal right away.
-        env["tectora.roof.planning"].create({
+        block = env["tectora.roof.planning"].create({
             "project_id": roof.id, "team_id": team.id,
             "start_datetime": today + timedelta(hours=6), "end_datetime": today + timedelta(hours=15),
             "notes": "Oprit vrijlaten voor de container. Sleutel bij de buren (nr. 16).",
         })
+        if stage == "timer":
+            # The crew on the block, as the planner's team onchange sets it
+            # (the portal list shows "3 pers.", not "0 pers.").
+            block.employee_ids = [(6, 0, team.member_ids.ids)]
     if stage == "timer" and roof and "tectora.roof.timer" in env:
         env["tectora.roof.timer"].create({
             "project_id": roof.id, "work_kind": "afbraak",
             "start_datetime": datetime.now() - timedelta(hours=6, minutes=30),
             "started_by_id": foreman.id, "employee_ids": [(6, 0, (foreman | roofer | roofer2).ids)],
         })
+        # Who to call, with a call button on the portal (video 11).
+        user.phone = "+32 470 12 34 56"
+        if "site_contact_id" in roof._fields:
+            roof.site_contact_id = partner
     # The portal header (video 11) shows the company logo: Tectora, not "Your logo".
     logo = os.path.join(ASSETS or "", "tectora_logo.png")
     if stage == "timer" and ASSETS and os.path.exists(logo):

@@ -45,7 +45,7 @@ shots:
       - click: {selector: ".o_searchview_input"}
       - type: Lichtk
       - wait: 0.6
-      - click: {selector: ".o_searchview_autocomplete li:has-text('Zoeken Label voor')"}
+      - click: {selector: ".o_searchview_autocomplete .o-dropdown-item:has(b:text-is('Label'))"}
       - wait: 1.0
       - hover: {selector: ".o_data_row:has-text('Renovatie plat dak Peeters')"}
 
