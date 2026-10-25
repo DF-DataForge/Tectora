@@ -5,7 +5,7 @@ Ze volgen één voorbeeldklant van de eerste aanvraag tot de uren op de werf,
 zonder de tekenmodule Dakmeting (die krijgt een eigen reeks in
 [`../dakmeting/`](../dakmeting/)).
 
-**Bedrijf**: Tectora — **voorbeeldklant**: Familie Peeters.
+**Bedrijf**: Tectora — **voorbeeldklant**: de familie Peeters.
 
 | # | Video | Duur | Voor wie |
 |---|---|---|---|
@@ -44,7 +44,7 @@ zonder de tekenmodule Dakmeting (die krijgt een eigen reeks in
 Zet dit klaar in een demodatabase (nooit in productie):
 
 * **Bedrijf**: Tectora, documentlay-out **Tectora Briefpapier**.
-* **Klant**: Familie Peeters, Kerkstraat 14, 8870 Izegem, aanspreektitel
+* **Klant**: Peeters, Kerkstraat 14, 8870 Izegem, aanspreektitel
   **Familie**, e-mailadres met een inbox die u kan tonen (video 03 en 04).
 * **Opportuniteit**: "Renovatie plat dak Peeters", ± 100 m², verwachte
   omzet € 14.500, bron **Lead website**.

@@ -14,9 +14,9 @@ shots:
     card: title
 
   2:
-    # Behind the opening card: the quotation of Familie Peeters.
+    # Behind the opening card: the quotation of the Peeters family.
     setup:
-      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+      - click: {selector: "tr.o_data_row:has-text('Peeters') td[name=name]"}
     steps:
       - wait: 0.8
       - highlight: {selector: "tr.o_is_line_section:has-text('ALGEMENE WERKEN')", seconds: 2.0}

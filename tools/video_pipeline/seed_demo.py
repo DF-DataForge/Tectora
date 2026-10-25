@@ -24,7 +24,7 @@ from datetime import datetime, time, timedelta
 DEMO_LOGIN = "admin"            # the office user the videos are recorded as
 FOREMAN_LOGIN = "koen.devos@tectora.example"   # portal user of video 11
 FOREMAN_PASSWORD = "koen"
-DEMO_PARTNER = "Familie Peeters"
+DEMO_PARTNER = "Peeters"           # salutation "Familie": "Fam. Peeters" on the cover
 DEMO_OPPORTUNITY = "Renovatie plat dak Peeters"
 TEMPLATE = "Renovatie plat dak - roofing 1 laag, PIR 12 cm, EPDM 1,1 mm, 2-delige dakrand"
 NOTES = (
@@ -133,7 +133,7 @@ if ASSETS and "quotation.document" in env:
 
 # ---------------------------------------------------------------- partners
 title_family = ref("tectora_roof.partner_title_family")
-partner = upsert("res.partner", [("name", "=", DEMO_PARTNER)], {
+partner = upsert("res.partner", [("name", "in", (DEMO_PARTNER, "Familie " + DEMO_PARTNER))], {
     "name": DEMO_PARTNER, "is_company": False, "street": "Kerkstraat 14", "zip": "8870",
     "city": "Izegem", "country_id": belgium.id, "email": "familie.peeters@example.com",
     "phone": "+32 51 00 00 00", "lang": "nl_BE",
@@ -389,14 +389,10 @@ if stage in ("project", "timer"):
         user.phone = "+32 470 12 34 56"
         if "site_contact_id" in roof._fields:
             roof.site_contact_id = partner
-    # The portal header (video 11) shows the company logo: Tectora, not "Your logo".
-    logo = os.path.join(ASSETS or "", "tectora_logo.png")
-    if stage == "timer" and ASSETS and os.path.exists(logo):
-        from odoo.tools.binary import BinaryBytes
-        with open(logo, "rb") as handle:
-            company.logo = BinaryBytes(handle.read())
-# The customer preview of the quotation (video 04) shows the logo too.
-if stage == "lead_notes" and ASSETS and os.path.exists(os.path.join(ASSETS, "tectora_logo.png")):
+
+# The company logo, in every stage: the portal header (video 11) and the
+# customer preview of the quotation (video 04) show Tectora, not "Your logo".
+if ASSETS and os.path.exists(os.path.join(ASSETS, "tectora_logo.png")):
     from odoo.tools.binary import BinaryBytes
     with open(os.path.join(ASSETS, "tectora_logo.png"), "rb") as handle:
         company.logo = BinaryBytes(handle.read())

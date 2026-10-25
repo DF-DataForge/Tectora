@@ -30,7 +30,7 @@ shots:
     steps:
       - click: {selector: ".o_kanban_group:first-child .o_kanban_quick_add"}
       - fill: {field: name, value: Renovatie plat dak Peeters}
-      - fill: {field: partner_id, value: Peeters, pick: Familie Peeters}
+      - fill: {field: partner_id, value: Peeters, pick: Peeters}
       - fill: {field: expected_revenue, value: "14500"}
       - fill: {field: source_id, value: website, pick: Lead website}
       - highlight: {field: source_id, seconds: 1.5}

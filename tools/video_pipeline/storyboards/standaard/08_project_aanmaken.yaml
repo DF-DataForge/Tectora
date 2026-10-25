@@ -17,7 +17,7 @@ shots:
 
   2:
     setup:
-      - click: {selector: ".o_data_row:has-text('Familie Peeters') td.o_data_cell >> nth=1"}
+      - click: {selector: ".o_data_row:has-text('Peeters') td.o_data_cell >> nth=1"}
     steps:
       - wait: 0.5
       - hover: {button: Bevestigen}
@@ -75,7 +75,7 @@ shots:
     steps:
       - app: Dakmeting
       - menu: Projecten
-      - click: {selector: ".o_kanban_record:has-text('Familie Peeters — Izegem')"}
+      - click: {selector: ".o_kanban_record:has-text('Peeters — Izegem')"}
       - zoom: {selector: ".o_tectora_cards", scale: 1.25}
       - hover: {selector: ".o_tectora_card_margin"}
 

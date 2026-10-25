@@ -27,7 +27,7 @@ shots:
   3:
     steps:
       - menu: Projecten
-      - click: {selector: ".o_kanban_record:has-text('Familie Peeters — Izegem')"}
+      - click: {selector: ".o_kanban_record:has-text('Peeters — Izegem')"}
       - zoom: {selector: ".o_tectora_order_list", scale: 1.5}
       - highlight: {selector: ".o_tectora_order_list .card-header .badge", seconds: 1.4}
       - highlight: {selector: ".o_tectora_order_summary", seconds: 2.0}

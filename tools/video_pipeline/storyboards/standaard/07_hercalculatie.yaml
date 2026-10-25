@@ -85,7 +85,7 @@ shots:
       - unclip: {selector: "tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]"}
       - highlight: {selector: "tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]", seconds: 2.4}
       - app: Verkoop
-      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+      - click: {selector: "tr.o_data_row:has-text('Peeters') td[name=name]"}
       - scroll: {selector: ".o_form_sheet_bg", dy: 700}
       - click: {selector: "tr.o_data_row:has-text('S00139') td[name=tectora_has_sale_bom] button"}
       - unclip: {selector: ".modal tr.o_data_row:has-text('P00512') td[name=tectora_recalc_info]"}

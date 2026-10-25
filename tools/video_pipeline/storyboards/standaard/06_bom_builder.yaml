@@ -38,7 +38,7 @@ shots:
   3:
     # Behind the card of shot 2: the quotation, scrolled to the opbouwwerken.
     setup:
-      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+      - click: {selector: "tr.o_data_row:has-text('Peeters') td[name=name]"}
       - scroll: {selector: ".o_form_sheet_bg", dy: 700}
     steps:
       - wait: 0.8

@@ -62,7 +62,7 @@ shots:
   4:
     steps:
       - menu: Projecten
-      - click: {selector: ".o_kanban_record:has-text('Familie Peeters — Izegem')"}
+      - click: {selector: ".o_kanban_record:has-text('Peeters — Izegem')"}
       - zoom: {selector: ".o_tectora_task_phases", scale: 1.6}
       - highlight: {selector: ".o_tectora_task_phases .o_tectora_steps", seconds: 1.8}
       - highlight: {selector: ".o_tectora_task_phases .fw-bold:has-text('Huidige fase')", seconds: 1.6}
