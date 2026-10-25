@@ -34,13 +34,16 @@ shots:
       - highlight: {selector: "tr.o_data_row:has-text('S00287')", seconds: 1.6}
       - highlight: {selector: "tr.o_data_row:has-text('S00010')", seconds: 1.6}
       - zoom: {selector: "tr.o_is_line_section:has-text('Opties')", scale: 1.6, seconds: 2.0}
+      - scroll_to: {selector: ".oe_subtotal_footer [name=tax_totals]"}
       - highlight: {selector: ".oe_subtotal_footer [name=tax_totals]", seconds: 2.0}
 
   4:
     steps:
+      - scroll_to: {selector: "tr.o_data_row:has-text('S00027')"}
       - highlight: {selector: "tr.o_data_row:has-text('S00027') td[name=tectora_demolition_hours]", seconds: 1.6}
       - highlight: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_execution_hours]", seconds: 1.6}
-      - highlight: {selector: ".o_list_renderer tfoot", seconds: 1.6}
+      - scroll_to: {selector: ".oe_subtotal_footer .mt-2:has([name=tectora_demolition_hours])"}
+      - highlight: {selector: ".o_list_renderer tfoot", seconds: 1.4}
       - highlight: {selector: ".oe_subtotal_footer .mt-2:has([name=tectora_demolition_hours])", seconds: 2.4}
       - highlight: {selector: ".oe_subtotal_footer [name=tectora_estimated_days]", seconds: 1.8}
 
