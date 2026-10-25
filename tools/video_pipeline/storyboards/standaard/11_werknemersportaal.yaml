@@ -20,9 +20,9 @@ shots:
     steps:
       - click: {selector: ".o_kanban_record:has-text('Tom Maes')"}
       - click: {selector: "button[name=action_tectora_grant_portal_access]"}
-      - wait: 1.2
-      - click: {selector: ".modal-footer .btn-primary"}
       - wait: 0.8
+      - click: {selector: ".modal-footer .btn-primary"}
+      - wait: 0.5
       - highlight: {selector: "button[name=action_tectora_open_portal_user]", seconds: 1.8}
       - click: Werk
       - click: {selector: ".o_field_widget[name=tectora_portal_planning_horizon] label:text-is('1 week')"}
@@ -30,11 +30,12 @@ shots:
 
   # The foreman Koen De Vos on his smartphone (a card covers the user switch).
   3:
-    steps:
+    # Runs behind a card at the end of shot 2; the shot itself opens on the phone.
+    setup:
       - card: {title: "Op de smartphone", subtitle: "ploegbaas Koen De Vos"}
       - login: {login: koen.devos@tectora.example, password: koen, path: /my}
       - phone: /my
-      - hide_card:
+    steps:
       - click: {selector: "a[href='/my/werven']"}
       - click: {selector: "button.navbar-toggler"}
       - click: {selector: "#portal_searchbar_filters"}

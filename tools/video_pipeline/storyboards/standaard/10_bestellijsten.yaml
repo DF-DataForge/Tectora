@@ -1,0 +1,84 @@
+# Storyboard for docs/video_scripts/standaard/10_bestellijsten.md
+script: docs/video_scripts/standaard/10_bestellijsten.md
+name: standaard_10_bestellijsten
+series: Tectora · de standaardflow
+stage: project
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 4
+start: /odoo/action-tectora_roof.action_tectora_projects
+
+shots:
+  1:
+    card: title
+
+  2:
+    steps:
+      - menu: Projectopvolging
+      - wait: 0.4
+      - click: Bestellijst-onderdelen
+      - wait: 0.8
+      - highlight: {selector: ".o_list_renderer tbody", seconds: 2.5}
+      - highlight: {selector: ".o_data_row:has-text('EPDM en toebehoren') td[name=order_action]", seconds: 2.2}
+      - highlight: {selector: ".o_data_row:has-text('Lichtkoepels') td[name=order_action]", seconds: 1.6}
+      - highlight: {selector: ".o_data_row:has-text('Isolatie PIR') td[name=partner_ids]", seconds: 2.2}
+
+  3:
+    steps:
+      - menu: Projecten
+      - click: {selector: ".o_kanban_record:has-text('Familie Peeters — Izegem')"}
+      - zoom: {selector: ".o_tectora_order_list", scale: 1.5}
+      - highlight: {selector: ".o_tectora_order_list .card-header .badge", seconds: 1.4}
+      - highlight: {selector: ".o_tectora_order_summary", seconds: 2.0}
+      - unzoom:
+
+  4:
+    steps:
+      - click: {selector: ".o_tectora_order_list .card-header button"}
+      - wait: 0.8
+      - highlight: {selector: ".o_tectora_order_board .small.text-muted.mb-2", seconds: 2.4}
+      - highlight: {selector: ".o_tectora_order_table thead", seconds: 1.8}
+      - hover: {selector: ".o_tectora_order_table tbody tr:nth-child(1) select"}
+      - highlight: {selector: ".o_tectora_order_table tbody tr:nth-child(1) select", seconds: 1.2}
+      - highlight: {selector: ".o_tectora_order_table tbody tr:nth-child(2) select", seconds: 1.2}
+
+  5:
+    steps:
+      - hover: {selector: ".o_tectora_order_table tr:has-text('Isolatie PIR') button:has-text('Bestellen')"}
+      - wait: 0.8
+      - click: {selector: ".o_tectora_order_table tr:has-text('Isolatie PIR') button:has-text('Bestellen')"}
+      - wait: 0.6
+      - highlight: {field: tectora_order_line_id, seconds: 1.4}
+      - click: {text: Overige info, in: .o_notebook_headers}
+      - wait: 0.8
+      - highlight: {field: origin, seconds: 1.6}
+      - click: {selector: ".o_breadcrumb a >> nth=-1"}
+      - wait: 0.6
+      - highlight: {selector: ".o_tectora_order_table tr:has-text('Isolatie PIR') td:nth-child(8)", seconds: 1.4}
+      - highlight: {selector: ".o_tectora_order_table tr:has-text('EPDM') td:nth-child(4)", seconds: 1.6}
+
+  6:
+    steps:
+      - click: {selector: ".o_tectora_order_table tbody tr:nth-child(1) input.o_tectora_check"}
+      - click: {selector: ".o_tectora_order_table tbody tr:nth-child(2) input.o_tectora_check"}
+      - click: {selector: ".o_tectora_order_table tbody tr:nth-child(3) input.o_tectora_check"}
+      - click: {selector: ".o_tectora_order_table tbody tr:nth-child(4) input.o_tectora_check"}
+      - click: {selector: ".o_tectora_order_table tbody tr:nth-child(5) input.o_tectora_check"}
+      - wait: 0.5
+      - click: {selector: ".o_breadcrumb a >> nth=-1"}
+      - click: {selector: ".o_tectora_task_phases .card-header button"}
+      - wait: 0.4
+      - highlight: {selector: ".o_tectora_task_row:has-text('Bestellijst afgevinkt')", seconds: 1.6}
+      - menu: Bestellijst
+      - click: Per leverancier
+      - click: {selector: ".o_searchview_facet:has-text('Nog af te vinken') .o_facet_remove"}
+      - wait: 1.0
+      - click: {selector: ".o_group_header:has-text('Dakcenter Vlaanderen')"}
+      - wait: 0.6
+      - click: {selector: ".o_group_header:has-text('Bouwmaterialen De Smet')"}
+      - hover: {selector: ".o_breadcrumb"}
+      - wait: 1.0
+
+  7:
+    card: title

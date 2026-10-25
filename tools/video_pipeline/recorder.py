@@ -458,6 +458,21 @@ class Director:
         if spec.get("seconds"):
             self.page.wait_for_timeout(int(spec["seconds"] * 1000))
 
+    def step_unclip(self, spec):
+        """A target whose text Odoo cuts off with "…" (a narrow list cell):
+        let the text wrap in place, so the whole value is readable."""
+        self.target(spec).evaluate(
+            """el => { for (const e of [el, ...el.querySelectorAll('*')]) {
+                e.style.whiteSpace = 'normal'; e.style.overflow = 'visible';
+                e.style.textOverflow = 'clip'; } }""")
+        self.page.wait_for_timeout(300)
+
+    def step_scroll_to(self, spec):
+        """A target below the fold (a line far down a quotation): scroll it
+        smoothly to the middle of the screen."""
+        self.target(spec).evaluate("el => el.scrollIntoView({block: 'center', behavior: 'smooth'})")
+        self.page.wait_for_timeout(900)
+
     def run(self, steps):
         for step in steps or []:
             if not isinstance(step, dict) or len(step) != 1:
@@ -538,6 +553,9 @@ def _launch(pw, cap, capture, chromium, slow_mo):
     if chromium:
         launch["executable_path"] = chromium
     env = cap.launch_env()
+    # Native widgets (date inputs: dd-mm-jjjj, not mm/dd/yyyy) follow LANG,
+    # not the context locale.
+    env = {**(env or os.environ), "LANG": "nl_BE.UTF-8", "LANGUAGE": "nl_BE:nl"}
     if env:
         launch["env"] = env
     return pw.chromium.launch(**launch)

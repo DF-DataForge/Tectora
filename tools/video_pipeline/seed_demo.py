@@ -258,6 +258,16 @@ insulation = product("S00139")
 for line in env["mrp.bom"].search([("product_tmpl_id", "=", insulation.product_tmpl_id.id)]).bom_line_ids:
     if line.product_id.product_tmpl_id == pir:
         line.product_qty = 1.0
+# Hercalculatie turns m² and m into pieces of the product's own unit (video 07):
+# the board and the profile are bought per piece, at a cost price per piece.
+units = ref("uom.product_uom_unit")
+for piece, size in ((pir, 0.72), (edge, 3.0)):
+    if units and piece.uom_id != units:
+        try:
+            with env.cr.savepoint():
+                piece.write({"uom_id": units.id, "standard_price": round(piece.standard_price * size, 2)})
+        except Exception as exc:   # e.g. stock moves in the old unit
+            print(f"{piece.default_code} stays in {piece.uom_id.name}: {exc}")
 
 # Video 06: a waste container, added as a fixed component in the BOM builder.
 upsert("product.template", [("default_code", "=", "P90001")], {
