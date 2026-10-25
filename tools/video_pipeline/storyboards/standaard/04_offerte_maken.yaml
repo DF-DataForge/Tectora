@@ -50,7 +50,7 @@ shots:
       - wait: 0.4
       # Enter: a new line right below, in the same section.
       - key: Enter
-      - wait: 0.6
+      - wait: 1.5
       - type: {text: "EPDM in de zinken", delay: 70}
       - wait: 1.0
       - click: {selector: ".o-autocomplete--dropdown-menu .dropdown-item:has-text('in de zinken/PVC goot')"}
