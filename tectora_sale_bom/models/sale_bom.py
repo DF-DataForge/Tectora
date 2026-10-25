@@ -393,11 +393,22 @@ class TectoraSaleBomLine(models.Model):
     @api.depends("product_id")
     def _compute_product_uom_id(self):
         for line in self:
-            if line.product_id and (
+            # A component with hercalculatie is counted in its Reken-UoM.
+            recalc_uom = line.product_id.product_tmpl_id._tectora_recalc_uom_record()
+            if recalc_uom:
+                line.product_uom_id = recalc_uom
+            elif line.product_id and (
                 not line.product_uom_id
                 or not line.product_uom_id._has_common_reference(line.product_id.uom_id)
             ):
                 line.product_uom_id = line.product_id.uom_id
+
+    def _tectora_apply_recalc_uom(self):
+        """Put the lines of components with hercalculatie in the Reken-UoM."""
+        for line in self:
+            uom = line.product_id.product_tmpl_id._tectora_recalc_uom_record()
+            if uom and line.product_uom_id != uom:
+                line.product_uom_id = uom
 
     @api.depends("product_id", "product_uom_id")
     def _compute_unit_cost(self):
@@ -408,8 +419,9 @@ class TectoraSaleBomLine(models.Model):
                 continue
             cost = product.standard_price
             if product.tectora_recalc and product.tectora_recalc_size > 0.0:
-                # Counted in m² or m³ here, bought per piece of that size.
-                cost /= product.tectora_recalc_size
+                # Counted in m, m² or m³ here, bought per piece of that size;
+                # the safety margin is material that is paid for too.
+                cost = product.product_tmpl_id._tectora_recalc_pieces(1.0) * cost
             elif line.product_uom_id and line.product_uom_id != product.uom_id:
                 cost = product.uom_id._compute_price(cost, line.product_uom_id)
             line.unit_cost = cost
@@ -435,6 +447,8 @@ class TectoraSaleBomLine(models.Model):
                 line.product_id
                 and line.product_uom_id
                 and not line.product_uom_id._has_common_reference(line.product_id.uom_id)
+                and line.product_uom_id
+                != line.product_id.product_tmpl_id._tectora_recalc_uom_record()
             ):
                 raise ValidationError(
                     _(

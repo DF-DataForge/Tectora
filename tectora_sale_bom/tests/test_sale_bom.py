@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import Command
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import Form, TransactionCase, tagged
 
 
@@ -245,3 +245,46 @@ class TestSaleBom(TransactionCase):
         form = self.open_dialog()
         component = form.line_ids.edit(2)
         self.assertAlmostEqual(component.unit_cost, 12.0)
+
+    def test_recalculation_unit_and_safety_margin(self):
+        """A component with hercalculatie is counted in its Reken-UoM on the
+        bill of materials, whatever unit it is bought in, and the safety
+        margin is added before the metres become rolls: 1 m per m² of roof,
+        rolls of 25 m, 100 m² sold = 100 m = 4 rolls; with 5 % = 105 m = 5
+        rolls."""
+        metre = self.env.ref("uom.product_uom_meter")
+        roll = self.env["product.product"].create({
+            "name": "Rol met draad", "type": "consu",
+            "uom_id": self.env.ref("uom.product_uom_unit").id,
+            "standard_price": 420.0,
+            "tectora_recalc": True, "tectora_recalc_uom": "m", "tectora_length_mm": 25000.0,
+        })
+        self.demo_bom.bom_line_ids = [
+            Command.create({"product_id": roll.id, "product_qty": 10.0}),
+        ]
+        bom_line = self.demo_bom.bom_line_ids.filtered(lambda l: l.product_id == roll)
+        self.assertEqual(bom_line.uom_id, metre, "the line is in the Reken-UoM")
+        template = roll.product_tmpl_id
+        self.assertEqual(template._tectora_recalculate(100.0), 4.0)
+        self.assertNotIn("%", bom_line.tectora_recalc_info)
+
+        roll.tectora_recalc_margin = 5.0
+        self.assertEqual(template._tectora_recalculate(100.0), 5.0)
+        self.assertAlmostEqual(template._tectora_recalc_pieces(100.0), 4.2)
+        self.assertIn("5 %", bom_line.tectora_recalc_info)
+        self.assertIn("10,50", bom_line.tectora_recalc_info.replace(".", ","))
+        self.order.action_confirm()
+        self.assertEqual(self.materials()[roll], 5.0)
+
+        # In the dialog: in metres, and a metre costs its share of a roll
+        # plus the margin: 420 / 25 × 1,05.
+        form = self.open_dialog()
+        component = form.line_ids.edit(2)
+        self.assertEqual(component.product_uom_id, metre)
+        self.assertAlmostEqual(component.unit_cost, 17.64)
+
+        # Another Reken-UoM moves the lines along.
+        template.write({"tectora_recalc_uom": "m2", "tectora_width_mm": 1000.0})
+        self.assertEqual(bom_line.uom_id, self.env.ref("uom.product_uom_square_meter"))
+        with self.assertRaises(ValidationError):
+            roll.tectora_recalc_margin = -1.0

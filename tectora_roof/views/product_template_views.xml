@@ -48,6 +48,12 @@
                     <span invisible="tectora_recalc_uom != 'm2'"> m² per stuk</span>
                     <span invisible="tectora_recalc_uom != 'm3'"> m³ per stuk</span>
                 </div>
+                <label for="tectora_recalc_margin" string="Veiligheidsmarge"
+                       invisible="not tectora_recalc"/>
+                <div name="tectora_recalc_margin" invisible="not tectora_recalc">
+                    <field name="tectora_recalc_margin" class="oe_inline" style="max-width:80px"/>
+                    <span> %</span>
+                </div>
             </xpath>
         </field>
     </record>
