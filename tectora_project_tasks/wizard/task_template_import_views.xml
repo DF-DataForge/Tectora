@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_task_template_import_form" model="ir.ui.view">
+        <field name="name">tectora.task.template.import.form</field>
+        <field name="model">tectora.task.template.import</field>
+        <field name="arch" type="xml">
+            <form string="Taaksjablonen importeren">
+                <field name="state" invisible="1"/>
+                <div invisible="state == 'done'">
+                    <div class="alert alert-info" role="alert">
+                        Importeert de projectfases en de taaksjablonen (taken en subtaken)
+                        uit de standaard Excel-lijst. Download de lijst hieronder, vul ze
+                        aan (één regel per taak of subtaak; uitleg in het tabblad
+                        <b>Uitleg</b>) en laad ze terug op.
+                    </div>
+                    <div class="mb-3">
+                        <button name="action_download_template" type="object"
+                                class="btn btn-secondary" icon="download"
+                                string="Standaardlijst downloaden"/>
+                    </div>
+                    <group>
+                        <field name="filename" invisible="1"/>
+                        <field name="file" filename="filename" string="Ingevulde lijst (.xlsx)"/>
+                        <field name="mode" widget="radio"/>
+                    </group>
+                </div>
+                <div invisible="state != 'done'">
+                    <div class="alert alert-success" role="alert">
+                        <b>De taaksjablonen zijn geïmporteerd.</b>
+                    </div>
+                    <field name="summary" nolabel="1" readonly="1"/>
+                </div>
+                <footer>
+                    <button name="action_import" type="object" string="Importeren"
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Annuleren" special="cancel" class="btn-secondary"
+                            invisible="state == 'done'"/>
+                    <button name="%(action_tectora_task_template)d" type="action"
+                            string="Taaksjablonen bekijken" class="btn-primary"
+                            invisible="state != 'done'"/>
+                    <button string="Sluiten" special="cancel" class="btn-secondary"
+                            invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_task_template_import" model="ir.actions.act_window">
+        <field name="name">Taaksjablonen importeren</field>
+        <field name="res_model">tectora.task.template.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_tectora_task_template_import_form"/>
+    </record>
+
+</odoo>

@@ -13,7 +13,9 @@ from an empty list of standard parts.
   parts every new project's order list starts from, in order (longest lead
   time first), with the action "Bestellen" (always order for the project) or
   "Stock eerst" (check the stock, order only the shortage), the suggested
-  suppliers and a note on them. The module ships no parts.
+  suppliers and a note on them. The module ships no parts: they are added by
+  hand or imported from the standardised Excel list (Projectopvolging ›
+  Bestellijst importeren, with the list to download).
 * Per project: tick a part off, choose the supplier, the order date and the
   expected delivery date, add the products needed, and create the request for
   quotation in one click. "Stock eerst" orders only what the free stock does
@@ -29,7 +31,7 @@ from an empty list of standard parts.
 * Dakmeting -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -42,6 +44,7 @@ from an empty list of standard parts.
         "views/purchase_order_views.xml",
         "views/task_template_views.xml",
         "views/project_project_views.xml",
+        "wizard/order_list_import_views.xml",
         "views/menus.xml",
     ],
     "assets": {

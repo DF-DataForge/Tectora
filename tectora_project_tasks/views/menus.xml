@@ -21,6 +21,12 @@
               action="action_tectora_task_template"
               sequence="20"/>
 
+    <menuitem id="menu_tectora_task_template_import"
+              name="Taaksjablonen importeren"
+              parent="menu_tectora_task_phases"
+              action="action_tectora_task_template_import"
+              sequence="25"/>
+
     <!-- The same, in Project -> Configuration. -->
     <menuitem id="menu_project_config_tectora_phases"
               name="Projectfases"
