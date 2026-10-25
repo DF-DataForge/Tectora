@@ -28,36 +28,59 @@ python3 -m venv .venv-video
 The Piper voice (`nl_BE-nathalie-medium`, or `nl_BE-rdh-medium` for a male
 voice) is downloaded on first use to `~/.cache/tectora-video/voices`.
 
-A **demo database**, never production: Odoo 20 with `tectora_roof`,
-`tectora_products`, `tectora_report_layout` and `sale_stock`, language
-Dutch (BE). Load the demo case (Familie Peeters) with:
+A **demo database**, never production: Odoo 20 with all Tectora modules
+except `tectora_roof_planning` (Planning is Enterprise), plus `calendar`,
+`hr_timesheet` and `l10n_be` with the Belgian chart (for 6 % VAT), language
+Dutch (BE). Also needed on the machine:
+
+* **wkhtmltopdf 0.12.6.1 with patched Qt** (the `wkhtmltox` package from the
+  wkhtmltopdf project, not Ubuntu's) — Odoo refuses the unpatched one for
+  quotations. Restart Odoo after installing it.
+* **A mail sink on localhost:25** (e.g. `python -m aiosmtpd -n -l
+  127.0.0.1:25 -c aiosmtpd.handlers.Sink`), so mails Odoo sends during a
+  take succeed instead of showing up as failed-mail counters.
+
+The demo case (Tectora, client Peeters with salutation Familie) comes from
+`seed_demo.py`, one **stage** per point in the story (`lead_new`, `lead`,
+`lead_notes`, `quote`, `quote_norecalc`, `project`, `timer`; see its
+docstring). A storyboard names its `stage`; `make_video.py` passes it to the
+`--reset` command as `$VIDEO_STAGE` (and the assets folder as
+`$VIDEO_ASSETS`):
 
 ```bash
-odoo shell -c odoo.conf -d tectora_demo < tools/video_pipeline/seed_demo.py
+VIDEO_STAGE=quote VIDEO_ASSETS=tools/video_pipeline/assets \
+    odoo shell -c odoo.conf -d tectora_video < tools/video_pipeline/seed_demo.py
 ```
 
-The seed is idempotent and removes what an earlier take created, so pass
-it as `--reset` and every take starts from the same screen.
+The seed is idempotent and removes what an earlier take created, so every
+take starts from the same screen.
 
 ## Making a video
 
 ```bash
+RESET="odoo shell -c odoo.conf -d tectora_video < tools/video_pipeline/seed_demo.py"
+
 # 1. Rehearse: headless, no recording; fails fast with error.png on a missing button
 .venv-video/bin/python tools/video_pipeline/make_video.py \
-    tools/video_pipeline/storyboards/dakmeting_02_dakproject_starten.yaml --capture none
+    tools/video_pipeline/storyboards/standaard/04_offerte_maken.yaml \
+    --db tectora_video --reset "$RESET" --capture none
 
 # 2. Record
 ODOO_PASSWORD=... .venv-video/bin/python tools/video_pipeline/make_video.py \
-    tools/video_pipeline/storyboards/dakmeting_02_dakproject_starten.yaml \
-    --url http://localhost:8069 --login admin \
-    --reset "odoo shell -c odoo.conf -d tectora_demo < tools/video_pipeline/seed_demo.py" \
+    tools/video_pipeline/storyboards/standaard/04_offerte_maken.yaml \
+    --url http://localhost:8069 --db tectora_video --login admin --reset "$RESET" \
     --music muziek.mp3   # optional, ducks under the voice
 ```
 
 Output in `build/videos/<storyboard>/`: `<name>.mp4` (1080p30, H.264/AAC),
 `<name>.srt` (subtitles from the voice-over), `<name>.jpg` (thumbnail) and
-`timeline.json`. `--voice-only` only synthesises the voice-over and prints
-the length per shot against the script.
+`timeline.json`. A storyboard's `bumper` (the series uses
+`docs/handleiding/dataforge_logo.png`) is shown before and after the video;
+`--bumper` overrides it. `--voice-only` only synthesises the voice-over and
+prints the length per shot against the script.
+
+Record a series one video at a time: one Odoo serving several recordings at
+once makes steps lag behind the voice-over.
 
 ## Writing a storyboard
 
@@ -79,7 +102,7 @@ shots:
       - menu: Dakprojecten                    # top menu
       - click: Renovatie plat dak Peeters     # button/link/tab/text
       - click: {button: Dakproject maken}     # or {selector: css}, {field: name}
-      - fill: {field: partner_id, value: Peeters, pick: Familie Peeters}
+      - fill: {field: partner_id, value: Peeters, pick: Peeters}
       - save:
       - highlight: {field: address, seconds: 2}
       - zoom: {selector: .o_statusbar_status, scale: 2}
@@ -91,15 +114,23 @@ until the voice-over is done; so the voice decides the length, as the
 scripts intend. A card's `kind: html` takes free HTML (see the diagram in
 shot 2 of the example).
 
+More steps (docstrings in `recorder.py`): `type`, `key`, `hover`, `drag`,
+`edit_cell`, `scroll`, `scroll_to`, `unclip`, `card`/`hide_card` (a card in
+the middle of a shot), `login` (switch user, under a card), `phone`/
+`phone_close` (a portal page in a smartphone frame), `fetch_pdf`/`show_pdf`
+(a printed report as a card), `open_here` and `back`. The eleven
+storyboards in `storyboards/standaard/` are worked examples of all of them.
+
 ## Publishing
 
 Upload the MP4 (unlisted on YouTube/Vimeo, or Google Drive) and add it as
 *Video* content to the course in Odoo eLearning; the `.srt` goes along as
 subtitles on YouTube/Vimeo.
 
-## Limits of this proof of concept
+## Limits
 
-* Only `dakmeting_02` has a storyboard; the other 20 scripts need one each.
+* The standard series (`storyboards/standaard/`, 11 videos) and
+  `dakmeting_02` have storyboards; the other Dakmeting scripts need one each.
   Drawing on the canvas (Dakmeting 03/04) needs mouse-path steps that do
   not exist yet.
 * Piper is free and offline but sounds synthetic; a paid voice (e.g.
