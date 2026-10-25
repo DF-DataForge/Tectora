@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_task_template_list" model="ir.ui.view">
+        <field name="name">tectora.task.template.list</field>
+        <field name="model">tectora.task.template</field>
+        <field name="arch" type="xml">
+            <list string="Taaksjablonen">
+                <field name="sequence" widget="handle"/>
+                <field name="phase_id"/>
+                <field name="display_name" string="Taak"/>
+                <field name="optional"/>
+                <field name="deadline_reference" optional="hide"/>
+                <field name="deadline_offset" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_task_template_form" model="ir.ui.view">
+        <field name="name">tectora.task.template.form</field>
+        <field name="model">tectora.task.template</field>
+        <field name="arch" type="xml">
+            <form string="Taaksjabloon">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Taak"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="phase_id"/>
+                            <field name="parent_id"/>
+                            <field name="sequence"/>
+                            <field name="optional" invisible="parent_id"/>
+                        </group>
+                        <group>
+                            <field name="deadline_reference"/>
+                            <field name="deadline_offset" invisible="not deadline_reference"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Subtaken" name="subtasks" invisible="parent_id">
+                            <field name="child_ids" context="{'default_phase_id': phase_id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="deadline_reference" optional="hide"/>
+                                    <field name="deadline_offset" optional="hide"/>
+                                    <field name="phase_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Toelichting" name="description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tectora_task_template_search" model="ir.ui.view">
+        <field name="name">tectora.task.template.search</field>
+        <field name="model">tectora.task.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="phase_id"/>
+                <filter name="main" string="Hoofdtaken" domain="[('parent_id', '=', False)]"/>
+                <filter name="optional" string="Opties" domain="[('optional', '=', True)]"/>
+                <separator/>
+                <filter name="archived" string="Gearchiveerd" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_phase" string="Fase" context="{'group_by': 'phase_id'}"/>
+                    <filter name="group_parent" string="Hoofdtaak" context="{'group_by': 'parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_task_template" model="ir.actions.act_window">
+        <field name="name">Taaksjablonen</field>
+        <field name="res_model">tectora.task.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_main': 1, 'search_default_group_phase': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak een taaksjabloon aan</p>
+            <p>Deze taken (met hun subtaken) worden per fase aangemaakt op elk
+               nieuw project. Optionele taken staan standaard uit en worden per
+               project aangezet.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The header and the footer of the document layout around an empty
+         page, one per order: the frame the headers and footers of the
+         quotation are printed in (ir_actions_report.py). No recipient, no
+         title, so only what the layout itself puts on every page. -->
+    <template id="report_layout_frame">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout" o="doc" hide_recipient_address="True"
+                   layout_document_title="''">
+                    <!-- wkhtmltopdf draws no header and footer on a page
+                         whose body is empty: an invisible line of 1px. -->
+                    <div class="page"><div style="height: 1px;"/></div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_layout_frame" model="ir.actions.report">
+        <field name="name">Lay-outkader offerte</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">tectora_quote_builder.report_layout_frame</field>
+    </record>
+
+</odoo>

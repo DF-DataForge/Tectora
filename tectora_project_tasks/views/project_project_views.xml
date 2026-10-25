@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The task block on the project dashboard: the phases as a timeline,
+         the progress of the current phase and its open tasks. -->
+    <record id="view_project_project_tectora_dashboard_inherit_tasks" model="ir.ui.view">
+        <field name="name">project.project.form.tectora.dashboard.tasks</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_project_project_tectora_dashboard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('o_tectora_cards')]" position="after">
+                <div class="o_tectora_task_phases_row mb-3">
+                    <widget name="tectora_task_phases"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_project_form_inherit_tectora_tasks" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.tectora.tasks</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_tectora_open_task_board" type="object"
+                        class="oe_stat_button" icon="checklist"
+                        string="Taken per fase" invisible="not tectora_task_phases"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="tectora_task_phases" invisible="1"/>
+                <field name="tectora_phase_id" invisible="not tectora_task_phases"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_project_project_filter_inherit_tectora_tasks" model="ir.ui.view">
+        <field name="name">project.project.search.inherit.tectora.tasks</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_project_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="tectora_phase_id"/>
+                <filter string="Fase" name="tectora_group_phase"
+                        context="{'group_by': 'tectora_phase_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

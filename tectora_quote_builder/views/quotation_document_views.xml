@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="quotation_document_form_inherit_tectora" model="ir.ui.view">
+        <field name="name">quotation.document.form.inherit.tectora</field>
+        <field name="model">quotation.document</field>
+        <field name="inherit_id" ref="sale_pdf_quote_builder.quotation_document_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='add_by_default']/../.." position="after">
+                <group string="Afdrukken in de documentlay-out" name="tectora_layout">
+                    <group>
+                        <field name="tectora_in_layout"/>
+                        <field name="tectora_crop_top" invisible="not tectora_in_layout"/>
+                        <field name="tectora_crop_top_pages" invisible="not tectora_in_layout or not tectora_crop_top"
+                               placeholder="alle pagina's"/>
+                        <field name="tectora_crop_bottom" invisible="not tectora_in_layout"/>
+                        <field name="tectora_crop_bottom_pages" invisible="not tectora_in_layout or not tectora_crop_bottom"
+                               placeholder="alle pagina's"/>
+                        <field name="tectora_fit_pages" invisible="not tectora_in_layout"
+                               placeholder="geen: alles op ware grootte"/>
+                    </group>
+                    <group invisible="document_type != 'header'">
+                        <field name="tectora_customer_name"/>
+                        <field name="tectora_customer_name_top" invisible="not tectora_customer_name"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
