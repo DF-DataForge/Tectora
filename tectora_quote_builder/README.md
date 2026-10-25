@@ -26,7 +26,9 @@ offerte zelf. Per document (tab *Afdrukken in de documentlay-out*):
 | In de documentlay-out | aan | uit = de pdf wordt afgedrukt zoals hij is |
 | Eigen kop weglaten (mm) | 28 | de band bovenaan de pdf zelf |
 | Eigen voet weglaten (mm) | 24 | de voetband van de pdf zelf |
+| Eigen kop enkel op pagina's | leeg = alle | bv. `1,2,4`: enkel die pagina's hebben bovenaan een band of logo |
 | Eigen voet enkel op pagina's | leeg = alle | bv. `1,4`: enkel die pagina's hebben een voetband |
+| Verkleinen op pagina's | leeg = geen | bv. `3`: die pagina's lopen tot tegen de rand en worden verkleind tot ze tussen de kop en voet van de lay-out passen |
 
 De pagina blijft **op ware grootte** (geen witte randen); de kop en voet van de
 lay-out komen erover. Onder de eigen band van de pdf (die wegvalt) staat dus de
@@ -51,9 +53,11 @@ offerte.
 - **Kop** = pagina 1–4 (voorpagina, introductie, kernwaarden en werkwijze,
   aanbrengactie): *Standaard toevoegen*, *Naam klant op de eerste pagina*,
   eigen kop 28 mm, eigen voet 24 mm *enkel op pagina's* `1,4`.
-- **Voettekst** = pagina 13–17 (verkoopsvoorwaarden, werfregels, beeld- en
-  geluidsmateriaal, dankwoord): *Standaard toevoegen*, eigen kop 28 mm, eigen
-  voet **0** (die pagina's hebben geen voetband; de inhoud loopt tot onderaan).
+- **Voettekst** = pagina 13–17 (verkoopsvoorwaarden, werfregels,
+  slotbepalingen, beeld- en geluidsmateriaal, dankwoord): *Standaard
+  toevoegen*, eigen kop 28 mm *enkel op pagina's* `1,2,4,5`, eigen voet **0**
+  (die pagina's hebben geen voetband), *verkleinen op pagina's* `3` (de
+  slotbepalingen beginnen bovenaan de pagina).
 
 ## Technisch
 

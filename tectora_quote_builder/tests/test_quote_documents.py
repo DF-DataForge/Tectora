@@ -107,6 +107,35 @@ class TestQuoteDocuments(TransactionCase):
         self.assertRegex(first.get_contents().get_data(), rb"0(\.0+)? 68\.03\d* 595\.27\d* 694\.4\d* re")
         self.assertRegex(second.get_contents().get_data(), rb"0(\.0+)? 0(\.0+)? 595\.27\d* 762\.5\d* re")
 
+    def test_fit_pages_and_crop_top_pages(self):
+        """Page 2 runs up to the top edge: no own band cut away, and scaled
+        down between the layout's header and footer."""
+        source = make_pdf([
+            [("OUDE BAND", 10), ("VOORSTEL OP MAAT", 216)],
+            [("Slotbepalingen", 8), ("Handtekening", 280)],
+        ])
+        result = self.Report._tectora_put_in_frame(
+            source, self.frame, crop_top=28 * MM, crop_bottom=0,
+            crop_top_pages={1}, fit_pages={2}, body_top=52 * MM, body_bottom=32 * MM,
+        )
+        first, second = (text_positions(page) for page in PdfFileReader(io.BytesIO(result)).pages)
+        # page 1: full size
+        self.assertAlmostEqual(first["VOORSTEL OP MAAT"], HEIGHT - 216 * MM, delta=1)
+        # page 2: everything between the header (52 mm) and the footer (32 mm)
+        body_top, body_bottom = HEIGHT - 52 * MM, 32 * MM
+        self.assertTrue(body_bottom <= second["Slotbepalingen"] <= body_top)
+        self.assertTrue(body_bottom <= second["Handtekening"] <= body_top)
+        content = PdfFileReader(io.BytesIO(result)).pages[1].get_contents().get_data()
+        # no own band on page 2: the whole page height is drawn
+        self.assertRegex(content, rb"0(\.0+)? 0(\.0+)? 595\.27\d* 841\.8\d* re")
+
+    def test_page_field_specs(self):
+        self.header.write({"tectora_crop_top_pages": "1,2", "tectora_fit_pages": "3-4"})
+        self.assertEqual(self.header._tectora_page_numbers("tectora_crop_top_pages"), {1, 2})
+        self.assertEqual(self.header._tectora_page_numbers("tectora_fit_pages"), {3, 4})
+        with self.assertRaises(ValidationError):
+            self.header.tectora_fit_pages = "drie"
+
     def test_crop_bottom_pages_spec(self):
         self.header.tectora_crop_bottom_pages = "1, 4-5"
         self.assertEqual(self.header._tectora_crop_bottom_page_numbers(), {1, 4, 5})
@@ -154,7 +183,7 @@ class TestQuoteDocuments(TransactionCase):
         order = self._order(quotation_document_ids=[(6, 0, (self.header | self.footer).ids)])
         writer = PdfFileWriter()
         with patch.object(type(self.Report), "_tectora_layout_frame", lambda self, order: {
-            "pdf": TestQuoteDocuments.frame,
+            "pdf": TestQuoteDocuments.frame, "margin_top": 52 * MM, "margin_bottom": 32 * MM,
         }):
             report = self.Report.with_context(tectora_layout_frames={})
             for document in (self.header, self.footer):

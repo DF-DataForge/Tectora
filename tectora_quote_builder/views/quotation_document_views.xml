@@ -11,9 +11,13 @@
                     <group>
                         <field name="tectora_in_layout"/>
                         <field name="tectora_crop_top" invisible="not tectora_in_layout"/>
+                        <field name="tectora_crop_top_pages" invisible="not tectora_in_layout or not tectora_crop_top"
+                               placeholder="alle pagina's"/>
                         <field name="tectora_crop_bottom" invisible="not tectora_in_layout"/>
                         <field name="tectora_crop_bottom_pages" invisible="not tectora_in_layout or not tectora_crop_bottom"
                                placeholder="alle pagina's"/>
+                        <field name="tectora_fit_pages" invisible="not tectora_in_layout"
+                               placeholder="geen: alles op ware grootte"/>
                     </group>
                     <group invisible="document_type != 'header'">
                         <field name="tectora_customer_name"/>

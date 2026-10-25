@@ -17,15 +17,16 @@ Footers, Odoo's Quote Builder) as the structure of every quotation:
   with the header and footer of the document layout (Settings › Document
   Layout), like the quotation itself, laid over the page at full size. The
   PDF's own band (heights per document, by default 28 mm at the top and 24 mm
-  at the bottom) is left out underneath. Per document this can be switched
-  off.
+  at the bottom, optionally only on some pages) is left out underneath. Pages
+  whose content runs up to the edge can be scaled down to fit between the
+  layout's header and footer instead. Per document this can be switched off.
 * **Customer name**: the first header can print the customer's name, with
   the salutation of the contact in front (Dhr., Mevr., ...), and the site
   address (the delivery address of the quotation) under it, on its
   first page (e.g. under "Voorstel op maat" on the cover), centred, in the
   company's primary colour, at a height set on the document.
     """,
-    "version": "20.0.1.2.0",
+    "version": "20.0.1.3.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
