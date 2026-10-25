@@ -14,7 +14,9 @@ starting from an empty task template.
 * **Taaksjablonen**: per phase the tasks and their subtasks, optional tasks
   (switched off by default, switched on per project) and deadlines relative to
   the project's start or end date. The module ships no phases and no
-  templates: they are filled in per company.
+  templates: they are filled in per company, by hand or imported from the
+  standardised Excel list (Projectopvolging › Taaksjablonen importeren, with
+  the list to download).
 * The **project dashboard** gets a "Taken" block: the phases as a timeline,
   the progress of the current phase and its open tasks, ticked off in place.
   "Openen" (or a click on a phase) opens the **task page**: per phase the
@@ -28,7 +30,7 @@ New projects get their phases and tasks on creation (once phases exist); an
 existing project starts the follow-up with "Taakopvolging starten" on the
 dashboard.
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -40,6 +42,7 @@ dashboard.
         "views/task_template_views.xml",
         "views/project_task_views.xml",
         "views/project_project_views.xml",
+        "wizard/task_template_import_views.xml",
         "views/menus.xml",
     ],
     "assets": {

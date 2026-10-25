@@ -27,6 +27,12 @@
               action="action_tectora_order_list_template"
               sequence="30"/>
 
+    <menuitem id="menu_tectora_order_list_import"
+              name="Bestellijst importeren"
+              parent="tectora_project_tasks.menu_tectora_task_phases"
+              action="action_tectora_order_list_import"
+              sequence="35"/>
+
     <menuitem id="menu_project_config_tectora_order_list_templates"
               name="Bestellijst-onderdelen"
               parent="project.menu_project_config"

@@ -16,6 +16,22 @@ A task template can be marked **Bestellijst afgevinkt (automatisch)**: that
 task is ticked off as soon as the whole order list is, opens again when a line
 is reopened, and links to the order list on the task page.
 
+## Importeren uit Excel
+
+*Dakmeting › Projectopvolging › Bestellijst importeren*: download de
+**standaardlijst** (`Bestellijst.xlsx`), vul ze aan en laad ze terug op.
+
+- Tabblad **Bestellijst**, één regel per onderdeel: *Volgorde* (leeg = de
+  volgorde van de regels), *Onderdeel* (verplicht), *Actie* (Bestellen of
+  Stock eerst; leeg = Bestellen), *Leveranciers* (namen van contacten,
+  gescheiden door `;`; de eerste is de standaardleverancier), *Toelichting
+  leveranciers*.
+- Een leverancier die niet als contact bestaat, wordt overgeslagen en in het
+  verslag vermeld, of aangemaakt met *Ontbrekende leveranciers aanmaken*.
+- *Toevoegen en bijwerken* / *Vervangen* en de foutmeldingen per rij: zoals bij
+  de taaksjablonen.
+- Bestaande bestellijsten van projecten veranderen niet.
+
 ## On the project
 
 - A **new project** gets an order list with one line per part. Existing
