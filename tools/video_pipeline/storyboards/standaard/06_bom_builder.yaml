@@ -1,0 +1,97 @@
+# Storyboard for docs/video_scripts/standaard/06_bom_builder.md
+script: docs/video_scripts/standaard/06_bom_builder.md
+name: standaard_06_bom_builder
+series: Tectora · de standaardflow
+stage: quote
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 5
+start: /odoo/sales
+pronunciation:
+  BOM: bom
+
+shots:
+  1:
+    card: title
+
+  2:
+    card:
+      kind: html
+      html: |
+        <div style="display:flex;align-items:center;gap:70px;font-family:Montserrat,sans-serif;color:#1d2b2b">
+          <div style="width:440px;padding:40px 34px;border-radius:22px;background:#2D8D8F;color:#fff;box-shadow:0 18px 40px rgba(45,141,143,.35)">
+            <div style="font-size:24px;font-weight:600;opacity:.85">Werkpost</div>
+            <div style="font-size:40px;font-weight:700;line-height:1.2;margin-top:10px">Leveren en plaatsen EPDM 1,1 mm</div>
+            <div style="font-size:26px;margin-top:18px;opacity:.9">96 m²</div>
+          </div>
+          <div style="font-size:90px;color:#2D8D8F;font-weight:700">→</div>
+          <div style="display:flex;flex-direction:column;gap:16px;font-size:32px;font-weight:600">
+            <div style="padding:16px 28px;border-radius:14px;background:#fff;border:4px solid #2D8D8F">EPDM-doek</div>
+            <div style="padding:16px 28px;border-radius:14px;background:#fff;border:4px solid #2D8D8F">Contactlijm</div>
+            <div style="padding:16px 28px;border-radius:14px;background:#fff;border:4px solid #2D8D8F">Naadband</div>
+            <div style="padding:16px 28px;border-radius:14px;background:#fff;border:4px solid #2D8D8F">Primer</div>
+            <div style="padding:16px 28px;border-radius:14px;background:#fff;border:4px solid #2D8D8F">Afdichtingskit</div>
+          </div>
+        </div>
+
+  3:
+    # Behind the card of shot 2: the quotation, scrolled to the opbouwwerken.
+    setup:
+      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+      - scroll: {selector: ".o_form_sheet_bg", dy: 700}
+    steps:
+      - wait: 0.8
+      - hover: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_has_sale_bom] button"}
+      - wait: 2.2
+      - click: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_has_sale_bom] button"}
+      - wait: 0.8
+
+  4:
+    steps:
+      - highlight: {selector: ".modal .o_list_renderer thead th[data-name=quantity]", seconds: 1.4}
+      - highlight: {selector: ".modal .o_list_renderer thead th[data-name=total_quantity]", seconds: 1.4}
+      - click: {selector: ".modal .o_field_x2many_list_row_add a, .modal .o_field_x2many_list_row_add button"}
+      - type: Container
+      - wait: 1.2
+      - click: {selector: ".o-autocomplete--dropdown-menu a:has-text('Container afval')"}
+      - wait: 1.0
+      - click: {selector: ".modal tr.o_data_row.o_selected_row td[name=fixed_quantity] input"}
+      - wait: 0.6
+      - click: {selector: ".modal .o_form_view label:has-text('Huidige prijs')"}
+      - highlight: {selector: ".modal tr.o_data_row:has-text('Container afval')", seconds: 2.0}
+
+  5:
+    steps:
+      - click: {selector: ".modal tr.o_data_row:has-text('BONDING') td[name=unit_cost]"}
+      - key: Control+a
+      - type: {text: "185", delay: 120}
+      - click: {selector: ".modal .o_form_view label:has-text('Huidige prijs')"}
+      - wait: 0.6
+      - highlight: {field: cost_per_unit, seconds: 1.8}
+      - highlight: {field: margin_percent, seconds: 1.6}
+      - highlight: {field: price_computed, seconds: 2.0}
+      - fill: {field: margin_percent, value: "180", delay: 140}
+      - click: {selector: ".modal .o_form_view label:has-text('Huidige prijs')"}
+      - zoom: {selector: ".modal .o_form_view .o_group:has(.o_field_widget[name=margin_percent])", scale: 1.6, seconds: 1.8}
+
+  6:
+    steps:
+      - highlight: {button: Opslaan, seconds: 1.2}
+      - highlight: {button: Opslaan en prijs toepassen, seconds: 1.4}
+      - click: {button: Opslaan en prijs toepassen}
+      - wait: 0.8
+      - click: {button: Ok}
+      - wait: 0.8
+      - highlight: {selector: "tr.o_data_row:has-text('S00177') td[name=price_unit]", seconds: 1.4}
+      - hover: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_has_sale_bom] button"}
+      - wait: 1.5
+      - hover: {selector: "tr.o_data_row:has-text('S00177') td[name=price_unit]"}
+      - zoom: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_has_sale_bom]", scale: 2.5, seconds: 1.5}
+      - click: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_has_sale_bom] button"}
+      - highlight: {button: Standaard herstellen, seconds: 1.8}
+      - click: {selector: ".modal-footer button:has-text('Sluiten')"}
+      - hover: {selector: "tr.o_data_row:has-text('S00177') td[name=price_unit]"}
+
+  7:
+    card: title

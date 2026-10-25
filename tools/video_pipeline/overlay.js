@@ -155,7 +155,8 @@
                 phone = document.createElement("div");
                 phone.id = "tv-phone";
                 phone.innerHTML = `<div class="tv-device"><iframe></iframe></div>`;
-                root.insertBefore(phone, root.querySelector("#tv-highlight"));
+                // Under the card (a card covers the phone), above the page.
+                root.insertBefore(phone, root.querySelector("#tv-card"));
             }
             phone.querySelector("iframe").src = src;
             requestAnimationFrame(() => phone.classList.add("tv-on"));

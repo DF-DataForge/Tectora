@@ -280,6 +280,13 @@ if roofer.user_id:
     roofer.user_id = False
     old.active = False
     old.login = f"archived-{old.id}-{old.login}"
+if stage == "timer":
+    # Video 11 sets Tom's planning horizon and grants access: undo an earlier
+    # take, chatter included.
+    if "tectora_portal_planning_horizon" in roofer._fields:
+        roofer.tectora_portal_planning_horizon = "all"
+    env["mail.message"].search([("model", "=", "hr.employee"), ("res_id", "=", roofer.id),
+                                ("author_id", "=", user.partner_id.id)]).unlink()
 team = upsert("tectora.roof.team", [("name", "=", "Ploeg 1")], {"name": "Ploeg 1", "leader_id": foreman.id})
 (foreman | roofer | roofer2).write({"roof_team_id": team.id})
 if "tectora_portal_planning_horizon" in foreman._fields:
@@ -336,6 +343,15 @@ if stage in ("project", "timer"):
                     "team_id": team.id})
     order.action_confirm()
     lead.stage_id = stage_won
+    # Video 10: what two parts of the order list need, so the request for
+    # quotation has lines and "Stock eerst" shows the shortage.
+    if "tectora.project.order.product" in env:
+        for line in env["tectora.project.order.line"].search(
+                [("project_id.partner_id", "=", partner.id), ("name", "in", ("Isolatie PIR", "EPDM en toebehoren"))]):
+            needed = (product("P00512"), 144) if line.name == "Isolatie PIR" else (product("P00444"), 106)
+            if needed[0] and not line.product_line_ids:
+                env["tectora.project.order.product"].create(
+                    {"order_line_id": line.id, "product_id": needed[0].id, "quantity": needed[1]})
     if roof and "tectora.roof.planning" in env:
         # Today's work block, so the site shows on the portal right away.
         block = env["tectora.roof.planning"].create({

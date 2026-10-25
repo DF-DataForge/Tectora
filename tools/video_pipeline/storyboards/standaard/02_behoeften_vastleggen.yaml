@@ -72,7 +72,9 @@ shots:
       - click: {selector: ".modal [name=date_deadline]"}
       - click: {selector: ".o_datetime_picker .o_today >> xpath=following::div[contains(@class,'o_date_item_cell')][1]"}
       - wait: 0.4
-      - click: {selector: ".modal button:has-text('Opslaan')"}
+      - click: {button: Opslaan, in: ".modal"}
+      - wait: 0.6
+      - highlight: {selector: ".o-mail-Activity", seconds: 2.2}
 
   7:
     card: title

@@ -19,35 +19,30 @@ shots:
     setup:
       - click: {selector: ".o_data_row:has-text('Familie Peeters') td.o_data_cell >> nth=1"}
     steps:
-      - wait: 0.8
-      - highlight: {selector: ".o_statusbar_status", seconds: 1.4}
+      - wait: 0.5
       - hover: {button: Bevestigen}
-      - wait: 0.6
+      - wait: 0.4
       - click: {button: Bevestigen}
-      - wait: 1.2
-      - highlight: {selector: ".o-mail-Chatter .o-mail-Message:has-text('Offerte bevestigd')", seconds: 1.6}
-      - highlight: {selector: ".o-form-buttonbox button:has-text('Projecten')", seconds: 1.6}
+      - highlight: {selector: ".o-mail-Chatter .o-mail-Message:has-text('Offerte bevestigd')", seconds: 1.2}
+      - highlight: {selector: ".o-form-buttonbox button:has-text('Projecten')", seconds: 1.4}
       - hover: {selector: ".o-form-buttonbox button:has-text('Projectdashboard')"}
-      - wait: 1.2
 
   3:
     steps:
       - click: {selector: ".o-form-buttonbox button:has-text('Projectdashboard')"}
-      - hover: {selector: ".o_tectora_dashboard h1, .o_tectora_dashboard .oe_title"}
-      - wait: 0.6
       - zoom: {selector: ".o_tectora_cards", scale: 1.35}
       - hover: {selector: ".o_tectora_card_revenue"}
-      - wait: 1.4
+      - wait: 1.0
       - hover: {selector: ".o_tectora_card_costs"}
-      - wait: 1.4
+      - wait: 1.0
       - hover: {selector: ".o_tectora_card_margin"}
-      - wait: 1.6
+      - wait: 1.0
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Materiaalkost (stuklijst)'))"}
-      - wait: 1.2
+      - wait: 0.8
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Inkoop'))"}
-      - wait: 1.2
+      - wait: 0.8
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Urenstaten'))"}
-      - wait: 1.2
+      - wait: 0.8
       - unzoom:
 
   4:
@@ -64,26 +59,24 @@ shots:
   5:
     steps:
       - click: {text: Materiaallijst, in: .o_notebook_headers}
-      - wait: 1.2
+      - wait: 0.6
       - scroll: {dy: 300}
-      - wait: 1.5
+      - wait: 0.8
       - scroll: {dy: -1400}
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Facturen'))"}
-      - wait: 1.0
+      - wait: 0.5
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Leveringen'))"}
-      - wait: 1.0
+      - wait: 0.5
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Inkoop'))"}
-      - wait: 1.0
+      - wait: 0.5
       - hover: {selector: ".o_tectora_card:has(.o_tectora_card_label:text-is('Urenstaten'))"}
-      - wait: 1.0
 
   6:
     steps:
       - app: Dakmeting
       - menu: Projecten
-      - hover: {selector: ".o_kanban_record:has-text('Familie Peeters')"}
-      - wait: 0.6
-      - click: {selector: ".o_kanban_record:has-text('Familie Peeters') span:text-is('Familie Peeters — Izegem')"}
+      - click: {selector: ".o_kanban_record:has-text('Familie Peeters — Izegem')"}
+      - zoom: {selector: ".o_tectora_cards", scale: 1.25}
       - hover: {selector: ".o_tectora_card_margin"}
 
   7:

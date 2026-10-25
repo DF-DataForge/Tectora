@@ -394,17 +394,26 @@ class Director:
         self.page.wait_for_timeout(500)
 
     def step_login(self, spec):
-        """{login, password, path}: switch user (cover it with a card)."""
+        """{login, password, path}: switch user (cover it with a card).
+
+        The log-out and log-in go over HTTP with the browser's cookies, so
+        the page itself only loads `path`: a card on screen stays on screen
+        (Odoo's log-out would clear the overlay's sessionStorage)."""
+        import re
+
         page = self.page
-        page.goto(self.base_url + "/web/session/logout")
-        page.goto(self.base_url + "/web/login" + (f"?db={self.db}" if self.db else ""))
-        page.fill("input[name=login]", spec["login"])
-        page.fill("input[name=password]", spec.get("password", spec["login"]))
-        page.click("button[type=submit]")
-        page.wait_for_load_state("domcontentloaded")
-        if spec.get("path"):
-            page.goto(self.base_url + spec["path"])
-        page.wait_for_timeout(800)
+        request = page.context.request
+        request.get(self.base_url + "/web/session/logout")
+        form = request.get(self.base_url + "/web/login" + (f"?db={self.db}" if self.db else "")).text()
+        token = re.search(r'name="csrf_token"\s+value="([^"]+)"', form)
+        response = request.post(self.base_url + "/web/login", form={
+            "login": spec["login"], "password": spec.get("password", spec["login"]),
+            "csrf_token": token.group(1) if token else "", "redirect": spec.get("path", "/my"),
+        })
+        if "/web/login" in response.url:
+            raise StepError(f"log-in as {spec['login']} failed")
+        page.goto(self.base_url + spec.get("path", "/my"))
+        self.ready()
 
     def step_phone(self, spec):
         """Show a page in a smartphone frame: "/my/werven" or {path}."""
@@ -412,6 +421,8 @@ class Director:
         self.page.evaluate("src => window.__tv.phone(src)", self.base_url + path)
         self.phone = self.page.frame_locator("#tv-phone iframe")
         self.ready(settle=1.0)
+        # After a page load the drawn cursor has no position yet: put it on the phone.
+        self.page.mouse.move(WIDTH / 2 + 60, HEIGHT / 2 + 160, steps=4)
 
     def step_phone_close(self, _=None):
         self.page.evaluate("() => window.__tv.hidePhone()")

@@ -1,0 +1,87 @@
+# Storyboard for docs/video_scripts/standaard/11_werknemersportaal.md
+script: docs/video_scripts/standaard/11_werknemersportaal.md
+name: standaard_11_werknemersportaal
+series: Tectora · de standaardflow
+stage: timer
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 5
+start: /odoo/employees
+pronunciation:
+  pdf: p d f
+
+shots:
+  1:
+    card: title
+
+  # Backend, as the office (admin): portal access for the roofer Tom Maes.
+  2:
+    steps:
+      - click: {selector: ".o_kanban_record:has-text('Tom Maes')"}
+      - click: {selector: "button[name=action_tectora_grant_portal_access]"}
+      - wait: 1.2
+      - click: {selector: ".modal-footer .btn-primary"}
+      - wait: 0.8
+      - highlight: {selector: "button[name=action_tectora_open_portal_user]", seconds: 1.8}
+      - click: Werk
+      - click: {selector: ".o_field_widget[name=tectora_portal_planning_horizon] label:text-is('1 week')"}
+      - highlight: {field: tectora_portal_planning_horizon, seconds: 2}
+
+  # The foreman Koen De Vos on his smartphone (a card covers the user switch).
+  3:
+    steps:
+      - card: {title: "Op de smartphone", subtitle: "ploegbaas Koen De Vos"}
+      - login: {login: koen.devos@tectora.example, password: koen, path: /my}
+      - phone: /my
+      - hide_card:
+      - click: {selector: "a[href='/my/werven']"}
+      - click: {selector: "button.navbar-toggler"}
+      - click: {selector: "#portal_searchbar_filters"}
+      - hover: {selector: ".dropdown-menu.show a:has-text('Vandaag')"}
+      - hover: {selector: ".dropdown-menu.show a:has-text('Uren lopen')"}
+      - hover: {selector: ".dropdown-menu.show a:has-text('Alle werven')"}
+      - wait: 0.3
+      - click: {selector: "#portal_searchbar_filters"}
+      - highlight: {selector: "table tbody tr:has-text('Peeters') td:has-text('pers.')", seconds: 1.5}
+
+  4:
+    steps:
+      - click: {selector: "table tbody tr a:has-text('Peeters')"}
+      - highlight: {selector: ".o_tectora_site_header a[href*='google.com/maps']", seconds: 1.2}
+      - highlight: {selector: "#tab-overview tr:has-text('Contact werf')", seconds: 1}
+      - highlight: {selector: "#tab-overview tr:has-text('Projectleider')", seconds: 1}
+      - highlight: {selector: "#tab-overview a:has-text('Werfblad (pdf)')", seconds: 1}
+      - highlight: {selector: "#tab-overview div:has(> .fw-bold:text-is('Werfinstructies'))", seconds: 1.2}
+      - click: {selector: "a.nav-link[data-tab=materials]"}
+      - highlight: {selector: "#tab-materials :text-is('Aanlevering van het materiaal')", seconds: 1.2}
+      - highlight: {selector: "#tab-materials table tbody tr:first-child", seconds: 1.5}
+
+  5:
+    steps:
+      - highlight: {selector: ".o_tectora_timer_card", seconds: 3}
+      - click: {selector: ".o_tectora_timer_card button:has-text('Stop')"}
+      - wait: 1
+      - highlight: {selector: "#tectoraStopModal .modal-body", seconds: 2}
+      - click: {selector: "#tectora_stop_notes"}
+      - type: "Afbraak klaar, container vol."
+      - click: {selector: "#tectoraStopModal button[type=submit]"}
+      - wait: 0.5
+      - highlight: {selector: ".o_tectora_portal > .alert-success", seconds: 2.5}
+
+  6:
+    steps:
+      - click: {selector: "a.nav-link[data-tab=report]"}
+      - highlight: {selector: "#tectora_report_progress", seconds: 1}
+      - click: {selector: "#tectora_report_work_done"}
+      - type: "Oude roofing en isolatie verwijderd."
+      - click: {selector: "#tectora_report_materials"}
+      - type: "1 container afval"
+      - click: {selector: "#tectora_report_remarks"}
+      - type: "Opstand lichtkoepel rot."
+      - highlight: {selector: "#tectora_report_photos", seconds: 1.2}
+      - click: {selector: "#tectoraReportForm button[type=submit]"}
+      - highlight: {selector: "#tab-report .card:has-text('Oude roofing')", seconds: 2}
+
+  7:
+    card: title
