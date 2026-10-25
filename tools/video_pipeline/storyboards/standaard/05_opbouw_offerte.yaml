@@ -1,0 +1,74 @@
+# Storyboard for docs/video_scripts/standaard/05_opbouw_offerte.md
+script: docs/video_scripts/standaard/05_opbouw_offerte.md
+name: standaard_05_opbouw_offerte
+series: Tectora · de standaardflow
+stage: quote
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 2
+start: /odoo/sales
+
+shots:
+  1:
+    card: title
+
+  2:
+    # Behind the opening card: the quotation of Familie Peeters.
+    setup:
+      - click: {selector: "tr.o_data_row:has-text('Familie Peeters') td[name=name]"}
+    steps:
+      - wait: 0.8
+      - highlight: {selector: "tr.o_is_line_section:has-text('ALGEMENE WERKEN')", seconds: 2.0}
+      - highlight: {selector: "tr.o_is_line_section:has-text('VEILIGHEID')", seconds: 1.4}
+      - highlight: {selector: "tr.o_is_line_section:has-text('AFBOUWWERKEN')", seconds: 2.4}
+      - scroll: {selector: ".o_form_sheet_bg", dy: 700}
+      - highlight: {selector: "tr.o_is_line_section:has-text('OPBOUWWERKEN')", seconds: 2.8}
+      - highlight: {selector: "tr.o_is_line_section:has-text('COMMERCIËLE')", seconds: 1.4}
+      - highlight: {selector: "tr.o_is_line_section:has-text('ALGEMENE NOTA')", seconds: 1.2}
+      - scroll: {selector: ".o_form_sheet_bg", dy: 600}
+      - highlight: {selector: "tr.o_is_line_section:has-text('Opties')", seconds: 1.2}
+
+  3:
+    steps:
+      - highlight: {selector: "tr.o_data_row:has-text('S00287')", seconds: 1.6}
+      - highlight: {selector: "tr.o_data_row:has-text('S00010')", seconds: 1.6}
+      - zoom: {selector: "tr.o_is_line_section:has-text('Opties')", scale: 1.6, seconds: 2.0}
+      - highlight: {selector: ".oe_subtotal_footer [name=tax_totals]", seconds: 2.0}
+
+  4:
+    steps:
+      - highlight: {selector: "tr.o_data_row:has-text('S00027') td[name=tectora_demolition_hours]", seconds: 1.6}
+      - highlight: {selector: "tr.o_data_row:has-text('S00177') td[name=tectora_execution_hours]", seconds: 1.6}
+      - highlight: {selector: ".o_list_renderer tfoot", seconds: 1.6}
+      - zoom: {selector: ".oe_subtotal_footer .mt-2:has([name=tectora_demolition_hours])", scale: 1.8, seconds: 4.0}
+
+  5:
+    steps:
+      - scroll: {selector: ".o_form_sheet_bg", dy: -2400}
+      - click: Daken toevoegen
+      - wait: 0.6
+      - fill: {field: roof_count, value: "2"}
+      - click: {selector: ".modal-body p, .modal-body .text-muted"}
+      - wait: 0.6
+      - click: {selector: ".modal tr.o_data_row:nth-child(1) td[name=name]"}
+      - key: Control+a
+      - type: Hoofddak
+      - click: {selector: ".modal tr.o_data_row:nth-child(2) td[name=name]"}
+      - key: Control+a
+      - type: Aanbouw
+      - click: {selector: ".modal-body p, .modal-body .text-muted"}
+      - highlight: {selector: ".modal-body p, .modal-body .text-muted", seconds: 2.4}
+      - click: {selector: ".modal-footer button:has-text('Annuleren')"}
+
+  6:
+    # Rendered while shot 5 is still on screen.
+    setup:
+      - fetch_pdf: {url: "/my/orders/{id}?report_type=pdf&download=true"}
+    steps:
+      - show_pdf: {url: "/my/orders/{id}?report_type=pdf&download=true", pages: [1], seconds: 5.5}
+      - show_pdf: {url: "/my/orders/{id}?report_type=pdf&download=true", pages: [2, 3], seconds: 6.5}
+      - show_pdf: {url: "/my/orders/{id}?report_type=pdf&download=true", pages: [4, 6], seconds: 6.0}
+
+  7:
+    card: title

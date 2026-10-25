@@ -53,7 +53,8 @@ shots:
       - fill: {field: tectora_length_mm, value: "1200"}
       - fill: {field: tectora_width_mm, value: "600"}
       - click: {selector: "label:has-text('Veiligheidsmarge')"}
-      - zoom: {selector: "div[name=tectora_recalc_dimensions]", scale: 1.8, seconds: 2.2}
+      - wait: 1.0
+      - highlight: {selector: "div[name=tectora_recalc_dimensions]", seconds: 2.4}
       - fill: {field: tectora_recalc_margin, value: "3"}
       - click: {selector: "label:has-text('Veiligheidsmarge')"}
       - highlight: {selector: "div[name=standard_price_uom]", seconds: 1.8}

@@ -125,6 +125,11 @@ if ASSETS and "quotation.document" in env:
                                                          "document_type": kind})
         document.write({"document_type": kind, "add_by_default": True, "active": True,
                         "quotation_template_ids": [(6, 0, template.ids)]})
+        if "tectora_customer_name" in document._fields:
+            # "Fam. Peeters" and the Werfadres under "OFFERTE VOOR" on the cover (video 05).
+            # The cover has its own full-bleed design: printed as it is, not in the letterhead frame.
+            document.write({"tectora_customer_name": kind == "header", "tectora_customer_name_top": 232.0,
+                            "tectora_in_layout": kind != "header"})
 
 # ---------------------------------------------------------------- partners
 title_family = ref("tectora_roof.partner_title_family")

@@ -429,19 +429,45 @@ class Director:
         self.phone = None
         self.page.wait_for_timeout(500)
 
+    def _report_pdf(self, url, keep=False):
+        """The bytes of a report url; "{id}" is the id of the record open on
+        screen (the last number in the page's address). A report fetched
+        before with fetch_pdf comes from memory; others are fetched anew."""
+        import re
+
+        if "{id}" in url:
+            ids = re.findall(r"/(\d+)(?=[/?#]|$)", self.page.url.split("?")[0])
+            if not ids:
+                raise StepError(f"no record id in {self.page.url} for {url}")
+            url = url.replace("{id}", ids[-1])
+        cache = self.__dict__.setdefault("_pdf_cache", {})
+        if url in cache:
+            return cache[url]
+        response = self.page.request.get(self.base_url + url, timeout=180000)
+        if not response.ok:
+            raise StepError(f"report {url}: HTTP {response.status}")
+        if keep:
+            cache[url] = response.body()
+        return response.body()
+
+    def step_fetch_pdf(self, spec):
+        """{url}: render a report now (e.g. in the `setup` of the shot that
+        shows it), so show_pdf can put it on screen without waiting."""
+        self._report_pdf(spec["url"] if isinstance(spec, dict) else spec, keep=True)
+
     def step_show_pdf(self, spec):
-        """{url, pages: [1, 2], title}: a printed report, page by page."""
+        """{url, pages: [1, 2], title}: a printed report, page by page.
+        "{id}" in the url is the id of the record open on screen (the last
+        number in the page's address), for records the seed recreates."""
         import base64
         import tempfile
 
-        response = self.page.request.get(self.base_url + spec["url"])
-        if not response.ok:
-            raise StepError(f"report {spec['url']}: HTTP {response.status}")
+        body = self._report_pdf(spec["url"])
         pages = spec.get("pages", [1])
         with tempfile.TemporaryDirectory() as tmp:
             pdf = os.path.join(tmp, "report.pdf")
             with open(pdf, "wb") as handle:
-                handle.write(response.body())
+                handle.write(body)
             images = []
             for number in pages:
                 out = os.path.join(tmp, f"p{number}")
@@ -470,8 +496,21 @@ class Director:
     def step_scroll_to(self, spec):
         """A target below the fold (a line far down a quotation): scroll it
         smoothly to the middle of the screen."""
-        self.target(spec).evaluate("el => el.scrollIntoView({block: 'center', behavior: 'smooth'})")
-        self.page.wait_for_timeout(900)
+        loc = self.target(spec)
+        loc.evaluate("el => el.scrollIntoView({block: 'center', behavior: 'smooth'})")
+        # Below the sticky control panel and above the bottom edge.
+        top = """el => { const r = el.getBoundingClientRect();
+            return r.top >= 160 && r.bottom <= window.innerHeight - 20 ? Math.round(r.top) : null; }"""
+        last = None
+        for _ in range(30):     # a long smooth scroll can take a few seconds
+            self.page.wait_for_timeout(150)
+            now = loc.evaluate(top)
+            if now is not None and now == last:     # in view and no longer moving
+                break
+            last = now
+        else:
+            loc.evaluate("el => el.scrollIntoView({block: 'center'})")
+        self.page.wait_for_timeout(500)
 
     def step_open_here(self, spec):
         """Click a button that opens a new tab (Voorbeeld: the customer
