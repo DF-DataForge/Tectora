@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_quotation_import_status_list" model="ir.ui.view">
+        <field name="name">tectora.quotation.import.status.list</field>
+        <field name="model">tectora.quotation.import.status</field>
+        <field name="arch" type="xml">
+            <list string="Statussen oud systeem" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="order_state"/>
+                <field name="lead_outcome"/>
+                <field name="stage_id" placeholder="Automatisch"/>
+                <field name="create_roof_project"/>
+                <field name="invoiced_legacy"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_tectora_quotation_import_status" model="ir.actions.act_window">
+        <field name="name">Statussen oud systeem</field>
+        <field name="res_model">tectora.quotation.import.status</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Een status van het oude systeem</p>
+            <p>Per status uit de offerte-export: de staat van de verkooporder
+               en de fase van de verkoopkans na de import.</p>
+        </field>
+    </record>
+
+</odoo>
