@@ -37,8 +37,14 @@ again on every new export, also on the live database:
   committed after every quotation, so a large export never hits the time
   limit of a web request and an interrupted import goes on where it stopped
   (Offerte-imports).
+* after the quotations, the project export (Projecten importeren): every
+  project is linked to the imported order(s) of its customer whose total is
+  the project's quoted total; its roof project and project get the old
+  number and status, the site address, the deadline and the roofing team
+  (Ploegen projectimport maps the old "verantwoordelijke" on the teams), and
+  a project with team and deadline is planned as a work block of that team.
     """,
-    "version": "20.0.1.2.0",
+    "version": "20.0.1.3.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -53,6 +59,7 @@ again on every new export, also on the live database:
         "views/sale_order_views.xml",
         "views/product_template_views.xml",
         "views/import_job_views.xml",
+        "views/project_import_views.xml",
         "wizard/quotation_import_views.xml",
     ],
     "installable": True,

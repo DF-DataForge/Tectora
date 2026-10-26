@@ -122,6 +122,46 @@ opnieuw verstuurt.
   gekoppelde en generieke lijnen, de gecorrigeerde lijnen en elke offerte
   die niet geïmporteerd kon worden (de rest gaat door).
 
+## Projecten importeren
+
+**Verkoop → Configuratie → Projecten importeren (oud systeem)**, *na* de
+offertes: laad de projectenexport (`projecten_Tectora_BV_<datum>.xlsx`) op.
+Ook hier eerst een **Testrun**: die toont welke projecten bij welke order
+horen en op welke ploeg ze komen, zonder iets te wijzigen. De import zelf loopt
+als importtaak op de achtergrond (*Offerte-imports*, soort *Projecten*).
+
+* **Koppeling**: de export noemt geen offerte. Een project hoort bij de
+  geïmporteerde order(s) van dezelfde klant (naam of btw-nummer) waarvan het
+  totaal gelijk is aan *totaal offertes ex BTW* (tot drie orders samen; een
+  bevestigde order gaat voor, een order hoort maar bij één project).
+* **Dakproject en project** krijgen het projectnummer en de status van het
+  oude systeem, het werfadres, de deadline (ook de leverdatum van de order) en
+  de ploeg; een afgesloten project wordt *Afgerond*. Een bevestigde order zonder
+  dakproject of project (de gefactureerde orders) krijgt ze nu. Een korte
+  projectomschrijving komt in het project; de lange projectfiches kapt de
+  export af (± 255 tekens, midden in de HTML) en worden niet overgenomen.
+* **Ploeg**: de kolom *verantwoordelijke gebruiker* wordt een bestaande
+  dakwerkersploeg via **Verkoop → Configuratie → Ploegen projectimport**. De
+  import vult die tabel met zijn gok (de ploeg waarvan de naam erin staat:
+  *TEAM 1 TECTORA: MARIUSZ & MARCIN* → Team 1, *DRENICA TEAM 2* → Drenica,
+  *TEAM 1 + TEAM 2* → beide); verbeter hem daar en importeer opnieuw.
+* **Inplannen**: een project met ploeg en deadline krijgt een werkblok op die
+  ploeg dat op de deadline eindigt (07:30–16:30) en zoveel werkdagen duurt als
+  de order geschat is (minstens 1). Afgesloten en uitgevoerde projecten
+  (*afgesloten*, *Slotfactuur bezorgd…*, *Werk klaar…*) krijgen een blok
+  *Uitgevoerd*, de andere *Ingepland*. Een project dat al werkblokken heeft,
+  krijgt er geen bij.
+* Opnieuw importeren koppelt niets dubbel: *Status bijwerken* neemt status,
+  ploeg, deadline en adres opnieuw over.
+
+Op de export van 26/10/2026: 221 projecten, waarvan 218 gekoppeld (2 met twee
+orders). Niet gekoppeld: drie vervolgprojecten met totaal 0 (2026/0219,
+2026/0096, 2026/0143). Twee projecten horen bij een offerte die *ON HOLD*
+staat (2026/0196, 2026/0197): gekoppeld, maar zonder project tot de offerte
+bevestigd wordt. Zonder ploeg (nog in te vullen): TM TOTALE RENOVATIE BV (24),
+Tectora BV (21), DECLEIR DAKWERKEN (3), MIKO ROOF (2), Piotr Arne (1) en 5
+projecten zonder verantwoordelijke.
+
 ## De export van 26/10/2026
 
 `offertes_Tectora_BV_26_10_2026.xlsx`: 585 offertes, 18 187 lijnen

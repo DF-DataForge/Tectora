@@ -566,6 +566,15 @@ class QuotationImportJob(models.Model):
     _order = "id desc"
 
     name = fields.Char(string="Import", required=True, readonly=True)
+    kind = fields.Selection(
+        [("quotes", "Offertes"), ("projects", "Projecten")],
+        string="Soort", default="quotes", required=True, readonly=True,
+    )
+    plan_projects = fields.Boolean(
+        string="Werkblokken inplannen", readonly=True,
+        help="Projecten: een project met ploeg en deadline krijgt een werkblok "
+        "op die ploeg (zie Projecten importeren).",
+    )
     file = fields.Binary(string="Bestand (.xlsx)", required=True, attachment=True)
     filename = fields.Char(string="Bestandsnaam", readonly=True)
     company_id = fields.Many2one(
@@ -585,11 +594,11 @@ class QuotationImportJob(models.Model):
         required=True,
         readonly=True,
     )
-    quote_count = fields.Integer(string="Offertes in het bestand", readonly=True)
+    quote_count = fields.Integer(string="In het bestand", readonly=True)
     position = fields.Integer(
         string="Verwerkt", readonly=True,
-        help="Aantal offertes van het bestand dat al verwerkt is; de volgende "
-        "run gaat verder vanaf hier.",
+        help="Aantal offertes of projecten van het bestand dat al verwerkt is; "
+        "de volgende run gaat verder vanaf hier.",
     )
     progress = fields.Float(string="Voortgang", compute="_compute_progress")
     counters = fields.Json(readonly=True, copy=False)
@@ -633,7 +642,7 @@ class QuotationImportJob(models.Model):
                 return
 
     def _process(self, commit=True, max_quotes=None):
-        """Import the quotations from ``position`` on. Returns True when the
+        """Import the quotations (or projects) from ``position`` on. Returns True when the
         job is finished, False when it stopped early (out of time, or after
         ``max_quotes``) and has to be run again.
 
@@ -642,8 +651,7 @@ class QuotationImportJob(models.Model):
         """
         self.ensure_one()
         try:
-            quotes, stats = self._parse()
-            statuses = self._statuses(quotes)
+            items, stats, run = self._run_prepare()
         except UserError as error:
             self.write({"state": "failed", "summary": str(error),
                         "date_end": fields.Datetime.now()})
@@ -651,14 +659,11 @@ class QuotationImportJob(models.Model):
                 self.env.cr.commit()
             return True
         if self.state == "queued":
-            self.write({"state": "running", "quote_count": len(quotes),
+            self.write({"state": "running", "quote_count": len(items),
                         "date_start": self.date_start or fields.Datetime.now()})
-        counters = dict(fresh_counters(), **(self.counters or {}))
-        lookups = self._prepare_lookups()
-        existing = self._existing_orders(quotes)
-        Status = self.env["tectora.quotation.import.status"]
+        counters = dict(self._run_counters(), **(self.counters or {}))
         done_now = 0
-        while self.position < len(quotes):
+        while self.position < len(items):
             if max_quotes is not None and done_now >= max_quotes:
                 return False
             if commit:
@@ -666,26 +671,21 @@ class QuotationImportJob(models.Model):
                 self.invalidate_recordset(["state"])
                 if self.state == "cancelled":
                     return True
-            quote = quotes[self.position]
-            status = statuses[Status._key(quote["status"])]
-            if not self._process_quote(quote, status, existing.get(quote["number"]),
-                                       lookups, counters):
-                # Records made inside the rolled back savepoint are gone.
-                lookups = self._prepare_lookups()
+            self._run_item(items[self.position], run, counters)
             # A copy: the field must see a new value, not the dict it holds.
             self.write({"position": self.position + 1,
                         "counters": json.loads(json.dumps(counters))})
             done_now += 1
             if commit:
                 seconds_left = self.env["ir.cron"]._commit_progress(
-                    1, remaining=len(quotes) - self.position
+                    1, remaining=len(items) - self.position
                 )
-                if self.position < len(quotes) and seconds_left < MIN_SECONDS_LEFT:
+                if self.position < len(items) and seconds_left < MIN_SECONDS_LEFT:
                     return False
         self.write({
             "state": "done",
             "date_end": fields.Datetime.now(),
-            "summary": self._summary(quotes, stats, counters),
+            "summary": self._run_summary(items, stats, counters),
         })
         _logger.info("tectora_quotation_import: %s done (%s)", self.filename, {
             key: value for key, value in counters.items() if isinstance(value, int)
@@ -693,6 +693,33 @@ class QuotationImportJob(models.Model):
         if commit:
             self.env.cr.commit()
         return True
+
+    # One kind of import: the quotations. The projects (project_import.py)
+    # override these four for kind "projects".
+    def _run_prepare(self):
+        """(items, stats, run): what to import, what the file said, and what
+        every item needs (looked up once per run)."""
+        quotes, stats = self._parse()
+        return quotes, stats, {
+            "statuses": self._statuses(quotes),
+            "lookups": self._prepare_lookups(),
+            "existing": self._existing_orders(quotes),
+        }
+
+    def _run_counters(self):
+        return fresh_counters()
+
+    def _run_item(self, quote, run, counters):
+        status = run["statuses"][
+            self.env["tectora.quotation.import.status"]._key(quote["status"])
+        ]
+        if not self._process_quote(quote, status, run["existing"].get(quote["number"]),
+                                   run["lookups"], counters):
+            # Records made inside the rolled back savepoint are gone.
+            run["lookups"] = self._prepare_lookups()
+
+    def _run_summary(self, quotes, stats, counters):
+        return self._summary(quotes, stats, counters)
 
     def _process_quote(self, quote, status, order, lookups, counters):
         """One quotation, in a savepoint of its own; False when it failed."""

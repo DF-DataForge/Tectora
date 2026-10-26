@@ -8,8 +8,8 @@ from odoo.tests import TransactionCase, tagged
 from .test_quote_rules import HEADER, row
 
 
-@tagged("post_install", "-at_install")
-class TestQuotationImport(TransactionCase):
+class ImportCase(TransactionCase):
+    """Taxes, stages and a works item; the helpers that run an import."""
 
     @classmethod
     def setUpClass(cls):
@@ -88,7 +88,11 @@ class TestQuotationImport(TransactionCase):
                 status="goedgekeurd", vat=0, customer="Garage Noord BV", vat_number=""),
         ]
 
-    # --------------------------------------------------------------- tests
+
+
+@tagged("post_install", "-at_install")
+class TestQuotationImport(ImportCase):
+
     def test_import_states_and_opportunities(self):
         job = self._import(self._rows())
         self.assertIn("3 offertes aangemaakt", job.summary)
@@ -222,3 +226,102 @@ class TestQuotationImport(TransactionCase):
         with self.assertRaisesRegex(UserError, "in opmaak"):
             self._import(rows)
         self.assertFalse(self._order("2026/0009"))
+
+
+PROJECT_HEADER = (
+    "nummer", "naam", "klantnummer", "klantnaam", "BTW-nummer klant", "adres klant",
+    "postcode klant", "stad klant", "land klant", "adres project", "postcode project",
+    "stad project", "omschrijving", "referentie voor klant", "status", "deadline",
+    "verantwoordelijke gebruiker", "totaal offertes ex BTW",
+)
+
+
+def project_row(number, customer, total, status, deadline="", responsible="",
+                description=""):
+    return (number, "Roeselare - %s" % customer, "K001", customer, "", "Kerkstraat 1",
+            "8800", "Roeselare", "", "Werfstraat 9", "8800", "Roeselare", description,
+            "", status, deadline, responsible, total)
+
+
+@tagged("post_install", "-at_install")
+class TestProjectImport(ImportCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.team_1 = cls.env["tectora.roof.team"].create({"name": "Team 1"})
+        cls.team_2 = cls.env["tectora.roof.team"].create({"name": "Team 2"})
+
+    def _import_projects(self, rows, **options):
+        import openpyxl
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Export Simpla"
+        sheet.append(PROJECT_HEADER)
+        for values in rows:
+            sheet.append(values)
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        wizard = self.env["tectora.project.import"].create({
+            "file": base64.b64encode(buffer.getvalue()).decode(),
+            "filename": "projecten.xlsx",
+            **options,
+        })
+        action = wizard.action_import()
+        if wizard.dry_run:
+            return wizard
+        job = self.env[action["res_model"]].browse(action["res_id"])
+        job._process(commit=False)
+        return job
+
+    def test_projects_linked_and_planned(self):
+        self._import(self._rows())
+        rows = [
+            project_row("2026/0100", "Garage Noord BV", 25, "in uitvoering",
+                        "30/10/2026", "TEAM 1 TECTORA: MARIUSZ & MARCIN",
+                        "Branden van het dampscherm"),
+            project_row("2026/0101", "Garage Noord BV", 100, "afgesloten",
+                        "15/09/2026", "TEAM 1 + TEAM 2"),
+            project_row("2026/0102", "Dhr. Peeters", 104.30, "lopend", "", "Onbekend BV"),
+            project_row("2026/0103", "Mevr. Niemand", 0, "lopend"),
+        ]
+        preview = self._import_projects(rows, dry_run=True)
+        self.assertIn("3 projecten gevonden", preview.summary)
+        self.assertIn("GEEN PLOEG", preview.summary)
+        self.assertFalse(self.env["tectora.project.import.team"].search([]))
+
+        job = self._import_projects(rows)
+        self.assertEqual(job.state, "done", job.summary)
+
+        approved = self._order("2026/0003").roof_project_id
+        self.assertEqual(approved.tectora_legacy_project_number, "2026/0100")
+        self.assertEqual(approved.team_id, self.team_1)
+        self.assertEqual(str(approved.date_deadline), "2026-10-30")
+        self.assertEqual(approved.address, "Werfstraat 9, 8800 Roeselare")
+        self.assertIn("dampscherm", str(approved.project_id.description))
+        block = approved.planning_ids
+        self.assertEqual(len(block), 1)
+        self.assertEqual(block.team_id, self.team_1)
+        self.assertEqual(block.state, "published")
+
+        # The invoiced order had no roof project: it gets one, and a project.
+        invoiced = self._order("2026/0002").roof_project_id
+        self.assertTrue(invoiced.project_id)
+        self.assertEqual(invoiced.state, "done")
+        self.assertEqual(invoiced.planning_ids.state, "done")
+        self.assertEqual(invoiced.planning_ids.employee_ids,
+                         (self.team_1 | self.team_2).member_ids)
+
+        # A quotation not confirmed yet: linked, no project; no team known.
+        running = self._order("2026/0001").roof_project_id
+        self.assertEqual(running.tectora_legacy_project_number, "2026/0102")
+        self.assertFalse(running.team_id)
+        self.assertIn("Onbekend BV (1)", job.summary)
+        self.assertIn("2026/0103", job.summary)  # no order found
+
+        # Again: nothing doubles; a corrected team table is applied.
+        self.env["tectora.project.import.team"].search([("name", "=", "Onbekend BV")]).team_ids = self.team_2
+        job = self._import_projects(rows)
+        self.assertEqual(running.team_id, self.team_2)
+        self.assertEqual(len(approved.planning_ids), 1)
+        self.assertIn("3 bijgewerkt", job.summary)

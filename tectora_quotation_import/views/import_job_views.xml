@@ -11,6 +11,7 @@
                   decoration-muted="state == 'cancelled'">
                 <field name="create_date" string="Aangemaakt"/>
                 <field name="name"/>
+                <field name="kind"/>
                 <field name="create_uid" string="Door" widget="many2one_avatar_user"/>
                 <field name="progress" widget="progressbar"/>
                 <field name="position"/>
@@ -47,8 +48,8 @@
                     </div>
                     <div class="alert alert-info" role="alert"
                          invisible="state not in ('queued', 'running')">
-                        De offertes worden op de achtergrond geïmporteerd en na elke
-                        offerte bewaard. Je kan dit scherm sluiten; vernieuw het om de
+                        De import loopt op de achtergrond en bewaart na elke offerte
+                        of elk project. Je kan dit scherm sluiten; vernieuw het om de
                         voortgang te zien.
                     </div>
                     <div class="oe_title">
@@ -65,14 +66,16 @@
                         <group string="Opties">
                             <field name="file" filename="filename" readonly="1"/>
                             <field name="filename" invisible="1"/>
+                            <field name="kind"/>
                             <field name="existing_mode" readonly="1"/>
-                            <field name="use_legacy_name" readonly="1"/>
-                            <field name="text_lines" readonly="1"/>
-                            <field name="user_id" readonly="1"/>
-                            <field name="team_id" readonly="1"/>
-                            <field name="tax_0_id" readonly="1"/>
-                            <field name="tax_6_id" readonly="1"/>
-                            <field name="tax_21_id" readonly="1"/>
+                            <field name="plan_projects" invisible="kind != 'projects'"/>
+                            <field name="use_legacy_name" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="text_lines" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="user_id" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="team_id" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="tax_0_id" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="tax_6_id" readonly="1" invisible="kind != 'quotes'"/>
+                            <field name="tax_21_id" readonly="1" invisible="kind != 'quotes'"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
