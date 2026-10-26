@@ -2,6 +2,9 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+# Odoo's own stages, renamed at Tectora to "Lopende offerte" and "Gewonnen".
+OPEN_STAGE_REF = "crm.stage_lead3"
+WON_STAGE_REF = "crm.stage_lead4"
 # Stage names looked for when a status does not name its stage itself.
 OPEN_STAGE_NAMES = ("Lopende offerte", "Offerte verzonden", "Proposition")
 WON_STAGE_NAMES = ("Gewonnen", "Won")
@@ -43,8 +46,8 @@ class QuotationImportStatus(models.Model):
     stage_id = fields.Many2one(
         "crm.stage",
         string="Fase verkoopkans",
-        help="Leeg: 'Lopende offerte' voor een lopende verkoopkans, de "
-        "gewonnen fase ('Gewonnen') voor een gewonnen.",
+        help="Leeg: de fase 'Lopende offerte' (crm.stage_lead3) voor een "
+        "lopende verkoopkans, 'Gewonnen' (crm.stage_lead4) voor een gewonnen.",
     )
     create_roof_project = fields.Boolean(
         string="Dakproject en project",
@@ -90,6 +93,12 @@ class QuotationImportStatus(models.Model):
         if self.stage_id:
             return self.stage_id
         Stage = self.env["crm.stage"]
+        stage = self.env.ref(
+            WON_STAGE_REF if self.lead_outcome == "won" else OPEN_STAGE_REF,
+            raise_if_not_found=False,
+        )
+        if stage and stage.is_won == (self.lead_outcome == "won"):
+            return stage
         # The stages shown in the team's pipeline (stages without team are
         # shared by every team).
         team_domain = (

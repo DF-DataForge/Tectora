@@ -37,8 +37,10 @@ wordt.
 | deels gefactureerd | bevestigde order | Gewonnen | ja | te factureren (rest in Odoo) |
 | gefactureerd | bevestigde order | Gewonnen | nee | gefactureerd (facturen in oud systeem) |
 
-* De fase wordt op naam gezocht (*Lopende offerte*, de gewonnen fase
-  *Gewonnen*) en kan per status vast gekozen worden.
+* De fasen zijn de standaardfasen van Odoo die bij Tectora hernoemd zijn:
+  *Lopende offerte* (`crm.stage_lead3`) en *Gewonnen* (`crm.stage_lead4`).
+  Per status kan een andere fase vast gekozen worden; ontbreken die fasen,
+  dan wordt op naam gezocht.
 * Een bevestigde order krijgt, zoals een bevestiging in Odoo, het plannebare
   project met zijn dashboard; voor volledig gefactureerde (afgewerkte) werven
   wordt geen dakproject of project gemaakt.

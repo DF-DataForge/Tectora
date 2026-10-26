@@ -3,7 +3,9 @@
 
     <!-- The statuses of the Simpla export. A quotation that was not (yet)
          approved stays a running quotation; approved and (partly) invoiced
-         quotations become confirmed orders with a won opportunity. -->
+         quotations become confirmed orders with a won opportunity. The
+         stages are Odoo's own, renamed at Tectora: crm.stage_lead3
+         ("Lopende offerte") and crm.stage_lead4 ("Gewonnen"). -->
     <record id="status_openstaand" model="tectora.quotation.import.status">
         <field name="sequence">10</field>
         <field name="name">openstaand</field>

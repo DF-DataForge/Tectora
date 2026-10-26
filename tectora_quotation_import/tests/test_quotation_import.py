@@ -14,13 +14,11 @@ class TestQuotationImport(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        Stage = cls.env["crm.stage"]
-        cls.stage_open = Stage.create({"name": "Lopende offerte", "sequence": 50})
-        cls.stage_won = Stage.create({"name": "Gewonnen", "sequence": 60, "is_won": True})
-        # The won stage of the import is the one called "Gewonnen".
-        Stage.search([("is_won", "=", True), ("id", "!=", cls.stage_won.id)]).write(
-            {"sequence": 70}
-        )
+        # Odoo's own stages, renamed at Tectora.
+        cls.stage_open = cls.env.ref("crm.stage_lead3")
+        cls.stage_open.name = "Lopende offerte"
+        cls.stage_won = cls.env.ref("crm.stage_lead4")
+        cls.stage_won.name = "Gewonnen"
         Tax = cls.env["account.tax"]
         cls.taxes = {
             rate: Tax.create({

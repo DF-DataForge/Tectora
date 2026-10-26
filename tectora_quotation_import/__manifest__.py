@@ -35,7 +35,7 @@ again on every new export, also on the live database:
 * a test run processes the whole file and rolls everything back, and the
   import can run in parts (maximum number of new quotations per run).
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.0.1",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
