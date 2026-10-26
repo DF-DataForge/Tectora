@@ -94,3 +94,47 @@ class TestQuoteRules(BaseCase):
     def test_missing_column(self):
         with self.assertRaisesRegex(ValueError, "status"):
             quote_rules.parse_rows(HEADER[:-1], [])
+
+    def test_sections_domes_and_two_roofs(self):
+        def r(description, quantity=1, price=10):
+            return row("2026/0020", description, quantity, "st", price, quantity * price)
+        rows = [r(d, 0, 0) if d.isupper() or d.startswith("Voorschot") else r(d) for d in (
+            "AFBOUWWERKEN THV DE KOEPELS",
+            "AFBOUWWERKEN THV HET HOOGSTE PLAT DAK",
+            "AFBOUWWERKEN THV HET LAAGSTE PLAT DAK",
+            "ALGEMENE WERKEN",
+            "Algemene vaste kosten",
+            "DAMPSCHERM",
+            "Leveren en plaatsen van de koepelschaal",
+            "Leveren en plaatsen van het dampscherm",
+            "OPBOUWWERKEN THV DE KOEPELS",
+            "OPBOUWWERKEN THV HET HOOGSTE PLAT DAK",
+            "OPBOUWWERKEN THV HET LAAGSTE PLAT DAK",
+            "Verwijderen van de dakranden",
+            "Verwijderen van de dakranden",
+            "Verwijderen van de koepel",
+            "Voorschot: 50% na akkoord.",
+        )]
+        rows.append(r("Gebruik van tijdelijke balustrades", 0, 9.5))
+        quotes, _stats = quote_rules.parse_rows(HEADER, rows)
+        blocks, notes, empty = quote_rules.arrange_sections(quotes[0])
+        arranged = [(title, [line["description"] for line in lines]) for title, lines in blocks]
+        self.assertEqual(arranged, [
+            ("ALGEMENE WERKEN", ["Algemene vaste kosten", "Gebruik van tijdelijke balustrades"]),
+            ("AFBOUWWERKEN THV HET HOOGSTE PLAT DAK", ["Verwijderen van de dakranden"]),
+            ("DAMPSCHERM", ["Leveren en plaatsen van het dampscherm"]),
+            ("AFBOUWWERKEN THV HET LAAGSTE PLAT DAK", ["Verwijderen van de dakranden"]),
+            ("AFBOUWWERKEN THV DE KOEPELS", ["Verwijderen van de koepel"]),
+            ("OPBOUWWERKEN THV DE KOEPELS", ["Leveren en plaatsen van de koepelschaal"]),
+        ])
+        self.assertEqual([line["description"] for line in notes], ["Voorschot: 50% na akkoord."])
+        self.assertEqual(empty, ["OPBOUWWERKEN THV HET HOOGSTE PLAT DAK",
+                                 "OPBOUWWERKEN THV HET LAAGSTE PLAT DAK"])
+
+    def test_title_recognition(self):
+        self.assertTrue(quote_rules.is_title("COMMERCIËLE TEGEMOETKOMING"))
+        self.assertTrue(quote_rules.is_title("34.12.20 Isolatieplaten plat dak - PUR 20cm"))
+        self.assertFalse(quote_rules.is_title("Werken kunnen uitgevoerd worden in maart."))
+        self.assertEqual(quote_rules.section_family("ALGEMENE NOTA'S"), "nota")
+        self.assertEqual(quote_rules.section_family("OPBOUWWERKEN THV DE KOEPELS"), "opbouw")
+        self.assertEqual(quote_rules.section_family("MEERWERK BIJ UITVOERING"), "optie")

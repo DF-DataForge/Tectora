@@ -102,14 +102,22 @@ class TestQuotationImport(TransactionCase):
         self.assertEqual(running.opportunity_id.stage_id, self.stage_open)
         self.assertEqual(running.opportunity_id.partner_id, running.partner_id)
         self.assertAlmostEqual(running.amount_untaxed, 104.30)
-        lines = running.order_line.sorted("sequence")
-        self.assertEqual(len(lines), 2, "the title line is skipped")
+        lines = running.order_line.filtered(lambda l: not l.display_type).sorted("sequence")
+        self.assertEqual(len(lines), 2)
+        self.assertFalse(running.order_line.filtered("display_type"),
+                         "a title without lines is left out")
         self.assertEqual(lines[0].product_id, self.works_item)
+        self.assertEqual(lines[0].label, self.works_item.display_name,
+                         "a catalogue works item is shown once, as Odoo shows it")
         self.assertEqual(lines[0].price_unit, 22.15, "the old price, not the catalogue's")
         self.assertEqual(lines[0].tax_ids, self.taxes[6])
         generic = lines[1]
-        self.assertEqual(generic.product_id.default_code, "TECTORA-IMPORT")
+        meter = self.env.ref("uom.product_uom_meter")
+        self.assertEqual(generic.product_id.default_code, "TECTORA-IMPORT-%s" % meter.id)
+        self.assertEqual(generic.product_id.uom_id, meter, "no unit conversion on the quote")
         self.assertEqual(generic.name, "Speciale opstand")
+        self.assertEqual(generic.label, "Speciale opstand",
+                         "the generic works item shows only the description")
         self.assertEqual(generic.product_uom_qty, 6, "the multiplied line takes the factor")
         self.assertEqual(generic.product_uom_id, self.env.ref("uom.product_uom_meter"))
         self.assertTrue(running.roof_project_id)
@@ -172,12 +180,41 @@ class TestQuotationImport(TransactionCase):
         self.assertTrue(self._order("2026/0003"))
         self.assertIn("3 offertes aangemaakt", job.summary)
 
-    def test_text_lines_as_notes(self):
-        self._import(self._rows(), text_lines="note")
-        notes = self._order("2026/0001").order_line.filtered(
-            lambda line: line.display_type == "line_note"
-        )
-        self.assertEqual(notes.mapped("name"), ["ALGEMENE WERKEN"])
+    def test_sections(self):
+        def quote_row(description, quantity, unit, price):
+            return row("2026/0010", description, quantity, unit, price, quantity * price,
+                       customer="Mevr. Claeys", vat_number="")
+        rows = [  # alphabetical, as the export gives them
+            quote_row("Actie maand februari", 1, "st", -50),
+            quote_row("AFBOUWWERKEN THV HET PLAT DAK", 0, "", 0),
+            quote_row("ALGEMENE NOTA'S", 0, "", 0),
+            quote_row("ALGEMENE WERKEN", 0, "", 0),
+            quote_row("Algemene vaste kosten", 1, "stuks", 85),
+            quote_row("COMMERCIËLE TEGEMOETKOMING", 0, "", 0),
+            quote_row("Leveren en plaatsen van de PE-tapbuis", 1, "st", 120),
+            quote_row("OPBOUWWERKEN THV HET PLAT DAK", 0, "", 0),
+            quote_row("Verwijderen van de tapbuis", 1, "st", 22.15),
+        ]
+        job = self._import(rows)
+        order = self._order("2026/0010")
+        self.assertEqual(order.order_line.sorted("sequence").mapped("label"), [
+            "ALGEMENE WERKEN",
+            "Algemene vaste kosten",
+            "AFBOUWWERKEN THV HET PLAT DAK",
+            "Verwijderen van de tapbuis",
+            "OPBOUWWERKEN THV HET PLAT DAK",
+            "Leveren en plaatsen van de PE-tapbuis",
+            "COMMERCIËLE TEGEMOETKOMING",
+            "Actie maand februari",
+        ])
+        sections = order.order_line.filtered(lambda l: l.display_type == "line_section")
+        self.assertEqual(len(sections), 4)
+        self.assertIn("4 secties", job.summary)
+        self.assertAlmostEqual(order.amount_untaxed, 177.15)
+
+    def test_titles_skipped(self):
+        self._import(self._rows(), text_lines="skip")
+        self.assertFalse(self._order("2026/0001").order_line.filtered("display_type"))
 
     def test_unknown_status_stops_the_import(self):
         rows = [row("2026/0009", "Verwijderen van de tapbuis", 1, "st", 25, 25,

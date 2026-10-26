@@ -38,12 +38,12 @@ again on every new export, also on the live database:
   limit of a web request and an interrupted import goes on where it stopped
   (Offerte-imports).
     """,
-    "version": "20.0.1.1.0",
+    "version": "20.0.1.2.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["tectora_roof", "tectora_products", "sale_crm"],
+    "depends": ["tectora_roof", "tectora_products", "sale_crm", "account"],
     "external_dependencies": {"python": ["openpyxl"]},
     "data": [
         "security/ir.access.csv",
@@ -51,6 +51,7 @@ again on every new export, also on the live database:
         "data/ir_cron_data.xml",
         "views/import_status_views.xml",
         "views/sale_order_views.xml",
+        "views/product_template_views.xml",
         "views/import_job_views.xml",
         "wizard/quotation_import_views.xml",
     ],

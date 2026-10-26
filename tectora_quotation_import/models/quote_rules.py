@@ -273,3 +273,257 @@ def parse_rows(header, rows):
         )
     stats["conflicts"] = sorted(set(stats["conflicts"]))
     return list(quotes.values()), stats
+
+
+# ---------------------------------------------------------------- sections
+# The export sorts the lines of a quotation alphabetically, so a chapter title
+# no longer stands above its lines. The titles are recognised (capitals, no
+# quantity, no price) and every line is put back under the title it most
+# likely stood under: by the kind of work (general costs, safety, demolition,
+# build-up, ...) and, where a quotation has several titles of that kind
+# ("AFBOUWWERKEN THV HET PLAT DAK" and "... THV DE KOEPELS"), by the words the
+# line shares with the title.
+
+# Family of a title, by its words; the first rule that matches wins.
+SECTION_RULES = [
+    ("nota", ("nota",)),
+    ("commercieel", ("tegemoetkom", "commerc", "korting", "actie")),
+    ("optie", ("option", "optie", "variant", "meerwerk", "extra", "worst",
+               "regie", "upgrade")),
+    ("afbouw", ("afbouw", "afbraak", "afbreek")),
+    ("opbouw", ("opbouw",)),
+    ("veiligheid", ("veiligheid", "stelling", "valbeveilig")),
+    ("algemeen", ("algemeen", "algemene", "voorrijd", "verplaatsing", "werkuren",
+                  "materiaalgebruik")),
+    ("koepel", ("koepel", "velux", "dakraam", "lichtstraat", "daklicht")),
+    ("detail", ("afvoer", "randafwerk", "randaansl", "verdichting", "dampscherm",
+                "coverboard", "isolatie", "timmerwerk", "dakdoorvoer", "tegelwerk",
+                "dakbedekking", "dakrand", "kroonlijst", "werkzaamheden", "werken")),
+]
+# Where the families stand on the quotation.
+FAMILY_RANK = {"algemeen": 0, "veiligheid": 1, "afbouw": 2, "opbouw": 2,
+               "detail": 2, "koepel": 2, "other": 2, "optie": 3,
+               "commercieel": 4, "nota": 5}
+# Within one roof: demolition, build-up, its details, then the rest.
+ROOF_ORDER = {"afbouw": 0, "opbouw": 1, "detail": 2, "koepel": 3, "other": 4}
+# Families a line of a family may go to when the quotation has no title of
+# its own family, in order.
+FALLBACK = {
+    "algemeen": ("veiligheid",),
+    "veiligheid": ("algemeen",),
+    "afbouw": ("opbouw", "detail", "koepel", "other"),
+    "opbouw": ("detail", "koepel", "other", "afbouw"),
+    "commercieel": ("optie",),
+}
+ROOF_FAMILIES = ("afbouw", "opbouw", "detail", "koepel", "other")
+
+# Kind of work of a line, by its words.
+LINE_RULES = [
+    ("commercieel", ("korting", "tegemoetkoming", "actie maand", "promotie",
+                     "commerciele")),
+    ("veiligheid", ("ankerpunt", "balustrade", "veiligheid", "valbeveilig",
+                    "stelling", "leuning", "borstwering", "veiligheidsnet",
+                    "dakrandbeveilig")),
+    ("algemeen", ("vaste kosten", "afvalverwerking", "afval", "verticaal transport",
+                  "camionkraan", "kraan", "container", "parkeervergunning",
+                  "openbaar domein", "werfinrichting", "voorrijkost", "verplaatsing",
+                  "hoogtewerker", "ladderlift", "bouwlift", "werfkeet")),
+]
+DEMOLITION_VERBS = ("verwijderen", "afbreken", "uitbreken", "demonteren",
+                    "wegnemen", "afbraak", "slopen", "uitnemen")
+
+# Words of a title that say nothing about which roof it is about.
+TITLE_STOPWORDS = {
+    "thv", "het", "de", "van", "der", "den", "een", "plat", "platte", "dak",
+    "daken", "boven", "aan", "op", "met", "en", "voor", "bij", "werken",
+    "werkzaamheden", "afbouwwerken", "opbouwwerken", "afbraakwerken",
+    "uitvoering", "tijdens",
+}
+
+
+# Words a line may share with a title without being in it: a title
+# "AFVOER HEMELWATER" is about the outlets and downpipes, ...
+TITLE_SYNONYMS = {
+    "afvoer": {"tapbui", "spuwer", "noodsp", "bolroo", "bladva", "goot", "hemelw", "afvoer"},
+    "hemelw": {"tapbui", "spuwer", "noodsp", "bolroo", "bladva", "goot", "afvoer"},
+    "randaf": {"dakran", "opstan", "muurka", "solins", "binnen", "buiten", "boordp"},
+    "randaa": {"dakran", "opstan", "muurka", "solins", "binnen", "buiten", "boordp"},
+    "dampsc": {"dampre", "dampop"},
+    "coverb": {"isolat", "coverb"},
+    "isolat": {"isolat", "coverb"},
+    "verdic": {"dakbed", "kimfix", "verank", "slabbe", "epdm"},
+    "timmer": {"kepers", "multip", "spouwp", "regel", "latten", "boordp", "planke", "balken"},
+    "zinkwe": {"zink", "solins", "anthra"},
+    "muuraf": {"muuraf", "dekste", "dekpan"},
+    "daklic": {"koepel", "velux", "dakraa", "lichts"},
+    "koepel": {"koepel", "velux", "rwa"},
+    "velux": {"velux", "dakraa"},
+    "platda": {"velux", "dakraa", "koepel"},
+}
+
+
+def _fold(text):
+    import unicodedata
+    text = unicodedata.normalize("NFKD", text or "")
+    return "".join(c for c in text if not unicodedata.combining(c)).lower()
+
+
+def _stems(text, stopwords=()):
+    words = re.findall(r"[a-z]{3,}", _fold(text))
+    return {word[:6] for word in words if word not in stopwords}
+
+
+def is_title(text):
+    """A chapter title: (mostly) capitals, or a numbered heading of a
+    specification ('34.12.20 Isolatieplaten ...', 'Hoofdstuk 35 - ...')."""
+    text = (text or "").strip()
+    if re.match(r"^(\d+\.)+\d*\s", text) or re.match(r"(?i)^hoofdstuk\s", text):
+        return True
+    letters = [c for c in text if c.isalpha()]
+    if len(letters) < 3:
+        return False
+    return sum(1 for c in letters if c.isupper()) / len(letters) >= 0.8
+
+
+def section_family(title):
+    folded = _fold(title)
+    for family, words in SECTION_RULES:
+        if any(word in folded for word in words):
+            return family
+    return "other"
+
+
+def line_family(line, chapter=None):
+    """The kind of work of a product line; ``chapter`` is the family its
+    catalogue product says (or None)."""
+    folded = _fold(line["description"])
+    if line["price"] < 0:
+        return "commercieel"
+    for family, words in LINE_RULES:
+        if any(word in folded for word in words):
+            return family
+    if chapter:
+        return chapter
+    if folded.startswith(DEMOLITION_VERBS):
+        return "afbouw"
+    return "opbouw"
+
+
+def arrange_sections(quote, chapter_of=None):
+    """Put the lines of a quotation under its titles.
+
+    Returns ``(blocks, notes, empty)``: ``blocks`` a list of
+    ``(title or None, [lines])`` in quotation order (the first block, without
+    title, holds the lines no title fits); ``notes`` the text lines that are
+    no title; ``empty`` the titles that got no line.
+    ``chapter_of(description)`` may give the family of a catalogue product.
+    """
+    sections = []
+    notes = []
+    for line in quote["lines"]:
+        if line["kind"] != "text":
+            continue
+        if not is_title(line["description"]):
+            notes.append(line)
+            continue
+        title_words = _stems(line["description"], TITLE_STOPWORDS)
+        sections.append({
+            "title": line["description"],
+            "family": section_family(line["description"]),
+            "words": title_words.union(*(TITLE_SYNONYMS.get(word, ()) for word in title_words)),
+            "lines": [],
+        })
+
+    loose = []
+    seen = {}
+    for line in quote["lines"]:
+        if line["kind"] == "text":
+            continue
+        family = line_family(line, chapter_of(line["description"]) if chapter_of else None)
+        target = _pick_section(line, family, sections, seen)
+        (target["lines"] if target else loose).append(line)
+
+    # Notes stand under the notes title when the quotation has one.
+    nota = next((s for s in sections if s["family"] == "nota"), None)
+    if nota:
+        nota["lines"].extend(notes)
+        notes = []
+
+    # Order: general, safety, then per roof its demolition and build-up,
+    # options, commercial, notes. The roof of a title is what it names
+    # besides its kind of work: nothing (the main flat roof), the domes, the
+    # garage, ...
+    def roof_of(section):
+        if section["family"] == "koepel" or "koepel" in section["words"]:
+            return frozenset({"koepel"})
+        if section["family"] in ("afbouw", "opbouw"):
+            return frozenset(section["words"])
+        return None  # a detail title (DAMPSCHERM, ...): with the first roof
+
+    roofs = []
+    for section in sections:
+        roof = roof_of(section)
+        if section["family"] in ROOF_FAMILIES and roof is not None and roof not in roofs:
+            roofs.append(roof)
+    # The main roof first, the domes last; the others as they come.
+    roofs.sort(key=lambda roof: (roof == frozenset({"koepel"}), len(roof)))
+
+    def rank(item):
+        index, section = item
+        family = section["family"]
+        if family in ROOF_FAMILIES:
+            roof = roof_of(section)
+            return (FAMILY_RANK[family], roofs.index(roof) if roof is not None else 0,
+                    ROOF_ORDER[family], index)
+        return (FAMILY_RANK[family], 0, 0, index)
+
+    ordered = [section for _index, section in sorted(enumerate(sections), key=rank)]
+    blocks = [(None, loose)] if loose else []
+    blocks += [(s["title"], s["lines"]) for s in ordered if s["lines"]]
+    empty = [s["title"] for s in ordered if not s["lines"]]
+    return blocks, notes, empty
+
+
+def _pick_section(line, family, sections, seen):
+    """The title a line most likely stood under, or None.
+
+    A title that names the line ("DAMPSCHERM" for the vapour barrier,
+    "AFBOUWWERKEN THV DE KOEPELS" for removing a dome) wins; otherwise the
+    most generic title of the line's kind of work, then of a related kind.
+    The same line on several roofs goes to their titles in turn.
+    """
+    if not sections:
+        return None
+    words = _stems(line["description"])
+
+    def score(section):
+        return len(section["words"] & words)
+
+    def pick(candidates, key_family):
+        best = max(score(s) for s in candidates)
+        best_ones = [s for s in candidates if score(s) == best]
+        fewest = min(len(s["words"]) for s in best_ones)
+        best_ones = [s for s in best_ones if len(s["words"]) == fewest]
+        key = (_fold(line["description"]), key_family)
+        count = seen.get(key, 0)
+        seen[key] = count + 1
+        return best_ones[count % len(best_ones)]
+
+    if not line["quantity"] and line["price"]:
+        # Not chosen (quantity 0): an option, when the quotation has options.
+        options = [s for s in sections if s["family"] == "optie"]
+        if options:
+            return pick(options, "optie")
+    if family in ROOF_FAMILIES:
+        # Demolition never goes under build-up (or its details), nor
+        # build-up under demolition.
+        allowed = {"afbouw", "koepel", "other"} if family == "afbouw" \
+            else {"opbouw", "detail", "koepel", "other"}
+        named = [s for s in sections if s["family"] in allowed and score(s) > 0]
+        if named:
+            return pick(named, "named")
+    for candidate_family in (family,) + FALLBACK.get(family, ()):
+        candidates = [s for s in sections if s["family"] == candidate_family]
+        if candidates:
+            return pick(candidates, candidate_family)
+    return None

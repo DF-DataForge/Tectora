@@ -26,7 +26,7 @@ export op en klik *Importeren / controleren*.
 |---|---|
 | **Gekende offertes** | Een offerte waarvan het nummer al in Odoo staat, wordt nooit opnieuw aangemaakt. *Status bijwerken* (standaard) brengt een offerte die intussen goedgekeurd werd naar een bevestigde order en haar verkoopkans naar gewonnen. Lijnen worden niet aangeraakt, een bevestigde order gaat nooit terug. *Overslaan* laat gekende offertes ongemoeid. |
 | **Offertenummer als ordernummer** | De order heet zoals in het oude systeem (bv. `2026/0004`). Het oude nummer staat sowieso op de order (*Offertenummer oud systeem*, zoekbaar, filter *Uit oud systeem*). |
-| **Titel- en tekstregels** | Regels zonder aantal, prijs en bedrag (ALGEMENE WERKEN, OPBOUWWERKEN THV HET PLAT DAK, ALGEMENE NOTA'S, ...). De export levert de lijnen **alfabetisch**, dus een titel staat niet meer boven zijn lijnen: standaard overgeslagen, of als notitie onderaan de offerte. |
+| **Titel- en tekstregels** | De regels in hoofdletters zonder aantal en prijs (ALGEMENE WERKEN, AFBOUWWERKEN THV HET PLAT DAK, COMMERCIËLE TEGEMOETKOMING, ...) worden **secties** van de offerte. Standaard: als secties, met de lijnen eronder ingedeeld (zie *Secties*); of overslaan. |
 | **Verkoper / Verkoopteam** | Op de orders en verkoopkansen (de export bevat geen verkoper). |
 | **Btw 0% / 6% / 21%** | Standaard de dienstenvariant van de Belgische btw (`6% S`, `21% S`) en `0% Cocont` (medecontractant) voor 0%. |
 
@@ -60,6 +60,47 @@ wordt.
   vervaldatum is offertedatum + geldigheidstermijn; de gewonnen verkoopkans
   krijgt de offertedatum als sluitingsdatum.
 
+## Secties
+
+De export levert de lijnen van een offerte **alfabetisch**: een sectietitel
+staat niet meer boven zijn lijnen. De import zet elke lijn terug onder de
+sectie waar ze het best bij past:
+
+1. **Soort werk van de lijn**: korting / negatieve prijs → commerciële
+   tegemoetkoming; ankerpunt, balustrade, stelling → veiligheid; vaste
+   kosten, afval, transport, kraan, parkeervergunning → algemene werken;
+   de categorie van de werkpost in de catalogus (01 algemeen, 02 veiligheid,
+   03 afbraak); *Verwijderen …* → afbouwwerken; de rest → opbouwwerken.
+2. **Een titel die de lijn noemt wint**: *AFBOUWWERKEN THV DE KOEPELS* voor
+   "Verwijderen van de koepel", *DAMPSCHERM* voor het dampscherm,
+   *AFVOER HEMELWATER* voor tapbuis en spuwer, ...
+3. Anders de meest algemene titel van die soort; staat dezelfde lijn er
+   meermaals (bv. een hoogste en een laagste plat dak), dan om beurten onder
+   elk van die titels. Een lijn met aantal 0 komt onder de opties/varianten
+   als de offerte die heeft.
+
+De secties staan in de volgorde algemene werken, veiligheid, per dak afbouw
+en opbouw (koepels als laatste), opties, commerciële tegemoetkoming, nota's.
+Titels zonder lijnen (vaak *ALGEMENE NOTA'S*: de tekst van de nota zit niet
+in de export) worden weggelaten; tekstregels komen onder de notasectie of
+onderaan. Op de export van 26/10/2026 komen 47 van de 14 738 productlijnen
+onder geen enkele sectie (bovenaan de offerte).
+
+Dit is een zo goed mogelijke reconstructie: kijk een offerte na voor je ze
+opnieuw verstuurt.
+
+## Op de offerte
+
+* Een lijn op een werkpost uit de catalogus wordt aangemaakt zoals Odoo dat
+  zelf doet (naam en verkoopomschrijving van het product, zijn eenheid): de
+  naam staat dus één keer op de offerte.
+* De generieke **Werkpost (oud systeem)** is er per eenheid (m, m², stuk,
+  forfait, ...), zodat er geen omrekening onder de hoeveelheid verschijnt. Het
+  vinkje **Omschrijving als label** (productfiche, tab Algemeen) zorgt dat
+  offertes, orders en facturen enkel de omschrijving van de lijn tonen, niet
+  de productnaam erboven. Andere producten houden de standaardweergave van
+  Odoo.
+
 ## Wat de import doet
 
 * **Klanten**: gezocht op btw-nummer (genormaliseerd: `be 0723.806.575` =
@@ -67,10 +108,10 @@ wordt.
   ongeldig btw-nummer komt in de notitie van de klant.
 * **Lijnen**: een omschrijving die exact de naam van een werkpost
   (verkoopbare dienst) uit de catalogus is, krijgt dat product; de andere
-  komen op de werkpost **Werkpost (oud systeem)** (`TECTORA-IMPORT`) met hun
-  eigen omschrijving. Eenheid, korting, btw-tarief en **prijs komen uit de
-  oude offerte** en worden door Odoo nooit herrekend (ook niet bij een
-  gewijzigde hoeveelheid).
+  komen op de werkpost **Werkpost (oud systeem)** (`TECTORA-IMPORT…`, één
+  per eenheid) met hun eigen omschrijving en eenheid. Korting, btw-tarief
+  en **prijs komen uit de oude offerte** en worden door Odoo nooit herrekend
+  (ook niet bij een gewijzigde hoeveelheid).
 * **Vermenigvuldigde lijnen**: in de export is bij sommige lijnen het bedrag
   een veelvoud van aantal × prijs (het oude systeem vermenigvuldigde de lijn
   in een kolom die de export weglaat). Het bedrag is juist, dus het aantal

@@ -21,6 +21,12 @@ EXTRA_UOM_KEYS = {"uren": "hour", "manuur": "hour", "dagen": "day"}
 # Context of every write of the import: no mails, no chatter tracking.
 QUIET = {"tracking_disable": True, "mail_create_nolog": True,
          "mail_notrack": True, "mail_auto_subscribe_no_notify": True}
+# Product categories of the catalogue that say the kind of work of a line.
+CATEGORY_CHAPTERS = (
+    ("01. ", "algemeen"),
+    ("02. Verplichte veiligheid", "veiligheid"),
+    ("03. ", "afbouw"),
+)
 # A cron run stops (and is triggered again) when less time than this is left.
 MIN_SECONDS_LEFT = 60
 
@@ -33,7 +39,7 @@ def fresh_counters():
     return {
         "created": 0, "updated": 0, "unchanged": 0, "skipped": 0,
         "partners": 0, "matched_lines": 0, "generic_lines": 0,
-        "skipped_text": 0, "invalid_vat": [], "missing_taxes": [],
+        "skipped_text": 0, "sections": 0, "empty_sections": 0, "invalid_vat": [], "missing_taxes": [],
         "total_differences": [], "not_reverted": [], "errors": [],
         "per_status": {},
     }
@@ -97,15 +103,18 @@ class QuotationImportOptions(models.AbstractModel):
     )
     text_lines = fields.Selection(
         [
+            ("sections", "Als secties, met de lijnen eronder ingedeeld"),
             ("skip", "Overslaan"),
-            ("note", "Als notitie onderaan de offerte"),
         ],
         string="Titel- en tekstregels",
-        default="skip",
+        default="sections",
         required=True,
-        help="Regels zonder aantal en prijs (hoofdstuktitels zoals ALGEMENE "
-        "WERKEN, nota's). De export levert de lijnen alfabetisch, dus een "
-        "titel staat niet meer boven zijn lijnen.",
+        help="Regels zonder aantal en prijs in hoofdletters (ALGEMENE WERKEN, "
+        "AFBOUWWERKEN THV HET PLAT DAK, ...) zijn de secties van de offerte. "
+        "De export levert de lijnen alfabetisch; elke lijn komt onder de "
+        "sectie waar ze het best bij past: naar de soort werk (algemene "
+        "kosten, veiligheid, afbraak, opbouw, koepels, ...) en de woorden die "
+        "ze met de titel deelt. Nota's komen onder de notasectie of onderaan.",
     )
 
     OPTION_FIELDS = ("sheet_name", "existing_mode", "use_legacy_name", "user_id",
@@ -219,35 +228,42 @@ class QuotationImportOptions(models.AbstractModel):
             "partners_by_name": partners_by_name,
             "uoms": {},
             "taxes": {0.0: self.tax_0_id, 6.0: self.tax_6_id, 21.0: self.tax_21_id},
-            "generic": None,
+            "generic": {},
         }
 
-    def _generic_product(self, lookups):
+    def _generic_product(self, lookups, uom=None):
         """The works item for lines of the old system without a product of
         their own in the catalogue: the line keeps its description, unit and
-        price."""
-        if lookups["generic"]:
-            return lookups["generic"]
+        price. One per unit, so the line's unit is the product's own (no
+        conversion on the quotation); it shows only the line's description
+        (Omschrijving als label)."""
+        unit = self.env.ref("uom.product_uom_unit")
+        uom = uom or unit
+        if uom.id in lookups["generic"]:
+            return lookups["generic"][uom.id]
+        code = GENERIC_PRODUCT_CODE if uom == unit else "%s-%s" % (GENERIC_PRODUCT_CODE, uom.id)
         Product = self.env["product.product"].with_context(active_test=False)
-        product = Product.search([("default_code", "=", GENERIC_PRODUCT_CODE)], limit=1)
+        product = Product.search([("default_code", "=", code)], limit=1)
         if not product:
             product = Product.create({
-                "name": _("Werkpost (oud systeem)"),
-                "default_code": GENERIC_PRODUCT_CODE,
+                "name": _("Werkpost (oud systeem)") if uom == unit
+                else _("Werkpost (oud systeem) per %s", uom.name),
+                "default_code": code,
                 "type": "service",
                 "sale_ok": True,
                 "purchase_ok": False,
                 "invoice_policy": "order",
+                "uom_id": uom.id,
                 "list_price": 0.0,
                 "taxes_id": [Command.clear()],
-                "description_sale": _(
-                    "Lijn uit een offerte van het oude systeem zonder "
-                    "overeenkomstig product in de catalogus."
-                ),
+                "tectora_description_label": True,
             })
-        elif not product.active:
-            product.active = True
-        lookups["generic"] = product
+        else:
+            if not product.active:
+                product.active = True
+            if not product.tectora_description_label:
+                product.tectora_description_label = True
+        lookups["generic"][uom.id] = product
         return product
 
     def _uom(self, unit, lookups):
@@ -323,22 +339,25 @@ class QuotationImportOptions(models.AbstractModel):
                 "sequence": sequence,
             }
         product = lookups["products"].get(_norm(line["description"]))
+        uom = self._uom(line["unit"], lookups)
+        values = {}
         if product:
+            # A catalogue works item: the line as Odoo itself makes it (its
+            # unit, its description), so the quotation shows it like any other.
             counters["matched_lines"] += 1
         else:
-            product = self._generic_product(lookups)
+            product = self._generic_product(lookups, uom)
             counters["generic_lines"] += 1
-        uom = self._uom(line["unit"], lookups)
+            values["name"] = line["description"] or product.display_name
         tax = self._tax(line["vat_rate"], lookups)
         if not tax:
             if line["vat_rate"] not in counters["missing_taxes"]:
                 counters["missing_taxes"].append(line["vat_rate"])
         price = line["price"]
-        return {
+        return dict(values, **{
             "product_id": product.id,
-            "name": line["description"] or product.display_name,
             "product_uom_qty": line["quantity"],
-            "product_uom_id": (uom or product.uom_id).id,
+            "product_uom_id": product.uom_id.id,
             "price_unit": price,
             # The price is the one of the old quotation. Odoo treats a price
             # that differs from technical_price_unit as set by hand and then
@@ -348,27 +367,46 @@ class QuotationImportOptions(models.AbstractModel):
             "discount": line["discount"],
             "tax_ids": [Command.set(tax.ids)],
             "sequence": sequence,
-        }
+        })
+
+    def _chapter_of(self, lookups):
+        """Family of a line by the category of its catalogue works item:
+        01 general works, 02 safety, 03 demolition (else by its words)."""
+        def chapter_of(description):
+            product = lookups["products"].get(_norm(description))
+            path = (product.categ_id.complete_name or "") if product else ""
+            for prefix, family in CATEGORY_CHAPTERS:
+                if prefix in path:
+                    return family
+            return None
+        return chapter_of
 
     def _order_values(self, quote, partner, lead, status, lookups, counters):
         lines = []
-        sequence = 10
-        for line in quote["lines"]:
-            if line["kind"] == "text":
-                continue
-            lines.append(Command.create(self._line_values(line, sequence, lookups, counters)))
+        sequence = 0
+
+        def add(values):
+            nonlocal sequence
             sequence += 10
-        texts = [line for line in quote["lines"] if line["kind"] == "text"]
-        if texts and self.text_lines == "note":
-            lines.append(Command.create({
-                "display_type": "line_section",
-                "name": _("Titels en nota's uit het oude systeem"),
-                "sequence": sequence,
-            }))
-            for line in texts:
-                sequence += 10
-                lines.append(Command.create(self._line_values(line, sequence, lookups, counters)))
-        counters["skipped_text"] += 0 if self.text_lines == "note" else len(texts)
+            lines.append(Command.create(dict(values, sequence=sequence)))
+
+        if self.text_lines == "sections":
+            blocks, notes, empty = quote_rules.arrange_sections(
+                quote, self._chapter_of(lookups)
+            )
+            counters["empty_sections"] += len(empty)
+        else:
+            blocks = [(None, [l for l in quote["lines"] if l["kind"] != "text"])]
+            notes = []
+            counters["skipped_text"] += sum(1 for l in quote["lines"] if l["kind"] == "text")
+        for title, block_lines in blocks:
+            if title:
+                add({"display_type": "line_section", "name": title})
+                counters["sections"] += 1
+            for line in block_lines:
+                add(self._line_values(line, 0, lookups, counters))
+        for line in notes:
+            add(self._line_values(line, 0, lookups, counters))
         values = {
             "partner_id": partner.id,
             "company_id": self.env.company.id,
@@ -701,6 +739,10 @@ class QuotationImportJob(models.Model):
         if stats["repriced"]:
             lines.append(_("%s lijnen waarvan de eenheidsprijs uit het bedrag "
                            "werd herrekend", stats["repriced"]))
+        if counters["sections"]:
+            lines.append(_("%(n)s secties aangemaakt met hun lijnen; %(empty)s titels "
+                           "zonder lijnen weggelaten (bv. ALGEMENE NOTA'S zonder tekst)",
+                           n=counters["sections"], empty=counters["empty_sections"]))
         if counters["skipped_text"]:
             lines.append(_("%s titel- en tekstregels overgeslagen", counters["skipped_text"]))
         if counters["invalid_vat"]:
