@@ -8,7 +8,7 @@ import re
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
-from odoo import _, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools.binary import BinaryBytes
 from odoo.tools.image import image_data_uri
@@ -30,6 +30,13 @@ EARTH_M_PER_PX = 156543.03392
 METERS_PER_DEG_LAT = 111320.0
 SATELLITE_ZOOM = 20
 REQUEST_TIMEOUT = 25
+# The task stages of every project (data/project_task_type_data.xml).
+TASK_STAGE_XMLIDS = (
+    "tectora_roof.project_task_type_nieuw",
+    "tectora_roof.project_task_type_bezig",
+    "tectora_roof.project_task_type_klaar",
+    "tectora_roof.project_task_type_geannuleerd",
+)
 
 # 50 px per meter — same default as the legacy standalone canvas when no
 # satellite background (and thus no geographic scale) is available.
@@ -563,7 +570,22 @@ class TectoraRoofProject(models.Model):
         Project = self.env["project.project"]
         if "allow_timesheets" in Project._fields:
             values["allow_timesheets"] = True
+        stages = self._tectora_task_stages()
+        if stages:
+            # Shared stages: otherwise every project gets four of its own.
+            values["type_ids"] = [Command.set(stages.ids)]
         return values
+
+    @api.model
+    def _tectora_task_stages(self):
+        """The task stages the projects share: Nieuw, Bezig, Klaar,
+        Geannuleerd (those still there and active)."""
+        stages = self.env["project.task.type"]
+        for xmlid in TASK_STAGE_XMLIDS:
+            stage = self.env.ref(xmlid, raise_if_not_found=False)
+            if stage and stage.active:
+                stages |= stage
+        return stages
 
     def _ensure_project(self):
         """Create (or complete) the plannable project and its analytic
