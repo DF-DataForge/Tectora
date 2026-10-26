@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tectora_quotation_import_job_list" model="ir.ui.view">
+        <field name="name">tectora.quotation.import.job.list</field>
+        <field name="model">tectora.quotation.import.job</field>
+        <field name="arch" type="xml">
+            <list string="Offerte-imports" create="false"
+                  decoration-info="state in ('queued', 'running')"
+                  decoration-danger="state == 'failed'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="create_date" string="Aangemaakt"/>
+                <field name="name"/>
+                <field name="create_uid" string="Door" widget="many2one_avatar_user"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="position"/>
+                <field name="quote_count"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('queued', 'running')"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'failed'"/>
+                <field name="date_end"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_quotation_import_job_form" model="ir.ui.view">
+        <field name="name">tectora.quotation.import.job.form</field>
+        <field name="model">tectora.quotation.import.job</field>
+        <field name="arch" type="xml">
+            <form string="Offerte-import" create="false">
+                <header>
+                    <button name="action_cancel" type="object" string="Stoppen"
+                            invisible="state not in ('queued', 'running')"
+                            confirm="De import stoppen? Wat al verwerkt is, blijft staan; 'Verdergaan' hervat de import."/>
+                    <button name="action_resume" type="object" string="Verdergaan"
+                            class="btn-primary"
+                            invisible="state not in ('cancelled', 'failed')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="queued,running,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_tectora_imported_orders)d" type="action"
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                string="Orders uit oud systeem"/>
+                    </div>
+                    <div class="alert alert-info" role="alert"
+                         invisible="state not in ('queued', 'running')">
+                        De offertes worden op de achtergrond geïmporteerd en na elke
+                        offerte bewaard. Je kan dit scherm sluiten; vernieuw het om de
+                        voortgang te zien.
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Voortgang">
+                            <field name="progress" widget="progressbar"/>
+                            <field name="position"/>
+                            <field name="quote_count"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                        <group string="Opties">
+                            <field name="file" filename="filename" readonly="1"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="existing_mode" readonly="1"/>
+                            <field name="use_legacy_name" readonly="1"/>
+                            <field name="text_lines" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="team_id" readonly="1"/>
+                            <field name="tax_0_id" readonly="1"/>
+                            <field name="tax_6_id" readonly="1"/>
+                            <field name="tax_21_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Resultaat" invisible="not summary">
+                        <field name="summary" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_quotation_import_job" model="ir.actions.act_window">
+        <field name="name">Offerte-imports</field>
+        <field name="res_model">tectora.quotation.import.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen offerte-import</p>
+            <p>Start een import via Offertes importeren (oud systeem).</p>
+        </field>
+    </record>
+
+</odoo>

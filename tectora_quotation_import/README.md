@@ -9,16 +9,24 @@ later op live.
 ## Gebruik
 
 **Verkoop → Configuratie → Offertes importeren (oud systeem)**: laad de
-export op en klik *Importeren*. Tip: vink eerst **Testrun** aan — het hele
-bestand wordt verwerkt en het resultaat getoond, maar er wordt niets
-opgeslagen.
+export op en klik *Importeren / controleren*.
+
+* Met **Testrun** aangevinkt wordt het bestand enkel gecontroleerd: je ziet
+  hoeveel offertes er nieuw zijn (per status, met de orderstatus en fase die
+  ze krijgen), hoeveel al in Odoo staan, hoeveel klanten nieuw zijn en hoeveel
+  lijnen op een werkpost uit de catalogus komen. Er wordt niets aangemaakt.
+* Zonder testrun wordt een **importtaak** gestart die op de achtergrond loopt
+  (geplande actie *Offerte-import oud systeem*). Elke offerte wordt apart
+  bewaard, zodat een grote export nooit tegen de tijdslimiet van de server
+  botst; wordt de import onderbroken, dan gaat hij verder waar hij stond.
+  Volg hem in **Verkoop → Configuratie → Offerte-imports** (voortgang,
+  resultaat, *Stoppen* / *Verdergaan*, knop naar de geïmporteerde orders).
 
 | Optie | Betekenis |
 |---|---|
 | **Gekende offertes** | Een offerte waarvan het nummer al in Odoo staat, wordt nooit opnieuw aangemaakt. *Status bijwerken* (standaard) brengt een offerte die intussen goedgekeurd werd naar een bevestigde order en haar verkoopkans naar gewonnen. Lijnen worden niet aangeraakt, een bevestigde order gaat nooit terug. *Overslaan* laat gekende offertes ongemoeid. |
 | **Offertenummer als ordernummer** | De order heet zoals in het oude systeem (bv. `2026/0004`). Het oude nummer staat sowieso op de order (*Offertenummer oud systeem*, zoekbaar, filter *Uit oud systeem*). |
 | **Titel- en tekstregels** | Regels zonder aantal, prijs en bedrag (ALGEMENE WERKEN, OPBOUWWERKEN THV HET PLAT DAK, ALGEMENE NOTA'S, ...). De export levert de lijnen **alfabetisch**, dus een titel staat niet meer boven zijn lijnen: standaard overgeslagen, of als notitie onderaan de offerte. |
-| **Maximum aantal nieuwe offertes** | Importeren in delen: start opnieuw met hetzelfde bestand, de reeds geïmporteerde worden overgeslagen. |
 | **Verkoper / Verkoopteam** | Op de orders en verkoopkansen (de export bevat geen verkoper). |
 | **Btw 0% / 6% / 21%** | Standaard de dienstenvariant van de Belgische btw (`6% S`, `21% S`) en `0% Cocont` (medecontractant) voor 0%. |
 

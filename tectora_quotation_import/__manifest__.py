@@ -32,10 +32,13 @@ again on every new export, also on the live database:
   the export; title and text lines (the export sorts lines alphabetically,
   so titles no longer stand above their lines) are skipped or added as
   notes;
-* a test run processes the whole file and rolls everything back, and the
-  import can run in parts (maximum number of new quotations per run).
+* the wizard checks the file (a test run shows what the import would do);
+  the import itself is a job run in the background by a scheduled action,
+  committed after every quotation, so a large export never hits the time
+  limit of a web request and an interrupted import goes on where it stopped
+  (Offerte-imports).
     """,
-    "version": "20.0.1.0.1",
+    "version": "20.0.1.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -45,8 +48,10 @@ again on every new export, also on the live database:
     "data": [
         "security/ir.access.csv",
         "data/import_status_data.xml",
+        "data/ir_cron_data.xml",
         "views/import_status_views.xml",
         "views/sale_order_views.xml",
+        "views/import_job_views.xml",
         "wizard/quotation_import_views.xml",
     ],
     "installable": True,

@@ -51,7 +51,9 @@ class TestQuotationImport(TransactionCase):
         workbook.save(buffer)
         return base64.b64encode(buffer.getvalue()).decode()
 
-    def _import(self, rows, **options):
+    def _import(self, rows, max_quotes=None, **options):
+        """Run the wizard and, unless it is a test run, the import job it
+        starts (without commits, as the scheduled action would)."""
         wizard = self.env["tectora.quotation.import"].create({
             "file": self._file(rows),
             "filename": "offertes.xlsx",
@@ -60,8 +62,13 @@ class TestQuotationImport(TransactionCase):
             "tax_21_id": self.taxes[21].id,
             **options,
         })
-        wizard.action_import()
-        return wizard
+        action = wizard.action_import()
+        if wizard.dry_run:
+            return wizard
+        job = self.env[action["res_model"]].browse(action["res_id"])
+        self.assertEqual(job.state, "queued")
+        job._process(commit=False, max_quotes=max_quotes)
+        return job
 
     def _order(self, number):
         return self.env["sale.order"].search([("tectora_legacy_number", "=", number)])
@@ -83,8 +90,8 @@ class TestQuotationImport(TransactionCase):
 
     # --------------------------------------------------------------- tests
     def test_import_states_and_opportunities(self):
-        wizard = self._import(self._rows())
-        self.assertIn("3 offertes aangemaakt", wizard.summary)
+        job = self._import(self._rows())
+        self.assertIn("3 offertes aangemaakt", job.summary)
 
         running = self._order("2026/0001")
         self.assertEqual(running.name, "2026/0001")
@@ -136,10 +143,10 @@ class TestQuotationImport(TransactionCase):
     def test_reimport_never_duplicates_and_moves_forward(self):
         self._import(self._rows())
         running = self._order("2026/0001")
-        wizard = self._import(self._rows(first_status="goedgekeurd"))
+        job = self._import(self._rows(first_status="goedgekeurd"))
         self.assertEqual(len(self._order("2026/0001")), 1)
         self.assertEqual(len(self._order("2026/0002")), 1)
-        self.assertIn("0 offertes aangemaakt", wizard.summary)
+        self.assertIn("0 offertes aangemaakt", job.summary)
         self.assertEqual(running.state, "sale")
         self.assertEqual(running.tectora_legacy_status, "goedgekeurd")
         self.assertEqual(running.opportunity_id.stage_id, self.stage_won)
@@ -147,15 +154,23 @@ class TestQuotationImport(TransactionCase):
         self._import(self._rows(first_status="openstaand"))
         self.assertEqual(running.state, "sale")
 
-    def test_dry_run_and_limit(self):
+    def test_dry_run_and_resume(self):
         wizard = self._import(self._rows(), dry_run=True)
         self.assertIn("TESTRUN", wizard.summary)
+        self.assertIn("3 nieuwe offertes", wizard.summary)
         self.assertFalse(self._order("2026/0001"))
-        self._import(self._rows(), limit=1)
+        # An import interrupted after one quotation goes on where it stopped.
+        job = self._import(self._rows(), max_quotes=1)
+        self.assertEqual(job.state, "running")
+        self.assertEqual(job.position, 1)
         self.assertTrue(self._order("2026/0001"))
         self.assertFalse(self._order("2026/0002"))
-        self._import(self._rows(), limit=1)
-        self.assertTrue(self._order("2026/0002"))
+        job._process(commit=False)
+        self.assertEqual(job.state, "done")
+        self.assertEqual(job.progress, 100)
+        self.assertEqual(len(self._order("2026/0001")), 1)
+        self.assertTrue(self._order("2026/0003"))
+        self.assertIn("3 offertes aangemaakt", job.summary)
 
     def test_text_lines_as_notes(self):
         self._import(self._rows(), text_lines="note")

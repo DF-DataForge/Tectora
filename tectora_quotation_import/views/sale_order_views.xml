@@ -30,4 +30,12 @@
         </field>
     </record>
 
+    <record id="action_tectora_imported_orders" model="ir.actions.act_window">
+        <field name="name">Orders uit oud systeem</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="domain">[('tectora_legacy_number', '!=', False)]</field>
+        <field name="context">{'search_default_tectora_legacy': 1}</field>
+    </record>
+
 </odoo>
