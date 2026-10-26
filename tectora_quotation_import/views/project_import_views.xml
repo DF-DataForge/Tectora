@@ -84,6 +84,7 @@
                         <group string="Opties">
                             <field name="existing_mode"/>
                             <field name="plan_projects"/>
+                            <field name="create_missing_teams"/>
                         </group>
                     </group>
                     <field name="state" invisible="1"/>

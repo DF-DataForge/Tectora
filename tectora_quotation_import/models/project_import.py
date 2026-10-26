@@ -60,6 +60,15 @@ class ProjectImportTeam(models.Model):
 class QuotationImportOptions(models.AbstractModel):
     _inherit = "tectora.quotation.import.options"
 
+    create_missing_teams = fields.Boolean(
+        string="Ontbrekende ploegen aanmaken",
+        default=True,
+        help="Projecten: een verantwoordelijke van het oude systeem die geen "
+        "bestaande ploeg is (bv. een onderaannemer), krijgt een nieuwe "
+        "dakwerkersploeg met zijn naam; een ploeg met precies die naam wordt "
+        "hergebruikt. Leden en ploegbaas vul je nadien in.",
+    )
+
     # -------------------------------------------------------- the projects
     def _parse_projects(self):
         header, rows = self._read_rows()
@@ -93,13 +102,22 @@ class QuotationImportOptions(models.AbstractModel):
         ]
 
     def _project_teams(self, projects, create):
-        """{responsible key: teams} from the team table; a responsible not in
-        it yet gets the guessed teams (and, with ``create``, a row)."""
+        """``(teams, new)``: {responsible key: teams} from the team table, and
+        the responsibles that get a team of their own.
+
+        A responsible not in the table yet gets the guessed teams (and, with
+        ``create``, a row). With "Ontbrekende ploegen aanmaken", a responsible
+        without any team gets a new roofing team of that name (an existing
+        team of exactly that name is reused); only with ``create``, else it is
+        only listed in ``new``.
+        """
         Map = self.env["tectora.project.import.team"]
+        Team = self.env["tectora.roof.team"].with_context(active_test=False)
         rows = {Map._key(row.name): row for row in Map.search([])}
         teams = self.env["tectora.roof.team"].search([])
         pairs = [(team.id, team.name) for team in teams]
         result = {}
+        new = []
         counts = {}
         for project in projects:
             key = Map._key(project["responsible"])
@@ -109,19 +127,29 @@ class QuotationImportOptions(models.AbstractModel):
             if key in result:
                 continue
             row = rows.get(key)
-            if row:
-                result[key] = row.team_ids
-                continue
-            guessed = teams.browse(project_rules.guess_teams(project["responsible"], pairs))
-            result[key] = guessed
+            found = row.team_ids if row else teams.browse(
+                project_rules.guess_teams(project["responsible"], pairs)
+            )
+            if not found and self.create_missing_teams:
+                new.append(project["responsible"])
+                if create:
+                    found = Team.search([("name", "=ilike", project["responsible"])], limit=1)
+                    if found and not found.active:
+                        found.active = True
+                    found = found or Team.create({"name": project["responsible"]})
+            result[key] = found
             if create:
-                rows[key] = Map.create({"name": project["responsible"],
-                                        "team_ids": [(6, 0, guessed.ids)]})
+                if row:
+                    if found and not row.team_ids:
+                        row.team_ids = found
+                else:
+                    rows[key] = Map.create({"name": project["responsible"],
+                                            "team_ids": [(6, 0, found.ids)]})
         if create:
             for key, row in rows.items():
                 if key in counts and row.project_count != counts[key]:
                     row.project_count = counts[key]
-        return result
+        return result, new
 
 
 class QuotationImportJob(models.Model):
@@ -136,7 +164,7 @@ class QuotationImportJob(models.Model):
         user = self.create_uid or self.env.user
         return projects, {"ambiguous": ambiguous}, {
             "assignment": assignment,
-            "teams": self._project_teams(projects, create=True),
+            "teams": self._project_teams(projects, create=True)[0],
             "tz": user.tz or self.env.user.tz or DEFAULT_TZ,
         }
 

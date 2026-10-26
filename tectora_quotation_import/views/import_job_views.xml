@@ -69,6 +69,7 @@
                             <field name="kind"/>
                             <field name="existing_mode" readonly="1"/>
                             <field name="plan_projects" invisible="kind != 'projects'"/>
+                            <field name="create_missing_teams" readonly="1" invisible="kind != 'projects'"/>
                             <field name="use_legacy_name" readonly="1" invisible="kind != 'quotes'"/>
                             <field name="text_lines" readonly="1" invisible="kind != 'quotes'"/>
                             <field name="user_id" readonly="1" invisible="kind != 'quotes'"/>

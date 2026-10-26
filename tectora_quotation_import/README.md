@@ -145,6 +145,10 @@ als importtaak op de achtergrond (*Offerte-imports*, soort *Projecten*).
   import vult die tabel met zijn gok (de ploeg waarvan de naam erin staat:
   *TEAM 1 TECTORA: MARIUSZ & MARCIN* → Team 1, *DRENICA TEAM 2* → Drenica,
   *TEAM 1 + TEAM 2* → beide); verbeter hem daar en importeer opnieuw.
+  Met **Ontbrekende ploegen aanmaken** (standaard aan) krijgt een
+  verantwoordelijke die geen bestaande ploeg is een nieuwe dakwerkersploeg met
+  zijn naam (een ploeg met precies die naam wordt hergebruikt); leden en
+  ploegbaas vul je nadien in bij de ploeg.
 * **Inplannen**: een project met ploeg en deadline krijgt een werkblok op die
   ploeg dat op de deadline eindigt (07:30–16:30) en zoveel werkdagen duurt als
   de order geschat is (minstens 1). Afgesloten en uitgevoerde projecten
@@ -158,9 +162,10 @@ Op de export van 26/10/2026: 221 projecten, waarvan 218 gekoppeld (2 met twee
 orders). Niet gekoppeld: drie vervolgprojecten met totaal 0 (2026/0219,
 2026/0096, 2026/0143). Twee projecten horen bij een offerte die *ON HOLD*
 staat (2026/0196, 2026/0197): gekoppeld, maar zonder project tot de offerte
-bevestigd wordt. Zonder ploeg (nog in te vullen): TM TOTALE RENOVATIE BV (24),
-Tectora BV (21), DECLEIR DAKWERKEN (3), MIKO ROOF (2), Piotr Arne (1) en 5
-projecten zonder verantwoordelijke.
+bevestigd wordt. Nieuwe ploegen (geen bestaande ploeg): TM TOTALE RENOVATIE BV
+(24 projecten), Tectora BV (21), DECLEIR DAKWERKEN (3), MIKO ROOF (2) en
+Piotr Arne (1); 5 projecten hebben geen verantwoordelijke en krijgen geen
+ploeg.
 
 ## De export van 26/10/2026
 

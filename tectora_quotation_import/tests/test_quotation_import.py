@@ -285,12 +285,12 @@ class TestProjectImport(ImportCase):
             project_row("2026/0102", "Dhr. Peeters", 104.30, "lopend", "", "Onbekend BV"),
             project_row("2026/0103", "Mevr. Niemand", 0, "lopend"),
         ]
-        preview = self._import_projects(rows, dry_run=True)
+        preview = self._import_projects(rows, dry_run=True, create_missing_teams=False)
         self.assertIn("3 projecten gevonden", preview.summary)
         self.assertIn("GEEN PLOEG", preview.summary)
         self.assertFalse(self.env["tectora.project.import.team"].search([]))
 
-        job = self._import_projects(rows)
+        job = self._import_projects(rows, create_missing_teams=False)
         self.assertEqual(job.state, "done", job.summary)
 
         approved = self._order("2026/0003").roof_project_id
@@ -321,7 +321,26 @@ class TestProjectImport(ImportCase):
 
         # Again: nothing doubles; a corrected team table is applied.
         self.env["tectora.project.import.team"].search([("name", "=", "Onbekend BV")]).team_ids = self.team_2
-        job = self._import_projects(rows)
+        job = self._import_projects(rows, create_missing_teams=False)
         self.assertEqual(running.team_id, self.team_2)
         self.assertEqual(len(approved.planning_ids), 1)
         self.assertIn("3 bijgewerkt", job.summary)
+
+    def test_missing_team_created(self):
+        self._import(self._rows())
+        rows = [project_row("2026/0102", "Dhr. Peeters", 104.30, "lopend", "30/10/2026",
+                            "MIKO ROOF")]
+        preview = self._import_projects(rows, dry_run=True)
+        self.assertIn("NIEUWE PLOEG 'MIKO ROOF'", preview.summary)
+        self.assertFalse(self.env["tectora.roof.team"].search([("name", "=", "MIKO ROOF")]))
+        self._import_projects(rows)
+        team = self.env["tectora.roof.team"].search([("name", "=", "MIKO ROOF")])
+        self.assertEqual(len(team), 1)
+        self.assertEqual(self._order("2026/0001").roof_project_id.team_id, team)
+        self.assertEqual(
+            self.env["tectora.project.import.team"].search([("name", "=", "MIKO ROOF")]).team_ids,
+            team,
+        )
+        # Again: the same team, not a second one.
+        self._import_projects(rows)
+        self.assertEqual(self.env["tectora.roof.team"].search_count([("name", "=", "MIKO ROOF")]), 1)

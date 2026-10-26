@@ -52,6 +52,7 @@ class ProjectImport(models.TransientModel):
             "sheet_name": self.sheet_name,
             "existing_mode": self.existing_mode,
             "plan_projects": self.plan_projects,
+            "create_missing_teams": self.create_missing_teams,
             "quote_count": len(projects),
         })
         job._trigger_cron()
@@ -66,7 +67,7 @@ class ProjectImport(models.TransientModel):
     def _preview(self, projects):
         orders, order_data = self._project_orders()
         assignment, ambiguous = project_rules.match_projects(projects, order_data)
-        teams = self._project_teams(projects, create=False)
+        teams, new_teams = self._project_teams(projects, create=False)
         names = {order.id: order.name for order in orders}
         states = {order.id: order.state for order in orders}
         phases = {}
@@ -91,7 +92,8 @@ class ProjectImport(models.TransientModel):
                 per_team.setdefault(project["responsible"], [0, teams.get(key)])[0] += 1
         planned = sum(
             1 for p in projects
-            if p["number"] in assignment and p["deadline"] and teams.get(Map._key(p["responsible"]))
+            if p["number"] in assignment and p["deadline"]
+            and (teams.get(Map._key(p["responsible"])) or p["responsible"] in new_teams)
         )
         phase_labels = {"closed": _("afgesloten"), "executed": _("uitgevoerd"),
                         "open": _("lopend")}
@@ -115,10 +117,13 @@ class ProjectImport(models.TransientModel):
             lines.append(_("Geen order gevonden: %s", ", ".join(unmatched)))
         lines += ["", _("Ploegen (verantwoordelijke → ploeg):")]
         for responsible, (count, found) in sorted(per_team.items(), key=lambda i: -i[1][0]):
-            lines.append("    %s (%s) → %s" % (
-                responsible, count,
-                ", ".join(found.mapped("name")) if found else _("GEEN PLOEG"),
-            ))
+            if found:
+                target = ", ".join(found.mapped("name"))
+            elif responsible in new_teams:
+                target = _("NIEUWE PLOEG '%s'", responsible)
+            else:
+                target = _("GEEN PLOEG")
+            lines.append("    %s (%s) → %s" % (responsible, count, target))
         if self.plan_projects:
             lines.append(_("%s projecten met ploeg en deadline worden ingepland", planned))
         return "\n".join(lines)
