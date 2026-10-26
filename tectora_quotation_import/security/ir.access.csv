@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_quotation_import_manager,tectora.quotation.import manager,tectora.quotation.import,sales_team.group_sale_manager,crud,
+access_tectora_quotation_import_system,tectora.quotation.import system,tectora.quotation.import,base.group_system,crud,
+access_tectora_quotation_import_status_user,tectora.quotation.import.status user,tectora.quotation.import.status,sales_team.group_sale_salesman,r,
+access_tectora_quotation_import_status_manager,tectora.quotation.import.status manager,tectora.quotation.import.status,sales_team.group_sale_manager,crud,

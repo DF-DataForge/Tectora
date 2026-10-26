@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- The statuses of the Simpla export. A quotation that was not (yet)
+         approved stays a running quotation; approved and (partly) invoiced
+         quotations become confirmed orders with a won opportunity. -->
+    <record id="status_openstaand" model="tectora.quotation.import.status">
+        <field name="sequence">10</field>
+        <field name="name">openstaand</field>
+        <field name="order_state">sent</field>
+        <field name="lead_outcome">open</field>
+        <field name="create_roof_project" eval="True"/>
+        <field name="invoiced_legacy">no</field>
+    </record>
+
+    <record id="status_on_hold" model="tectora.quotation.import.status">
+        <field name="sequence">20</field>
+        <field name="name">ON HOLD</field>
+        <field name="order_state">sent</field>
+        <field name="lead_outcome">open</field>
+        <field name="create_roof_project" eval="True"/>
+        <field name="invoiced_legacy">no</field>
+    </record>
+
+    <record id="status_niet_goedgekeurd" model="tectora.quotation.import.status">
+        <field name="sequence">30</field>
+        <field name="name">niet goedgekeurd</field>
+        <field name="order_state">sent</field>
+        <field name="lead_outcome">open</field>
+        <field name="create_roof_project" eval="True"/>
+        <field name="invoiced_legacy">no</field>
+    </record>
+
+    <record id="status_goedgekeurd" model="tectora.quotation.import.status">
+        <field name="sequence">40</field>
+        <field name="name">goedgekeurd</field>
+        <field name="order_state">sale</field>
+        <field name="lead_outcome">won</field>
+        <field name="create_roof_project" eval="True"/>
+        <field name="invoiced_legacy">no</field>
+    </record>
+
+    <record id="status_deels_gefactureerd" model="tectora.quotation.import.status">
+        <field name="sequence">50</field>
+        <field name="name">deels gefactureerd</field>
+        <field name="order_state">sale</field>
+        <field name="lead_outcome">won</field>
+        <field name="create_roof_project" eval="True"/>
+        <field name="invoiced_legacy">partial</field>
+    </record>
+
+    <record id="status_gefactureerd" model="tectora.quotation.import.status">
+        <field name="sequence">60</field>
+        <field name="name">gefactureerd</field>
+        <field name="order_state">sale</field>
+        <field name="lead_outcome">won</field>
+        <field name="create_roof_project" eval="False"/>
+        <field name="invoiced_legacy">invoiced</field>
+    </record>
+
+</odoo>
