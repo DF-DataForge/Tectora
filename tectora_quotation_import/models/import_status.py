@@ -90,7 +90,11 @@ class QuotationImportStatus(models.Model):
         if self.stage_id:
             return self.stage_id
         Stage = self.env["crm.stage"]
-        team_domain = [("team_id", "in", [team.id, False])] if team else []
+        # The stages shown in the team's pipeline (stages without team are
+        # shared by every team).
+        team_domain = (
+            ["|", ("team_ids", "=", False), ("team_ids", "in", team.ids)] if team else []
+        )
         if self.lead_outcome == "won":
             for name in WON_STAGE_NAMES:
                 stage = Stage.search(
