@@ -40,4 +40,30 @@
             font-weight: 600;
         }
     }
+
+    // The block's colour is its project type; its state shows in its style.
+    // The gantt puts a decoration-<name> class on the pill (or on the item
+    // around it, depending on the version), so match both.
+    // Concept (decoration-info): hatched, with a dashed border.
+    .o_gantt_pill[class*="decoration-info"],
+    .o_gantt_pill[class*="decoration_info"],
+    [class*="decoration-info"] > .o_gantt_pill,
+    [class*="decoration_info"] > .o_gantt_pill {
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.45) 0 6px,
+            transparent 6px 12px
+        ) !important;
+        outline: 2px dashed rgba(0, 0, 0, 0.35);
+        outline-offset: -2px;
+    }
+
+    // Uitgevoerd (decoration-secondary): greyed out, the open work stands out.
+    .o_gantt_pill[class*="decoration-secondary"],
+    .o_gantt_pill[class*="decoration_secondary"],
+    [class*="decoration-secondary"] > .o_gantt_pill,
+    [class*="decoration_secondary"] > .o_gantt_pill {
+        filter: grayscale(0.85);
+        opacity: 0.55;
+    }
 }
