@@ -178,3 +178,4 @@ Releases and the modules they need upgraded:
 | Afmetingen hercalculatie in mm; hercalculatie aanzetten vanuit een component | `tectora_roof` (20.0.3.46.0) |
 | Hercalculatie: veiligheidsmarge; stuklijstlijnen in de Reken-UoM | `tectora_roof` (20.0.3.47.0), `tectora_sale_bom` (20.0.1.3.0) |
 | Planning per ploeg: grotere planningsblokken | `tectora_roof_planning` (20.0.1.11.0) |
+| Planning: filter en groepering op afdeling | `tectora_roof` (20.0.3.49.0) |

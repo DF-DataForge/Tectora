@@ -21,6 +21,15 @@ class TectoraRoofPlanning(models.Model):
         index=True,
     )
     team_id = fields.Many2one("tectora.roof.team", string="Ploeg", index=True)
+    department_id = fields.Many2one(
+        "hr.department",
+        string="Afdeling",
+        compute="_compute_department_id",
+        store=True,
+        index=True,
+        help="De afdeling van de ploeg; heeft de ploeg er geen, die van de "
+        "ploegbaas of anders van de toegewezen medewerkers.",
+    )
     employee_ids = fields.Many2many(
         "hr.employee",
         "tectora_roof_planning_employee_rel",
@@ -90,6 +99,18 @@ class TectoraRoofPlanning(models.Model):
             if item.employee_ids:
                 details.append(_("%s pers.") % len(item.employee_ids))
             item.display_name = " · ".join([title] + details)
+
+    @api.depends(
+        "team_id.department_id", "team_id.leader_id.department_id",
+        "employee_ids.department_id",
+    )
+    def _compute_department_id(self):
+        for item in self:
+            item.department_id = (
+                item.team_id.department_id
+                or item.team_id.leader_id.department_id
+                or item.employee_ids.department_id[:1]
+            )
 
     def _compute_employee_count(self):
         for item in self:
