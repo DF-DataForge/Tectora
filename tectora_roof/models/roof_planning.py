@@ -6,6 +6,15 @@ import pytz
 from odoo import _, api, fields, models
 
 
+# Colour of a block in the team planner per project type (the gantt's colour
+# palette): the type of work reads at a glance, its state from its style.
+PROJECT_TYPE_COLORS = {
+    "renovatie": 4,   # light blue
+    "nieuwbouw": 10,  # green
+    "industrie": 2,   # orange
+}
+
+
 class TectoraRoofPlanning(models.Model):
     _name = "tectora.roof.planning"
     _description = "Dakplanning (werkblok)"
@@ -21,6 +30,15 @@ class TectoraRoofPlanning(models.Model):
         index=True,
     )
     team_id = fields.Many2one("tectora.roof.team", string="Ploeg", index=True)
+    department_id = fields.Many2one(
+        "hr.department",
+        string="Afdeling",
+        compute="_compute_department_id",
+        store=True,
+        index=True,
+        help="De afdeling van de ploeg; heeft de ploeg er geen, die van de "
+        "ploegbaas of anders van de toegewezen medewerkers.",
+    )
     employee_ids = fields.Many2many(
         "hr.employee",
         "tectora_roof_planning_employee_rel",
@@ -48,6 +66,10 @@ class TectoraRoofPlanning(models.Model):
         related="project_id.color", store=True, string="Kleur",
         help="Kleur van het project: alle blokken van een project delen ze.",
     )
+    type_color = fields.Integer(
+        string="Kleur projecttype", compute="_compute_type_color", store=True,
+        help="Kleur van het blok in de planner: één kleur per projecttype.",
+    )
     notes = fields.Text(string="Werfinstructies")
 
     # --- basic project information shown on the planning item -------------
@@ -66,30 +88,44 @@ class TectoraRoofPlanning(models.Model):
             item.name = " — ".join(filter(None, [project.code, project.name]))
 
     @api.depends(
-        "project_id.name", "project_id.address", "project_id.partner_id",
-        "project_id.total_area", "project_id.project_type", "employee_ids",
+        "project_id.name", "project_id.address", "project_id.partner_id.name",
+        "project_id.partner_id.city", "project_id.total_area", "employee_ids",
     )
     def _compute_display_name(self):
-        """The block as the planner shows it: the key data of the site --
-        customer and project, address, roof area, project type and how many
-        people are on it -- so a bar in the team planner reads at a glance."""
-        types = dict(self.env["tectora.roof.project"]._fields["project_type"].selection)
+        """The block as the planner shows it, shortest first: the customer,
+        the municipality of the site, the roof area and how many people are
+        on it ("Dhr. Peeters · Heule · 120 m² · 2 pers."), so the part a
+        planner looks for is still on a short bar. The full address is in the
+        block's summary; the project type is the block's colour."""
         for item in self:
             project = item.project_id
-            customer = project.partner_id.name
-            title = project.name or item.name or _("Werkblok")
-            if customer and customer.lower() not in (title or "").lower():
-                title = "%s — %s" % (customer, title)
+            title = project.partner_id.name or project.name or item.name or _("Werkblok")
             details = []
-            if project.address:
-                details.append(project.address)
+            city = project._site_city() if project else ""
+            if city and city.lower() not in title.lower():
+                details.append(city)
             if project.total_area:
                 details.append(_("%s m²") % ("%.0f" % project.total_area))
-            if project.project_type:
-                details.append(types.get(project.project_type, project.project_type))
             if item.employee_ids:
                 details.append(_("%s pers.") % len(item.employee_ids))
             item.display_name = " · ".join([title] + details)
+
+    @api.depends("project_id.project_type")
+    def _compute_type_color(self):
+        for item in self:
+            item.type_color = PROJECT_TYPE_COLORS.get(item.project_id.project_type, 0)
+
+    @api.depends(
+        "team_id.department_id", "team_id.leader_id.department_id",
+        "employee_ids.department_id",
+    )
+    def _compute_department_id(self):
+        for item in self:
+            item.department_id = (
+                item.team_id.department_id
+                or item.team_id.leader_id.department_id
+                or item.employee_ids.department_id[:1]
+            )
 
     def _compute_employee_count(self):
         for item in self:
