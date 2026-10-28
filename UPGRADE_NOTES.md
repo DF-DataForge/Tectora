@@ -177,3 +177,4 @@ Releases and the modules they need upgraded:
 | Kop- en voetteksten: eigen kop per pagina, pagina's verkleinen | `tectora_quote_builder` (20.0.1.3.0) |
 | Afmetingen hercalculatie in mm; hercalculatie aanzetten vanuit een component | `tectora_roof` (20.0.3.46.0) |
 | Hercalculatie: veiligheidsmarge; stuklijstlijnen in de Reken-UoM | `tectora_roof` (20.0.3.47.0), `tectora_sale_bom` (20.0.1.3.0) |
+| Planning per ploeg: grotere planningsblokken | `tectora_roof_planning` (20.0.1.11.0) |
