@@ -363,8 +363,11 @@ class TectoraProjectOrderLine(models.Model):
             raise UserError(self.env._(
                 "Alles voor '%s' is op voorraad: er moet niets besteld worden.", self.name
             ))
+        roof = self.project_id.roof_project_id
         order = self.env["purchase.order"].create({
             "partner_id": self.partner_id.id,
+            # The site's reference, for the vendor's confirmation and delivery.
+            "partner_ref": roof._tectora_vendor_reference() if roof else self.project_id.name,
             "origin": f"{self.project_id.name} · {self.name}",
             "project_id": self.project_id.id,
             "tectora_order_line_id": self.id,

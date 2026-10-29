@@ -310,6 +310,8 @@ class TectoraPurchaseFromMaterial(models.TransientModel):
             "origin": ", ".join(origins),
             "user_id": self.env.user.id,
             "tectora_roof_project_id": projects.id if len(projects) == 1 else False,
+            # The site's reference for the vendor, when the order is for one.
+            "partner_ref": projects._tectora_vendor_reference() if len(projects) == 1 else False,
             "tectora_logistics_route_id": route.id,
         }
         if route.delivery_type == "dropship":

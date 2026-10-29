@@ -831,6 +831,13 @@ class TectoraRoofProject(models.Model):
             values["name"] = self._project_name()
         return values
 
+    def _tectora_vendor_reference(self):
+        """The reference of this site on a purchase order (its vendor
+        reference): "DAK/2026/0107 · Dhr. Peeters — Heule"."""
+        self.ensure_one()
+        code = self.code if self.code and self.code != _("New") else ""
+        return " · ".join(filter(None, [code, self.name]))
+
     def _site_city(self):
         """Municipality of the site: the order's delivery address, else the
         customer's, else the last part of the free-text site address
