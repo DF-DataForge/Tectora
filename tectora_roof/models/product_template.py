@@ -207,8 +207,12 @@ class ProductTemplate(models.Model):
         self.ensure_one()
         if not self.tectora_recalc or self.tectora_recalc_size <= 0.0:
             return quantity
-        # Up to whole pieces, without 20.000000001 becoming 21.
-        return float(math.ceil(round(self._tectora_recalc_pieces(quantity, margin), 6)))
+        return self._tectora_round_pieces(self._tectora_recalc_pieces(quantity, margin))
+
+    @api.model
+    def _tectora_round_pieces(self, pieces):
+        """Up to whole pieces, without 20.000000001 becoming 21."""
+        return float(math.ceil(round(pieces, 6)))
 
     def _tectora_recalc_explanation(self, quantity, rounded=False, margin=None):
         """How ``quantity`` in the Reken-UoM becomes pieces, as a line of
