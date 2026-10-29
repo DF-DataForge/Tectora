@@ -41,7 +41,7 @@
         }
     }
 
-    // The block's colour is its project type; its state shows in its style.
+    // The block's colour is its project's; its state shows in its style.
     // The gantt puts a decoration-<name> class on the pill (or on the item
     // around it, depending on the version), so match both.
     // Concept (decoration-info): hatched, with a dashed border.
