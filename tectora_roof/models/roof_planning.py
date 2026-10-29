@@ -76,14 +76,17 @@ class TectoraRoofPlanning(models.Model):
 
     @api.depends(
         "project_id.name", "project_id.address", "project_id.partner_id.name",
-        "project_id.partner_id.city", "project_id.total_area", "employee_ids",
+        "project_id.partner_id.city", "project_id.total_area",
+        "project_id.project_type", "employee_ids",
     )
     def _compute_display_name(self):
         """The block as the planner shows it, shortest first: the customer,
-        the municipality of the site, the roof area and how many people are
-        on it ("Dhr. Peeters · Heule · 120 m² · 2 pers."), so the part a
-        planner looks for is still on a short bar. The full address is in the
-        block's summary; the block's colour is that of its project."""
+        the municipality of the site, the roof area, the project type and
+        how many people are on it ("Dhr. Peeters · Heule · 120 m² ·
+        Renovatie · 2 pers."), so the part a planner looks for is still on a
+        short bar. The full address is in the block's summary; the block's
+        colour is that of its project."""
+        types = dict(self.env["tectora.roof.project"]._fields["project_type"].selection)
         for item in self:
             project = item.project_id
             title = project.partner_id.name or project.name or item.name or _("Werkblok")
@@ -93,6 +96,8 @@ class TectoraRoofPlanning(models.Model):
                 details.append(city)
             if project.total_area:
                 details.append(_("%s m²") % ("%.0f" % project.total_area))
+            if project.project_type:
+                details.append(types.get(project.project_type, project.project_type))
             if item.employee_ids:
                 details.append(_("%s pers.") % len(item.employee_ids))
             item.display_name = " · ".join([title] + details)
