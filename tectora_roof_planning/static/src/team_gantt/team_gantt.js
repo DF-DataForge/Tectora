@@ -14,7 +14,6 @@ const PILL_SCALE = 3;
 // cells and the row headers both use, and a block sits between two of them
 // (grid-area: r3 / c1 / r4 / c25).
 const ROWS_VAR = "--Gantt__GridRows-grid-template-rows";
-const PILL_HEIGHT_VAR = "--Gantt__Pill-height";
 
 // What this planner set itself, per renderer element, and the value the
 // gantt had put there before: a re-render scales from the gantt's own
@@ -83,17 +82,8 @@ function enlargePills(root) {
         covered.has(parseInt(track, 10)) ? `[r${track}]${parseFloat(size) * PILL_SCALE}px` : whole
     );
     setScaled(renderer, ROWS_VAR, rows, scaled);
-    // The blocks' own height goes with their rows: scaled with them, back to
-    // the gantt's when no row is scaled (never one without the other).
-    const pillHeight = ownValue(renderer, PILL_HEIGHT_VAR);
-    if (pillHeight) {
-        setScaled(
-            renderer,
-            PILL_HEIGHT_VAR,
-            pillHeight,
-            scaled !== rows ? `${parseFloat(pillHeight) * PILL_SCALE}px` : pillHeight
-        );
-    }
+    // The blocks themselves take the height of their rows (team_gantt.scss):
+    // never taller than the row they are in, whatever the gantt sets.
     root.classList.toggle("o_tectora_tall", scaled !== rows);
 }
 
@@ -112,35 +102,30 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
                 enlargePills(el);
             }
         };
-        // The gantt also rewrites its row variable outside a render (on
-        // loading, while a block is dragged), which put the rows back to the
-        // standard height under blocks that stayed tall: any change of a
-        // style in the planner scales again, at most once per frame. Setting
-        // what is already set is skipped (setScaled), so this settles.
-        let observer = null;
-        let frame = null;
-        const schedule = () => {
-            if (frame === null) {
-                frame = requestAnimationFrame(() => {
-                    frame = null;
-                    enlarge();
-                });
-            }
-        };
-        onMounted(() => {
+        // The gantt sets its rows once more right after a render (on
+        // loading): scale again on the next frame and a moment later, once,
+        // not on every change of the planner (watching its styles kept the
+        // gantt from drawing the days that scroll into view).
+        const timers = new Set();
+        const enlargeSoon = () => {
             enlarge();
-            observer = new MutationObserver(schedule);
-            for (const el of document.querySelectorAll(".o_tectora_team_gantt")) {
-                observer.observe(el, { attributes: true, attributeFilter: ["style"], subtree: true });
-            }
-        });
-        onPatched(enlarge);
+            const frame = requestAnimationFrame(() => {
+                timers.delete(frame);
+                enlarge();
+            });
+            timers.add(frame);
+            const timeout = setTimeout(() => {
+                timers.delete(timeout);
+                enlarge();
+            }, 300);
+            timers.add(timeout);
+        };
+        onMounted(enlargeSoon);
+        onPatched(enlargeSoon);
         onWillUnmount(() => {
-            if (observer) {
-                observer.disconnect();
-            }
-            if (frame !== null) {
-                cancelAnimationFrame(frame);
+            for (const timer of timers) {
+                cancelAnimationFrame(timer);
+                clearTimeout(timer);
             }
         });
     }

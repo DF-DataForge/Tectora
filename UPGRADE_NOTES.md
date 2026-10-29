@@ -198,3 +198,5 @@ Releases and the modules they need upgraded:
 | Fix "Weer vernieuwen" op het formulier van een werkblok | `tectora_roof_planning` (20.0.1.17.0) |
 | Planning per ploeg: rijen blijven hoog bij laden en slepen | `tectora_roof_planning` (20.0.1.18.0) |
 | Stuklijst op maat: stuks, extra marge per lijn, kostprijs per stuk | `tectora_roof` (20.0.3.57.0), `tectora_sale_bom` (20.0.1.4.0) |
+| Stuklijst op maat: geen validatiefout meer via het open-knopje van een component | `tectora_sale_bom` (20.0.1.5.0) |
+| Planning per ploeg: week-weergave en scrollen werken weer (geen stijl-observer meer) | `tectora_roof_planning` (20.0.1.19.0) |
