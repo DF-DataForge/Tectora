@@ -118,6 +118,25 @@ class TestSaleBom(TransactionCase):
         self.assertAlmostEqual(materials[self.primer], 10.0)
         self.assertAlmostEqual(materials[self.container], 1.0)
 
+    def test_material_list_has_one_line_per_product(self):
+        """Several order lines needing the same material, and a credit line
+        taking some back, give one material line per product."""
+        self.order.write({"order_line": [
+            Command.create({"product_id": self.roofing.id, "product_uom_qty": 40.0,
+                            "price_unit": 50.0}),
+            Command.create({"product_id": self.roofing.id, "product_uom_qty": -10.0,
+                            "price_unit": 50.0}),
+        ]})
+        self.order.action_confirm()
+        lines = self.env["tectora.roof.material"].search([("sale_order_id", "=", self.order.id)])
+        self.assertEqual(len(lines), 2, "EPDM and glue, once each")
+        self.assertEqual(len(lines.product_id), 2)
+        materials = self.materials()
+        # (100 + 40 - 10) m2 x 1,1 m2 EPDM and x 0,2 glue per m2
+        self.assertAlmostEqual(materials[self.epdm], 143.0)
+        self.assertAlmostEqual(materials[self.glue], 26.0)
+        self.assertFalse(lines.sale_order_line_id, "from several order lines")
+
     def test_change_after_confirmation_rebuilds_material_list(self):
         self.order.action_confirm()
         self.assertNotIn(self.primer, self.materials())

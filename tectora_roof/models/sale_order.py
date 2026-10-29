@@ -8,9 +8,13 @@ from markupsafe import escape as html_escape
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, float_is_zero
 
 from .project_task import WORK_KINDS
+
+# Marks material values in pieces of a component with hercalculatie, still to
+# be rounded up once the order's lines are added up per product.
+ROUND_PIECES = "_tectora_round_pieces"
 
 _logger = logging.getLogger(__name__)
 
@@ -992,10 +996,15 @@ class SaleOrder(models.Model):
         with hercalculatie is counted in m² or m³ on the bill of materials
         and needed in pieces: ``quantity`` is turned into pieces of the
         product's own unit, with the product's safety margin or ``margin``
-        (in %, a bill of materials line's own)."""
+        (in %, a bill of materials line's own). Not rounded yet: the pieces
+        are rounded up once per product, when the lines of the order are
+        added up (_tectora_merge_material_values)."""
         if product.tectora_recalc:
-            quantity = product.product_tmpl_id._tectora_recalculate(quantity, margin)
-            uom = product.uom_id
+            quantity = product.product_tmpl_id._tectora_recalc_pieces(quantity, margin)
+            values = self._tectora_material_values(line, product, quantity, product.uom_id, bom_name)
+            # Pieces, to be rounded up on the product's total.
+            values[ROUND_PIECES] = True
+            return values
         return self._tectora_material_values(line, product, quantity, uom, bom_name)
 
     def _tectora_exploded_quantity(self, bom, factor, bom_line, line_data):
@@ -1003,6 +1012,54 @@ class SaleOrder(models.Model):
         ``bom`` is needed. Extension point for components whose quantity does
         not follow the order line (tectora_sale_bom)."""
         return line_data["qty"]
+
+    def _tectora_merge_material_values(self, values):
+        """One material line per product: what the order lines need of a
+        product (several works items need the same primer or screws, a
+        credit line takes some back) is added up, in the unit of its first
+        line (another unit of the same kind is converted). A component with
+        hercalculatie is rounded up to whole pieces on the total, not per
+        order line. What adds up to nothing is left out."""
+        Product = self.env["product.product"]
+        Uom = self.env["uom.uom"]
+        merged = {}
+        for vals in values:
+            product = Product.browse(vals["product_id"])
+            uom = Uom.browse(vals.get("product_uom_id")) or product.uom_id
+            key = product.id
+            current = merged.get(key)
+            if current:
+                target = Uom.browse(current["product_uom_id"])
+                if uom != target and not uom._has_common_reference(target):
+                    # Units that do not convert stay on their own line.
+                    key = (product.id, uom.id)
+                    current = merged.get(key)
+            if not current:
+                merged[key] = dict(vals, product_uom_id=uom.id, bom_name=vals.get("bom_name") or False)
+                continue
+            target = Uom.browse(current["product_uom_id"])
+            quantity = vals["quantity"]
+            if uom != target:
+                quantity = uom._compute_quantity(quantity, target, round=False)
+            current["quantity"] += quantity
+            if vals.get(ROUND_PIECES):
+                current[ROUND_PIECES] = True
+            for field in ("source_product_id", "sale_order_line_id"):
+                if current.get(field) != vals.get(field):
+                    current[field] = False
+            names = [name for name in (current["bom_name"] or "").split("; ") if name]
+            if vals.get("bom_name") and vals["bom_name"] not in names:
+                names.append(vals["bom_name"])
+            current["bom_name"] = "; ".join(names) or False
+        result = []
+        for vals in merged.values():
+            product = Product.browse(vals["product_id"])
+            if vals.pop(ROUND_PIECES, False):
+                vals["quantity"] = product.product_tmpl_id._tectora_round_pieces(vals["quantity"])
+            if float_is_zero(vals["quantity"], precision_digits=6):
+                continue
+            result.append(vals)
+        return result
 
     def _tectora_generate_materials(self):
         """Explode every sold product into material requirements.
@@ -1028,6 +1085,7 @@ class SaleOrder(models.Model):
         values = []
         for line in lines:
             values += self._tectora_line_material_values(line, boms.get(line.product_id))
+        values = self._tectora_merge_material_values(values)
         materials = Material.create(values) if values else Material
         if materials:
             self.roof_project_id.message_post(
