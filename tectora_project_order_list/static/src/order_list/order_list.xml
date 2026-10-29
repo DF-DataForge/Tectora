@@ -179,16 +179,18 @@
                                                     <div t-if="panel.loading" class="text-muted small">Producten laden…</div>
                                                     <div t-elif="!panel.items.length" class="text-muted small">
                                                         <t t-if="line.partner_id">
-                                                            Geen producten gevonden voor <b t-out="line.partner_name"/>. Voeg de
-                                                            leverancier toe op het tabblad Inkoop van de producten; zonder producten
-                                                            maakt Bestellen een lege prijsaanvraag.
+                                                            Geen producten van <b t-out="line.partner_name"/> op de materiaallijst
+                                                            van dit project. De lijst toont enkel wat het project nodig heeft
+                                                            (materiaallijst van de bevestigde order) en wat deze leverancier levert
+                                                            (tabblad Inkoop van het product); zonder producten maakt Bestellen een
+                                                            lege prijsaanvraag.
                                                         </t>
                                                         <t t-else="">Kies eerst een leverancier.</t>
                                                     </div>
                                                     <t t-else="">
                                                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                                                             <span class="small fw-bold">
-                                                                Producten<t t-if="line.partner_name"> van <t t-out="line.partner_name"/></t>
+                                                                Producten<t t-if="line.partner_name"> van <t t-out="line.partner_name"/></t> op de materiaallijst
                                                             </span>
                                                             <input type="search" class="form-control form-control-sm o_tectora_products_search"
                                                                    placeholder="Zoeken…" t-att-value="panel.search"
@@ -208,6 +210,7 @@
                                                                 <span class="flex-grow-1 o_tectora_product_name" t-on-click="() => this.toggleProduct(item)">
                                                                     <t t-out="item.name"/>
                                                                     <span t-if="item.code" class="text-muted small ms-1">[<t t-out="item.code"/>]</span>
+                                                                    <span t-if="item.needed !== false" class="text-muted small ms-1">· nodig: <t t-out="item.needed"/> <t t-out="item.uom"/></span>
                                                                     <span t-if="line.action === 'stock_first' and item.free_qty !== false"
                                                                           class="text-muted small ms-1">· vrij: <t t-out="item.free_qty"/></span>
                                                                 </span>

@@ -114,21 +114,31 @@ class TestOrderList(TransactionCase):
             "name": "Dakgoot", "purchase_ok": True,
             "seller_ids": [(0, 0, {"partner_id": self.supplier.id})],
         })
-        Product.create({
+        wool = Product.create({
             "name": "Rotswol", "purchase_ok": True,
             "seller_ids": [(0, 0, {"partner_id": self.other_supplier.id})],
         })
         self.env["tectora.project.order.product"].create({
             "order_line_id": line.id, "product_id": self.product.id, "quantity": 4,
         })
+        # The project's material list: membrane twice (two order lines) and
+        # the wool; not the gutter.
+        roof = self.env["tectora.roof.project"].create({"name": "Werf", "project_id": project.id})
+        self.env["tectora.roof.material"].create([
+            {"project_id": roof.id, "product_id": membrane.id, "quantity": 30.0},
+            {"project_id": roof.id, "product_id": membrane.id, "quantity": 12.5},
+            {"project_id": roof.id, "product_id": wool.id, "quantity": 8.0},
+        ])
 
         items = {item["name"]: item for item in line.tectora_get_supplier_products()}
-        self.assertEqual(set(items), {"EPDM", "Dakmembraan", "Dakgoot"},
-                         "the chosen supplier's products and those already on the part")
+        self.assertEqual(set(items), {"EPDM", "Dakmembraan"},
+                         "the supplier's products on the material list, and those on the part")
         self.assertTrue(items["EPDM"]["selected"])
         self.assertEqual(items["EPDM"]["quantity"], 4)
         self.assertFalse(items["Dakmembraan"]["selected"])
         self.assertEqual(items["Dakmembraan"]["code"], "DM-1")
+        self.assertEqual(items["Dakmembraan"]["quantity"], 42.5, "what the material list needs")
+        self.assertEqual(items["Dakmembraan"]["needed"], 42.5)
 
         action = line.action_tectora_create_purchase(products=[
             {"product_id": membrane.id, "quantity": 12},

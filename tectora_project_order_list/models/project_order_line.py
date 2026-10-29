@@ -138,17 +138,35 @@ class TectoraProjectOrderLine(models.Model):
             ("company_id", "in", [False, self.company_id.id or self.env.company.id]),
         ])
 
+    def _tectora_material_needs(self):
+        """{product: quantity in the product's unit} the project needs
+        according to its material list (the materials of its roof projects,
+        from the confirmed order)."""
+        self.ensure_one()
+        needs = {}
+        for material in self.project_id.roof_project_ids.material_line_ids:
+            product = material.product_id
+            quantity = material.quantity
+            if material.product_uom_id and material.product_uom_id != product.uom_id:
+                quantity = material.product_uom_id._compute_quantity(
+                    quantity, product.uom_id, round=False
+                )
+            needs[product] = needs.get(product, 0.0) + quantity
+        return needs
+
     def tectora_get_supplier_products(self):
         """The product list of the order list page: the products the
-        supplier delivers and those already on the part; the latter come
-        first, selected, with their quantity."""
+        supplier delivers that are on the project's material list, with the
+        quantity it needs, and the products already on the part; the latter
+        come first, selected, with their quantity."""
         self.ensure_one()
         existing = {pl.product_id: pl for pl in self.product_line_ids}
+        needs = self._tectora_material_needs()
         codes = {}
         products = self.env["product.product"]
         for info in self._tectora_supplier_infos():
             variants = info.product_id or info.product_tmpl_id.product_variant_ids
-            for product in variants.filtered("purchase_ok"):
+            for product in variants.filtered(lambda p: p.purchase_ok and p in needs):
                 products |= product
                 if info.product_code:
                     codes.setdefault(product.id, info.product_code)
@@ -162,7 +180,11 @@ class TectoraProjectOrderLine(models.Model):
                 "name": product.display_name,
                 "code": codes.get(product.id, ""),
                 "uom": (product_line.uom_id if product_line else product.uom_id).name or "",
-                "quantity": product_line.quantity if product_line else 1.0,
+                "quantity": (
+                    product_line.quantity if product_line
+                    else round(needs.get(product, 0.0), 2) or 1.0
+                ),
+                "needed": round(needs[product], 2) if product in needs else False,
                 "selected": bool(product_line),
                 "free_qty": (
                     product.with_company(company).free_qty if product.is_storable else False

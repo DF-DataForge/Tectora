@@ -44,7 +44,8 @@ is reopened, and links to the order list on the task page.
   only the shortage). Filter *Enkel open*, *Lijstweergave* for the editable list.
 - **Producten** on a line opens, under it, the products its supplier delivers
   (the supplier on the products' *Inkoop* tab; without a chosen supplier, the
-  suggested ones) and the products already on the line. Tick them, set the
+  suggested ones) that are on the project's material list, with the quantity
+  the list needs, and the products already on the line. Tick them, set the
   quantity, and **Bestellen** puts exactly those on the request for quotation
   (they are added to the line's products too).
 - The line's status follows its purchase orders: te bestellen, uit stock,
