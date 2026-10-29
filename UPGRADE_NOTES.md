@@ -201,4 +201,4 @@ Releases and the modules they need upgraded:
 | Stuklijst op maat: geen validatiefout meer via het open-knopje van een component | `tectora_sale_bom` (20.0.1.5.0) |
 | Planning per ploeg: week-weergave en scrollen werken weer (geen stijl-observer meer) | `tectora_roof_planning` (20.0.1.19.0) |
 | Materiaallijst: één lijn per product (opgeteld over de orderlijnen, stuks afgerond op het totaal) | `tectora_roof` (20.0.3.58.0) |
-| Bestellijst: productkeuze enkel uit de materiaallijst van het project | `tectora_project_order_list` (20.0.1.4.0) |
+| Bestellijst: productkeuze uit de materiaallijst van het project, plus "Ander product toevoegen" | `tectora_project_order_list` (20.0.1.5.0) |

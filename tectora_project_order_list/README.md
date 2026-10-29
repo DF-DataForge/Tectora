@@ -45,7 +45,10 @@ is reopened, and links to the order list on the task page.
 - **Producten** on a line opens, under it, the products its supplier delivers
   (the supplier on the products' *Inkoop* tab; without a chosen supplier, the
   suggested ones) that are on the project's material list, with the quantity
-  the list needs, and the products already on the line. Tick them, set the
+  the list needs, and the products already on the line. **Ander product
+  toevoegen** under the list searches any purchasable product (the
+  supplier's first) and adds it, ticked, for what the material list does not
+  cover. Tick them, set the
   quantity, and **Bestellen** puts exactly those on the request for quotation
   (they are added to the line's products too).
 - The line's status follows its purchase orders: te bestellen, uit stock,

@@ -158,6 +158,17 @@ class TestOrderList(TransactionCase):
         with self.assertRaises(UserError):
             line.action_tectora_create_purchase(products=[])
 
+        # Beyond the material list: any purchasable product, the supplier's first.
+        extra = line.tectora_search_extra_products("Dak")
+        self.assertEqual(
+            [item["name"] for item in extra][:2], ["Dakgoot", "Dakmembraan"],
+            "the supplier's products first",
+        )
+        self.assertTrue(all(item["from_supplier"] for item in extra[:2]))
+        action = line.action_tectora_create_purchase(products=[{"product_id": gutter.id, "quantity": 3}])
+        order = self.env["purchase.order"].browse(action["res_id"])
+        self.assertEqual(order.order_line.product_id, gutter, "a product off the list can be ordered")
+
         # Without a chosen supplier: the products of the suggested ones.
         line.partner_id = False
         names = {item["name"] for item in line.tectora_get_supplier_products()}

@@ -192,6 +192,40 @@ class TectoraProjectOrderLine(models.Model):
             })
         return result
 
+    def tectora_search_extra_products(self, term="", limit=20):
+        """Any purchasable product, to add to the part beyond what the
+        material list needs (the "+ Ander product" search of the order list
+        page); the supplier's own products first."""
+        self.ensure_one()
+        supplier_products = self.env["product.product"]
+        for info in self._tectora_supplier_infos():
+            supplier_products |= info.product_id or info.product_tmpl_id.product_variant_ids
+        domain = [("purchase_ok", "=", True)]
+        if term:
+            domain += ["|", "|", ("name", "ilike", term), ("default_code", "ilike", term),
+                       ("barcode", "ilike", term)]
+        Product = self.env["product.product"]
+        found = Product.search(domain + [("id", "in", supplier_products.ids)], limit=limit)
+        if len(found) < limit:
+            found |= Product.search(
+                domain + [("id", "not in", found.ids)], limit=limit - len(found)
+            )
+        company = self.company_id or self.env.company
+        return [{
+            "id": product.id,
+            "name": product.display_name,
+            "code": "",
+            "uom": product.uom_id.name or "",
+            "quantity": 1.0,
+            "selected": True,
+            "needed": False,
+            "extra": True,
+            "from_supplier": product in supplier_products,
+            "free_qty": (
+                product.with_company(company).free_qty if product.is_storable else False
+            ),
+        } for product in found]
+
     def _tectora_set_products(self, products):
         """Puts the selected products on the part, with their quantity, and
         returns their product lines. Other products on the part stay."""

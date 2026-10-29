@@ -58,6 +58,35 @@
         </div>
     </t>
 
+    <!-- Under a part's product list: "+ Ander product" adds any purchasable
+         product beyond what the material list needs (the supplier's first). -->
+    <t t-name="tectora_project_order_list.OrderBoardExtraProducts">
+        <div t-if="!panel.loading" class="o_tectora_products_extra mt-2">
+            <button class="btn btn-sm btn-link p-0" t-on-click="() => this.toggleExtra(panel)">
+                <i class="oi me-1" t-att-data-icon="panel.extra.open ? 'remove' : 'add'"/>Ander product toevoegen
+            </button>
+            <div t-if="panel.extra.open" class="mt-1">
+                <input type="search" class="form-control form-control-sm o_tectora_products_search"
+                       placeholder="Zoek een product (naam, referentie)…"
+                       t-att-value="panel.extra.term"
+                       t-on-input="(ev) => this.onExtraInput(panel, ev)"/>
+                <div t-if="panel.extra.loading" class="text-muted small mt-1">Zoeken…</div>
+                <ul t-elif="panel.extra.results.length" class="list-unstyled mb-0 mt-1 o_tectora_products_list">
+                    <li t-foreach="panel.extra.results" t-as="result" t-key="result.id"
+                        class="d-flex align-items-center gap-2 o_tectora_product_name"
+                        title="Toevoegen aan de lijst"
+                        t-on-click="() => this.addExtra(panel, result)">
+                        <i class="oi text-primary" data-icon="add_circle"/>
+                        <span class="flex-grow-1" t-out="result.name"/>
+                        <span t-if="result.from_supplier" class="badge text-bg-light border">leverancier</span>
+                        <span class="small text-muted" t-out="result.uom"/>
+                    </li>
+                </ul>
+                <div t-else="" class="text-muted small mt-1">Geen producten gevonden.</div>
+            </div>
+        </div>
+    </t>
+
     <!-- Order list page -->
     <t t-name="tectora_project_order_list.OrderBoard">
         <div class="o_action o_tectora_order_board">
@@ -223,6 +252,7 @@
                                                         </ul>
                                                         <div t-if="!this.visibleProducts(panel).length" class="text-muted small">Geen producten voor deze zoekterm.</div>
                                                     </t>
+                                                    <t t-call="tectora_project_order_list.OrderBoardExtraProducts"/>
                                                 </div>
                                             </td>
                                         </tr>

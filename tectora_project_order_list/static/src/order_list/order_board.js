@@ -91,7 +91,14 @@ export class TectoraOrderBoard extends Component {
     }
 
     async loadProducts(line) {
-        this.state.products[line.id] = { open: true, loading: true, items: [], search: "" };
+        this.state.products[line.id] = {
+            open: true,
+            loading: true,
+            items: [],
+            search: "",
+            // "+ Ander product": products beyond the material list.
+            extra: { open: false, term: "", results: [], loading: false },
+        };
         const panel = this.state.products[line.id];
         const items = await this.board.orm.call(
             "tectora.project.order.line",
@@ -131,6 +138,49 @@ export class TectoraOrderBoard extends Component {
         return panel.items.filter((item) =>
             `${item.name} ${item.code}`.toLowerCase().includes(search)
         );
+    }
+
+    // ------------------------------------------------- other products
+
+    toggleExtra(panel) {
+        panel.extra.open = !panel.extra.open;
+        if (panel.extra.open && !panel.extra.results.length) {
+            return this.searchExtra(panel, "");
+        }
+    }
+
+    async searchExtra(panel, term) {
+        panel.extra.term = term;
+        const line = this.state.data.lines.find(
+            (candidate) => this.state.products[candidate.id] === panel
+        );
+        if (!line) {
+            return;
+        }
+        panel.extra.loading = true;
+        const results = await this.board.orm.call(
+            "tectora.project.order.line",
+            "tectora_search_extra_products",
+            [[line.id], term]
+        );
+        // Only the answer to the last search counts.
+        if (panel.extra.term !== term) {
+            return;
+        }
+        const listed = new Set(panel.items.map((item) => item.id));
+        panel.extra.results = results.filter((item) => !listed.has(item.id));
+        panel.extra.loading = false;
+    }
+
+    onExtraInput(panel, ev) {
+        const term = ev.target.value;
+        clearTimeout(this.extraTimer);
+        this.extraTimer = setTimeout(() => this.searchExtra(panel, term), 250);
+    }
+
+    addExtra(panel, item) {
+        panel.items.unshift(item);
+        panel.extra.results = panel.extra.results.filter((result) => result.id !== item.id);
     }
 
     toggleProduct(item) {
