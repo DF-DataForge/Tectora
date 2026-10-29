@@ -177,3 +177,28 @@ Releases and the modules they need upgraded:
 | Kop- en voetteksten: eigen kop per pagina, pagina's verkleinen | `tectora_quote_builder` (20.0.1.3.0) |
 | Afmetingen hercalculatie in mm; hercalculatie aanzetten vanuit een component | `tectora_roof` (20.0.3.46.0) |
 | Hercalculatie: veiligheidsmarge; stuklijstlijnen in de Reken-UoM | `tectora_roof` (20.0.3.47.0), `tectora_sale_bom` (20.0.1.3.0) |
+| Planning per ploeg: grotere planningsblokken | `tectora_roof_planning` (20.0.1.11.0) |
+| Planning: filter en groepering op afdeling | `tectora_roof` (20.0.3.49.0) |
+| Planning per ploeg: kleur per projecttype, status zichtbaar, korter label | `tectora_roof` (20.0.3.50.0), `tectora_roof_planning` (20.0.1.12.0) |
+| Planning per ploeg: kleur weer per project | `tectora_roof` (20.0.3.51.0), `tectora_roof_planning` (20.0.1.13.0) |
+| Bestellijst: producten van de leverancier kiezen en bestellen | `tectora_project_order_list` (20.0.1.2.0) |
+| Planning per ploeg: projecttype terug op het label | `tectora_roof` (20.0.3.52.0) |
+| Contacttype op Contacten (new module) | install `tectora_contact_type` (20.0.1.0.0) by hand from Apps (or `-i tectora_contact_type`): it is not installed by a deploy or an upgrade, so serving the code can never take the instance down on a missing `res_partner` column |
+| Planning-app: diensten gekleurd per dakproject | `tectora_roof_planning` (20.0.1.14.0) |
+| Geschatte uitvoeringstijd niet meer op de offerte-PDF | `tectora_roof` (20.0.3.53.0) |
+| Kop- en voetteksten offerte: eigen band langs de dakrand weggeknipt | `tectora_quote_builder` (20.0.1.4.0), `tectora_report_layout` (20.0.1.5.0) |
+| Briefpapier: voetband van de lay-out weer zichtbaar in de PDF | `tectora_report_layout` (20.0.1.6.0) |
+| Kop- en voetteksten offerte: weer recht afgeknipt (geen witte strook, geen afgesneden tekst); briefpapier zonder paginanummer | `tectora_quote_builder` (20.0.1.5.0), `tectora_report_layout` (20.0.1.7.0) |
+| Offertelijnen: uren afbraak en opbouw samen in één kolom | `tectora_roof` (20.0.3.54.0) |
+| Offerte-PDF sneller: lay-outkader hergebruikt, voorpagina in één doorgang | `tectora_quote_builder` (20.0.1.6.0) |
+| Offerte-PDF: prijs excl. en incl. btw, ook per sectie | `tectora_roof` (20.0.3.55.0) |
+| Planning per ploeg: blokken echt 3× hoger in Odoo 20 | `tectora_roof_planning` (20.0.1.15.0) |
+| Projectoverzicht als startpagina van de Project-app | `tectora_roof` (20.0.3.56.0), `tectora_project_tasks` (20.0.1.2.0), `tectora_project_order_list` (20.0.1.3.0) |
+| Weersvoorspelling (Open-Meteo) op de werkblokken en in de ploegplanner, dagelijks en met "Weer vernieuwen" | `tectora_roof_planning` (20.0.1.16.0) |
+| Fix "Weer vernieuwen" op het formulier van een werkblok | `tectora_roof_planning` (20.0.1.17.0) |
+| Planning per ploeg: rijen blijven hoog bij laden en slepen | `tectora_roof_planning` (20.0.1.18.0) |
+| Stuklijst op maat: stuks, extra marge per lijn, kostprijs per stuk | `tectora_roof` (20.0.3.57.0), `tectora_sale_bom` (20.0.1.4.0) |
+| Stuklijst op maat: geen validatiefout meer via het open-knopje van een component | `tectora_sale_bom` (20.0.1.5.0) |
+| Planning per ploeg: week-weergave en scrollen werken weer (geen stijl-observer meer) | `tectora_roof_planning` (20.0.1.19.0) |
+| Materiaallijst: één lijn per product (opgeteld over de orderlijnen, stuks afgerond op het totaal) | `tectora_roof` (20.0.3.58.0) |
+| Bestellijst: productkeuze uit de materiaallijst, "Ander product toevoegen", reeds besteld apart, leveren vanuit stock | `tectora_project_order_list` (20.0.1.6.0) |

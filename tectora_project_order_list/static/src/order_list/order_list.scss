@@ -57,3 +57,42 @@
         }
     }
 }
+
+// The product list under an order list line: the supplier's products to tick
+// for the request for quotation.
+.o_tectora_order_board .o_tectora_order_table {
+    tr.o_tectora_products_row > td {
+        border-top: 0;
+        padding-top: 0;
+    }
+    .o_tectora_products {
+        background-color: $body-bg;
+    }
+    .o_tectora_products_search {
+        max-width: 16rem;
+    }
+    .o_tectora_products_list {
+        max-height: 18rem;
+        overflow-y: auto;
+        li {
+            padding: 0.2rem 0.25rem;
+            border-bottom: 1px solid $border-color;
+            &:last-child {
+                border-bottom: 0;
+            }
+            &.o_tectora_product_selected {
+                background-color: rgba($o-brand-primary, 0.06);
+            }
+        }
+    }
+    .o_tectora_product_name {
+        cursor: pointer;
+    }
+    input.o_tectora_product_qty {
+        width: 6rem;
+        min-width: 0;
+    }
+    .o_tectora_product_uom {
+        width: 4rem;
+    }
+}

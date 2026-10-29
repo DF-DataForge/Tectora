@@ -18,7 +18,10 @@ from an empty list of standard parts.
   Bestellijst importeren, with the list to download).
 * Per project: tick a part off, choose the supplier, the order date and the
   expected delivery date, add the products needed, and create the request for
-  quotation in one click. "Stock eerst" orders only what the free stock does
+  quotation in one click. On the order list page, "Producten" under a part
+  lists the products its supplier delivers (their supplier prices): tick
+  them, set the quantity, and "Bestellen" puts exactly those on the request
+  for quotation. "Stock eerst" orders only what the free stock does
   not cover. The purchase order carries the project (and so its analytic
   account) and the order list line; the line's status follows it
   (te bestellen, uit stock, prijsaanvraag, besteld, ontvangen, afgevinkt) and
@@ -31,7 +34,7 @@ from an empty list of standard parts.
 * Dakmeting -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
     """,
-    "version": "20.0.1.1.0",
+    "version": "20.0.1.6.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",

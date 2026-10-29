@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The number and status of the old project on the roof project. -->
+    <record id="view_tectora_roof_project_form_legacy" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form.legacy</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <div invisible="not tectora_legacy_project_number" class="text-muted">
+                    Oud systeem: project
+                    <field name="tectora_legacy_project_number" class="oe_inline"/>
+                    — <field name="tectora_legacy_project_status" class="oe_inline"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_search_legacy" model="ir.ui.view">
+        <field name="name">tectora.roof.project.search.legacy</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="tectora_legacy_project_number"/>
+            </xpath>
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Uit oud systeem" name="tectora_legacy_project"
+                        domain="[('tectora_legacy_project_number', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Which team(s) a responsible of the old system is. -->
+    <record id="view_tectora_project_import_team_list" model="ir.ui.view">
+        <field name="name">tectora.project.import.team.list</field>
+        <field name="model">tectora.project.import.team</field>
+        <field name="arch" type="xml">
+            <list string="Ploegen projectimport" editable="bottom">
+                <field name="name"/>
+                <field name="team_ids" widget="many2many_tags" placeholder="Geen ploeg"/>
+                <field name="project_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_tectora_project_import_team" model="ir.actions.act_window">
+        <field name="name">Ploegen projectimport</field>
+        <field name="res_model">tectora.project.import.team</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen verantwoordelijken</p>
+            <p>De projectimport vult deze lijst met de verantwoordelijken van het
+               oude systeem en de ploeg die ze zijn; verbeter de ploeg hier en
+               importeer opnieuw.</p>
+        </field>
+    </record>
+
+    <!-- The wizard. -->
+    <record id="view_tectora_project_import_form" model="ir.ui.view">
+        <field name="name">tectora.project.import.form</field>
+        <field name="model">tectora.project.import</field>
+        <field name="arch" type="xml">
+            <form string="Projecten importeren">
+                <div invisible="state == 'done'">
+                    <div class="alert alert-info" role="alert">
+                        Laad de projectenexport van het oude systeem (.xlsx) op, <b>na de
+                        offertes</b>. Elk project wordt gekoppeld aan de geïmporteerde
+                        order(s) van dezelfde klant waarvan het totaal gelijk is aan
+                        <i>totaal offertes ex BTW</i>; het dakproject en het project
+                        krijgen het projectnummer, de status, het werfadres, de deadline
+                        en de <b>ploeg</b> (<i>verantwoordelijke gebruiker</i>, zie
+                        Ploegen projectimport). De import loopt op de achtergrond.
+                    </div>
+                    <group>
+                        <group string="Bestand">
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="sheet_name" placeholder="bv. Export Simpla"/>
+                            <field name="dry_run"/>
+                        </group>
+                        <group string="Opties">
+                            <field name="existing_mode"/>
+                            <field name="plan_projects"/>
+                            <field name="create_missing_teams"/>
+                        </group>
+                    </group>
+                    <field name="state" invisible="1"/>
+                </div>
+                <div invisible="state != 'done'">
+                    <div class="alert alert-success" role="alert">
+                        <b>Het bestand is gecontroleerd.</b> Vink 'Testrun' uit en
+                        importeer om de projecten te koppelen.
+                    </div>
+                    <field name="summary" nolabel="1" readonly="1"
+                           widget="text" class="o_field_text"/>
+                </div>
+                <footer>
+                    <button name="action_import" type="object" string="Importeren / controleren"
+                            class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-secondary" invisible="state == 'done'"/>
+                    <button string="Sluiten" special="cancel"
+                            class="btn-primary" invisible="state != 'done'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tectora_project_import" model="ir.actions.act_window">
+        <field name="name">Projecten importeren</field>
+        <field name="res_model">tectora.project.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_tectora_project_import_form"/>
+    </record>
+
+    <menuitem id="menu_tectora_project_import"
+              name="Projecten importeren (oud systeem)"
+              parent="sale.menu_sale_config"
+              action="action_tectora_project_import"
+              groups="sales_team.group_sale_manager"
+              sequence="96"/>
+
+    <menuitem id="menu_tectora_project_import_team"
+              name="Ploegen projectimport"
+              parent="sale.menu_sale_config"
+              action="action_tectora_project_import_team"
+              groups="sales_team.group_sale_manager"
+              sequence="99"/>
+
+</odoo>

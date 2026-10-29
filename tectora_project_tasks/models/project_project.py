@@ -278,3 +278,34 @@ class ProjectProject(models.Model):
                 lambda t: t.date_deadline and t.date_deadline.date() < today
             )),
         }
+
+    # ---------------------------------------------------------------- overview
+    @api.model
+    def _tectora_overview_sections(self, active):
+        """The projects overview: the open projects per phase of their task
+        follow-up, each phase opening its projects."""
+        sections = super()._tectora_overview_sections(active)
+        followed = active.filtered("tectora_task_phases")
+        if not followed:
+            return sections
+        items = []
+        for phase in self.env["tectora.project.phase"].search([]):
+            projects = followed.filtered(lambda project: project.tectora_phase_id == phase)
+            items.append({
+                "label": phase.name,
+                "value": len(projects),
+                "ids": projects.ids,
+                "help": phase.subtitle or "",
+                "tone": "primary",
+            })
+        without = followed.filtered(lambda project: not project.tectora_phase_id)
+        if without:
+            items.append({
+                "label": self.env._("Zonder fase"),
+                "value": len(without),
+                "ids": without.ids,
+                "help": "",
+                "tone": "neutral",
+            })
+        sections.append({"key": "phases", "title": self.env._("Projecten per fase"), "items": items})
+        return sections

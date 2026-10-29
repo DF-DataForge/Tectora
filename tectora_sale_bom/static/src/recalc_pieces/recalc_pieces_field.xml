@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_sale_bom.RecalcPiecesField">
+        <span t-att-title="this.title or undefined"
+              t-att-class="'text-nowrap' + (this.title ? ' o_tectora_recalc_pieces_hint' : '')">
+            <t t-out="this.value"/>
+            <span t-if="this.unit" class="text-muted ms-1" t-out="this.unit"/>
+        </span>
+    </t>
+
+</templates>

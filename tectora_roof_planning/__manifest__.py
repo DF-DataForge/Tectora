@@ -29,19 +29,35 @@ roof project. Ploegen themselves move from Dakmeting to
 Planning -> Configuratie, since that is where they are used. Uninstalling puts
 the app's own default planner and the Ploegen menu back.
 
+In the Planning app's own planners (per resource and the others) a shift
+takes the colour of its roof project, so all shifts of one site share it;
+shifts without a roof project keep their own colour.
+
+Weather forecasts from Open-Meteo (no API key) on the work blocks: a
+scheduled action fetches every morning the daily forecast of the next 16
+days for every site with a work block in that period and keeps it; each block
+gets the worst day's weather (icon, temperatures, rain, wind gusts) in its
+label in the team planner and in its summary, day by day, with a warning when
+the weather is no good for roofing work (rain, snow, thunder, gusts from
+50 km/h, below 5 °C). "Weer vernieuwen" on the planner, and on the blocks'
+list and form, fetches it at once. The site is located by the roof project's
+satellite image, else its municipality (Open-Meteo geocoding, kept).
+
 The project dashboard of Dakmeting lists the employees' shifts on its
 Planning tab and its planning card opens the resource planner on them.
 
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "20.0.1.10.0",
+    "version": "20.0.1.19.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
     "depends": ["tectora_roof", "planning"],
     "data": [
+        "security/ir.access.csv",
+        "data/weather_data.xml",
         "views/planning_slot_views.xml",
         "views/roof_planning_views.xml",
         "views/project_project_views.xml",
@@ -49,6 +65,7 @@ installed.
     "assets": {
         "web.assets_backend": [
             "tectora_roof_planning/static/src/team_gantt/team_gantt.scss",
+            "tectora_roof_planning/static/src/team_gantt/team_gantt.xml",
             "tectora_roof_planning/static/src/team_gantt/team_gantt.js",
         ],
     },

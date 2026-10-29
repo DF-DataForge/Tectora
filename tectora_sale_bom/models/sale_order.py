@@ -27,10 +27,16 @@ class SaleOrder(models.Model):
                 continue
             kit = kits.get(component.product_id)
             if not kit:
+                # The line's extra margin, as the bill of materials shows it:
+                # in the pieces of a component with hercalculatie, on the
+                # quantity of any other.
+                margin = component.extra_margin or 0.0
+                if not component.product_id.tectora_recalc:
+                    quantity *= 1.0 + margin / 100.0
                 values.append(
                     self._tectora_component_values(
                         line, component.product_id, quantity,
-                        component.product_uom_id, name,
+                        component.product_uom_id, name, margin=margin,
                     )
                 )
                 continue
