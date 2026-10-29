@@ -70,7 +70,7 @@ along as a second PDF whenever the order is mailed to the vendor.
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "20.0.1.5.0",
+    "version": "20.0.1.6.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",

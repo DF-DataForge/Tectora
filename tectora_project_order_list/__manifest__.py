@@ -34,7 +34,7 @@ from an empty list of standard parts.
 * Dakmeting -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
     """,
-    "version": "20.0.1.8.0",
+    "version": "20.0.1.9.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -47,6 +47,7 @@ from an empty list of standard parts.
         "views/purchase_order_views.xml",
         "views/task_template_views.xml",
         "views/project_project_views.xml",
+        "views/roof_material_views.xml",
         "wizard/order_list_import_views.xml",
         "views/menus.xml",
     ],

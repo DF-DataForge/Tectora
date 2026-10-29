@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The material list follows the order list: per product where its
+         order or its delivery from the warehouse stands (roof_material.py). -->
+    <record id="view_tectora_roof_material_list_order_list" model="ir.ui.view">
+        <field name="name">tectora.roof.material.list.order.list</field>
+        <field name="model">tectora.roof.material</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_material_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_uom_id']" position="after">
+                <field name="order_list_state" widget="badge" optional="show"
+                       decoration-muted="order_list_state in ('none', 'to_order')"
+                       decoration-warning="order_list_state in ('rfq', 'stock_waiting')"
+                       decoration-info="order_list_state in ('ordered', 'stock_reserved')"
+                       decoration-success="order_list_state in ('received', 'stock_done')"/>
+                <field name="order_list_info" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_project_form_order_list" model="ir.ui.view">
+        <field name="name">tectora.roof.project.form.order.list</field>
+        <field name="model">tectora.roof.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_project_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='material_line_ids']/list/field[@name='product_uom_id']" position="after">
+                <field name="order_list_state" widget="badge" optional="show" readonly="1"
+                       decoration-muted="order_list_state in ('none', 'to_order')"
+                       decoration-warning="order_list_state in ('rfq', 'stock_waiting')"
+                       decoration-info="order_list_state in ('ordered', 'stock_reserved')"
+                       decoration-success="order_list_state in ('received', 'stock_done')"/>
+                <field name="order_list_info" optional="show" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_project_project_tectora_dashboard_order_list_materials" model="ir.ui.view">
+        <field name="name">project.project.tectora.dashboard.order.list.materials</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="tectora_roof.view_project_project_tectora_dashboard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='roof_material_line_ids']/list/field[@name='product_uom_id']" position="after">
+                <field name="order_list_state" widget="badge" optional="show"
+                       decoration-muted="order_list_state in ('none', 'to_order')"
+                       decoration-warning="order_list_state in ('rfq', 'stock_waiting')"
+                       decoration-info="order_list_state in ('ordered', 'stock_reserved')"
+                       decoration-success="order_list_state in ('received', 'stock_done')"/>
+                <field name="order_list_info" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

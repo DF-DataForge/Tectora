@@ -185,6 +185,13 @@ class TestOrderList(TransactionCase):
         })
         stock = self.env.ref("stock.stock_location_stock")
         self.env["stock.quant"]._update_available_quantity(screws, stock, 10)
+        roof = self.env["tectora.roof.project"].create({"name": "Werf", "project_id": project.id})
+        Material = self.env["tectora.roof.material"]
+        epdm_need, screws_need = Material.create([
+            {"project_id": roof.id, "product_id": self.product.id, "quantity": 5.0},
+            {"project_id": roof.id, "product_id": screws.id, "quantity": 10.0},
+        ])
+        self.assertEqual(epdm_need.order_list_state, "none")
 
         # Ordered: set apart under its purchase order.
         action = line.action_tectora_create_purchase(
@@ -213,6 +220,18 @@ class TestOrderList(TransactionCase):
         # A second delivery from stock goes on the same open delivery.
         line.action_tectora_deliver_from_stock([{"product_id": screws.id, "quantity": 2}])
         self.assertEqual(len(picking.move_ids), 2)
+
+        # The material list follows the order list, per product.
+        (epdm_need | screws_need).invalidate_recordset()
+        self.assertEqual(epdm_need.order_list_state, "rfq")
+        self.assertIn(purchase.name, epdm_need.order_list_info)
+        self.assertEqual(screws_need.order_list_state, "stock_reserved")
+        self.assertEqual(screws_need.order_list_covered_qty, 6.0)
+        self.assertIn("deels: 6", screws_need.order_list_info)
+        self.assertIn(picking.name, screws_need.order_list_info)
+        purchase.button_confirm()
+        epdm_need.invalidate_recordset()
+        self.assertEqual(epdm_need.order_list_state, "ordered")
         service = self.env["product.product"].create({
             "name": "Kraanhuur", "type": "service", "purchase_ok": True,
         })
