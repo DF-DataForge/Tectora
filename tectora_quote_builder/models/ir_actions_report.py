@@ -30,6 +30,38 @@ MM = 72 / 25.4  # PDF points per millimetre
 FRAME_REPORT = "tectora_quote_builder.action_report_layout_frame"
 
 
+# The layout frames rendered so far, per database and company: the frame only
+# shows the layout's header and footer, so it is the same for every order of
+# a company until the company, its layout or its data change (see
+# _tectora_frame_key). Saves a wkhtmltopdf run on every print.
+FRAME_CACHE = {}
+FRAME_CACHE_SIZE = 16
+DECOMPRESS_CHUNK = 64 * 1024
+
+
+def _decompress_damaged(data):
+    """What can be read of a damaged stream, as pypdf does as a last resort
+    (byte by byte, skipping what does not decompress), but in chunks: only
+    a chunk that fails is read byte by byte, and the result is collected
+    once instead of copied at every byte."""
+    stream = zlib.decompressobj(zlib.MAX_WBITS | 32)
+    result = bytearray()
+    for start in range(0, len(data), DECOMPRESS_CHUNK):
+        chunk = data[start:start + DECOMPRESS_CHUNK]
+        saved = stream.copy()
+        try:
+            result += stream.decompress(chunk)
+            continue
+        except zlib.error:
+            stream = saved
+        for index in range(len(chunk)):
+            try:
+                result += stream.decompress(chunk[index:index + 1])
+            except zlib.error:
+                pass
+    return bytes(result)
+
+
 @contextlib.contextmanager
 def lenient_flate():
     """Decompress the page streams as pypdf itself does.
@@ -45,14 +77,7 @@ def lenient_flate():
         try:
             return strict(data)
         except zlib.error:
-            stream = zlib.decompressobj(zlib.MAX_WBITS | 32)
-            result = b""
-            for index in range(len(data)):
-                try:
-                    result += stream.decompress(data[index:index + 1])
-                except zlib.error:
-                    pass
-            return result
+            return _decompress_damaged(data)
 
     pypdf.filters.decompress = decompress
     try:
@@ -103,14 +128,22 @@ class IrActionsReport(models.Model):
         )
         frame = quotation_document.tectora_in_layout and self._tectora_layout_frame(order)
         with lenient_flate():
-            if stamp:
+            if stamp and not frame:
                 content = self._tectora_stamp_customer_name(
                     content, order, quotation_document.tectora_customer_name_top
                 )
             if frame:
+                # One pass: the name is stamped on the first page while the
+                # pages are put in the frame, the PDF is read and written once.
+                stamp_first_page = stamp and (
+                    lambda page: self._tectora_stamp_page(
+                        page, order, quotation_document.tectora_customer_name_top
+                    )
+                )
                 content = self._tectora_put_in_frame(
                     content,
                     frame["pdf"],
+                    stamp_first_page=stamp_first_page or None,
                     crop_top=quotation_document.tectora_crop_top * MM,
                     crop_bottom=quotation_document.tectora_crop_bottom * MM,
                     crop_bottom_pages=quotation_document._tectora_crop_bottom_page_numbers(),
@@ -142,18 +175,47 @@ class IrActionsReport(models.Model):
         clean = self.with_env(self.env(context=context))
         try:
             report = clean.env.ref(FRAME_REPORT)
-            pdf, _report_type = clean._render_qweb_pdf(report, order.ids)
-            paperformat = report.get_paperformat()
-            frame = {
-                "pdf": pdf,
-                "margin_top": (paperformat.margin_top or 0) * MM,
-                "margin_bottom": (paperformat.margin_bottom or 0) * MM,
-            }
+            key = clean._tectora_frame_key(report, order)
+            frame = FRAME_CACHE.get(key)
+            if frame is None:
+                pdf, _report_type = clean._render_qweb_pdf(report, order.ids)
+                paperformat = report.get_paperformat()
+                frame = {
+                    "pdf": pdf,
+                    "margin_top": (paperformat.margin_top or 0) * MM,
+                    "margin_bottom": (paperformat.margin_bottom or 0) * MM,
+                }
+                if len(FRAME_CACHE) >= FRAME_CACHE_SIZE:
+                    FRAME_CACHE.pop(next(iter(FRAME_CACHE)))
+                FRAME_CACHE[key] = frame
         except Exception:
             _logger.exception("Lay-outkader voor offerte %s kon niet gemaakt worden", order.name)
         if frames is not None:
             frames[order.id] = frame
         return frame
+
+    @api.model
+    def _tectora_frame_key(self, report, order):
+        """What the layout frame depends on: the company with its layout,
+        logo, colours and footer data (its partner and bank accounts), the
+        paper format, the language, and the views (a module upgrade loads a
+        new registry). Not the order: the frame shows no recipient or title."""
+        company = order.company_id or self.env.company
+        partner = company.partner_id
+        paperformat = report.get_paperformat()
+        return (
+            self.env.cr.dbname,
+            getattr(self.env.registry, "registry_sequence", None),
+            company.id,
+            str(company.write_date),
+            str(partner.write_date),
+            tuple(sorted(str(bank.write_date) for bank in partner.bank_ids)),
+            company.external_report_layout_id.id,
+            paperformat.id,
+            str(paperformat.write_date),
+            str(report.write_date),
+            self.env.context.get("lang") or self.env.lang,
+        )
 
     @api.model
     def _tectora_stamp_customer_name(self, content, order, top_mm):
@@ -165,25 +227,30 @@ class IrActionsReport(models.Model):
         writer = PdfFileWriter()
         for index, page in enumerate(reader.pages):
             if index == 0:
-                box = page.mediabox
-                width, height = float(box.width), float(box.height)
-                overlay = io.BytesIO()
-                pdf = canvas.Canvas(overlay, pagesize=(width, height))
-                pdf.setFillColor(HexColor(order.company_id.primary_color or "#008B93"))
-                pdf.setFont("Helvetica-Bold", 20)
-                name = order.partner_id._tectora_name_with_title()
-                pdf.drawCentredString(width / 2, height - top_mm * MM, name)
-                site = self._tectora_site_address(order)
-                if site:
-                    pdf.setFont("Helvetica", 12)
-                    pdf.drawCentredString(width / 2, height - (top_mm + 8) * MM, f"Werfadres: {site}")
-                pdf.save()
-                stamp = PdfFileReader(io.BytesIO(overlay.getvalue())).pages[0]
-                page.merge_transformed_page(
-                    stamp, Transformation().translate(float(box.left), float(box.bottom))
-                )
+                self._tectora_stamp_page(page, order, top_mm)
             writer.add_page(page)
         return self._tectora_pdf_bytes(writer)
+
+    @api.model
+    def _tectora_stamp_page(self, page, order, top_mm):
+        """Stamps the customer's name and the site on `page` (in place)."""
+        box = page.mediabox
+        width, height = float(box.width), float(box.height)
+        overlay = io.BytesIO()
+        pdf = canvas.Canvas(overlay, pagesize=(width, height))
+        pdf.setFillColor(HexColor(order.company_id.primary_color or "#008B93"))
+        pdf.setFont("Helvetica-Bold", 20)
+        name = order.partner_id._tectora_name_with_title()
+        pdf.drawCentredString(width / 2, height - top_mm * MM, name)
+        site = self._tectora_site_address(order)
+        if site:
+            pdf.setFont("Helvetica", 12)
+            pdf.drawCentredString(width / 2, height - (top_mm + 8) * MM, f"Werfadres: {site}")
+        pdf.save()
+        stamp = PdfFileReader(io.BytesIO(overlay.getvalue())).pages[0]
+        page.merge_transformed_page(
+            stamp, Transformation().translate(float(box.left), float(box.bottom))
+        )
 
     @api.model
     def _tectora_site_address(self, order):
@@ -197,6 +264,7 @@ class IrActionsReport(models.Model):
     def _tectora_put_in_frame(
         self, content, frame_pdf, crop_top, crop_bottom, crop_bottom_pages=None,
         crop_top_pages=None, fit_pages=(), body_top=0.0, body_bottom=0.0,
+        stamp_first_page=None,
     ):
         """Every page of `content` with the frame (the header and footer of
         the document layout) on top, without `crop_top` and `crop_bottom`
@@ -207,16 +275,19 @@ class IrActionsReport(models.Model):
         edge) is scaled down to fit between `body_top` and `body_bottom`
         points, the space between the layout's header and footer. Page
         numbers are 1-based; `crop_top_pages` / `crop_bottom_pages`: the
-        pages with a band of their own, None for all.
+        pages with a band of their own, None for all. `stamp_first_page`:
+        called with the first page before it is framed (the customer's name).
         """
         reader = PdfFileReader(io.BytesIO(content), strict=False)
         writer = PdfFileWriter()
+        frame_page = PdfFileReader(io.BytesIO(frame_pdf), strict=False).pages[0]
         for number, page in enumerate(reader.pages, start=1):
+            if number == 1 and stamp_first_page:
+                stamp_first_page(page)
             page_crop_top = crop_top if crop_top_pages is None or number in crop_top_pages else 0.0
             page_crop_bottom = (
                 crop_bottom if crop_bottom_pages is None or number in crop_bottom_pages else 0.0
             )
-            frame_page = PdfFileReader(io.BytesIO(frame_pdf), strict=False).pages[0]
             frame_width = float(frame_page.mediabox.width)
             frame_height = float(frame_page.mediabox.height)
             box = page.mediabox

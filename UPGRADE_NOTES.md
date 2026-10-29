@@ -190,3 +190,4 @@ Releases and the modules they need upgraded:
 | Briefpapier: voetband van de lay-out weer zichtbaar in de PDF | `tectora_report_layout` (20.0.1.6.0) |
 | Kop- en voetteksten offerte: weer recht afgeknipt (geen witte strook, geen afgesneden tekst); briefpapier zonder paginanummer | `tectora_quote_builder` (20.0.1.5.0), `tectora_report_layout` (20.0.1.7.0) |
 | Offertelijnen: uren afbraak en opbouw samen in één kolom | `tectora_roof` (20.0.3.54.0) |
+| Offerte-PDF sneller: lay-outkader hergebruikt, voorpagina in één doorgang | `tectora_quote_builder` (20.0.1.6.0) |
