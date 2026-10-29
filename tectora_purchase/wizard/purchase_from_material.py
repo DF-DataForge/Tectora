@@ -367,12 +367,37 @@ class TectoraPurchaseFromMaterial(models.TransientModel):
             accounts[project] = account
         return accounts
 
+    def _open_purchase_order(self, vendor, route, company, lines):
+        """The open request for quotation of the one project of ``lines`` at
+        ``vendor`` with the same operation (one purchase order per vendor and
+        project), or None. Orders for several sites are always new ones."""
+        projects = lines.project_id
+        if len(projects) != 1:
+            return None
+        picking_type = route._picking_type_for_company(company)
+        PurchaseOrder = self.env["purchase.order"].with_company(company)
+        project_domain = [("tectora_roof_project_id", "=", projects.id)]
+        if projects.project_id and "project_id" in PurchaseOrder._fields:
+            # Also the ones made from the project's order list.
+            project_domain = ["|", ("project_id", "=", projects.project_id.id)] + project_domain
+        order = PurchaseOrder.search(project_domain + [
+            ("partner_id", "child_of", vendor.commercial_partner_id.id),
+            ("company_id", "=", company.id),
+            ("picking_type_id", "=", picking_type.id),
+            ("state", "in", ("draft", "sent", "to approve")),
+        ], order="id", limit=1)
+        return order or None
+
     def _create_purchase_order(self, vendor, route, company, lines):
         PurchaseOrder = self.env["purchase.order"].with_company(company)
         PurchaseLine = self.env["purchase.order.line"].with_company(company)
-        order = PurchaseOrder.create(
-            self._purchase_order_values(vendor, route, company, lines)
-        )
+        # One purchase order per vendor and project: an open request for
+        # quotation of the site takes the lines.
+        order = self._open_purchase_order(vendor, route, company, lines)
+        if not order:
+            order = PurchaseOrder.create(
+                self._purchase_order_values(vendor, route, company, lines)
+            )
         accounts = self._analytic_accounts(lines.project_id)
 
         # One order line per project, product and unit: the same material
@@ -386,9 +411,15 @@ class TectoraPurchaseFromMaterial(models.TransientModel):
 
         projects = lines.project_id.sorted(lambda p: (p.planned_date_begin or fields.Datetime.now(), p.code or ""))
         with_sections = route.delivery_type != "dropship"
-        sequence = 10
+        # After what an order taken up again already has.
+        sequence = max([10] + [line.sequence + 1 for line in order.order_line])
+        section_names = order.order_line.filtered(
+            lambda l: l.display_type == "line_section"
+        ).mapped("name")
         for project in projects:
-            if with_sections:
+            label = self._project_label(project)
+            # A site gets its section once, also on an order taken up again.
+            if with_sections and not any((name or "").startswith(label) for name in section_names):
                 # The vendor sees which lines belong to which site.
                 section = self._project_label(project)
                 if project.planned_date_begin:

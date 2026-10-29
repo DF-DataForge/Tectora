@@ -203,3 +203,4 @@ Releases and the modules they need upgraded:
 | Materiaallijst: één lijn per product (opgeteld over de orderlijnen, stuks afgerond op het totaal) | `tectora_roof` (20.0.3.58.0) |
 | Bestellijst: productkeuze uit de materiaallijst, "Ander product toevoegen", reeds besteld apart, leveren vanuit stock | `tectora_project_order_list` (20.0.1.6.0) |
 | Aankooporder vanuit een project: leveranciersreferentie = referentie van de werf | `tectora_roof` (20.0.3.59.0), `tectora_project_order_list` (20.0.1.7.0), `tectora_purchase` (20.0.1.4.0) |
+| Eén aankooporder per leverancier per project (bestellijst en materiaallijst) | `tectora_project_order_list` (20.0.1.8.0), `tectora_purchase` (20.0.1.5.0) |

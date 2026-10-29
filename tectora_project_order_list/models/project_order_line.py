@@ -40,6 +40,12 @@ class TectoraProjectOrderLine(models.Model):
     purchase_order_ids = fields.One2many(
         "purchase.order", "tectora_order_line_id", string="Inkooporders"
     )
+    tectora_purchase_ids = fields.Many2many(
+        "purchase.order", string="Inkooporders van dit onderdeel",
+        compute="_compute_tectora_purchase_ids",
+        help="De aankooporders met producten van dit onderdeel. Een project "
+        "heeft één aankooporder per leverancier, die de onderdelen delen.",
+    )
     purchase_count = fields.Integer(compute="_compute_status", string="# Inkooporders")
     status = fields.Selection(
         [
@@ -55,14 +61,21 @@ class TectoraProjectOrderLine(models.Model):
     )
     is_late = fields.Boolean(compute="_compute_status", string="Te laat")
 
+    @api.depends("purchase_order_ids", "product_line_ids.purchase_line_id")
+    def _compute_tectora_purchase_ids(self):
+        for line in self:
+            line.tectora_purchase_ids = (
+                line.purchase_order_ids | line.product_line_ids.purchase_line_id.order_id
+            )
+
     @api.depends(
-        "checked", "order_action", "expected_date", "purchase_order_ids.state",
-        "purchase_order_ids.receipt_status", "product_line_ids.shortage_qty",
+        "checked", "order_action", "expected_date", "tectora_purchase_ids.state",
+        "tectora_purchase_ids.receipt_status", "product_line_ids.shortage_qty",
     )
     def _compute_status(self):
         today = fields.Date.context_today(self)
         for line in self:
-            orders = line.purchase_order_ids.filtered(lambda po: po.state != "cancel")
+            orders = line.tectora_purchase_ids.filtered(lambda po: po.state != "cancel")
             line.purchase_count = len(orders)
             confirmed = orders.filtered(lambda po: po.state == "purchase")
             if line.checked:
@@ -230,12 +243,13 @@ class TectoraProjectOrderLine(models.Model):
                 "reference": order.name,
                 "state": states.get(order.state, order.state),
                 "tone": "success" if order.state == "purchase" else "warning",
+                # Per order line once: products ordered twice share it.
                 "lines": [{
-                    "id": pl.id,
-                    "name": pl.product_id.display_name,
-                    "quantity": round(pl.purchase_line_id.product_qty, 2),
-                    "uom": pl.purchase_line_id.uom_id.name or pl.uom_id.name or "",
-                } for pl in order_lines],
+                    "id": purchase_line.id,
+                    "name": purchase_line.product_id.display_name,
+                    "quantity": round(purchase_line.product_qty, 2),
+                    "uom": purchase_line.uom_id.name or "",
+                } for purchase_line in order_lines.purchase_line_id],
             })
         return groups
 
@@ -363,19 +377,30 @@ class TectoraProjectOrderLine(models.Model):
             raise UserError(self.env._(
                 "Alles voor '%s' is op voorraad: er moet niets besteld worden.", self.name
             ))
-        roof = self.project_id.roof_project_id
-        order = self.env["purchase.order"].create({
-            "partner_id": self.partner_id.id,
-            # The site's reference, for the vendor's confirmation and delivery.
-            "partner_ref": roof._tectora_vendor_reference() if roof else self.project_id.name,
-            "origin": f"{self.project_id.name} · {self.name}",
-            "project_id": self.project_id.id,
-            "tectora_order_line_id": self.id,
-            "order_line": line_values,
-        })
+        # One purchase order per vendor and project: the parts add their
+        # products to the open one.
+        order = self._tectora_open_purchase_order()
+        if order:
+            purchase_lines = order._tectora_add_order_list_lines(
+                [values for _command, _id, values in line_values]
+            )
+            if self.name not in (order.origin or ""):
+                order.origin = " · ".join(filter(None, [order.origin, self.name]))
+        else:
+            roof = self.project_id.roof_project_id
+            order = self.env["purchase.order"].create({
+                "partner_id": self.partner_id.id,
+                # The site's reference, for the vendor's confirmation and delivery.
+                "partner_ref": roof._tectora_vendor_reference() if roof else self.project_id.name,
+                "origin": f"{self.project_id.name} · {self.name}",
+                "project_id": self.project_id.id,
+                "tectora_order_line_id": self.id,
+                "order_line": line_values,
+            })
+            purchase_lines = order.order_line
         # The products are in order now: the order list page sets them apart.
         for product_line in product_lines:
-            purchase_line = order.order_line.filtered(
+            purchase_line = purchase_lines.filtered(
                 lambda pl: pl.product_id == product_line.product_id
             )[:1]
             if purchase_line:
@@ -393,6 +418,32 @@ class TectoraProjectOrderLine(models.Model):
             "views": [(False, "form")],
             "target": "current",
         }
+
+    def _tectora_open_purchase_order(self):
+        """The project's purchase order at this part's vendor that can still
+        take lines: a request for quotation, else a confirmed order that is
+        not locked. None when there is none."""
+        self.ensure_one()
+        PurchaseOrder = self.env["purchase.order"]
+        vendor = self.partner_id.commercial_partner_id
+        project_domain = [("project_id", "=", self.project_id.id)]
+        roof = self.project_id.roof_project_id
+        if roof and "tectora_roof_project_id" in PurchaseOrder._fields:
+            # Also the orders made from the material list (tectora_purchase).
+            project_domain = ["|", ("tectora_roof_project_id", "=", roof.id)] + project_domain
+        domain = project_domain + [
+            ("partner_id", "child_of", vendor.id),
+            ("company_id", "=", (self.company_id or self.env.company).id),
+        ]
+        order = PurchaseOrder.search(
+            domain + [("state", "in", ("draft", "sent", "to approve"))], order="id", limit=1
+        )
+        if not order:
+            confirmed = [("state", "=", "purchase")]
+            if "locked" in PurchaseOrder._fields:
+                confirmed.append(("locked", "=", False))
+            order = PurchaseOrder.search(domain + confirmed, order="id", limit=1)
+        return order or None
 
     def action_tectora_deliver_from_stock(self, products):
         """The selected products go from the warehouse to the site: they are
@@ -490,7 +541,7 @@ class TectoraProjectOrderLine(models.Model):
             "name": self.env._("Inkooporders · %s", self.name),
             "res_model": "purchase.order",
             "views": [(False, "list"), (False, "form")],
-            "domain": [("tectora_order_line_id", "=", self.id)],
+            "domain": [("id", "in", self.tectora_purchase_ids.ids)],
             "context": {
                 "default_tectora_order_line_id": self.id,
                 "default_project_id": self.project_id.id,
