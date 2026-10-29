@@ -28,9 +28,6 @@ _logger = logging.getLogger(__name__)
 
 MM = 72 / 25.4  # PDF points per millimetre
 FRAME_REPORT = "tectora_quote_builder.action_report_layout_frame"
-# How far under the lower edge of the layout's header a page is cut, so the
-# header's own line and its anti-aliasing never show the page beneath.
-CONTOUR_MARGIN_MM = 0.5
 
 
 @contextlib.contextmanager
@@ -121,7 +118,6 @@ class IrActionsReport(models.Model):
                     fit_pages=quotation_document._tectora_page_numbers("tectora_fit_pages") or (),
                     body_top=frame["margin_top"],
                     body_bottom=frame["margin_bottom"],
-                    header_contour=frame.get("contour"),
                 )
         return content
 
@@ -148,17 +144,10 @@ class IrActionsReport(models.Model):
             report = clean.env.ref(FRAME_REPORT)
             pdf, _report_type = clean._render_qweb_pdf(report, order.ids)
             paperformat = report.get_paperformat()
-            company = order.company_id or self.env.company
             frame = {
                 "pdf": pdf,
                 "margin_top": (paperformat.margin_top or 0) * MM,
                 "margin_bottom": (paperformat.margin_bottom or 0) * MM,
-                # The lower edge of the layout's header (tectora_report_layout),
-                # to cut the page's own band away along it.
-                "contour": (
-                    company._tectora_header_contour()
-                    if hasattr(company, "_tectora_header_contour") else None
-                ),
             }
         except Exception:
             _logger.exception("Lay-outkader voor offerte %s kon niet gemaakt worden", order.name)
@@ -208,7 +197,6 @@ class IrActionsReport(models.Model):
     def _tectora_put_in_frame(
         self, content, frame_pdf, crop_top, crop_bottom, crop_bottom_pages=None,
         crop_top_pages=None, fit_pages=(), body_top=0.0, body_bottom=0.0,
-        header_contour=None,
     ):
         """Every page of `content` with the frame (the header and footer of
         the document layout) on top, without `crop_top` and `crop_bottom`
@@ -220,14 +208,6 @@ class IrActionsReport(models.Model):
         points, the space between the layout's header and footer. Page
         numbers are 1-based; `crop_top_pages` / `crop_bottom_pages`: the
         pages with a band of their own, None for all.
-
-        `header_contour`: the lower edge of the layout's header, as points
-        (fraction of the width, mm from the top). A page whose own band is
-        left out is then cut along that edge (and at least `crop_top` deep),
-        not along a straight line: a header with a sloped side (the roof
-        edge) would otherwise leave a white wedge where the page was cut
-        higher than the header comes down, and a piece of the page's own
-        band where it was cut lower.
         """
         reader = PdfFileReader(io.BytesIO(content), strict=False)
         writer = PdfFileWriter()
@@ -245,26 +225,16 @@ class IrActionsReport(models.Model):
             top = float(box.top) - page_crop_top
             if top <= bottom:
                 bottom, top = float(box.bottom), float(box.top)
+            self._tectora_clip_page(page, left, bottom, width, top - bottom)
             body_height = frame_height - body_top - body_bottom
             if number in fit_pages and body_height > 0:
                 scale = min(frame_width / width, body_height / (top - bottom))
                 offset_x = (frame_width - width * scale) / 2 - left * scale
                 offset_y = frame_height - body_top - top * scale
-                outline = None
             else:
                 scale = frame_width / width
                 offset_x = -left * scale
                 offset_y = frame_height - float(box.top) * scale
-                outline = header_contour and page_crop_top and self._tectora_header_outline(
-                    header_contour, left, width, top,
-                    to_page_y=lambda mm: (frame_height - mm * MM - offset_y) / scale,
-                )
-            if outline:
-                self._tectora_clip_page_to(
-                    page, [(left, bottom), (left + width, bottom)] + outline[::-1]
-                )
-            else:
-                self._tectora_clip_page(page, left, bottom, width, top - bottom)
             sheet = PageObject.create_blank_page(width=frame_width, height=frame_height)
             sheet.merge_transformed_page(
                 page, Transformation().scale(scale, scale).translate(offset_x, offset_y)
@@ -276,50 +246,14 @@ class IrActionsReport(models.Model):
         return self._tectora_pdf_bytes(writer)
 
     @api.model
-    def _tectora_header_outline(self, contour, left, width, crop_y, to_page_y):
-        """The top side of what stays of a page under the layout's header, in
-        the page's own coordinates, from left to right: the header's lower
-        edge (`contour`, a little lower to cover its line), but never above
-        `crop_y` (the straight cut of the page's own band). `to_page_y` turns
-        millimetres from the top of the frame into the page's y."""
-        points = [
-            (left + fraction * width, to_page_y(mm + CONTOUR_MARGIN_MM))
-            for fraction, mm in sorted(contour)
-        ]
-        if len(points) < 2:
-            return None
-        outline = []
-        for (x1, y1), (x2, y2) in zip(points, points[1:]):
-            outline.append((x1, min(y1, crop_y)))
-            # Where the edge crosses the straight cut, both meet.
-            if (y1 - crop_y) * (y2 - crop_y) < 0:
-                x = x1 + (crop_y - y1) * (x2 - x1) / (y2 - y1)
-                outline.append((x, crop_y))
-        outline.append((points[-1][0], min(points[-1][1], crop_y)))
-        return outline
-
-    @api.model
     def _tectora_clip_page(self, page, x, y, width, height):
         """Only what lies within the rectangle is drawn of the page."""
-        self._tectora_clip_contents(page, b"%.3f %.3f %.3f %.3f re " % (x, y, width, height))
-
-    @api.model
-    def _tectora_clip_page_to(self, page, polygon):
-        """Only what lies within the polygon (page coordinates) is drawn of
-        the page."""
-        path = b"%.3f %.3f m " % polygon[0] + b"".join(
-            b"%.3f %.3f l " % point for point in polygon[1:]
-        )
-        self._tectora_clip_contents(page, path + b"h ")
-
-    @api.model
-    def _tectora_clip_contents(self, page, path):
-        """Only what lies within `path` (PDF path operators) is drawn of the
-        page."""
         contents = page.get_contents()
         data = contents.get_data() if contents is not None else b""
         clipped = ContentStream(None, None)
-        clipped.set_data(b"q " + path + b"W n\n" + data + b"\nQ\n")
+        clipped.set_data(
+            b"q %.3f %.3f %.3f %.3f re W n\n" % (x, y, width, height) + data + b"\nQ\n"
+        )
         page.replace_contents(clipped)
 
     @api.model

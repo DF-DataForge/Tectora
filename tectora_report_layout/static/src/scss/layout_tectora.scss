@@ -152,10 +152,6 @@ $o-tectora-lh-side: 8.65mm;
     .o_tectora_lh_accent {
         background-color: #ffffff;
     }
-
-    .o_tectora_lh_pager {
-        color: rgba(255, 255, 255, .75);
-    }
 }
 
 .o_tectora_lh_accent {
@@ -164,14 +160,6 @@ $o-tectora-lh-side: 8.65mm;
     right: 0;
     width: 10.6mm;
     height: .82mm;
-}
-
-.o_tectora_lh_pager {
-    position: absolute;
-    top: 3.25mm;
-    right: $o-tectora-lh-side;
-    font-size: 7pt;
-    color: #6c757d;
 }
 
 // The parties under the letterhead with the roof edge: the recipient's name
