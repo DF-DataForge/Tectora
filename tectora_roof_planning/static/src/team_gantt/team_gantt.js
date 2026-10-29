@@ -3,7 +3,7 @@
 import { registry } from "@web/core/registry";
 import { ganttView } from "@web_gantt/gantt_view";
 import { GanttRenderer } from "@web_gantt/gantt_renderer";
-import { onMounted, onPatched } from "@odoo/owl";
+import { onMounted, onPatched, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 // How much taller than the standard gantt the team planner's blocks are.
@@ -34,9 +34,19 @@ function ownValue(renderer, name) {
 }
 
 function setScaled(renderer, name, original, value) {
-    renderer.style.setProperty(name, value);
     const state = applied.get(renderer) || {};
-    state[name] = { original, value: renderer.style.getPropertyValue(name) };
+    const previous = state[name];
+    if (
+        previous &&
+        previous.original === original &&
+        previous.target === value &&
+        renderer.style.getPropertyValue(name) === previous.value
+    ) {
+        // Already so: setting it again would only trigger the observer.
+        return;
+    }
+    renderer.style.setProperty(name, value);
+    state[name] = { original, target: value, value: renderer.style.getPropertyValue(name) };
     applied.set(renderer, state);
 }
 
@@ -73,9 +83,16 @@ function enlargePills(root) {
         covered.has(parseInt(track, 10)) ? `[r${track}]${parseFloat(size) * PILL_SCALE}px` : whole
     );
     setScaled(renderer, ROWS_VAR, rows, scaled);
+    // The blocks' own height goes with their rows: scaled with them, back to
+    // the gantt's when no row is scaled (never one without the other).
     const pillHeight = ownValue(renderer, PILL_HEIGHT_VAR);
-    if (pillHeight && scaled !== rows) {
-        setScaled(renderer, PILL_HEIGHT_VAR, pillHeight, `${parseFloat(pillHeight) * PILL_SCALE}px`);
+    if (pillHeight) {
+        setScaled(
+            renderer,
+            PILL_HEIGHT_VAR,
+            pillHeight,
+            scaled !== rows ? `${parseFloat(pillHeight) * PILL_SCALE}px` : pillHeight
+        );
     }
     root.classList.toggle("o_tectora_tall", scaled !== rows);
 }
@@ -95,8 +112,37 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
                 enlargePills(el);
             }
         };
-        onMounted(enlarge);
+        // The gantt also rewrites its row variable outside a render (on
+        // loading, while a block is dragged), which put the rows back to the
+        // standard height under blocks that stayed tall: any change of a
+        // style in the planner scales again, at most once per frame. Setting
+        // what is already set is skipped (setScaled), so this settles.
+        let observer = null;
+        let frame = null;
+        const schedule = () => {
+            if (frame === null) {
+                frame = requestAnimationFrame(() => {
+                    frame = null;
+                    enlarge();
+                });
+            }
+        };
+        onMounted(() => {
+            enlarge();
+            observer = new MutationObserver(schedule);
+            for (const el of document.querySelectorAll(".o_tectora_team_gantt")) {
+                observer.observe(el, { attributes: true, attributeFilter: ["style"], subtree: true });
+            }
+        });
         onPatched(enlarge);
+        onWillUnmount(() => {
+            if (observer) {
+                observer.disconnect();
+            }
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+            }
+        });
     }
 
     onPillClicked(ev, pill) {

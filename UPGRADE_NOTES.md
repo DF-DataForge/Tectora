@@ -196,3 +196,4 @@ Releases and the modules they need upgraded:
 | Projectoverzicht als startpagina van de Project-app | `tectora_roof` (20.0.3.56.0), `tectora_project_tasks` (20.0.1.2.0), `tectora_project_order_list` (20.0.1.3.0) |
 | Weersvoorspelling (Open-Meteo) op de werkblokken en in de ploegplanner, dagelijks en met "Weer vernieuwen" | `tectora_roof_planning` (20.0.1.16.0) |
 | Fix "Weer vernieuwen" op het formulier van een werkblok | `tectora_roof_planning` (20.0.1.17.0) |
+| Planning per ploeg: rijen blijven hoog bij laden en slepen | `tectora_roof_planning` (20.0.1.18.0) |
