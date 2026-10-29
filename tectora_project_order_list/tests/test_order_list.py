@@ -71,6 +71,9 @@ class TestOrderList(TransactionCase):
         action = line.action_tectora_create_purchase()
         order = self.env["purchase.order"].browse(action["res_id"])
         self.assertEqual(order.project_id, project)
+        self.assertEqual(order.partner_ref, "Werf", "the site's reference for the vendor")
+        roof = self.env["tectora.roof.project"].create({"name": "Werf Heule", "project_id": project.id})
+        self.assertEqual(roof._tectora_vendor_reference(), f"{roof.code} · Werf Heule")
         self.assertEqual(order.tectora_order_line_id, line)
         self.assertEqual(order.order_line.product_qty, 5)
         self.assertEqual(line.status, "rfq")
@@ -167,7 +170,7 @@ class TestOrderList(TransactionCase):
         self.assertTrue(all(item["from_supplier"] for item in extra[:2]))
         action = line.action_tectora_create_purchase(products=[{"product_id": gutter.id, "quantity": 3}])
         order = self.env["purchase.order"].browse(action["res_id"])
-        self.assertEqual(order.order_line.product_id, gutter, "a product off the list can be ordered")
+        self.assertIn(gutter, order.order_line.product_id, "a product off the list can be ordered")
 
         # Without a chosen supplier: the products of the suggested ones.
         line.partner_id = False
@@ -182,6 +185,13 @@ class TestOrderList(TransactionCase):
         })
         stock = self.env.ref("stock.stock_location_stock")
         self.env["stock.quant"]._update_available_quantity(screws, stock, 10)
+        roof = self.env["tectora.roof.project"].create({"name": "Werf", "project_id": project.id})
+        Material = self.env["tectora.roof.material"]
+        epdm_need, screws_need = Material.create([
+            {"project_id": roof.id, "product_id": self.product.id, "quantity": 5.0},
+            {"project_id": roof.id, "product_id": screws.id, "quantity": 10.0},
+        ])
+        self.assertEqual(epdm_need.order_list_state, "none")
 
         # Ordered: set apart under its purchase order.
         action = line.action_tectora_create_purchase(
@@ -210,6 +220,18 @@ class TestOrderList(TransactionCase):
         # A second delivery from stock goes on the same open delivery.
         line.action_tectora_deliver_from_stock([{"product_id": screws.id, "quantity": 2}])
         self.assertEqual(len(picking.move_ids), 2)
+
+        # The material list follows the order list, per product.
+        (epdm_need | screws_need).invalidate_recordset()
+        self.assertEqual(epdm_need.order_list_state, "rfq")
+        self.assertIn(purchase.name, epdm_need.order_list_info)
+        self.assertEqual(screws_need.order_list_state, "stock_reserved")
+        self.assertEqual(screws_need.order_list_covered_qty, 6.0)
+        self.assertIn("deels: 6", screws_need.order_list_info)
+        self.assertIn(picking.name, screws_need.order_list_info)
+        purchase.button_confirm()
+        epdm_need.invalidate_recordset()
+        self.assertEqual(epdm_need.order_list_state, "ordered")
         service = self.env["product.product"].create({
             "name": "Kraanhuur", "type": "service", "purchase_ok": True,
         })
@@ -222,6 +244,50 @@ class TestOrderList(TransactionCase):
         data = line.tectora_get_supplier_products()
         self.assertIn(self.product.id, [item["id"] for item in data["items"]])
         self.assertFalse(data["ordered"])
+
+    def test_one_purchase_order_per_vendor_and_project(self):
+        project = self._project()
+        roofing, insulation = project.tectora_order_line_ids[:2]
+        insulation.partner_id = self.supplier
+        board = self.env["product.product"].create({"name": "Isolatieplaat", "purchase_ok": True})
+
+        first = roofing.action_tectora_create_purchase(
+            products=[{"product_id": self.product.id, "quantity": 5}]
+        )
+        second = insulation.action_tectora_create_purchase(
+            products=[{"product_id": board.id, "quantity": 8}]
+        )
+        self.assertEqual(first["res_id"], second["res_id"], "one order for the vendor")
+        order = self.env["purchase.order"].browse(first["res_id"])
+        self.assertEqual(set(order.order_line.product_id.ids), {self.product.id, board.id})
+        self.assertIn(insulation.name, order.origin)
+        self.assertEqual(roofing.tectora_purchase_ids, order)
+        self.assertEqual(insulation.tectora_purchase_ids, order)
+        self.assertEqual(insulation.status, "rfq")
+
+        # The same product again, on the request for quotation: added up.
+        roofing.action_tectora_create_purchase(
+            products=[{"product_id": self.product.id, "quantity": 2}]
+        )
+        epdm = order.order_line.filtered(lambda line: line.product_id == self.product)
+        self.assertEqual(len(epdm), 1)
+        self.assertEqual(epdm.product_qty, 7)
+
+        # Confirmed: a line of its own, still on the same order.
+        order.button_confirm()
+        roofing.action_tectora_create_purchase(
+            products=[{"product_id": self.product.id, "quantity": 1}]
+        )
+        self.assertEqual(len(order.order_line.filtered(lambda l: l.product_id == self.product)), 2)
+        self.assertEqual(
+            self.env["purchase.order"].search_count([("project_id", "=", project.id)]), 1
+        )
+        # Another vendor: an order of its own.
+        insulation.partner_id = self.other_supplier
+        other = insulation.action_tectora_create_purchase(
+            products=[{"product_id": board.id, "quantity": 1}]
+        )
+        self.assertNotEqual(other["res_id"], order.id)
 
     def test_board_data_and_empty_configuration(self):
         project = self._project()
