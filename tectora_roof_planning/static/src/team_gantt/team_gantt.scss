@@ -7,25 +7,29 @@
         letter-spacing: -0.01em;
     }
 
-    // Blocks three times as high (team_gantt.js scales the grid tracks they
-    // sit on and adds this class only when that worked): the block fills its
-    // taller grid cell and shows its label on several lines.
+    // Blocks three times as high (team_gantt.js scales the gantt's rows and
+    // adds this class only when that worked): the block fills its taller row
+    // and its label runs over several lines instead of one truncated line.
     &.o_tectora_tall {
-        .o_tectora_pill_item {
-            align-self: stretch;
-        }
-
         .o_gantt_pill {
-            height: 100% !important;
-            align-items: flex-start;
+            align-items: flex-start !important;
             padding-top: 0.3rem;
             padding-bottom: 0.3rem;
             border-radius: 0.4rem;
+            overflow: hidden;
+
+            // whatever element carries the label (title, content, a
+            // text-truncate span): allowed to wrap
+            &,
+            * {
+                white-space: normal !important;
+                text-overflow: clip;
+            }
         }
 
         .o_gantt_pill_title,
-        .o_gantt_pill .o_gantt_pill_content {
-            white-space: normal !important;
+        .o_gantt_pill .o_gantt_pill_content,
+        .o_gantt_pill .text-truncate {
             line-height: 1.3;
             font-size: 0.85rem;
             font-weight: 500;

@@ -8,128 +8,75 @@ import { onMounted, onPatched } from "@odoo/owl";
 // How much taller than the standard gantt the team planner's blocks are.
 const PILL_SCALE = 3;
 
-// The grid tracks this renderer set itself, per grid element, and the inline
-// value the gantt had put there before, so a re-render scales from the
-// gantt's own layout again instead of scaling an already scaled one.
+// The gantt (Odoo 20) lays its rows out on named grid lines: the renderer
+// carries them in this variable ("[r1]25px[r2]16px[r3]25px..."), which the
+// cells and the row headers both use, and a block sits between two of them
+// (grid-area: r3 / c1 / r4 / c25).
+const ROWS_VAR = "--Gantt__GridRows-grid-template-rows";
+const PILL_HEIGHT_VAR = "--Gantt__Pill-height";
+
+// What this planner set itself, per renderer element, and the value the
+// gantt had put there before: a re-render scales from the gantt's own
+// layout again instead of scaling an already scaled one.
 const applied = new WeakMap();
 
-/** The grid item a pill sits in, and the grid it is placed on. */
-function gridItemOf(pill, root) {
-    let item = pill;
-    while (item.parentElement && item !== root) {
-        const display = getComputedStyle(item.parentElement).display;
-        if (display === "grid" || display === "inline-grid") {
-            return item;
-        }
-        item = item.parentElement;
-    }
-    return null;
+function lineNumber(value) {
+    const match = /^r(\d+)$/.exec(String(value).trim());
+    return match ? parseInt(match[1], 10) : null;
 }
 
-/** The grid lines [start, end) an item covers, or null when not placed. */
-function gridRowsOf(item, trackCount) {
-    const style = getComputedStyle(item);
-    const start = parseInt(style.gridRowStart, 10);
-    if (!(start > 0)) {
-        return null;
-    }
-    const endValue = style.gridRowEnd;
-    let end;
-    if (endValue.startsWith("span")) {
-        end = start + (parseInt(endValue.slice(4), 10) || 1);
-    } else {
-        end = parseInt(endValue, 10);
-        if (!(end > 0)) {
-            end = start + 1;
-        }
-    }
-    return [start, Math.min(end, trackCount + 1)];
+/** The gantt's own value of a variable, undoing what this planner set. */
+function ownValue(renderer, name) {
+    const current = renderer.style.getPropertyValue(name);
+    const previous = (applied.get(renderer) || {})[name];
+    return previous && current === previous.value ? previous.original : current;
 }
 
-/** Puts back the tracks the gantt itself set on a grid, if they are ours. */
-function restoreGrid(grid) {
-    const previous = applied.get(grid);
-    if (previous && grid.style.gridTemplateRows === previous.value) {
-        grid.style.gridTemplateRows = previous.original;
-    }
-    applied.delete(grid);
-}
-
-function scaleGrid(grid, tracks, covered) {
-    const original = grid.style.gridTemplateRows;
-    const value = tracks
-        .map((size, index) => `${covered.has(index + 1) ? size * PILL_SCALE : size}px`)
-        .join(" ");
-    grid.style.gridTemplateRows = value;
-    applied.set(grid, { original, value: grid.style.gridTemplateRows });
+function setScaled(renderer, name, original, value) {
+    renderer.style.setProperty(name, value);
+    const state = applied.get(renderer) || {};
+    state[name] = { original, value: renderer.style.getPropertyValue(name) };
+    applied.set(renderer, state);
 }
 
 /**
- * Makes the project blocks PILL_SCALE times as high. The gantt lays a row
- * out on a fine CSS grid and places every block on a few of its tracks; the
- * tracks the blocks sit on are scaled, so a row grows with its blocks and
- * the row headers next to it (on the same tracks) follow. Empty rows and the
- * space between blocks keep the standard height. This works from the
- * rendered grid only, so it does not depend on the gantt's internals.
+ * Makes the project blocks PILL_SCALE times as high: the rows the blocks
+ * sit on (the tracks between the lines of their grid area) are scaled in
+ * the gantt's own row variable, so the row headers follow; empty rows and
+ * the space between blocks keep the standard height.
  */
 function enlargePills(root) {
-    const grids = new Map();
-    for (const pill of root.querySelectorAll(".o_gantt_pill")) {
-        const item = gridItemOf(pill, root);
-        if (!item) {
-            continue;
-        }
-        item.classList.add("o_tectora_pill_item");
-        const grid = item.parentElement;
-        if (!grids.has(grid)) {
-            grids.set(grid, []);
-        }
-        grids.get(grid).push(item);
+    const renderer = root.matches(".o_gantt_renderer")
+        ? root
+        : root.querySelector(".o_gantt_renderer");
+    if (!renderer) {
+        return;
     }
-    // Other grids of the planner (the row headers) are scaled along when they
-    // have the same tracks, so they stay level with the blocks.
-    const allGrids = [root, ...root.querySelectorAll("*")].filter((el) => {
-        const display = getComputedStyle(el).display;
-        return display === "grid" || display === "inline-grid";
-    });
-    for (const grid of allGrids) {
-        restoreGrid(grid);
+    const rows = ownValue(renderer, ROWS_VAR);
+    if (!rows) {
+        root.classList.remove("o_tectora_tall");
+        return;
     }
-    let scaled = false;
-    const done = new Set();
-    for (const [grid, items] of grids) {
-        const tracks = getComputedStyle(grid)
-            .gridTemplateRows.split(" ")
-            .map((size) => parseFloat(size));
-        if (!tracks.length || tracks.some((size) => !(size >= 0))) {
-            continue;
-        }
-        const covered = new Set();
-        for (const item of items) {
-            const rows = gridRowsOf(item, tracks.length);
-            if (!rows) {
-                continue;
-            }
-            for (let line = rows[0]; line < rows[1]; line++) {
-                covered.add(line);
+    const covered = new Set();
+    for (const item of renderer.querySelectorAll(".o_gantt_pill_wrapper")) {
+        const style = getComputedStyle(item);
+        const start = lineNumber(style.gridRowStart);
+        const end = lineNumber(style.gridRowEnd);
+        if (start && end && end > start) {
+            for (let track = start; track < end; track++) {
+                covered.add(track);
             }
         }
-        if (!covered.size) {
-            continue;
-        }
-        const signature = getComputedStyle(grid).gridTemplateRows;
-        for (const other of allGrids) {
-            if (other !== grid && !grids.has(other) && !done.has(other)
-                && getComputedStyle(other).gridTemplateRows === signature) {
-                scaleGrid(other, tracks, covered);
-                done.add(other);
-            }
-        }
-        scaleGrid(grid, tracks, covered);
-        done.add(grid);
-        scaled = true;
     }
-    root.classList.toggle("o_tectora_tall", scaled);
+    const scaled = rows.replace(/\[r(\d+)\]\s*([\d.]+)px/g, (whole, track, size) =>
+        covered.has(parseInt(track, 10)) ? `[r${track}]${parseFloat(size) * PILL_SCALE}px` : whole
+    );
+    setScaled(renderer, ROWS_VAR, rows, scaled);
+    const pillHeight = ownValue(renderer, PILL_HEIGHT_VAR);
+    if (pillHeight && scaled !== rows) {
+        setScaled(renderer, PILL_HEIGHT_VAR, pillHeight, `${parseFloat(pillHeight) * PILL_SCALE}px`);
+    }
+    root.classList.toggle("o_tectora_tall", scaled !== rows);
 }
 
 /**

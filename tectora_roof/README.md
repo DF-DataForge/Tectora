@@ -123,7 +123,9 @@ install on Odoo 17 or earlier without adjustments.
 ## Offerte-pdf
 
 De offerte-pdf (afdrukken, e-mailen, klantenportaal) is het standaard
-offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
+offertedocument van Odoo, in de documentlay-out van het bedrijf. Elke lijn en
+elke som per sectie staat er zowel **excl. btw** als **incl. btw** op (twee
+kolommen, ongeacht de btw-weergave van het bedrijf). Staat
 **Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
 dakproject), dan volgt het meetblad met tekening, maten en producten, en
 toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
@@ -277,6 +279,27 @@ project (start- en einddatum) en omgekeerd.
   eerdere bevestiging van dezelfde order worden vervangen.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
+
+## Projectoverzicht
+
+De Project-app opent op het **Projectoverzicht** (menu *Overzicht*, ook in
+Dakmeting › Projectoverzicht): de kerncijfers van alle projecten van een
+dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
+projectdashboard), elk project in een lijst opent zijn projectdashboard.
+*Alle projecten* opent de gewone projectkaarten.
+
+* **Status**: actief (dakproject niet afgerond), nu bezig (de geplande periode
+  loopt of een werkblok loopt nu), gepland, niet ingepland (geen geplande
+  start en geen werkblokken), einddatum voorbij, afgerond.
+* **Financieel**, over alle projecten, excl. btw: orderwaarde, gefactureerd,
+  nog te factureren, kosten en marge, met dezelfde berekening als het
+  projectdashboard (`_tectora_profitability_by_project`, één query per soort
+  gegevens in plaats van per project).
+* **Lijsten**: deze week op de werf (werkblokken van de week, met de ploegen),
+  start binnenkort (14 dagen), meest nog te factureren, laagste marge.
+* Met de taakopvolging: **projecten per fase**; met de bestellijst: de
+  **bestellijsten** (te laat, te bestellen, prijsaanvraag, besteld). Andere
+  modules voegen zo'n blok toe via `_tectora_overview_sections`.
 
 ## Geschatte uren opbouw en afbraak, en de taken Uitvoeringswerken en Afbraakwerken
 

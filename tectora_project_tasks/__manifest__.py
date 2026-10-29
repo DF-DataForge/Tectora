@@ -30,7 +30,7 @@ New projects get their phases and tasks on creation (once phases exist); an
 existing project starts the follow-up with "Taakopvolging starten" on the
 dashboard.
     """,
-    "version": "20.0.1.1.0",
+    "version": "20.0.1.2.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",

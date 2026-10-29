@@ -1,6 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Every price on the quotation both without and with VAT: the amount
+         column always shows the price excluding VAT (Odoo picks one of the
+         two after the company's tax display), and a column next to it the
+         price including VAT, on the lines and on the totals per section. -->
+    <template id="report_saleorder_document_vat_columns"
+              inherit_id="sale.report_saleorder_document">
+        <xpath expr="//t[@t-set='price_field']" position="attributes">
+            <attribute name="t-value">'price_subtotal'</attribute>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
+            <span>Prijs excl. BTW</span>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']" position="after">
+            <th name="th_total_incl" class="text-end"><span>Prijs incl. BTW</span></th>
+        </xpath>
+        <xpath expr="//td[@name='td_product_subtotal']" position="after">
+            <td name="td_product_total_incl" class="text-end o_price_total">
+                <t t-if="not line.is_downpayment and not collapse_prices">
+                    <span t-field="line.price_total"/>
+                </t>
+            </td>
+        </xpath>
+        <xpath expr="//td[@name='td_section_price']" position="after">
+            <td t-if="show_section_total" name="td_section_price_incl" class="text-end o_price_total">
+                <span t-out="line._get_section_totals('price_total')"
+                      t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+            </td>
+        </xpath>
+        <xpath expr="//td[@name='td_section_group_total']" position="after">
+            <td name="td_section_group_total_incl" class="text-end o_price_total">
+                <span t-if="show_section_total" t-out="section_line['price_total']"
+                      t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+            </td>
+        </xpath>
+    </template>
+
     <!-- No internal reference ("[S00053] ") in front of the lines of the
          quotation and the invoice: the customer reads the product name. -->
     <template id="report_saleorder_document_line_label"
