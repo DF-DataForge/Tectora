@@ -131,18 +131,6 @@ class SaleOrder(models.Model):
         hours, minutes = divmod(total_minutes, 60)
         return _("%(hours)s u %(minutes)02d", hours=hours, minutes=minutes)
 
-    def _tectora_estimated_time_label(self):
-        """``42 u 30 (± 5,3 werkdagen)``, for the quotation."""
-        self.ensure_one()
-        label = self._tectora_hours_label(self.tectora_estimated_hours)
-        days = self.tectora_estimated_days
-        if days >= 1:
-            label += " " + _(
-                "(± %(days)s werkdagen)",
-                days=("%.1f" % days).replace(".", ","),
-            )
-        return label
-
     tectora_tax_id = fields.Many2one(
         "account.tax",
         string="Btw-tarief voor alle regels",

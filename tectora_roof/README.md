@@ -294,9 +294,8 @@ Tectora** (`werkuren construction` en `werkuren veiligheid` → opbouw,
   wordt eerst omgerekend);
 * onder de totalen van de offerte **Geschatte uren afbraak**, **Geschatte uren
   opbouw** en de **Geschatte uitvoeringstijd** samen, in uren en in werkdagen
-  (uren per dag uit de werktijden van het bedrijf, anders 8). De offerte-PDF
-  toont dezelfde regels onder de totalen, in elke stijl, enkel als er iets
-  geschat is;
+  (uren per dag uit de werktijden van het bedrijf, anders 8). Enkel intern:
+  de offerte-PDF voor de klant toont ze niet;
 * bij het **bevestigen** van de order per werksoort een taak op het project,
   **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte uren van die
   werksoort als **toegewezen tijd**, de leverdatum van de order (of het
