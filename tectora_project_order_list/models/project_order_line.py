@@ -104,12 +104,15 @@ class TectoraProjectOrderLine(models.Model):
         projects.exists()._tectora_sync_order_list_task()
         return res
 
-    def _tectora_purchase_line_values(self):
-        """Purchase lines: everything for "Bestellen", only the shortage for
+    def _tectora_purchase_line_values(self, product_lines=None):
+        """Purchase lines for the given product lines (all of them by
+        default): everything for "Bestellen", only the shortage for
         "Stock eerst"."""
         self.ensure_one()
+        if product_lines is None:
+            product_lines = self.product_line_ids
         values = []
-        for product_line in self.product_line_ids:
+        for product_line in product_lines:
             qty = (
                 product_line.shortage_qty if self.order_action == "stock_first"
                 else product_line.quantity
@@ -123,13 +126,99 @@ class TectoraProjectOrderLine(models.Model):
             }))
         return values
 
-    def action_tectora_create_purchase(self):
-        """A request for quotation for this part, charged to the project."""
+    def _tectora_supplier_infos(self):
+        """The supplier prices (Purchase tab of the products) of the part's
+        supplier; without a chosen supplier, those of the suggested ones."""
+        self.ensure_one()
+        partners = self.partner_id or self.allowed_partner_ids
+        if not partners:
+            return self.env["product.supplierinfo"]
+        return self.env["product.supplierinfo"].search([
+            ("partner_id", "child_of", partners.commercial_partner_id.ids),
+            ("company_id", "in", [False, self.company_id.id or self.env.company.id]),
+        ])
+
+    def tectora_get_supplier_products(self):
+        """The product list of the order list page: the products the
+        supplier delivers and those already on the part; the latter come
+        first, selected, with their quantity."""
+        self.ensure_one()
+        existing = {pl.product_id: pl for pl in self.product_line_ids}
+        codes = {}
+        products = self.env["product.product"]
+        for info in self._tectora_supplier_infos():
+            variants = info.product_id or info.product_tmpl_id.product_variant_ids
+            for product in variants.filtered("purchase_ok"):
+                products |= product
+                if info.product_code:
+                    codes.setdefault(product.id, info.product_code)
+        products |= self.product_line_ids.product_id
+        company = self.company_id or self.env.company
+        result = []
+        for product in products.sorted(lambda p: (p not in existing, p.display_name or "")):
+            product_line = existing.get(product)
+            result.append({
+                "id": product.id,
+                "name": product.display_name,
+                "code": codes.get(product.id, ""),
+                "uom": (product_line.uom_id if product_line else product.uom_id).name or "",
+                "quantity": product_line.quantity if product_line else 1.0,
+                "selected": bool(product_line),
+                "free_qty": (
+                    product.with_company(company).free_qty if product.is_storable else False
+                ),
+            })
+        return result
+
+    def _tectora_set_products(self, products):
+        """Puts the selected products on the part, with their quantity, and
+        returns their product lines. Other products on the part stay."""
+        self.ensure_one()
+        ProductLine = self.env["tectora.project.order.product"]
+        selected = ProductLine
+        for item in products:
+            product = self.env["product.product"].browse(int(item["product_id"])).exists()
+            if not product:
+                continue
+            quantity = float(item.get("quantity") or 0.0)
+            if quantity <= 0:
+                raise UserError(self.env._(
+                    "Geef een hoeveelheid groter dan nul voor '%s'.", product.display_name
+                ))
+            product_line = self.product_line_ids.filtered(lambda pl: pl.product_id == product)[:1]
+            if product_line:
+                if product_line.quantity != quantity:
+                    product_line.quantity = quantity
+            else:
+                product_line = ProductLine.create({
+                    "order_line_id": self.id,
+                    "product_id": product.id,
+                    "quantity": quantity,
+                })
+            selected |= product_line
+        return selected
+
+    def action_tectora_create_purchase(self, products=None):
+        """A request for quotation for this part, charged to the project.
+
+        ``products`` (from the order list page): the selected products, as
+        ``[{"product_id": id, "quantity": qty}]``; they are put on the part
+        and the request for quotation holds only them. Without it, all the
+        part's products are ordered.
+        """
         self.ensure_one()
         if not self.partner_id:
             raise UserError(self.env._("Kies eerst een leverancier voor '%s'.", self.name))
-        line_values = self._tectora_purchase_line_values()
-        if self.product_line_ids and not line_values:
+        if products is not None:
+            if not products:
+                raise UserError(self.env._(
+                    "Selecteer eerst de producten om te bestellen voor '%s'.", self.name
+                ))
+            product_lines = self._tectora_set_products(products)
+        else:
+            product_lines = self.product_line_ids
+        line_values = self._tectora_purchase_line_values(product_lines)
+        if product_lines and not line_values:
             raise UserError(self.env._(
                 "Alles voor '%s' is op voorraad: er moet niets besteld worden.", self.name
             ))

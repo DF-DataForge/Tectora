@@ -111,6 +111,7 @@
                                 </thead>
                                 <tbody>
                                     <t t-foreach="this.visibleLines" t-as="line" t-key="line.id">
+                                        <t t-set="panel" t-value="this.productPanel(line)"/>
                                         <tr t-att-class="(line.checked ? 'o_tectora_done ' : '') + (line.late ? 'table-danger' : '')">
                                             <td class="text-center">
                                                 <input type="checkbox" class="form-check-input o_tectora_check"
@@ -157,10 +158,69 @@
                                                         t-on-click="() => this.openPurchases(line)" title="Inkooporders">
                                                     <i class="oi" data-icon="shopping_cart"/> <t t-out="line.purchase_count"/>
                                                 </button>
+                                                <button t-if="!line.checked"
+                                                        t-att-class="'btn btn-sm me-1 ' + (panel and panel.open ? 'btn-primary' : 'btn-secondary')"
+                                                        t-on-click="() => this.toggleProducts(line)"
+                                                        title="Producten van de leverancier kiezen">
+                                                    <i class="oi me-1" data-icon="inventory_2"/>Producten
+                                                    <span t-if="this.selectedCount(line)" class="badge text-bg-light border ms-1" t-out="this.selectedCount(line)"/>
+                                                    <i class="oi ms-1" t-att-data-icon="panel and panel.open ? 'expand_less' : 'expand_more'"/>
+                                                </button>
                                                 <button t-if="!line.checked" class="btn btn-sm btn-secondary"
                                                         t-on-click="() => this.createPurchase(line)" title="Bestelling (prijsaanvraag) aanmaken">
                                                     <i class="oi me-1" data-icon="add_shopping_cart"/>Bestellen
                                                 </button>
+                                            </td>
+                                        </tr>
+                                        <tr t-if="panel and panel.open and !line.checked" class="o_tectora_products_row">
+                                            <td/>
+                                            <td colspan="8">
+                                                <div class="o_tectora_products border rounded p-2">
+                                                    <div t-if="panel.loading" class="text-muted small">Producten laden…</div>
+                                                    <div t-elif="!panel.items.length" class="text-muted small">
+                                                        <t t-if="line.partner_id">
+                                                            Geen producten gevonden voor <b t-out="line.partner_name"/>. Voeg de
+                                                            leverancier toe op het tabblad Inkoop van de producten; zonder producten
+                                                            maakt Bestellen een lege prijsaanvraag.
+                                                        </t>
+                                                        <t t-else="">Kies eerst een leverancier.</t>
+                                                    </div>
+                                                    <t t-else="">
+                                                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                            <span class="small fw-bold">
+                                                                Producten<t t-if="line.partner_name"> van <t t-out="line.partner_name"/></t>
+                                                            </span>
+                                                            <input type="search" class="form-control form-control-sm o_tectora_products_search"
+                                                                   placeholder="Zoeken…" t-att-value="panel.search"
+                                                                   t-on-input="(ev) => { panel.search = ev.target.value; }"/>
+                                                            <button class="btn btn-sm btn-link p-0" t-on-click="() => this.setAllProducts(panel, true)">Alles</button>
+                                                            <button class="btn btn-sm btn-link p-0" t-on-click="() => this.setAllProducts(panel, false)">Niets</button>
+                                                            <span class="small text-muted ms-auto">
+                                                                <t t-out="this.selectedProducts(line).length"/> geselecteerd · Bestellen zet ze op de prijsaanvraag
+                                                            </span>
+                                                        </div>
+                                                        <ul class="list-unstyled mb-0 o_tectora_products_list">
+                                                            <li t-foreach="this.visibleProducts(panel)" t-as="item" t-key="item.id"
+                                                                t-att-class="'d-flex align-items-center gap-2 ' + (item.selected ? 'o_tectora_product_selected' : '')">
+                                                                <input type="checkbox" class="form-check-input o_tectora_check"
+                                                                       t-att-checked="item.selected ? true : undefined"
+                                                                       t-on-change="() => this.toggleProduct(item)"/>
+                                                                <span class="flex-grow-1 o_tectora_product_name" t-on-click="() => this.toggleProduct(item)">
+                                                                    <t t-out="item.name"/>
+                                                                    <span t-if="item.code" class="text-muted small ms-1">[<t t-out="item.code"/>]</span>
+                                                                    <span t-if="line.action === 'stock_first' and item.free_qty !== false"
+                                                                          class="text-muted small ms-1">· vrij: <t t-out="item.free_qty"/></span>
+                                                                </span>
+                                                                <input type="number" min="0" step="any"
+                                                                       class="form-control form-control-sm text-end o_tectora_product_qty"
+                                                                       t-att-value="item.quantity"
+                                                                       t-on-change="(ev) => this.onProductQuantity(item, ev)"/>
+                                                                <span class="small text-muted o_tectora_product_uom" t-out="item.uom"/>
+                                                            </li>
+                                                        </ul>
+                                                        <div t-if="!this.visibleProducts(panel).length" class="text-muted small">Geen producten voor deze zoekterm.</div>
+                                                    </t>
+                                                </div>
                                             </td>
                                         </tr>
                                     </t>
