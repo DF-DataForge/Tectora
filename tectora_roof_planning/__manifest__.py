@@ -29,13 +29,17 @@ roof project. Ploegen themselves move from Dakmeting to
 Planning -> Configuratie, since that is where they are used. Uninstalling puts
 the app's own default planner and the Ploegen menu back.
 
+In the Planning app's own planners (per resource and the others) a shift
+takes the colour of its roof project, so all shifts of one site share it;
+shifts without a roof project keep their own colour.
+
 The project dashboard of Dakmeting lists the employees' shifts on its
 Planning tab and its planning card opens the resource planner on them.
 
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "20.0.1.13.0",
+    "version": "20.0.1.14.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
