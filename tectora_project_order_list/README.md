@@ -61,6 +61,13 @@ is reopened, and links to the order list on the task page.
   transfers do not ship them again. Tick them, set the
   quantity, and **Bestellen** puts exactly those on the request for quotation
   (they are added to the line's products too).
+- The **material list** follows the order list, per product (column
+  *Bestellijst*): not on it, to order, request for quotation, ordered,
+  received, or from the warehouse (waiting, reserved, delivered), with the
+  purchase order and vendor or the delivery, and "deels: x van y" when only
+  part of what is needed is covered. It is computed live, so always up to
+  date; ordering from the material list (tectora_purchase) skips what the
+  order list covers already.
 - The line's status follows its purchase orders: te bestellen, uit stock,
   prijsaanvraag, besteld, ontvangen, afgevinkt; a line whose expected delivery
   date has passed shows *te laat*.
