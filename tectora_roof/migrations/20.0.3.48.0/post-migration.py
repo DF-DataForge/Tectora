@@ -25,15 +25,19 @@ STAGE_NAMES = {
 QUIET = {"tracking_disable": True, "mail_notrack": True, "active_test": False}
 
 
-def _names(stage):
+def _names(stage, langs):
     names = set()
-    for lang in ("en_US", "nl_BE", "nl_NL"):
+    for lang in langs:
         names.add((stage.with_context(lang=lang).name or "").strip().lower())
     return names
 
 
 def migrate(cr, version):
     env = api.Environment(cr, SUPERUSER_ID, {})
+    # Only installed languages: Odoo 20 refuses a context language that is
+    # not ("Invalid language code: nl_NL" on a database with only nl_BE).
+    installed = {code for code, _name in env["res.lang"].get_installed()}
+    langs = [lang for lang in ("en_US", "nl_BE", "nl_NL") if lang in installed] or ["en_US"]
     shared = {}
     for xmlid, names in STAGE_NAMES.items():
         stage = env.ref(xmlid, raise_if_not_found=False)
@@ -50,7 +54,7 @@ def migrate(cr, version):
     for project in projects:
         commands = [Command.link(stage.id) for stage in shared_stages]
         for stage in project.type_ids - shared_stages:
-            stage_names = _names(stage)
+            stage_names = _names(stage, langs)
             target = next(
                 (shared_stage for shared_stage, names in shared.items()
                  if stage_names & names),
