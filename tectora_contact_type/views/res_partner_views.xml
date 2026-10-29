@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The Contacttype above the tags on the contact form. -->
+    <record id="view_partner_form_contact_type" model="ir.ui.view">
+        <field name="name">res.partner.form.tectora.contact.type</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet//field[@name='category_id']" position="before">
+                <field name="df_cont_type"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_list_contact_type" model="ir.ui.view">
+        <field name="name">res.partner.list.tectora.contact.type</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="df_cont_type" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_search_contact_type" model="ir.ui.view">
+        <field name="name">res.partner.search.tectora.contact.type</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="df_cont_type"/>
+                <filter name="group_df_cont_type" string="Contacttype"
+                        context="{'group_by': 'df_cont_type'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
