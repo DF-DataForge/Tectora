@@ -1,0 +1,68 @@
+# Storyboard for docs/video_scripts/standaard/03_afspraak_inplannen.md
+script: docs/video_scripts/standaard/03_afspraak_inplannen.md
+name: standaard_03_afspraak_inplannen
+series: Tectora · de standaardflow
+stage: lead_notes
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 4
+start: /odoo/crm
+pronunciation:
+  CRM: C R M
+
+shots:
+  1:
+    card: title
+
+  2:
+    setup:
+      - click: {selector: ".o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+    steps:
+      - wait: 1.5
+      - hover: {selector: ".oe_stat_button:has-text('Geen afspraak')"}
+      - highlight: {selector: ".oe_stat_button:has-text('Geen afspraak')", seconds: 2.5}
+
+  3:
+    steps:
+      - click: {selector: ".oe_stat_button:has-text('Geen afspraak')"}
+      # Next week: Thursday is then always in the future, whatever the recording day.
+      - click: {selector: ".o_calendar_button_next"}
+      # Thursday 10:00-11:00 (the lanes' centre falls in the Thursday column).
+      - drag:
+          from: {selector: ".fc-timegrid-slot-lane[data-time='10:30:00']"}
+          to: {selector: ".fc-timegrid-slot-lane[data-time='10:00:00']"}
+          dy: -6
+      - wait: 0.5
+      - highlight: {field: name, seconds: 1.8}
+
+  4:
+    steps:
+      - fill: {field: name, value: Plaatsbezoek Peeters}
+      - highlight: {field: partner_ids, seconds: 1.5}
+      - fill: {field: location, value: "Kerkstraat 14, 8870 Izegem"}
+      - click: {button: Opslaan, in: ".modal"}
+      - wait: 0.6
+      - click: {selector: ".fc-event:has-text('Plaatsbezoek Peeters')"}
+      - wait: 0.8
+      - click: {text: Bewerken, in: ".o_popover"}
+      - click: {selector: ".o_notebook .nav-link:has-text('Opties')"}
+      - fill: {field: alarm_ids, value: "1 d", pick: "Notificatie - 1 dag"}
+      - highlight: {field: alarm_ids, seconds: 1.2}
+      - save:
+
+  5:
+    steps:
+      - click: {selector: ".o_breadcrumb .o_breadcrumb_dropdown, .o_breadcrumb button"}
+      - click: {selector: ".dropdown-item:has-text('Renovatie plat dak Peeters')"}
+      - wait: 0.5
+      - highlight: {selector: ".oe_stat_button:has-text('Volgende afspraak')", seconds: 2.2}
+      - highlight: {selector: ".o-mail-Activity:has-text('Plaatsbezoek Peeters')", seconds: 1.8}
+
+  6:
+    steps:
+      - click: {selector: ".o_breadcrumb a:has-text('Pijplijn')"}
+      - highlight: {selector: ".o_kanban_record:has-text('Renovatie plat dak Peeters')", seconds: 1.8}
+
+  7:
+    card: title

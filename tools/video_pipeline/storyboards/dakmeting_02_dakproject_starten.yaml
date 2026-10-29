@@ -1,0 +1,73 @@
+# Storyboard for docs/video_scripts/dakmeting/02_dakproject_starten.md
+#
+# The script supplies the voice-over and the "Tekst in beeld" per shot; this
+# file only says what happens on screen. Shot numbers follow the script.
+# Demo data: tools/video_pipeline/seed_demo.py (run it before every take).
+
+script: docs/video_scripts/dakmeting/02_dakproject_starten.md
+series: Tectora Dakmeting
+voice: nl_BE-nathalie-medium
+tempo: 1.15                # Piper length scale: >1 slower, <1 faster
+thumbnail_shot: 3
+start: /odoo/crm           # screen under the opening card
+
+pronunciation:             # audio only; subtitles keep the script's spelling
+  CRM: C R M
+
+shots:
+  1:
+    card: title            # opening card: the shot's "Tekst in beeld"
+
+  2:
+    card:
+      kind: html
+      html: |
+        <div style="display:flex;flex-direction:column;align-items:center;gap:56px;font-family:Montserrat,sans-serif;color:#1d2b2b">
+          <div style="display:flex;align-items:center;gap:40px">
+            <div style="width:420px;padding:44px 0;border-radius:22px;background:#2D8D8F;color:#fff;font-size:52px;font-weight:700;box-shadow:0 18px 40px rgba(45,141,143,.35)">Dakproject</div>
+            <div style="display:flex;flex-direction:column;gap:22px;font-size:26px;font-weight:600;color:#2D8D8F">
+              <div>meting &nbsp;→</div>
+              <div style="font-size:64px;line-height:1">⇄</div>
+              <div>← &nbsp;offerte</div>
+            </div>
+            <div style="width:420px;padding:44px 0;border-radius:22px;background:#fff;border:5px solid #2D8D8F;font-size:52px;font-weight:700">Offerte</div>
+          </div>
+          <div style="font-size:44px;font-weight:700">1 dakproject = 1 offerte</div>
+        </div>
+
+  3:
+    steps:
+      - click: Renovatie plat dak Peeters
+      - wait: 0.6
+      - click: {button: Dakproject maken}
+      - highlight: {field: partner_id}
+      - highlight: {field: address}
+
+  4:
+    steps:
+      - app: Verkoop
+      - click: {selector: .o_list_button_add}
+      # Odoo 20: "Nieuw" on Offertes opens a list of quotation templates.
+      - click: {selector: ".o-dropdown--menu .dropdown-item:has-text('Renovatie plat dak - roofing 1 laag')"}
+      - fill: {field: partner_id, value: Peeters, pick: Familie Peeters}
+      - save:
+      - highlight: {selector: ".oe_stat_button:has-text('Dakproject')", seconds: 2.5}
+
+  5:
+    steps:
+      - app: Dakmeting
+      - click: {selector: .o_list_button_add}
+      - fill: {field: name, value: Carport Peeters}
+      - fill: {field: partner_id, value: Peeters, pick: Familie Peeters}
+      - fill: {field: project_type, value: Renovatie}
+      - fill: {field: address, value: "Kerkstraat 14, 8870 Izegem"}
+      - save:
+
+  6:
+    steps:
+      - zoom: {selector: .o_form_statusbar .o_statusbar_status, scale: 2.0}
+
+  7:
+    card:
+      kind: title
+      subtitle: Tectora Dakmeting · volgende video
