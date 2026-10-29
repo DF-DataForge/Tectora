@@ -48,7 +48,17 @@ is reopened, and links to the order list on the task page.
   the list needs, and the products already on the line. **Ander product
   toevoegen** under the list searches any purchasable product (the
   supplier's first) and adds it, ticked, for what the material list does not
-  cover. Tick them, set the
+  cover. Every product shows its free stock.
+- Once ordered, products are set apart under **Reeds in bestelling bij
+  <leverancier>**, per purchase order with its status; what is not ordered
+  stays on top and can go to another supplier (a cancelled order puts its
+  products back).
+- **Leveren vanuit stock** puts the selected products on the project's open
+  outgoing delivery of the order list (a new one when there is none, to the
+  site), confirmed so the warehouse stock is reserved; they show under
+  **Leveren vanuit magazijn** with their reservation. With the roof project's
+  transfers installed the delivery is on the roof project, so its material
+  transfers do not ship them again. Tick them, set the
   quantity, and **Bestellen** puts exactly those on the request for quotation
   (they are added to the line's products too).
 - The line's status follows its purchase orders: te bestellen, uit stock,

@@ -155,42 +155,123 @@ class TectoraProjectOrderLine(models.Model):
         return needs
 
     def tectora_get_supplier_products(self):
-        """The product list of the order list page: the products the
-        supplier delivers that are on the project's material list, with the
-        quantity it needs, and the products already on the part; the latter
-        come first, selected, with their quantity."""
+        """The product list of the order list page, in three parts:
+
+        * ``items``, still to order (or to deliver from stock): the
+          supplier's products on the project's material list, with the
+          quantity it needs, and the products on the part that are neither
+          ordered nor delivered yet (those first, selected), whatever the
+          supplier, so they can go to another one;
+        * ``ordered``: per purchase order, the products already in order
+          ("Reeds in bestelling bij ..."), with its status;
+        * ``stock``: per delivery, the products going from the warehouse to
+          the site, with their reservation.
+        """
         self.ensure_one()
-        existing = {pl.product_id: pl for pl in self.product_line_ids}
+        to_order = self.product_line_ids.filtered(lambda pl: pl.source == "to_order")
+        done_products = (self.product_line_ids - to_order).product_id
+        existing = {pl.product_id: pl for pl in to_order}
         needs = self._tectora_material_needs()
         codes = {}
         products = self.env["product.product"]
         for info in self._tectora_supplier_infos():
             variants = info.product_id or info.product_tmpl_id.product_variant_ids
-            for product in variants.filtered(lambda p: p.purchase_ok and p in needs):
+            for product in variants.filtered(
+                lambda p: p.purchase_ok and p in needs and p not in done_products
+            ):
                 products |= product
                 if info.product_code:
                     codes.setdefault(product.id, info.product_code)
-        products |= self.product_line_ids.product_id
-        company = self.company_id or self.env.company
-        result = []
+        products |= to_order.product_id
+        items = []
         for product in products.sorted(lambda p: (p not in existing, p.display_name or "")):
             product_line = existing.get(product)
-            result.append({
-                "id": product.id,
-                "name": product.display_name,
-                "code": codes.get(product.id, ""),
-                "uom": (product_line.uom_id if product_line else product.uom_id).name or "",
-                "quantity": (
+            items.append(dict(
+                self._tectora_product_item(product, product_line.uom_id if product_line else False),
+                code=codes.get(product.id, ""),
+                quantity=(
                     product_line.quantity if product_line
                     else round(needs.get(product, 0.0), 2) or 1.0
                 ),
-                "needed": round(needs[product], 2) if product in needs else False,
-                "selected": bool(product_line),
-                "free_qty": (
-                    product.with_company(company).free_qty if product.is_storable else False
-                ),
+                needed=round(needs[product], 2) if product in needs else False,
+                selected=bool(product_line),
+            ))
+        return {
+            "items": items,
+            "ordered": self._tectora_ordered_groups(),
+            "stock": self._tectora_stock_groups(),
+        }
+
+    def _tectora_product_item(self, product, uom=False):
+        company = self.company_id or self.env.company
+        return {
+            "id": product.id,
+            "name": product.display_name,
+            "code": "",
+            "uom": (uom or product.uom_id).name or "",
+            "free_qty": (
+                round(product.with_company(company).free_qty, 2) if product.is_storable else False
+            ),
+        }
+
+    def _tectora_ordered_groups(self):
+        """The products in order, per purchase order."""
+        lines = self.product_line_ids.filtered(lambda pl: pl.source == "ordered")
+        states = dict(
+            self.env["purchase.order"]._fields["state"]._description_selection(self.env)
+        )
+        groups = []
+        for order in lines.purchase_line_id.order_id.sorted("id"):
+            order_lines = lines.filtered(lambda pl: pl.purchase_line_id.order_id == order)
+            groups.append({
+                "id": order.id,
+                "model": "purchase.order",
+                "title": self.env._("Reeds in bestelling bij %s", order.partner_id.display_name),
+                "reference": order.name,
+                "state": states.get(order.state, order.state),
+                "tone": "success" if order.state == "purchase" else "warning",
+                "lines": [{
+                    "id": pl.id,
+                    "name": pl.product_id.display_name,
+                    "quantity": round(pl.purchase_line_id.product_qty, 2),
+                    "uom": pl.purchase_line_id.uom_id.name or pl.uom_id.name or "",
+                } for pl in order_lines],
             })
-        return result
+        return groups
+
+    def _tectora_stock_groups(self):
+        """The products delivered from the warehouse, per delivery."""
+        lines = self.product_line_ids.filtered(lambda pl: pl.source == "stock")
+        move_states = {
+            "draft": self.env._("Concept"),
+            "waiting": self.env._("Wacht op voorraad"),
+            "confirmed": self.env._("Wacht op voorraad"),
+            "partially_available": self.env._("Deels gereserveerd"),
+            "assigned": self.env._("Gereserveerd"),
+            "done": self.env._("Geleverd"),
+        }
+        states = dict(
+            self.env["stock.picking"]._fields["state"]._description_selection(self.env)
+        )
+        groups = []
+        for picking in lines.move_id.picking_id.sorted("id"):
+            picking_lines = lines.filtered(lambda pl: pl.move_id.picking_id == picking)
+            groups.append({
+                "id": picking.id,
+                "model": "stock.picking",
+                "title": self.env._("Leveren vanuit magazijn"),
+                "reference": picking.name,
+                "state": states.get(picking.state, picking.state),
+                "tone": "success" if picking.state in ("assigned", "done") else "warning",
+                "lines": [{
+                    "id": pl.id,
+                    "name": pl.product_id.display_name,
+                    "quantity": round(pl.move_id.product_uom_qty, 2),
+                    "uom": pl.move_id.uom_id.name or "",
+                    "state": move_states.get(pl.move_id.state, pl.move_id.state),
+                } for pl in picking_lines],
+            })
+        return groups
 
     def tectora_search_extra_products(self, term="", limit=20):
         """Any purchasable product, to add to the part beyond what the
@@ -241,7 +322,11 @@ class TectoraProjectOrderLine(models.Model):
                 raise UserError(self.env._(
                     "Geef een hoeveelheid groter dan nul voor '%s'.", product.display_name
                 ))
-            product_line = self.product_line_ids.filtered(lambda pl: pl.product_id == product)[:1]
+            # Only a line still to order: what is ordered or on a delivery
+            # stays as it is, a new need gets a line of its own.
+            product_line = self.product_line_ids.filtered(
+                lambda pl: pl.product_id == product and pl.source == "to_order"
+            )[:1]
             if product_line:
                 if product_line.quantity != quantity:
                     product_line.quantity = quantity
@@ -272,7 +357,7 @@ class TectoraProjectOrderLine(models.Model):
                 ))
             product_lines = self._tectora_set_products(products)
         else:
-            product_lines = self.product_line_ids
+            product_lines = self.product_line_ids.filtered(lambda pl: pl.source == "to_order")
         line_values = self._tectora_purchase_line_values(product_lines)
         if product_lines and not line_values:
             raise UserError(self.env._(
@@ -285,6 +370,13 @@ class TectoraProjectOrderLine(models.Model):
             "tectora_order_line_id": self.id,
             "order_line": line_values,
         })
+        # The products are in order now: the order list page sets them apart.
+        for product_line in product_lines:
+            purchase_line = order.order_line.filtered(
+                lambda pl: pl.product_id == product_line.product_id
+            )[:1]
+            if purchase_line:
+                product_line.purchase_line_id = purchase_line
         self.write({
             "order_date": self.order_date or fields.Date.context_today(self),
             "expected_date": self.expected_date or (
@@ -298,6 +390,95 @@ class TectoraProjectOrderLine(models.Model):
             "views": [(False, "form")],
             "target": "current",
         }
+
+    def action_tectora_deliver_from_stock(self, products):
+        """The selected products go from the warehouse to the site: they are
+        put on the project's open outgoing delivery of the order list (a new
+        one when there is none), which is confirmed and reserves the stock.
+
+        ``products``: ``[{"product_id": id, "quantity": qty}]``, as for a
+        request for quotation.
+        """
+        self.ensure_one()
+        if not products:
+            raise UserError(self.env._(
+                "Selecteer eerst de producten om uit stock te leveren voor '%s'.", self.name
+            ))
+        product_lines = self._tectora_set_products(products)
+        not_stocked = product_lines.product_id.filtered(lambda p: not p.is_storable)
+        if not_stocked:
+            raise UserError(self.env._(
+                "Enkel producten met voorraad kunnen uit het magazijn komen: %s.",
+                ", ".join(not_stocked.mapped("display_name")),
+            ))
+        picking = self._tectora_stock_picking()
+        Move = self.env["stock.move"]
+        moves = Move
+        for product_line in product_lines:
+            move = Move.create({
+                "picking_id": picking.id,
+                "product_id": product_line.product_id.id,
+                "product_uom_qty": product_line.quantity,
+                "uom_id": (product_line.uom_id or product_line.product_id.uom_id).id,
+                "location_id": picking.location_id.id,
+                "location_dest_id": picking.location_dest_id.id,
+                "company_id": picking.company_id.id,
+            })
+            product_line.move_id = move
+            moves |= move
+        # Confirmed, so the warehouse sees it, and reserved from the stock.
+        moves._action_confirm()
+        moves._action_assign()
+        self.project_id.message_post(body=self.env._(
+            "%(count)s product(en) van '%(part)s' uit het magazijn op %(picking)s.",
+            count=len(moves), part=self.name, picking=picking._get_html_link(),
+        ))
+        return True
+
+    def _tectora_stock_picking(self):
+        """The project's open outgoing delivery of the order list, or a new
+        one: from the company's warehouse to the site."""
+        self.ensure_one()
+        project = self.project_id
+        company = self.company_id or self.env.company
+        warehouse = self.env["stock.warehouse"].search([("company_id", "=", company.id)], limit=1)
+        picking_type = warehouse.out_type_id
+        if not picking_type:
+            raise UserError(self.env._(
+                "Er is geen magazijn met een leveringsbewerking voor %s.", company.name
+            ))
+        origin = self.env._("%s · Bestellijst", project.name)
+        Picking = self.env["stock.picking"]
+        picking = Picking.search([
+            ("picking_type_id", "=", picking_type.id),
+            ("origin", "=", origin),
+            ("state", "not in", ("done", "cancel")),
+        ], limit=1, order="id desc")
+        if picking:
+            return picking
+        roof = project.roof_project_id
+        order = roof.sale_order_id if roof else False
+        partner = (order.partner_shipping_id if order else False) or project.partner_id
+        destination = (
+            picking_type.default_location_dest_id
+            or (partner and partner.property_stock_customer)
+            or self.env.ref("stock.stock_location_customers")
+        )
+        values = {
+            "picking_type_id": picking_type.id,
+            "partner_id": partner.id if partner else False,
+            "origin": origin,
+            "location_id": picking_type.default_location_src_id.id,
+            "location_dest_id": destination.id,
+            "company_id": company.id,
+        }
+        if roof and roof.planned_date_begin:
+            values["scheduled_date"] = roof.planned_date_begin
+        # With the roof project's transfers (tectora_roof_stock): on the roof
+        # project, so its material transfers do not ship these again.
+        if roof and "tectora_roof_project_id" in Picking._fields:
+            values["tectora_roof_project_id"] = roof.id
+        return Picking.create(values)
 
     def action_tectora_view_purchases(self):
         self.ensure_one()
@@ -351,6 +532,36 @@ class TectoraProjectOrderProduct(models.Model):
     )
     free_qty = fields.Float(string="Vrije voorraad", digits="Product Unit", compute="_compute_stock")
     shortage_qty = fields.Float(string="Tekort", digits="Product Unit", compute="_compute_stock")
+    purchase_line_id = fields.Many2one(
+        "purchase.order.line", string="Inkooplijn", ondelete="set null", copy=False,
+        help="De lijn van de prijsaanvraag of inkooporder waarop dit product besteld is.",
+    )
+    move_id = fields.Many2one(
+        "stock.move", string="Levering uit stock", ondelete="set null", copy=False,
+        help="De beweging op de uitgaande levering waarmee dit product uit het "
+        "magazijn naar de werf gaat.",
+    )
+    source = fields.Selection(
+        [
+            ("to_order", "Te bestellen"),
+            ("ordered", "In bestelling"),
+            ("stock", "Uit magazijn"),
+        ],
+        string="Herkomst",
+        compute="_compute_source",
+        help="Te bestellen tot het op een prijsaanvraag of een levering uit "
+        "stock staat; een geannuleerde bestelling of levering zet het terug.",
+    )
+
+    @api.depends("purchase_line_id.order_id.state", "move_id.state")
+    def _compute_source(self):
+        for line in self:
+            if line.purchase_line_id and line.purchase_line_id.order_id.state != "cancel":
+                line.source = "ordered"
+            elif line.move_id and line.move_id.state != "cancel":
+                line.source = "stock"
+            else:
+                line.source = "to_order"
 
     @api.depends("product_id")
     def _compute_uom_id(self):

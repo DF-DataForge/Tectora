@@ -95,21 +95,61 @@ export class TectoraOrderBoard extends Component {
             open: true,
             loading: true,
             items: [],
+            // Set apart: per purchase order, and per delivery from stock.
+            ordered: [],
+            stock: [],
             search: "",
             // "+ Ander product": products beyond the material list.
             extra: { open: false, term: "", results: [], loading: false },
         };
         const panel = this.state.products[line.id];
-        const items = await this.board.orm.call(
+        const result = await this.board.orm.call(
             "tectora.project.order.line",
             "tectora_get_supplier_products",
             [[line.id]]
         );
         // Not when the list was dropped meanwhile (another supplier chosen).
         if (this.state.products[line.id] === panel) {
-            panel.items = items;
+            panel.items = result.items;
+            panel.ordered = result.ordered;
+            panel.stock = result.stock;
             panel.loading = false;
         }
+    }
+
+    /** The products a button acts on: those selected in the list. */
+    selectedPayload(line, what) {
+        const selected = this.selectedProducts(line);
+        if (!selected.length) {
+            this.notification.add(`Selecteer eerst de producten om ${what}.`, { type: "warning" });
+            return null;
+        }
+        return selected.map((item) => ({ product_id: item.id, quantity: item.quantity }));
+    }
+
+    /** The selected products go from the warehouse to the site. */
+    async deliverFromStock(line) {
+        const products = this.selectedPayload(line, "uit stock te leveren");
+        if (!products) {
+            return;
+        }
+        await this.board.mutate(this.state, () =>
+            this.board.orm.call(
+                "tectora.project.order.line",
+                "action_tectora_deliver_from_stock",
+                [[line.id], products]
+            )
+        );
+        return this.loadProducts(line);
+    }
+
+    openRecord(model, id) {
+        return this.board.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: model,
+            res_id: id,
+            views: [[false, "form"]],
+        });
     }
 
     toggleProducts(line) {
@@ -212,18 +252,12 @@ export class TectoraOrderBoard extends Component {
         const panel = this.productPanel(line);
         const kwargs = {};
         if (panel && !panel.loading && panel.items.length) {
-            const selected = this.selectedProducts(line);
-            if (!selected.length) {
+            const products = this.selectedPayload(line, "te bestellen");
+            if (!products) {
                 panel.open = true;
-                this.notification.add("Selecteer eerst de producten om te bestellen.", {
-                    type: "warning",
-                });
                 return;
             }
-            kwargs.products = selected.map((item) => ({
-                product_id: item.id,
-                quantity: item.quantity,
-            }));
+            kwargs.products = products;
         }
         return this.board.mutate(this.state, () =>
             this.board.orm.call(

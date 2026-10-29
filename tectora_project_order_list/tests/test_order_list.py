@@ -174,6 +174,55 @@ class TestOrderList(TransactionCase):
         names = {item["name"] for item in line.tectora_get_supplier_products()}
         self.assertIn("Rotswol", names)
 
+    def test_ordered_and_stock_products_are_set_apart(self):
+        project = self._project()
+        line = project.tectora_order_line_ids[0]  # Dakmaterialen NV chosen
+        screws = self.env["product.product"].create({
+            "name": "Schroeven", "is_storable": True, "purchase_ok": True,
+        })
+        stock = self.env.ref("stock.stock_location_stock")
+        self.env["stock.quant"]._update_available_quantity(screws, stock, 10)
+
+        # Ordered: set apart under its purchase order.
+        action = line.action_tectora_create_purchase(
+            products=[{"product_id": self.product.id, "quantity": 5}]
+        )
+        purchase = self.env["purchase.order"].browse(action["res_id"])
+        data = line.tectora_get_supplier_products()
+        self.assertNotIn(self.product.id, [item["id"] for item in data["items"]])
+        self.assertEqual(len(data["ordered"]), 1)
+        self.assertIn("Dakmaterialen NV", data["ordered"][0]["title"])
+        self.assertEqual(data["ordered"][0]["reference"], purchase.name)
+        self.assertEqual(data["ordered"][0]["lines"][0]["quantity"], 5)
+
+        # From the warehouse: on an outgoing delivery that reserves the stock.
+        line.action_tectora_deliver_from_stock([{"product_id": screws.id, "quantity": 4}])
+        data = line.tectora_get_supplier_products()
+        self.assertEqual(len(data["stock"]), 1)
+        group = data["stock"][0]
+        picking = self.env["stock.picking"].browse(group["id"])
+        self.assertEqual(picking.picking_type_id.code, "outgoing")
+        move = picking.move_ids
+        self.assertEqual(move.product_id, screws)
+        self.assertEqual(move.product_uom_qty, 4)
+        self.assertEqual(move.state, "assigned", "the stock is reserved")
+        self.assertEqual(screws.with_company(self.env.company).free_qty, 6)
+        # A second delivery from stock goes on the same open delivery.
+        line.action_tectora_deliver_from_stock([{"product_id": screws.id, "quantity": 2}])
+        self.assertEqual(len(picking.move_ids), 2)
+        service = self.env["product.product"].create({
+            "name": "Kraanhuur", "type": "service", "purchase_ok": True,
+        })
+        with self.assertRaises(UserError, msg="only stocked products come from the warehouse"):
+            line.action_tectora_deliver_from_stock([{"product_id": service.id, "quantity": 1}])
+
+        # A cancelled order puts its products back on top.
+        purchase.button_cancel()
+        line.product_line_ids.invalidate_recordset(["source"])
+        data = line.tectora_get_supplier_products()
+        self.assertIn(self.product.id, [item["id"] for item in data["items"]])
+        self.assertFalse(data["ordered"])
+
     def test_board_data_and_empty_configuration(self):
         project = self._project()
         data = project.tectora_get_order_list_data()

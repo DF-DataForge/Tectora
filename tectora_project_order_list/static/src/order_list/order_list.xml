@@ -87,6 +87,29 @@
         </div>
     </t>
 
+    <!-- The products set apart: per purchase order ("Reeds in bestelling bij
+         ..."), and per delivery from the warehouse, each with its status. -->
+    <t t-name="tectora_project_order_list.OrderBoardProductGroups">
+        <t t-if="!panel.loading">
+            <div t-foreach="panel.ordered.concat(panel.stock)" t-as="group" t-key="group.model + group.id"
+                 class="o_tectora_products_group mt-2 pt-2 border-top">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <i class="oi text-muted" t-att-data-icon="group.model === 'stock.picking' ? 'warehouse' : 'shopping_cart'"/>
+                    <span class="small fw-bold" t-out="group.title"/>
+                    <a href="#" class="small" t-on-click.prevent="() => this.openRecord(group.model, group.id)" t-out="group.reference"/>
+                    <span t-att-class="'badge ' + (group.tone === 'success' ? 'text-bg-success' : 'text-bg-warning')" t-out="group.state"/>
+                </div>
+                <ul class="list-unstyled mb-0 ms-4 small">
+                    <li t-foreach="group.lines" t-as="entry" t-key="entry.id" class="d-flex gap-2">
+                        <span class="flex-grow-1" t-out="entry.name"/>
+                        <span t-if="entry.state" class="text-muted" t-out="entry.state"/>
+                        <span class="text-nowrap"><t t-out="entry.quantity"/> <t t-out="entry.uom"/></span>
+                    </li>
+                </ul>
+            </div>
+        </t>
+    </t>
+
     <!-- Order list page -->
     <t t-name="tectora_project_order_list.OrderBoard">
         <div class="o_action o_tectora_order_board">
@@ -207,7 +230,10 @@
                                                 <div class="o_tectora_products border rounded p-2">
                                                     <div t-if="panel.loading" class="text-muted small">Producten laden…</div>
                                                     <div t-elif="!panel.items.length" class="text-muted small">
-                                                        <t t-if="line.partner_id">
+                                                        <t t-if="panel.ordered.length or panel.stock.length">
+                                                            Alles van dit onderdeel is besteld of komt uit het magazijn.
+                                                        </t>
+                                                        <t t-elif="line.partner_id">
                                                             Geen producten van <b t-out="line.partner_name"/> op de materiaallijst
                                                             van dit project. De lijst toont enkel wat het project nodig heeft
                                                             (materiaallijst van de bevestigde order) en wat deze leverancier levert
@@ -229,6 +255,11 @@
                                                             <span class="small text-muted ms-auto">
                                                                 <t t-out="this.selectedProducts(line).length"/> geselecteerd · Bestellen zet ze op de prijsaanvraag
                                                             </span>
+                                                            <button class="btn btn-sm btn-secondary"
+                                                                    title="De geselecteerde producten op een uitgaande levering naar de werf: de voorraad wordt gereserveerd"
+                                                                    t-on-click="() => this.deliverFromStock(line)">
+                                                                <i class="oi me-1" data-icon="warehouse"/>Leveren vanuit stock
+                                                            </button>
                                                         </div>
                                                         <ul class="list-unstyled mb-0 o_tectora_products_list">
                                                             <li t-foreach="this.visibleProducts(panel)" t-as="item" t-key="item.id"
@@ -240,8 +271,8 @@
                                                                     <t t-out="item.name"/>
                                                                     <span t-if="item.code" class="text-muted small ms-1">[<t t-out="item.code"/>]</span>
                                                                     <span t-if="item.needed !== false" class="text-muted small ms-1">· nodig: <t t-out="item.needed"/> <t t-out="item.uom"/></span>
-                                                                    <span t-if="line.action === 'stock_first' and item.free_qty !== false"
-                                                                          class="text-muted small ms-1">· vrij: <t t-out="item.free_qty"/></span>
+                                                                    <span t-if="item.free_qty !== false"
+                                                                          t-att-class="'small ms-1 ' + (item.free_qty &gt; 0 ? 'text-success' : 'text-muted')">· in stock: <t t-out="item.free_qty"/> <t t-out="item.uom"/></span>
                                                                 </span>
                                                                 <input type="number" min="0" step="any"
                                                                        class="form-control form-control-sm text-end o_tectora_product_qty"
@@ -253,6 +284,7 @@
                                                         <div t-if="!this.visibleProducts(panel).length" class="text-muted small">Geen producten voor deze zoekterm.</div>
                                                     </t>
                                                     <t t-call="tectora_project_order_list.OrderBoardExtraProducts"/>
+                                                    <t t-call="tectora_project_order_list.OrderBoardProductGroups"/>
                                                 </div>
                                             </td>
                                         </tr>
