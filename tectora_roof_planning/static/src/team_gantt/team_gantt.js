@@ -4,6 +4,7 @@ import { registry } from "@web/core/registry";
 import { ganttView } from "@web_gantt/gantt_view";
 import { GanttRenderer } from "@web_gantt/gantt_renderer";
 import { onMounted, onPatched } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
 
 // How much taller than the standard gantt the team planner's blocks are.
 const PILL_SCALE = 3;
@@ -111,9 +112,41 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
     }
 }
 
+/**
+ * The team planner's controller: "Weer vernieuwen" next to the gantt's own
+ * buttons fetches the weather forecasts now (they are fetched every morning
+ * too) and reloads the planner.
+ */
+export class TectoraTeamGanttController extends ganttView.Controller {
+    // The gantt's own buttons, which ours are added to.
+    static tectoraButtons = ganttView.buttonTemplate;
+
+    setup() {
+        super.setup(...arguments);
+        this.tectoraOrm = useService("orm");
+        this.tectoraAction = useService("action");
+    }
+
+    async onTectoraRefreshWeather() {
+        const action = await this.tectoraOrm.call(
+            "tectora.roof.planning",
+            "action_tectora_refresh_weather",
+            []
+        );
+        await this.tectoraAction.doAction(action);
+    }
+}
+
 export const tectoraTeamGanttView = {
     ...ganttView,
+    Controller: TectoraTeamGanttController,
     Renderer: TectoraTeamGanttRenderer,
 };
+// Only when the gantt takes its buttons from a template (as the other views
+// do); without one the planner keeps the gantt's own buttons, and the
+// forecasts are refreshed from the work blocks' list or form.
+if (ganttView.buttonTemplate) {
+    tectoraTeamGanttView.buttonTemplate = "tectora_roof_planning.TeamGanttButtons";
+}
 
 registry.category("views").add("tectora_team_gantt", tectoraTeamGanttView);
