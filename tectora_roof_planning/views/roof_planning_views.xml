@@ -3,9 +3,8 @@
 
     <!-- The team planner: one row per ploeg, one project block per work block
          (customer, municipality, roof area, project type and crew size on the
-         bar). The
-         block's colour is its project's, its style its state: a concept
-         is hatched, a finished block greyed out (team_gantt.scss). Dragging
+         bar). The block's colour is its project's, its style its state: a
+         concept is hatched, a finished block greyed out (team_gantt.scss). Dragging
          or resizing a block moves the shifts of every employee on it; the
          block's summary form lists those employees and lets one be taken
          off. -->
