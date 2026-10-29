@@ -26,7 +26,7 @@ Footers, Odoo's Quote Builder) as the structure of every quotation:
   first page (e.g. under "Voorstel op maat" on the cover), centred, in the
   company's primary colour, at a height set on the document.
     """,
-    "version": "20.0.1.5.0",
+    "version": "20.0.1.6.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

@@ -198,6 +198,42 @@ class TestQuoteDocuments(TransactionCase):
         self.assertIn("LAYOUT VOET", terms)
         self.assertNotIn("Dhr. Michiels Philippe", terms, "only on the first header")
 
+    def test_layout_frame_rendered_once_per_company(self):
+        """The frame only depends on the company's layout: a second order,
+        or a second print, reuses it; a change of the company renders it
+        again."""
+        from odoo.addons.tectora_quote_builder.models import ir_actions_report as module
+        module.FRAME_CACHE.clear()
+        renders = []
+
+        def render(self, report_ref, res_ids=None, data=None):
+            renders.append(res_ids)
+            return TestQuoteDocuments.frame, "pdf"
+
+        first, second = self._order(), self._order()
+        with patch.object(type(self.Report), "_render_qweb_pdf", render):
+            self.assertTrue(self.Report._tectora_layout_frame(first))
+            self.assertTrue(self.Report._tectora_layout_frame(second))
+            self.assertEqual(len(renders), 1, "one render for both orders")
+            company = first.company_id
+            other_layout = self.env["report.layout"].search(
+                [("view_id", "!=", company.external_report_layout_id.id)], limit=1
+            ).view_id
+            company.external_report_layout_id = other_layout
+            self.assertTrue(self.Report._tectora_layout_frame(first))
+            self.assertEqual(len(renders), 2, "rendered again for another layout")
+        module.FRAME_CACHE.clear()
+
+    def test_damaged_stream_decompressed(self):
+        """A stream with a damaged end is read as far as it goes, quickly."""
+        import zlib
+        from odoo.addons.tectora_quote_builder.models.ir_actions_report import (
+            _decompress_damaged,
+        )
+        raw = b"BT /F1 12 Tf (Tectora) Tj ET\n" * 20000
+        damaged = zlib.compress(raw)[:-4] + b"\0\0\0\0junk"
+        self.assertEqual(_decompress_damaged(damaged), raw)
+
     def test_document_outside_layout_unchanged(self):
         self.footer.tectora_in_layout = False
         order = self._order(quotation_document_ids=[(6, 0, self.footer.ids)])
