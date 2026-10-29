@@ -13,6 +13,23 @@ def _group_by_four(number):
     return " ".join(number[i:i + 4] for i in range(0, len(number), 4))
 
 
+# The lower edge of each layout's header, where the page shows again: points
+# (fraction of the page width, millimetres from the top of the page), from
+# left to right. Read from the header shapes in report_templates.xml; used to
+# cut away the own band of the PDF pages printed in the layout (the headers and
+# footers of the quotation) along the header's own shape.
+HEADER_CONTOURS = {
+    # The roof letterhead: the band is 40mm high (viewBox 160 high), its roof
+    # edge ends at 150 on the left, 118 at the peak (777/1000) and 134 on the
+    # right.
+    "tectora_report_layout.external_layout_tectora_roof_letterhead": [
+        (0.0, 37.5), (0.777, 29.5), (1.0, 33.5),
+    ],
+    "tectora_report_layout.external_layout_tectora_letterhead": [(0.0, 27.6), (1.0, 27.6)],
+    "tectora_report_layout.external_layout_tectora_letterhead_light": [(0.0, 27.6), (1.0, 27.6)],
+}
+
+
 class ResCompany(models.Model):
     _inherit = "res.company"
 
@@ -22,6 +39,13 @@ class ResCompany(models.Model):
         selection_add=[("tectora", "Tectora")],
         ondelete={"tectora": "set default"},
     )
+
+    def _tectora_header_contour(self):
+        """The lower edge of the header of the company's document layout, as
+        points (fraction of the page width, mm from the top) from left to
+        right; None for a layout whose shape is not known here."""
+        self.ensure_one()
+        return HEADER_CONTOURS.get(self.external_report_layout_id.key)
 
     def _tectora_letterhead_services(self):
         """The services on the right of the letterhead band, when the company
