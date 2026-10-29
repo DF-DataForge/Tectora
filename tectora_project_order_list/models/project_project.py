@@ -164,3 +164,35 @@ class ProjectProject(models.Model):
             "progress": self.tectora_order_progress,
             "late": len([line for line in lines if line["late"]]),
         }
+
+    # ---------------------------------------------------------------- overview
+    @api.model
+    def _tectora_overview_sections(self, active):
+        """The projects overview: where the order lists of the open projects
+        stand, each status opening the projects with such parts."""
+        sections = super()._tectora_overview_sections(active)
+        lines = self.env["tectora.project.order.line"].search([
+            ("project_id", "in", active.ids), ("checked", "=", False),
+        ])
+        if not lines:
+            return sections
+        statuses = dict(lines._fields["status"]._description_selection(self.env))
+        late = lines.filtered("is_late")
+        items = [{
+            "label": self.env._("Te laat"),
+            "value": len(late),
+            "ids": late.project_id.ids,
+            "help": self.env._("Onderdelen waarvan de verwachte levering voorbij is."),
+            "tone": "danger",
+        }]
+        for status, tone in (("todo", "warning"), ("rfq", "info"), ("ordered", "primary")):
+            status_lines = lines.filtered(lambda line: line.status == status)
+            items.append({
+                "label": statuses.get(status, status),
+                "value": len(status_lines),
+                "ids": status_lines.project_id.ids,
+                "help": self.env._("Aantal onderdelen; klik voor de projecten."),
+                "tone": tone,
+            })
+        sections.append({"key": "order_list", "title": self.env._("Bestellijsten"), "items": items})
+        return sections

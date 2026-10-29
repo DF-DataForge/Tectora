@@ -9,6 +9,22 @@
         <field name="context">{'default_sale_ok': True, 'default_type': 'consu', 'default_is_storable': True}</field>
     </record>
 
+    <!-- The projects overview: key figures over all projects, each opening
+         the projects behind it (project_overview.py, static/src/project_overview). -->
+    <record id="action_tectora_project_overview" model="ir.actions.client">
+        <field name="name">Projectoverzicht</field>
+        <field name="tag">tectora_project_overview</field>
+    </record>
+
+    <!-- First under Project, so the app opens on it (its root menu has no
+         action of its own and opens its first submenu); Projecten stays
+         right after it. -->
+    <menuitem id="menu_project_overview"
+              name="Overzicht"
+              parent="project.menu_main_pm"
+              action="action_tectora_project_overview"
+              sequence="0"/>
+
     <menuitem id="menu_tectora_root"
               name="Dakmeting"
               web_icon="tectora_roof,static/description/icon.png"
@@ -19,6 +35,12 @@
               parent="menu_tectora_root"
               action="action_tectora_roof_project"
               sequence="10"/>
+
+    <menuitem id="menu_tectora_project_overview"
+              name="Projectoverzicht"
+              parent="menu_tectora_root"
+              action="action_tectora_project_overview"
+              sequence="11"/>
 
     <!-- The plannable projects behind the roof projects, opening on their
          dashboard (omzet en kosten, leveringen, taken, planning). -->

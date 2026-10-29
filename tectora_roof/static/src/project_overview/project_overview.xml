@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- One figure: a tile that opens the projects behind it. -->
+    <t t-name="tectora_roof.ProjectOverviewTile">
+        <button t-att-class="'o_tectora_overview_tile o_tectora_tone_' + (tile.tone or 'neutral')"
+                t-att-title="tile.help"
+                t-att-disabled="tile.ids.length ? undefined : true"
+                t-on-click="() => this.openProjects(tile.ids, tile.label)">
+            <span class="o_tectora_overview_tile_label" t-out="tile.label"/>
+            <span class="o_tectora_overview_tile_value" t-out="tile.value"/>
+            <span t-if="tile.sub" class="o_tectora_overview_tile_sub" t-out="tile.sub"/>
+        </button>
+    </t>
+
+    <t t-name="tectora_roof.ProjectOverview">
+        <div class="o_action o_tectora_project_overview">
+            <Layout display="{ controlPanel: {} }">
+                <t t-set-slot="control-panel-buttons">
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-primary" t-on-click="() => this.openAllProjects()">
+                            <i class="oi me-1" data-icon="view_kanban"/>Alle projecten
+                        </button>
+                        <button class="btn btn-secondary" t-on-click="() => this.load()" title="Vernieuwen">
+                            <i class="oi" data-icon="refresh"/>
+                        </button>
+                    </div>
+                </t>
+
+                <div class="o_tectora_overview_content">
+                    <div t-if="!this.state.data" class="text-muted p-4">Laden…</div>
+                    <t t-else="">
+                        <t t-set="data" t-value="this.state.data"/>
+                        <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+                            <h2 class="mb-0">Projectoverzicht</h2>
+                            <span class="text-muted" t-out="data.today"/>
+                        </div>
+
+                        <h5 class="o_tectora_overview_heading">Status</h5>
+                        <div class="o_tectora_overview_tiles mb-4">
+                            <t t-foreach="data.status_tiles" t-as="tile" t-key="tile.key">
+                                <t t-call="tectora_roof.ProjectOverviewTile"/>
+                            </t>
+                        </div>
+
+                        <h5 class="o_tectora_overview_heading">
+                            Financieel <span class="text-muted small fw-normal">alle projecten, excl. btw<t t-if="data.margin_percent"> · marge <t t-out="data.margin_percent"/></t></span>
+                        </h5>
+                        <div class="o_tectora_overview_tiles mb-4">
+                            <t t-foreach="data.money_tiles" t-as="tile" t-key="tile.key">
+                                <t t-call="tectora_roof.ProjectOverviewTile"/>
+                            </t>
+                        </div>
+
+                        <div t-if="data.sections.length" class="o_tectora_overview_grid mb-4">
+                            <div t-foreach="data.sections" t-as="section" t-key="section.key" class="o_tectora_overview_panel">
+                                <h5 class="o_tectora_overview_heading" t-out="section.title"/>
+                                <div t-foreach="section.items" t-as="entry" t-key="entry_index"
+                                     t-att-class="'o_tectora_overview_bar ' + (entry.ids.length ? 'o_clickable' : '')"
+                                     t-att-title="entry.help"
+                                     t-on-click="() => this.openProjects(entry.ids, section.title + ' · ' + entry.label)">
+                                    <span class="o_tectora_overview_bar_label" t-out="entry.label"/>
+                                    <span class="o_tectora_overview_bar_track">
+                                        <span t-att-class="'o_tectora_overview_bar_fill o_tectora_tone_' + (entry.tone or 'primary')"
+                                              t-att-style="'width: ' + this.barWidth(section, entry)"/>
+                                    </span>
+                                    <span class="o_tectora_overview_bar_value" t-out="entry.value"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_tectora_overview_grid">
+                            <div t-foreach="data.lists" t-as="list" t-key="list.key" class="o_tectora_overview_panel">
+                                <div class="d-flex align-items-baseline">
+                                    <h5 class="o_tectora_overview_heading flex-grow-1" t-out="list.title"/>
+                                    <a t-if="list.ids.length" href="#" class="small"
+                                       t-on-click.prevent="() => this.openProjects(list.ids, list.title)">
+                                        Alle <t t-out="list.ids.length"/>
+                                    </a>
+                                </div>
+                                <div t-if="!list.items.length" class="text-muted small" t-out="list.empty"/>
+                                <ul t-else="" class="list-unstyled mb-0">
+                                    <li t-foreach="list.items" t-as="item" t-key="item.id"
+                                        t-att-class="'o_tectora_overview_item o_tectora_tone_' + (item.tone or 'neutral')"
+                                        title="Projectdashboard openen"
+                                        t-on-click="() => this.openProject(item.id)">
+                                        <div class="flex-grow-1 text-truncate">
+                                            <div class="fw-semibold text-truncate" t-out="item.name"/>
+                                            <div t-if="item.sub" class="small text-muted text-truncate" t-out="item.sub"/>
+                                        </div>
+                                        <div t-if="item.value" class="o_tectora_overview_item_value" t-out="item.value"/>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </Layout>
+        </div>
+    </t>
+
+</templates>

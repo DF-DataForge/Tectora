@@ -193,3 +193,4 @@ Releases and the modules they need upgraded:
 | Offerte-PDF sneller: lay-outkader hergebruikt, voorpagina in één doorgang | `tectora_quote_builder` (20.0.1.6.0) |
 | Offerte-PDF: prijs excl. en incl. btw, ook per sectie | `tectora_roof` (20.0.3.55.0) |
 | Planning per ploeg: blokken echt 3× hoger in Odoo 20 | `tectora_roof_planning` (20.0.1.15.0) |
+| Projectoverzicht als startpagina van de Project-app | `tectora_roof` (20.0.3.56.0), `tectora_project_tasks` (20.0.1.2.0), `tectora_project_order_list` (20.0.1.3.0) |

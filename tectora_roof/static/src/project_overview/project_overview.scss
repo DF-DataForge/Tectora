@@ -1,0 +1,160 @@
+// Projects overview: the start page of the Project app. Tiles in the look of
+// the project dashboard's cards, a coloured edge per kind of figure.
+.o_tectora_project_overview {
+    .o_tectora_overview_content {
+        padding: 1rem 1.25rem;
+        overflow: auto;
+        height: 100%;
+    }
+
+    .o_tectora_overview_heading {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6c757d;
+        margin-bottom: 0.6rem;
+    }
+
+    .o_tectora_overview_tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .o_tectora_overview_tile {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+        padding: 0.7rem 0.9rem;
+        text-align: left;
+        background: #f8f9fa;
+        border: 1px solid var(--border-color, #e2e6e9);
+        border-left: 4px solid var(--o-tectora-tone, #6c757d);
+        border-radius: 8px;
+        color: inherit;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+        &:hover:not([disabled]),
+        &:focus-visible {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
+            background: #fff;
+        }
+
+        &[disabled] {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .o_tectora_overview_tile_label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6c757d;
+        }
+
+        .o_tectora_overview_tile_value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .o_tectora_overview_tile_sub {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    }
+
+    .o_tectora_overview_grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1rem;
+    }
+
+    .o_tectora_overview_panel {
+        padding: 0.8rem 1rem;
+        background: #fff;
+        border: 1px solid var(--border-color, #e2e6e9);
+        border-radius: 8px;
+        min-width: 0;
+    }
+
+    .o_tectora_overview_item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.45rem 0.5rem;
+        border-bottom: 1px solid var(--border-color, #e2e6e9);
+        border-left: 3px solid var(--o-tectora-tone, transparent);
+        cursor: pointer;
+
+        &:last-child {
+            border-bottom: 0;
+        }
+
+        &:hover {
+            background: rgba($o-brand-primary, 0.06);
+        }
+
+        &.o_tectora_tone_neutral {
+            --o-tectora-tone: transparent;
+        }
+    }
+
+    .o_tectora_overview_item_value {
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
+    .o_tectora_overview_bar {
+        display: grid;
+        grid-template-columns: minmax(7rem, 35%) 1fr 2.5rem;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.3rem 0.25rem;
+        border-radius: 4px;
+
+        &.o_clickable {
+            cursor: pointer;
+
+            &:hover {
+                background: rgba($o-brand-primary, 0.06);
+            }
+        }
+    }
+
+    .o_tectora_overview_bar_label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .o_tectora_overview_bar_track {
+        height: 0.6rem;
+        background: #eef0f2;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .o_tectora_overview_bar_fill {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--o-tectora-tone, #0a7483);
+    }
+
+    .o_tectora_overview_bar_value {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    // The colour of a figure: the edge of a tile, a list item or a bar.
+    .o_tectora_tone_neutral { --o-tectora-tone: #6c757d; }
+    .o_tectora_tone_primary { --o-tectora-tone: #0a7483; }
+    .o_tectora_tone_info { --o-tectora-tone: #2563eb; }
+    .o_tectora_tone_success { --o-tectora-tone: #198754; }
+    .o_tectora_tone_warning { --o-tectora-tone: #d97706; }
+    .o_tectora_tone_danger { --o-tectora-tone: #dc3545; }
+}
