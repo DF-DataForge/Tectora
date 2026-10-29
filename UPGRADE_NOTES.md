@@ -197,3 +197,4 @@ Releases and the modules they need upgraded:
 | Weersvoorspelling (Open-Meteo) op de werkblokken en in de ploegplanner, dagelijks en met "Weer vernieuwen" | `tectora_roof_planning` (20.0.1.16.0) |
 | Fix "Weer vernieuwen" op het formulier van een werkblok | `tectora_roof_planning` (20.0.1.17.0) |
 | Planning per ploeg: rijen blijven hoog bij laden en slepen | `tectora_roof_planning` (20.0.1.18.0) |
+| Stuklijst op maat: stuks, extra marge per lijn, kostprijs per stuk | `tectora_roof` (20.0.3.57.0), `tectora_sale_bom` (20.0.1.4.0) |

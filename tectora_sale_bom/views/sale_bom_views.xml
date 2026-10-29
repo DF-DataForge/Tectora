@@ -49,7 +49,10 @@
                             <field name="product_uom_id" groups="uom.group_uom"
                                    options="{'no_create': True, 'no_open': True}"
                                    widget="many2one_uom"/>
-                            <field name="tectora_recalc_info" readonly="1" optional="show"
+                            <field name="extra_margin" string="Extra marge %" width="90px"/>
+                            <field name="pieces" widget="tectora_recalc_pieces" readonly="1"/>
+                            <field name="pieces_uom_id" column_invisible="True"/>
+                            <field name="tectora_recalc_info" readonly="1" optional="hide"
                                    class="text-muted"/>
                             <field name="unit_cost"/>
                             <field name="cost_subtotal" sum="Totaal"/>
