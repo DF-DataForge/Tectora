@@ -987,13 +987,14 @@ class SaleOrder(models.Model):
             for bom_line, line_data in lines_done
         ]
 
-    def _tectora_component_values(self, line, product, quantity, uom, bom_name):
+    def _tectora_component_values(self, line, product, quantity, uom, bom_name, margin=None):
         """Material values of a component of a bill of materials. A component
         with hercalculatie is counted in m² or m³ on the bill of materials
         and needed in pieces: ``quantity`` is turned into pieces of the
-        product's own unit."""
+        product's own unit, with the product's safety margin or ``margin``
+        (in %, a bill of materials line's own)."""
         if product.tectora_recalc:
-            quantity = product.product_tmpl_id._tectora_recalculate(quantity)
+            quantity = product.product_tmpl_id._tectora_recalculate(quantity, margin)
             uom = product.uom_id
         return self._tectora_material_values(line, product, quantity, uom, bom_name)
 

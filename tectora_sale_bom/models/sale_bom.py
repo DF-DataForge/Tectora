@@ -15,6 +15,7 @@ the whole line (one container per site).
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare, float_is_zero
+from odoo.tools.misc import formatLang
 
 # The reference of a bill of materials saved from a quotation.
 SAVED_REFERENCE = "Op maat"
@@ -115,24 +116,21 @@ class TectoraSaleBom(models.Model):
         "line_ids.unit_cost",
         "line_ids.quantity",
         "line_ids.fixed_quantity",
+        "line_ids.pieces",
         "quantity_in_product_uom",
     )
     def _compute_costs(self):
         for bom in self:
             bom.cost_total = sum(bom.line_ids.mapped("cost_subtotal"))
-            variable = sum(
-                line.quantity * line.unit_cost
-                for line in bom.line_ids
-                if not line.fixed_quantity
-            )
-            fixed = sum(
-                line.quantity * line.unit_cost
-                for line in bom.line_ids
-                if line.fixed_quantity
-            )
             quantity = bom.quantity_in_product_uom
-            # Per unit of the product; fixed costs spread over the line.
-            per_product_unit = variable + (fixed / quantity if quantity else 0.0)
+            if quantity:
+                # What the line costs (whole pieces, margins included),
+                # spread over what is sold.
+                per_product_unit = bom.cost_total / quantity
+            else:
+                per_product_unit = sum(
+                    line.cost_subtotal for line in bom.line_ids if not line.fixed_quantity
+                )
             product_unit = bom.product_id.uom_id
             line_unit = bom.product_uom_id
             if product_unit and line_unit and product_unit != line_unit:
@@ -349,12 +347,36 @@ class TectoraSaleBomLine(models.Model):
         help="De hoeveelheid geldt voor de hele orderlijn en groeit niet mee "
         "met de verkochte hoeveelheid.",
     )
+    extra_margin = fields.Float(
+        string="Extra marge (%)",
+        compute="_compute_extra_margin",
+        store=True,
+        precompute=True,
+        readonly=False,
+        digits=(16, 2),
+        help="Extra materiaal bovenop het totaal, voor overlap, snijverlies en "
+        "breuk. Standaard de veiligheidsmarge van het product, anders 0 %. "
+        "Telt mee in de stuks, de kost en de materiaallijst.",
+    )
     total_quantity = fields.Float(
         string="Totaal",
         compute="_compute_total_quantity",
         digits="Product Unit",
         help="Wat de lijn nodig heeft: hoeveelheid × verkochte hoeveelheid, "
         "of de vaste hoeveelheid.",
+    )
+    pieces = fields.Float(
+        string="Stuks",
+        compute="_compute_pieces",
+        digits="Product Unit",
+        help="Wat er voorzien moet worden: het totaal plus de extra marge; "
+        "bij een product met hercalculatie omgerekend naar stuks en naar "
+        "boven afgerond, zoals op de materiaallijst. Ga erover voor de "
+        "berekening.",
+    )
+    pieces_uom_id = fields.Many2one(
+        "uom.uom", string="Per", compute="_compute_pieces",
+        help="Stuks bij een product met hercalculatie, anders de eenheid van de lijn.",
     )
     unit_cost = fields.Float(
         string="Kostprijs",
@@ -363,8 +385,8 @@ class TectoraSaleBomLine(models.Model):
         precompute=True,
         readonly=False,
         digits="Product Price",
-        help="Kostprijs per eenheid van de component; standaard de kostprijs "
-        "van het product.",
+        help="Kostprijs per eenheid van de component (per stuk bij een "
+        "product met hercalculatie); standaard de kostprijs van het product.",
     )
     cost_subtotal = fields.Monetary(
         string="Kost",
@@ -381,14 +403,42 @@ class TectoraSaleBomLine(models.Model):
         "materiaallijst.",
     )
 
-    @api.depends("product_id", "total_quantity")
+    @api.depends("product_id", "total_quantity", "extra_margin", "product_uom_id")
     def _compute_tectora_recalc_info(self):
         for line in self:
             template = line.product_id.product_tmpl_id
-            line.tectora_recalc_info = (
-                template._tectora_recalc_explanation(line.total_quantity, rounded=True)
-                if template else ""
-            )
+            if not template:
+                line.tectora_recalc_info = ""
+            elif template.tectora_recalc:
+                line.tectora_recalc_info = template._tectora_recalc_explanation(
+                    line.total_quantity, rounded=True, margin=line.extra_margin
+                )
+            elif line.extra_margin:
+                line.tectora_recalc_info = _(
+                    "%(qty)s %(unit)s + %(margin)s %% = %(total)s %(unit)s",
+                    qty=formatLang(self.env, line.total_quantity, digits=2),
+                    unit=line.product_uom_id.name or "",
+                    margin=formatLang(self.env, line.extra_margin, digits=2),
+                    total=formatLang(self.env, line.pieces, digits=2),
+                )
+            else:
+                line.tectora_recalc_info = ""
+
+    @api.depends("product_id")
+    def _compute_extra_margin(self):
+        for line in self:
+            line.extra_margin = line.product_id.product_tmpl_id.tectora_recalc_margin or 0.0
+
+    @api.depends("product_id", "product_uom_id", "total_quantity", "extra_margin")
+    def _compute_pieces(self):
+        for line in self:
+            template = line.product_id.product_tmpl_id
+            if template and template.tectora_recalc and template.tectora_recalc_size > 0.0:
+                line.pieces = template._tectora_recalculate(line.total_quantity, line.extra_margin)
+                line.pieces_uom_id = line.product_id.uom_id
+            else:
+                line.pieces = line.total_quantity * (1.0 + (line.extra_margin or 0.0) / 100.0)
+                line.pieces_uom_id = line.product_uom_id
 
     @api.depends("product_id")
     def _compute_product_uom_id(self):
@@ -417,12 +467,12 @@ class TectoraSaleBomLine(models.Model):
             if not product:
                 line.unit_cost = 0.0
                 continue
+            # A component with hercalculatie is counted in m, m² or m³ here
+            # but bought per piece: the cost of one piece, multiplied by the
+            # pieces needed (_compute_cost_subtotal).
             cost = product.standard_price
-            if product.tectora_recalc and product.tectora_recalc_size > 0.0:
-                # Counted in m, m² or m³ here, bought per piece of that size;
-                # the safety margin is material that is paid for too.
-                cost = product.product_tmpl_id._tectora_recalc_pieces(1.0) * cost
-            elif line.product_uom_id and line.product_uom_id != product.uom_id:
+            recalc = product.tectora_recalc and product.tectora_recalc_size > 0.0
+            if not recalc and line.product_uom_id and line.product_uom_id != product.uom_id:
                 cost = product.uom_id._compute_price(cost, line.product_uom_id)
             line.unit_cost = cost
 
@@ -435,10 +485,10 @@ class TectoraSaleBomLine(models.Model):
                 else line.quantity * line.bom_id.quantity_in_product_uom
             )
 
-    @api.depends("total_quantity", "unit_cost")
+    @api.depends("pieces", "unit_cost")
     def _compute_cost_subtotal(self):
         for line in self:
-            line.cost_subtotal = line.total_quantity * line.unit_cost
+            line.cost_subtotal = line.pieces * line.unit_cost
 
     @api.constrains("product_id", "product_uom_id")
     def _check_uom(self):

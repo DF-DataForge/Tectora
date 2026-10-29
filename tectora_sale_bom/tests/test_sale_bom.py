@@ -241,10 +241,15 @@ class TestSaleBom(TransactionCase):
         template.write({"tectora_length": 1.0, "tectora_width": 0.5})
         self.order.action_confirm()
         self.assertEqual(self.materials()[board], 200.0)
-        # In the dialog the board costs per m²: 6 per board of 0,5 m².
+        # In the dialog: 1 m² per m² of roof, 100 m² = 200 boards of 6 each,
+        # no extra margin as the board has no safety margin.
         form = self.open_dialog()
         component = form.line_ids.edit(2)
-        self.assertAlmostEqual(component.unit_cost, 12.0)
+        self.assertAlmostEqual(component.unit_cost, 6.0, msg="the cost of one board")
+        self.assertEqual(component.extra_margin, 0.0)
+        self.assertEqual(component.pieces, 200.0)
+        self.assertAlmostEqual(component.cost_subtotal, 1200.0, msg="pieces × cost per piece")
+        self.assertIn("200 stuks", component.tectora_recalc_info)
 
     def test_recalculation_unit_and_safety_margin(self):
         """A component with hercalculatie is counted in its Reken-UoM on the
@@ -276,12 +281,23 @@ class TestSaleBom(TransactionCase):
         self.order.action_confirm()
         self.assertEqual(self.materials()[roll], 5.0)
 
-        # In the dialog: in metres, and a metre costs its share of a roll
-        # plus the margin: 420 / 25 × 1,05.
+        # In the dialog: in metres, the extra margin starts at the product's
+        # safety margin, 100 m + 5 % = 105 m = 5 rolls of 420.
         form = self.open_dialog()
         component = form.line_ids.edit(2)
         self.assertEqual(component.product_uom_id, metre)
-        self.assertAlmostEqual(component.unit_cost, 17.64)
+        self.assertAlmostEqual(component.unit_cost, 420.0, msg="the cost of one roll")
+        self.assertEqual(component.extra_margin, 5.0)
+        self.assertEqual(component.pieces, 5.0)
+        self.assertAlmostEqual(component.cost_subtotal, 2100.0)
+        # Without the margin on this line: 4 rolls, here and on the
+        # material list.
+        component.extra_margin = 0.0
+        self.assertEqual(component.pieces, 4.0)
+        self.assertAlmostEqual(component.cost_subtotal, 1680.0)
+        component.save()
+        form.save()
+        self.assertEqual(self.materials()[roll], 4.0)
 
         # Another Reken-UoM moves the lines along.
         template.write({"tectora_recalc_uom": "m2", "tectora_width_mm": 1000.0})
