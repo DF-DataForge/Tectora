@@ -23,7 +23,9 @@ export class TectoraOrderBoard extends Component {
 
     setup() {
         this.notification = useService("notification");
-        this.state = proxy({ data: null, onlyOpen: false });
+        // products: per order list line, the product list opened under it
+        // ({ open, loading, items, search }).
+        this.state = proxy({ data: null, onlyOpen: false, products: {} });
         this.board = new OrderListController({
             env: this.env,
             orm: useService("orm"),
@@ -64,13 +66,90 @@ export class TectoraOrderBoard extends Component {
             ev.target.value = line.partner_id || "";
             return this.board.openLine(line);
         }
-        return this.board.writeLine(this.state, line, {
-            partner_id: value ? parseInt(value) : false,
-        });
+        return this.board
+            .writeLine(this.state, line, { partner_id: value ? parseInt(value) : false })
+            .then(() => {
+                // Another supplier delivers other products.
+                const panel = this.state.products[line.id];
+                if (panel) {
+                    delete this.state.products[line.id];
+                    if (panel.open) {
+                        return this.toggleProducts(line);
+                    }
+                }
+            });
     }
 
     onDateChange(line, field, ev) {
         return this.board.writeLine(this.state, line, { [field]: ev.target.value || false });
+    }
+
+    // ------------------------------------------------------------ products
+
+    productPanel(line) {
+        return this.state.products[line.id];
+    }
+
+    async loadProducts(line) {
+        this.state.products[line.id] = { open: true, loading: true, items: [], search: "" };
+        const panel = this.state.products[line.id];
+        const items = await this.board.orm.call(
+            "tectora.project.order.line",
+            "tectora_get_supplier_products",
+            [[line.id]]
+        );
+        // Not when the list was dropped meanwhile (another supplier chosen).
+        if (this.state.products[line.id] === panel) {
+            panel.items = items;
+            panel.loading = false;
+        }
+    }
+
+    toggleProducts(line) {
+        const panel = this.productPanel(line);
+        if (!panel) {
+            return this.loadProducts(line);
+        }
+        panel.open = !panel.open;
+    }
+
+    selectedProducts(line) {
+        const panel = this.productPanel(line);
+        return panel ? panel.items.filter((item) => item.selected) : [];
+    }
+
+    selectedCount(line) {
+        const panel = this.productPanel(line);
+        return panel ? this.selectedProducts(line).length : line.product_count;
+    }
+
+    visibleProducts(panel) {
+        const search = panel.search.trim().toLowerCase();
+        if (!search) {
+            return panel.items;
+        }
+        return panel.items.filter((item) =>
+            `${item.name} ${item.code}`.toLowerCase().includes(search)
+        );
+    }
+
+    toggleProduct(item) {
+        item.selected = !item.selected;
+    }
+
+    setAllProducts(panel, selected) {
+        for (const item of this.visibleProducts(panel)) {
+            item.selected = selected;
+        }
+    }
+
+    onProductQuantity(item, ev) {
+        const quantity = parseFloat(String(ev.target.value).replace(",", "."));
+        item.quantity = quantity > 0 ? quantity : item.quantity;
+        ev.target.value = item.quantity;
+        if (quantity > 0) {
+            item.selected = true;
+        }
     }
 
     createPurchase(line) {
@@ -78,10 +157,31 @@ export class TectoraOrderBoard extends Component {
             this.notification.add("Kies eerst een leverancier.", { type: "warning" });
             return;
         }
+        // With the product list loaded, the request for quotation holds the
+        // selected products; without it, the part's products as before.
+        const panel = this.productPanel(line);
+        const kwargs = {};
+        if (panel && !panel.loading && panel.items.length) {
+            const selected = this.selectedProducts(line);
+            if (!selected.length) {
+                panel.open = true;
+                this.notification.add("Selecteer eerst de producten om te bestellen.", {
+                    type: "warning",
+                });
+                return;
+            }
+            kwargs.products = selected.map((item) => ({
+                product_id: item.id,
+                quantity: item.quantity,
+            }));
+        }
         return this.board.mutate(this.state, () =>
-            this.board.orm.call("tectora.project.order.line", "action_tectora_create_purchase", [
-                [line.id],
-            ])
+            this.board.orm.call(
+                "tectora.project.order.line",
+                "action_tectora_create_purchase",
+                [[line.id]],
+                kwargs
+            )
         );
     }
 

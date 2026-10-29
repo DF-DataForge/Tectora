@@ -102,6 +102,57 @@ class TestOrderList(TransactionCase):
         with self.assertRaises(UserError):
             line.action_tectora_create_purchase()
 
+    def test_supplier_products_and_purchase_of_the_selection(self):
+        project = self._project()
+        line = project.tectora_order_line_ids[0]  # Dakmaterialen NV chosen
+        Product = self.env["product.product"]
+        membrane = Product.create({
+            "name": "Dakmembraan", "purchase_ok": True,
+            "seller_ids": [(0, 0, {"partner_id": self.supplier.id, "product_code": "DM-1"})],
+        })
+        gutter = Product.create({
+            "name": "Dakgoot", "purchase_ok": True,
+            "seller_ids": [(0, 0, {"partner_id": self.supplier.id})],
+        })
+        Product.create({
+            "name": "Rotswol", "purchase_ok": True,
+            "seller_ids": [(0, 0, {"partner_id": self.other_supplier.id})],
+        })
+        self.env["tectora.project.order.product"].create({
+            "order_line_id": line.id, "product_id": self.product.id, "quantity": 4,
+        })
+
+        items = {item["name"]: item for item in line.tectora_get_supplier_products()}
+        self.assertEqual(set(items), {"EPDM", "Dakmembraan", "Dakgoot"},
+                         "the chosen supplier's products and those already on the part")
+        self.assertTrue(items["EPDM"]["selected"])
+        self.assertEqual(items["EPDM"]["quantity"], 4)
+        self.assertFalse(items["Dakmembraan"]["selected"])
+        self.assertEqual(items["Dakmembraan"]["code"], "DM-1")
+
+        action = line.action_tectora_create_purchase(products=[
+            {"product_id": membrane.id, "quantity": 12},
+            {"product_id": self.product.id, "quantity": 6},
+        ])
+        order = self.env["purchase.order"].browse(action["res_id"])
+        self.assertEqual(
+            {(pl.product_id, pl.product_qty) for pl in order.order_line},
+            {(membrane, 12), (self.product, 6)},
+            "the request for quotation holds the selected products only",
+        )
+        self.assertEqual(
+            {(pl.product_id, pl.quantity) for pl in line.product_line_ids},
+            {(membrane, 12), (self.product, 6)},
+        )
+        self.assertNotIn(gutter, line.product_line_ids.product_id)
+        with self.assertRaises(UserError):
+            line.action_tectora_create_purchase(products=[])
+
+        # Without a chosen supplier: the products of the suggested ones.
+        line.partner_id = False
+        names = {item["name"] for item in line.tectora_get_supplier_products()}
+        self.assertIn("Rotswol", names)
+
     def test_board_data_and_empty_configuration(self):
         project = self._project()
         data = project.tectora_get_order_list_data()

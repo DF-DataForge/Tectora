@@ -180,3 +180,5 @@ Releases and the modules they need upgraded:
 | Planning per ploeg: grotere planningsblokken | `tectora_roof_planning` (20.0.1.11.0) |
 | Planning: filter en groepering op afdeling | `tectora_roof` (20.0.3.49.0) |
 | Planning per ploeg: kleur per projecttype, status zichtbaar, korter label | `tectora_roof` (20.0.3.50.0), `tectora_roof_planning` (20.0.1.12.0) |
+| Planning per ploeg: kleur weer per project | `tectora_roof` (20.0.3.51.0), `tectora_roof_planning` (20.0.1.13.0) |
+| Bestellijst: producten van de leverancier kiezen en bestellen | `tectora_project_order_list` (20.0.1.2.0) |
