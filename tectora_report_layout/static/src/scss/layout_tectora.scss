@@ -134,13 +134,13 @@ $o-tectora-lh-side: 8.65mm;
 
     // In the PDF the footer area is the 32mm bottom margin of the paper
     // format; the band fills its lower 27.8mm, down to the edge of the page.
+    // wkhtmltopdf only prints what the footer takes up in the flow (a fixed
+    // or absolute band has no height and left the footer empty), so the band
+    // stays in the flow, like the header's: pushed down by the 4.2mm above
+    // it and past the footer's own margins, as the header band is.
     &.o_tectora_lh_footer_pdf {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 0;
+        margin: calc(32mm - #{$o-tectora-lh-footer-height} - #{$o-default-report-margins})
+            (-$o-default-report-margins) (-$o-default-report-margins);
     }
 }
 

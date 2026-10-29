@@ -184,3 +184,7 @@ Releases and the modules they need upgraded:
 | Bestellijst: producten van de leverancier kiezen en bestellen | `tectora_project_order_list` (20.0.1.2.0) |
 | Planning per ploeg: projecttype terug op het label | `tectora_roof` (20.0.3.52.0) |
 | Contacttype op Contacten (new module) | install `tectora_contact_type` (20.0.1.0.0) by hand from Apps (or `-i tectora_contact_type`): it is not installed by a deploy or an upgrade, so serving the code can never take the instance down on a missing `res_partner` column |
+| Planning-app: diensten gekleurd per dakproject | `tectora_roof_planning` (20.0.1.14.0) |
+| Geschatte uitvoeringstijd niet meer op de offerte-PDF | `tectora_roof` (20.0.3.53.0) |
+| Kop- en voetteksten offerte: eigen band langs de dakrand weggeknipt | `tectora_quote_builder` (20.0.1.4.0), `tectora_report_layout` (20.0.1.5.0) |
+| Briefpapier: voetband van de lay-out weer zichtbaar in de PDF | `tectora_report_layout` (20.0.1.6.0) |

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
+import re
 from unittest.mock import patch
 
 from reportlab.lib.pagesizes import A4
@@ -97,6 +98,33 @@ class TestQuoteDocuments(TransactionCase):
         self.assertRegex(content, rb"0(\.0+)? 68\.03\d* 595\.27\d* 694\.4\d* re\s+W\s+n")
         # The layout's header and footer are drawn over the page.
         self.assertGreater(content.index(b"LAYOUT KOP"), content.index(b"VOORSTEL OP MAAT"))
+
+    def test_crop_along_the_header_contour(self):
+        """With a sloped header (the roof edge), the page's own band is cut
+        along the header's lower edge, at least as deep as the straight cut."""
+        contour = [(0.0, 37.5), (0.777, 29.5), (1.0, 33.5)]
+        result = self.Report._tectora_put_in_frame(
+            self.source, self.frame, crop_top=28 * MM, crop_bottom=24 * MM,
+            header_contour=contour,
+        )
+        content = PdfFileReader(io.BytesIO(result)).pages[0].get_contents().get_data()
+        self.assertNotRegex(content, rb"694\.4\d* re", "no straight cut at 28 mm")
+        clip = re.search(rb"q\s+((?:[\d.]+ [\d.]+ [ml]\s+)+)h\s+W\s+n", content)
+        self.assertTrue(clip, "the page is clipped to a polygon")
+        corners = [tuple(map(float, point.split()[:2]))
+                   for point in re.findall(rb"[\d.]+ [\d.]+ [ml]", clip.group(1))]
+        # bottom left and right at the footer cut, then the edge from right
+        # to left: 34, 30 and 38 mm from the top (0.5 mm under the edge)
+        tops = [round((HEIGHT - y) / MM, 1) for _x, y in corners[2:]]
+        self.assertEqual(tops, [34.0, 30.0, 38.0])
+        # a straight cut deeper than the edge wins where it is lower
+        outline = self.Report._tectora_header_outline(
+            contour, 0.0, 595.276, HEIGHT - 32 * MM, to_page_y=lambda mm: HEIGHT - mm * MM,
+        )
+        ys = [round((HEIGHT - y) / MM, 1) for _x, y in outline]
+        self.assertEqual(ys[0], 38.0)
+        self.assertEqual(min(ys), 32.0)
+        self.assertEqual(ys[-1], 34.0)
 
     def test_footer_crop_only_on_given_pages(self):
         result = self.Report._tectora_put_in_frame(
