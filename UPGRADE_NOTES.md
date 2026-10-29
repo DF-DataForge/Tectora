@@ -182,3 +182,5 @@ Releases and the modules they need upgraded:
 | Planning per ploeg: kleur per projecttype, status zichtbaar, korter label | `tectora_roof` (20.0.3.50.0), `tectora_roof_planning` (20.0.1.12.0) |
 | Planning per ploeg: kleur weer per project | `tectora_roof` (20.0.3.51.0), `tectora_roof_planning` (20.0.1.13.0) |
 | Bestellijst: producten van de leverancier kiezen en bestellen | `tectora_project_order_list` (20.0.1.2.0) |
+| Planning per ploeg: projecttype terug op het label | `tectora_roof` (20.0.3.52.0) |
+| Contacttype op Contacten (new module) | install `tectora_contact_type` (20.0.1.0.0) by hand from Apps (or `-i tectora_contact_type`): it is not installed by a deploy or an upgrade, so serving the code can never take the instance down on a missing `res_partner` column |
