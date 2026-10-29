@@ -106,7 +106,14 @@ def assemble(meta, out_dir, name, music=None, music_volume=0.18, thumbnail_shot=
     total = shots[-1]["end"] - t0
     offset = t0 - meta["video_start"]
     if offset < 0:
-        raise SystemExit("recording started after the first shot; timeline is unusable")
+        # The first frame came late. Harmless while it falls inside a first
+        # shot without voice-over (the opening card): that card gets shorter.
+        first = shots[0]
+        if first["voice"] or meta["video_start"] > first["end"] - 1.0:
+            raise SystemExit("recording started after the first shot; timeline is unusable")
+        t0 = meta["video_start"]
+        total = shots[-1]["end"] - t0
+        offset = 0.0
 
     voice = build_voice_track(shots, t0, total, os.path.join(out_dir, "voice.wav"))
     final = os.path.join(out_dir, f"{name}.mp4")

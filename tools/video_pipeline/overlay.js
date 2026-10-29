@@ -252,7 +252,17 @@
         },
     };
     window.__tv = api;
-    // <html> exists before any content paints: mounting now means a card
-    // covers the page from the very first frame of a reload.
-    mount();
+    // Mount as soon as <html> exists, before any content paints, so a card
+    // covers the page from the very first frame of a reload. Init scripts
+    // can run before the parser has created <html>: wait for it then.
+    if (document.documentElement) {
+        mount();
+    } else {
+        new MutationObserver((_, observer) => {
+            if (document.documentElement) {
+                observer.disconnect();
+                mount();
+            }
+        }).observe(document, { childList: true });
+    }
 })();

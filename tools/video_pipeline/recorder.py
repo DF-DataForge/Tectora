@@ -73,6 +73,13 @@ class X11Capture:
              "-copyts", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "12", self.path],
             stdin=subprocess.PIPE,
         )
+        # Only start the shots once frames are being written: ffmpeg can take
+        # a second or two to start on a busy machine.
+        deadline = time.time() + 15
+        while time.time() < deadline:
+            if os.path.exists(self.path) and os.path.getsize(self.path) > 4096:
+                break
+            time.sleep(0.2)
         time.sleep(0.5)
 
     def stop(self):
