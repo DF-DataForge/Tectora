@@ -322,9 +322,10 @@ class TectoraRoofPlanning(models.Model):
             "Open-Meteo: %s locaties opgehaald, %s werkblokken bijgewerkt", fetched, len(blocks)
         )
 
-    @api.model
     def action_tectora_refresh_weather(self):
-        """The planner's "Weer vernieuwen": fetch now, then reload."""
+        """"Weer vernieuwen": fetch now, then reload. For every upcoming
+        block, whichever records it is called on: the planner calls it
+        without any, the form on its own block, the list on its selection."""
         blocks, fetched = self._tectora_refresh_weather()
         if blocks and not fetched:
             message = _("De weersvoorspelling kon niet opgehaald worden (Open-Meteo).")

@@ -131,7 +131,7 @@ export class TectoraTeamGanttController extends ganttView.Controller {
         const action = await this.tectoraOrm.call(
             "tectora.roof.planning",
             "action_tectora_refresh_weather",
-            []
+            [[]]
         );
         await this.tectoraAction.doAction(action);
     }
