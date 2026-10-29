@@ -49,7 +49,7 @@ Planning tab and its planning card opens the resource planner on them.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "20.0.1.17.0",
+    "version": "20.0.1.18.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
