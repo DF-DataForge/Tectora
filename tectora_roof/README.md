@@ -289,9 +289,9 @@ Tectora** (`werkuren construction` en `werkuren veiligheid` → opbouw,
 `werkuren afbraak` en `Afbraakwerken` → afbraak); zie
 `docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit volgt:
 
-* op elke **offertelijn** de uren afbraak en de uren opbouw (hoeveelheid ×
-  norm, getoond als uu:mm, met kolomtotalen; een lijn in een andere eenheid
-  wordt eerst omgerekend);
+* op elke **offertelijn** de geschatte uren, afbraak en opbouw samen in één
+  kolom **Uren** (hoeveelheid × norm, getoond als uu:mm, met kolomtotaal; een
+  lijn in een andere eenheid wordt eerst omgerekend);
 * onder de totalen van de offerte **Geschatte uren afbraak**, **Geschatte uren
   opbouw** en de **Geschatte uitvoeringstijd** samen, in uren en in werkdagen
   (uren per dag uit de werktijden van het bedrijf, anders 8). Enkel intern:

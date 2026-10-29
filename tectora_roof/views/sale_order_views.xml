@@ -65,19 +65,14 @@
                         invisible="state not in ('sale', 'done')"
                         string="Projectdashboard"/>
             </xpath>
-            <!-- The estimate per line, hours of demolition and of execution
-                 (quantity x the product's hours per unit, shown as hh:mm),
-                 each with its column total. -->
+            <!-- The estimate per line in one column: the hours of demolition
+                 and of execution together (quantity x the product's hours per
+                 unit, shown as hh:mm), with the column total. The split is in
+                 the totals under the amounts. -->
             <xpath expr="//field[@name='order_line']/list/column[@name='price_unit']"
                    position="before">
-                <field name="tectora_demolition_hours" widget="float_time"
-                       string="Uren afbraak" sum="Totaal afbraak" optional="show"
-                       invisible="display_type or is_downpayment" width="90px"/>
-                <field name="tectora_execution_hours" widget="float_time"
-                       string="Uren opbouw" sum="Totaal opbouw" optional="show"
-                       invisible="display_type or is_downpayment" width="90px"/>
                 <field name="tectora_estimated_hours" widget="float_time"
-                       string="Uren totaal" sum="Totaal" optional="hide"
+                       string="Uren" sum="Totaal" optional="show"
                        invisible="display_type or is_downpayment" width="90px"/>
             </xpath>
             <!-- The totals of the estimate under the amounts. -->

@@ -31,12 +31,7 @@ offerte zelf. Per document (tab *Afdrukken in de documentlay-out*):
 | Verkleinen op pagina's | leeg = geen | bv. `3`: die pagina's lopen tot tegen de rand en worden verkleind tot ze tussen de kop en voet van de lay-out passen |
 
 De pagina blijft **op ware grootte** (geen witte randen); de kop en voet van de
-lay-out komen erover. Heeft de kop van de lay-out een schuine onderkant (de
-dakrand van *Tectora Briefpapier met dakrand*), dan wordt de eigen band van de
-pdf langs die dakrand weggeknipt, niet recht: zo blijft er geen witte wig
-onder de nok en geen stuk van de eigen dakrand van de pdf. *Eigen kop
-weglaten* is dan het minimum: dieper dan de dakrand knipt het enkel waar die
-hoogte lager ligt. Onder de eigen band van de pdf (die wegvalt) staat dus de
+lay-out komen erover. Onder de eigen band van de pdf (die wegvalt) staat dus de
 kop of voet van de lay-out. Is de voet van de lay-out lager dan de eigen voet
 van de pdf, dan blijft daar wit; zet *Eigen voet weglaten* op 0 om de voetband
 van de pdf zelf te houden.
