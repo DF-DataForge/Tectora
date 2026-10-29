@@ -37,7 +37,8 @@ NOTES = (
 )
 # Quotation quantities after the measurement (video 04).
 MEASURED = {"S00177": 96, "S00400": 38, "S00182": 38, "S00043": 38, "S00023": 38}
-STAGES = ("lead_new", "lead", "lead_notes", "quote", "quote_norecalc", "project", "timer")
+STAGES = ("lead_new", "lead", "lead_notes", "quote", "quote_norecalc", "project", "timer",
+          "so_logistics")
 
 # No field tracking: it only adds chatter noise to seeded data, and it trips
 # over records the clean-up below deletes.
@@ -389,6 +390,120 @@ if stage in ("project", "timer"):
         user.phone = "+32 470 12 34 56"
         if "site_contact_id" in roof._fields:
             roof.site_contact_id = partner
+
+# ------------------------------------- from sales order to logistics (video)
+# A fictional garage roof for a contractor, with a small fictional catalogue
+# (supplier 1 = Bouwmaterialen De Smet: PIR, glue, profiles, container;
+# supplier 2 = Dakcenter Vlaanderen: EPDM):
+# two works items sold per m² and per m, without a bill of materials (the
+# video builds it on the sales order), five components, stock for two of
+# them, two suppliers and one order-list part.
+if stage == "so_logistics":
+    m2 = ref("uom.product_uom_square_meter")
+    meter = ref("uom.product_uom_meter")
+    unit = ref("uom.product_uom_unit")
+    supplier_1 = suppliers["Dakcenter Vlaanderen"]
+    supplier_2 = suppliers["Bouwmaterialen De Smet"]
+    builder = upsert("res.partner", [("name", "=", "Bouwbedrijf Vandenbroucke")], {
+        "name": "Bouwbedrijf Vandenbroucke", "is_company": True, "street": "Industrielaan 8",
+        "zip": "8790", "city": "Waregem", "country_id": belgium.id, "lang": "nl_BE",
+        "email": "werf@vandenbroucke.example", "phone": "+32 56 00 00 00",
+    })
+    # Leftovers of an earlier take of this video.
+    b_projects = env["project.project"].with_context(active_test=False).search(
+        [("partner_id", "=", builder.id)])
+    b_orders = env["sale.order"].search([("partner_id", "=", builder.id)])
+    b_purchases = env["purchase.order"].search(
+        ["|", ("origin", "ilike", "Vandenbroucke"), ("project_id", "in", b_projects.ids)])
+    b_purchases.filtered(lambda p: p.state != "cancel").button_cancel()
+    b_purchases.unlink()
+    b_pickings = env["stock.picking"].search([("origin", "ilike", "Vandenbroucke")])
+    b_pickings.filtered(lambda p: p.state not in ("done", "cancel")).action_cancel()
+    b_pickings.filtered(lambda p: p.state == "cancel").unlink()
+    b_roofs = env["tectora.roof.project"].with_context(active_test=False).search(
+        [("partner_id", "=", builder.id)])
+    if "tectora.project.order.line" in env:
+        env["tectora.project.order.line"].search([("project_id", "in", b_projects.ids)]).unlink()
+    b_orders.filtered(lambda o: o.state not in ("draft", "cancel"))._action_cancel()
+    b_orders.unlink()
+    b_roofs.unlink()
+    b_projects.with_context(active_test=False).task_ids.unlink()
+    if "project.collaborator" in env:
+        env["project.collaborator"].sudo().search([("project_id", "in", b_projects.ids)]).unlink()
+    b_projects.unlink()
+
+    def demo_product(code, values, supplier=None, price=0.0):
+        """A fictional product, found by its name and reset every take. No
+        internal reference: it would print as "[…]" in front of the name and
+        cut it short in narrow columns. (``code`` was the key of earlier
+        versions of this seed, kept in the barcode.)"""
+        product = env["product.product"].with_context(active_test=False).search(
+            ["|", ("name", "=", values["name"]), ("barcode", "=", code)], limit=1)
+        values = dict(values, barcode=False, default_code=False, active=True)
+        if product:
+            product.write(values)
+        else:
+            product = env["product.product"].create(values)
+        product.seller_ids.unlink()
+        if supplier:
+            env["product.supplierinfo"].create({
+                "partner_id": supplier.id, "product_tmpl_id": product.product_tmpl_id.id,
+                "price": price, "delay": 5,
+            })
+        return product
+
+    works_roof = demo_product("DEMO-DAK", {
+        "name": "Plat dak: isolatie en EPDM", "type": "service", "sale_ok": True,
+        "purchase_ok": False, "uom_id": m2.id, "list_price": 68.0,
+    })
+    works_edge = demo_product("DEMO-RAND", {
+        "name": "Dakrand aluminium", "type": "service", "sale_ok": True,
+        "purchase_ok": False, "uom_id": meter.id, "list_price": 39.0,
+    })
+    # The video builds the bills of materials: none at the start of a take.
+    env["mrp.bom"].with_context(active_test=False).search([
+        ("product_tmpl_id", "in", (works_roof | works_edge).product_tmpl_id.ids)]).unlink()
+    goods = {"type": "consu", "is_storable": True, "sale_ok": False, "purchase_ok": True,
+             "uom_id": unit.id, "uom_po_id": unit.id} if "uom_po_id" in env["product.template"]._fields \
+        else {"type": "consu", "is_storable": True, "sale_ok": False, "purchase_ok": True, "uom_id": unit.id}
+    recalc = "tectora_recalc" in env["product.template"]._fields
+    pir = demo_product("DEMO-PIR", dict(goods, name="PIR-plaat 120 mm", standard_price=11.40,
+        **({"tectora_recalc": True, "tectora_recalc_uom": "m2", "tectora_length_mm": 1200,
+            "tectora_width_mm": 600, "tectora_height_mm": 120, "tectora_recalc_margin": 5} if recalc else {})),
+        supplier_2, 11.40)
+    epdm = demo_product("DEMO-EPDM", dict(goods, name="EPDM-rol 15 × 3,05 m",
+        standard_price=310.0,
+        **({"tectora_recalc": True, "tectora_recalc_uom": "m2", "tectora_length_mm": 15000,
+            "tectora_width_mm": 3050, "tectora_height_mm": 1.2, "tectora_recalc_margin": 10} if recalc else {})),
+        supplier_1, 310.0)
+    glue = demo_product("DEMO-LIJM", dict(goods, name="Contactlijm 5 l", standard_price=48.0,
+        **({"tectora_recalc": False} if recalc else {})), supplier_2, 48.0)
+    edge = demo_product("DEMO-PROFIEL", dict(goods, name="Dakrandprofiel 3 m", standard_price=23.50,
+        **({"tectora_recalc": True, "tectora_recalc_uom": "m", "tectora_length_mm": 3000,
+            "tectora_width_mm": 80, "tectora_height_mm": 60, "tectora_recalc_margin": 5} if recalc else {})),
+        supplier_2, 23.50)
+    container = demo_product("DEMO-CONTAINER", dict(goods, name="Container 6 m³",
+        is_storable=False, standard_price=280.0, **({"tectora_recalc": False} if recalc else {})),
+        supplier_2, 280.0)
+    # Stock in the warehouse: enough glue and roof-edge profiles, no PIR or EPDM.
+    warehouse = env["stock.warehouse"].search([("company_id", "=", company.id)], limit=1)
+    Quant = env["stock.quant"].with_context(inventory_mode=True)
+    for product, quantity in ((glue, 12), (edge, 20), (pir, 0), (epdm, 0)):
+        quant = Quant.search([("product_id", "=", product.id),
+                              ("location_id", "=", warehouse.lot_stock_id.id)], limit=1)
+        if not quant:
+            quant = Quant.create({"product_id": product.id, "location_id": warehouse.lot_stock_id.id})
+        quant.inventory_quantity = quantity
+        quant.action_apply_inventory()
+    # One order-list part for the whole video, with both suppliers.
+    if "tectora.order.list.template" in env:
+        Parts = env["tectora.order.list.template"].with_context(active_test=False)
+        Parts.search([]).unlink()
+        Parts.create({"name": "Materialen", "sequence": 10, "order_action": "order",
+                      "partner_ids": [(6, 0, (supplier_1 | supplier_2).ids)]})
+    # No task templates in this video: the dashboard stays about materials.
+    if "tectora.task.template" in env:
+        env["tectora.task.template"].with_context(active_test=False).search([]).write({"active": False})
 
 # The company logo, in every stage: the portal header (video 11) and the
 # customer preview of the quotation (video 04) show Tectora, not "Your logo".

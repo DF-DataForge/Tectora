@@ -1,0 +1,509 @@
+# Storyboard for docs/video_scripts/standaard/12_van_verkooporder_tot_bestelling.md
+# From products on a sales order to the logistics: bill of materials
+# (L × B × H per m and m², a fixed product), project, order list (from
+# stock, supplier 1, supplier 2) and the material list. Demo data: stage
+# so_logistics in seed_demo.py.
+
+script: docs/video_scripts/standaard/12_van_verkooporder_tot_bestelling.md
+name: standaard_12_van_verkooporder_tot_bestelling
+series: Tectora · de standaardflow
+stage: so_logistics
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 10
+start: /odoo/sales
+pronunciation:
+  PIR: P I R
+  EPDM: E P D M
+  WH/OUT: W H out
+shots:
+  1:
+    card: title
+  2:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;display:flex;flex-direction:column;align-items:center;gap:34px\"\
+        >\n  <div style=\"display:flex;align-items:center;gap:18px;font-size:30px;font-weight:700\">\n    <div style=\"\
+        padding:22px 26px;border-radius:16px;background:#2D8D8F;color:#fff\">Verkooporder</div><div style=\"color:#2D8D8F\"\
+        >→</div>\n    <div style=\"padding:22px 26px;border-radius:16px;background:#2D8D8F;color:#fff\">Stuklijst</div><div\
+        \ style=\"color:#2D8D8F\">→</div>\n    <div style=\"padding:22px 26px;border-radius:16px;background:#2D8D8F;color:#fff\"\
+        >Project</div><div style=\"color:#2D8D8F\">→</div>\n    <div style=\"padding:22px 26px;border-radius:16px;background:#2D8D8F;color:#fff\"\
+        >Bestellijst</div>\n  </div>\n  <div style=\"display:flex;gap:24px;font-size:26px;font-weight:600\">\n \
+        \   <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Eigen magazijn</div>\n\
+        \    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Leverancier\
+        \ 1</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Leverancier 2</div>\n  </div>\n  <div style=\"font-size:26px;font-weight:600;color:#2D8D8F\">↓ alles zichtbaar\
+        \ op de</div>\n  <div style=\"padding:20px 34px;border-radius:16px;background:#1d2b2b;color:#fff;font-size:34px;font-weight:700\"\
+        >Materiaallijst</div>\n  <div style=\"font-size:24px;margin-top:6px\">Voorbeeld: garage 10 × 6 m · 60 m²\
+        \ plat dak · 32 m dakrand</div>\n</div>"
+  3:
+    setup:
+    - goto: /odoo/sales
+    steps:
+    - menu: Producten
+    - wait: 0.5
+    - click:
+        selector: .o-dropdown--menu .dropdown-item:has-text('Producten')
+    - wait: 0.8
+    - click:
+        selector: .o_searchview_input
+    - key: Control+a
+    - type:
+        text: Plat dak
+        delay: 70
+    - key: Enter
+    - wait: 1.0
+    - click:
+        selector: '.o_kanban_record:has-text(''Plat dak: isolatie en EPDM''), .o_data_row:has-text(''Plat dak: isolatie
+          en EPDM'')'
+    - wait: 0.8
+    - highlight:
+        field: type
+        seconds: 2.2
+    - highlight:
+        field: list_price
+        seconds: 2.2
+    - highlight:
+        field: uom_id
+        seconds: 2.0
+  4:
+    steps:
+    - app: Inkoop
+    - menu: Producten
+    - wait: 0.5
+    - click:
+        selector: .o-dropdown--menu .dropdown-item:has-text('Producten')
+    - wait: 0.8
+    - click:
+        selector: .o_searchview_input
+    - key: Control+a
+    - type:
+        text: PIR-plaat
+        delay: 70
+    - key: Enter
+    - wait: 1.0
+    - click:
+        selector: .o_kanban_record:has-text('PIR-plaat 120 mm'), .o_data_row:has-text('PIR-plaat 120 mm')
+    - wait: 0.8
+    - highlight:
+        field: type
+        seconds: 1.4
+    - highlight:
+        field: is_storable
+        seconds: 1.2
+    - highlight:
+        field: standard_price
+        seconds: 1.4
+    - highlight:
+        field: tectora_recalc
+        seconds: 1.2
+    - highlight:
+        field: tectora_recalc_uom
+        seconds: 1.6
+    - zoom:
+        field: tectora_length_mm
+        scale: 1.6
+    - highlight:
+        selector: div:has(> div > div[name=tectora_length_mm]), .o_wrap_input:has(div[name=tectora_length_mm])
+        seconds: 4.5
+    - unzoom: null
+    - highlight:
+        field: tectora_recalc_margin
+        seconds: 2.0
+  5:
+    steps:
+    - click:
+        selector: .o_breadcrumb a:has-text('Producten')
+    - wait: 0.6
+    - click:
+        selector: .o_searchview_input
+    - key: Control+a
+    - type:
+        text: EPDM-rol
+        delay: 70
+    - key: Enter
+    - wait: 1.0
+    - click:
+        selector: .o_kanban_record:has-text('EPDM-rol 15 × 3,05 m'), .o_data_row:has-text('EPDM-rol 15 × 3,05 m')
+    - wait: 0.8
+    - zoom:
+        field: tectora_length_mm
+        scale: 1.6
+    - wait: 3.5
+    - unzoom: null
+    - highlight:
+        field: tectora_recalc_margin
+        seconds: 2.0
+  6:
+    steps:
+    - click:
+        selector: .o_breadcrumb a:has-text('Producten')
+    - wait: 0.6
+    - click:
+        selector: .o_searchview_input
+    - key: Control+a
+    - type:
+        text: Dakrandprofiel
+        delay: 70
+    - key: Enter
+    - wait: 1.0
+    - click:
+        selector: .o_kanban_record:has-text('Dakrandprofiel 3 m'), .o_data_row:has-text('Dakrandprofiel 3 m')
+    - wait: 0.8
+    - highlight:
+        field: tectora_recalc_uom
+        seconds: 1.8
+    - zoom:
+        field: tectora_length_mm
+        scale: 1.6
+    - wait: 3
+    - unzoom: null
+    - highlight:
+        field: qty_available
+        seconds: 2.5
+  7:
+    steps:
+    - app: Verkoop
+    - wait: 0.5
+    - click:
+        selector: .o_list_button_add
+    - wait: 0.4
+    - click:
+        selector: .o-dropdown--menu .dropdown-item >> nth=0
+    - fill:
+        field: partner_id
+        value: Vandenbroucke
+        pick: Bouwbedrijf Vandenbroucke
+  8:
+    steps:
+    - click:
+        text: Regel toevoegen
+    - type:
+        text: Plat dak
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: '.o-autocomplete--dropdown-menu a:has-text(''Plat dak: isolatie en EPDM'')'
+    - click:
+        selector: .o_data_row.o_selected_row td[name=product_uom_qty], .o_data_row.o_selected_row td[name=sol_qty]
+    - key: Control+a
+    - type:
+        text: '60'
+        delay: 150
+    - click:
+        text: Regel toevoegen
+    - type:
+        text: Dakrand
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:has-text('Dakrand aluminium')
+    - click:
+        selector: .o_data_row.o_selected_row td[name=product_uom_qty], .o_data_row.o_selected_row td[name=sol_qty]
+    - key: Control+a
+    - type:
+        text: '32'
+        delay: 150
+    - save: null
+  9:
+    steps:
+    - hover:
+        selector: .o_data_row:has-text('Plat dak') td[name=tectora_has_sale_bom] i
+    - wait: 1.5
+    - click:
+        selector: .o_data_row:has-text('Plat dak') td[name=tectora_has_sale_bom] i
+    - wait: 1.2
+  10:
+    steps:
+    - click:
+        selector: .modal button:has-text('Regel toevoegen'), .modal a:has-text('Regel toevoegen')
+    - type:
+        text: PIR-plaat
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:text-is('PIR-plaat 120 mm'), .o-autocomplete--dropdown-menu a:has-text('PIR-plaat
+          120 mm')
+    - wait: 0.6
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.8
+    - hover:
+        selector: .modal .o_data_row:has-text('PIR-plaat 120 mm') td[name=pieces] span
+    - wait: 3.5
+    - hover:
+        selector: .modal .modal-title
+  11:
+    steps:
+    - click:
+        selector: .modal button:has-text('Regel toevoegen'), .modal a:has-text('Regel toevoegen')
+    - type:
+        text: EPDM-rol
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:text-is('EPDM-rol 15 × 3,05 m'), .o-autocomplete--dropdown-menu
+          a:has-text('EPDM-rol 15 × 3,05 m')
+    - wait: 0.6
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.8
+    - hover:
+        selector: .modal .o_data_row:has-text('EPDM-rol 15 × 3,05 m') td[name=pieces] span
+    - wait: 3.5
+    - hover:
+        selector: .modal .modal-title
+    - click:
+        selector: .modal button:has-text('Regel toevoegen'), .modal a:has-text('Regel toevoegen')
+    - type:
+        text: Contactlijm 5
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:text-is('Contactlijm 5 l'), .o-autocomplete--dropdown-menu a:has-text('Contactlijm
+          5 l')
+    - wait: 0.6
+    - click:
+        selector: .modal .o_data_row.o_selected_row td[name=quantity]
+    - key: Control+a
+    - type:
+        text: 0,05
+        delay: 120
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.8
+  12:
+    steps:
+    - click:
+        selector: .modal button:has-text('Regel toevoegen'), .modal a:has-text('Regel toevoegen')
+    - type:
+        text: Container 6
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:text-is('Container 6 m³'), .o-autocomplete--dropdown-menu a:has-text('Container
+          6 m³')
+    - wait: 0.6
+    - click:
+        selector: .modal .o_data_row.o_selected_row td[name=quantity]
+    - key: Control+a
+    - type:
+        text: '1'
+        delay: 120
+    - click:
+        selector: .modal .o_data_row.o_selected_row td[name=fixed_quantity] input
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.8
+    - highlight:
+        selector: .modal .o_data_row:has-text('Container') td[name=fixed_quantity]
+        seconds: 1.8
+    - highlight:
+        field: cost_per_unit
+        seconds: 2.5
+  13:
+    steps:
+    - fill:
+        field: margin_percent
+        value: '100'
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.6
+    - highlight:
+        field: price_computed
+        seconds: 2.0
+    - click:
+        selector: .modal footer button:has-text('Opslaan en prijs toepassen')
+    - wait: 0.8
+    - click:
+        selector: .modal button:has-text('Ok')
+    - wait: 1.2
+    - highlight:
+        selector: .o_data_row:has-text('Plat dak') td[name=price_unit]
+        seconds: 2.0
+  14:
+    steps:
+    - click:
+        selector: .o_data_row:has-text('Plat dak') td[name=tectora_has_sale_bom] i
+    - wait: 1.2
+    - click:
+        selector: .modal footer button:has-text('Opslaan als standaardstuklijst')
+    - wait: 0.8
+    - click:
+        selector: .modal button:has-text('Ok')
+    - wait: 1.2
+  15:
+    steps:
+    - click:
+        selector: .o_data_row:has-text('Dakrand aluminium') td[name=tectora_has_sale_bom] i
+    - wait: 1.2
+    - click:
+        selector: .modal button:has-text('Regel toevoegen'), .modal a:has-text('Regel toevoegen')
+    - type:
+        text: Dakrandprofiel 3
+        delay: 70
+    - wait: 1.0
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:text-is('Dakrandprofiel 3 m'), .o-autocomplete--dropdown-menu
+          a:has-text('Dakrandprofiel 3 m')
+    - wait: 0.6
+    - click:
+        selector: .modal .modal-title
+    - wait: 0.8
+    - hover:
+        selector: .modal .o_data_row:has-text('Dakrandprofiel 3 m') td[name=pieces] span
+    - wait: 3.5
+    - hover:
+        selector: .modal .modal-title
+    - click:
+        selector: .modal footer button.btn-primary:has-text('Opslaan')
+    - wait: 1.0
+  16:
+    steps:
+    - click:
+        button: Bevestigen
+    - wait: 1.2
+    - highlight:
+        selector: .o_statusbar_status
+        seconds: 1.6
+    - highlight:
+        selector: .o-form-buttonbox button:has-text('Projectdashboard')
+        seconds: 1.6
+  17:
+    steps:
+    - click:
+        selector: .o-form-buttonbox button:has-text('Projectdashboard')
+    - wait: 1.2
+    - click:
+        selector: .o_notebook .nav-link:text-is('Materiaallijst')
+    - wait: 0.8
+    - scroll_to:
+        selector: .o_notebook .nav-link:text-is('Materiaallijst')
+    - highlight:
+        selector: .tab-pane.active .o_list_renderer table
+        seconds: 4.0
+    - highlight:
+        selector: .tab-pane.active th[data-name=order_list_state]
+        seconds: 2.0
+    - click:
+        selector: .tab-pane.active .o_optional_columns_dropdown_toggle
+    - wait: 0.6
+    - click:
+        selector: .o-dropdown--menu .dropdown-item:has-text('Inkooporder') input, .o-dropdown--menu label:has-text('Inkooporder')
+    - click:
+        selector: .o-dropdown--menu .dropdown-item:has-text('Inkoopstatus') input, .o-dropdown--menu label:has-text('Inkoopstatus')
+    - key: Escape
+    - wait: 0.6
+  18:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_order_list button:has-text('Openen'), div:has(> div > span:has-text('Bestellijst'))
+          button:has-text('Openen')
+    - click:
+        selector: .o_tectora_order_list button:has-text('Openen'), div:has(> div > span:has-text('Bestellijst'))
+          button:has-text('Openen')
+    - wait: 1.2
+    - highlight:
+        selector: select.form-select
+        seconds: 1.8
+    - click:
+        selector: button[title='Producten van de leverancier kiezen']
+    - wait: 1.2
+    - highlight:
+        selector: .o_tectora_products_list
+        seconds: 4.0
+  19:
+    steps:
+    - click:
+        selector: li:has(.o_tectora_product_name:has-text('Contactlijm')) input.o_tectora_check
+    - click:
+        selector: li:has(.o_tectora_product_name:has-text('Dakrandprofiel')) input.o_tectora_check
+    - wait: 0.5
+    - click:
+        selector: button:has-text('Leveren vanuit stock')
+    - wait: 1.5
+    - highlight:
+        selector: div:has(> span:has-text('Leveren vanuit magazijn')), *:has(> *:text-is('Leveren vanuit magazijn'))
+        seconds: 3.0
+  20:
+    steps:
+    - click:
+        selector: li:has(.o_tectora_product_name:has-text('PIR-plaat')) input.o_tectora_check
+    - click:
+        selector: li:has(.o_tectora_product_name:has-text('Container')) input.o_tectora_check
+    - wait: 0.5
+    - click:
+        selector: button[title='Bestelling (prijsaanvraag) aanmaken']
+    - wait: 1.5
+    - highlight:
+        selector: .o_list_renderer table
+        seconds: 2.5
+    - highlight:
+        field: tectora_order_line_id
+        seconds: 1.8
+    - click:
+        button: Bevestig order
+    - wait: 1.2
+    - click:
+        selector: .o_breadcrumb a:has-text('Bestellijst')
+    - wait: 1.2
+  21:
+    steps:
+    - select_option:
+        selector: select.form-select
+        label: Dakcenter Vlaanderen
+    - wait: 0.6
+    - click:
+        selector: button[title='Producten van de leverancier kiezen']
+    - wait: 1.2
+    - click:
+        selector: li:has(.o_tectora_product_name:has-text('EPDM-rol')) input.o_tectora_check
+    - wait: 0.4
+    - click:
+        selector: button[title='Bestelling (prijsaanvraag) aanmaken']
+    - wait: 1.5
+    - click:
+        button: Bevestig order
+    - wait: 1.2
+    - click:
+        selector: .o_breadcrumb a:has-text('Bestellijst')
+    - wait: 1.2
+    - click:
+        selector: button[title='Producten van de leverancier kiezen']
+    - wait: 1.2
+    - highlight:
+        selector: '*:text-is(''Alles van dit onderdeel is besteld of komt uit het magazijn.'')'
+        seconds: 1.8
+  22:
+    steps:
+    - click:
+        selector: .o_breadcrumb a:has-text('Vandenbroucke')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_card:has(.o_tectora_card_label:text-is('Inkoop'))
+        seconds: 2.0
+    - click:
+        selector: .o_notebook .nav-link:text-is('Materiaallijst')
+    - wait: 0.8
+    - scroll_to:
+        selector: .o_notebook .nav-link:text-is('Materiaallijst')
+    - highlight:
+        selector: .tab-pane.active td[name=order_list_state] >> nth=0
+        seconds: 1.5
+    - highlight:
+        selector: .tab-pane.active .o_list_renderer table
+        seconds: 5.0
+  23:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;max-width:1250px\">\n  <div style=\"\
+        font-size:48px;font-weight:700;color:#2D8D8F;margin-bottom:28px\">Samengevat</div>\n  <ol style=\"font-size:32px;line-height:1.7;font-weight:500;padding-left:44px;margin:0\"\
+        >\n    <li>Werkposten op de verkooporder, per m² of per m</li>\n    <li>De stuklijst: L × B × H rekent om\
+        \ naar stuks, met veiligheidsmarge; een vast product telt één keer per lijn</li>\n    <li>Bevestigen maakt\
+        \ het project en de materiaallijst</li>\n    <li>Bestellijst: uit het magazijn of bij de juiste leverancier</li>\n\
+        \    <li>De materiaallijst volgt alles: besteld, gereserveerd, ontvangen, geleverd</li>\n  </ol>\n</div>"
+  24:
+    card:
+      kind: title
+      subtitle: Tectora · de standaardflow

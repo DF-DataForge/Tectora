@@ -332,6 +332,14 @@ class Director:
         self.page.keyboard.press(key)
         self.ready(settle=0.3)
 
+    def step_select_option(self, spec):
+        """{selector: css of a <select>, label: visible option}: a plain
+        HTML dropdown (outside a form field, e.g. on a client action)."""
+        select = self.target({"selector": spec["selector"]})
+        self.move_to(select)
+        select.select_option(label=spec["label"])
+        self.ready(settle=0.6)
+
     def step_type(self, spec):
         """Type into whatever has the focus: "text" or {text, delay}."""
         if isinstance(spec, str):
