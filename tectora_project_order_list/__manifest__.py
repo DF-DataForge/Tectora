@@ -33,13 +33,17 @@ from an empty list of standard parts.
   the task page.
 * Dakmeting -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
+* The material list follows the order list, per product: what the order list
+  ordered or delivers from the warehouse shows in the column "Bestellijst"
+  and also in the material list's own purchase status ("Inkoopstatus") and
+  purchase order, so the two never contradict each other.
     """,
-    "version": "20.0.1.9.0",
+    "version": "20.0.1.10.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["tectora_project_tasks", "purchase_stock", "project_purchase"],
+    "depends": ["tectora_project_tasks", "tectora_purchase", "purchase_stock", "project_purchase"],
     "data": [
         "security/ir.access.csv",
         "views/order_list_template_views.xml",

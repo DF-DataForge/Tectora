@@ -177,6 +177,55 @@ class TestOrderList(TransactionCase):
         names = {item["name"] for item in line.tectora_get_supplier_products()}
         self.assertIn("Rotswol", names)
 
+    def test_material_purchase_status_follows_order_list(self):
+        """The material list's own purchase status and purchase order agree
+        with what the order list ordered or delivers from the warehouse."""
+        project = self._project()
+        line = project.tectora_order_line_ids[0]
+        screws = self.env["product.product"].create({
+            "name": "Schroeven", "is_storable": True, "purchase_ok": True,
+        })
+        self.env["stock.quant"]._update_available_quantity(
+            screws, self.env.ref("stock.stock_location_stock"), 10
+        )
+        roof = self.env["tectora.roof.project"].create({"name": "Werf", "project_id": project.id})
+        epdm_need, screws_need = self.env["tectora.roof.material"].create([
+            {"project_id": roof.id, "product_id": self.product.id, "quantity": 5.0},
+            {"project_id": roof.id, "product_id": screws.id, "quantity": 4.0},
+        ])
+        self.assertEqual(epdm_need.purchase_state, "to_order")
+        self.assertFalse(epdm_need.purchase_order_id)
+
+        action = line.action_tectora_create_purchase(
+            products=[{"product_id": self.product.id, "quantity": 5}]
+        )
+        purchase = self.env["purchase.order"].browse(action["res_id"])
+        line.action_tectora_deliver_from_stock([{"product_id": screws.id, "quantity": 4}])
+        self.assertEqual(epdm_need.purchase_state, "rfq")
+        self.assertEqual(epdm_need.purchase_order_id, purchase)
+        self.assertEqual(screws_need.purchase_state, "stock")
+        self.assertFalse(screws_need.purchase_order_id)
+        self.assertFalse(
+            (epdm_need | screws_need)._lines_to_order(),
+            "the material list does not order a second time",
+        )
+
+        purchase.button_confirm()
+        self.assertEqual(epdm_need.purchase_state, "ordered")
+        receipt = purchase.picking_ids
+        receipt.move_ids.quantity = 5
+        receipt.button_validate()
+        self.assertEqual(epdm_need.purchase_state, "received")
+
+        # A purchase order of the material list itself goes first.
+        own = self.env["purchase.order"].create({
+            "partner_id": self.supplier.id,
+            "order_line": [(0, 0, {"product_id": screws.id, "product_qty": 4})],
+        })
+        screws_need.purchase_line_id = own.order_line
+        self.assertEqual(screws_need.purchase_state, "rfq")
+        self.assertEqual(screws_need.purchase_order_id, own)
+
     def test_ordered_and_stock_products_are_set_apart(self):
         project = self._project()
         line = project.tectora_order_line_ids[0]  # Dakmaterialen NV chosen

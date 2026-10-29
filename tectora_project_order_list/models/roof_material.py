@@ -2,7 +2,11 @@
 """The material list follows the order list: per product, where its order
 stands (request for quotation, ordered, received) or its delivery from the
 warehouse (waiting, reserved, delivered), computed live from the project's
-order list, so it is always up to date."""
+order list, so it is always up to date.
+
+The material list's own purchase status and purchase order (tectora_purchase)
+follow the order list too, unless the material list ordered the product
+itself: one truth per product, whichever way it was ordered."""
 from odoo import api, fields, models
 
 # From the least to the most advanced: a product ordered in two goes shows
@@ -20,8 +24,32 @@ ORDER_LIST_STATES = [
 STATE_RANK = {key: rank for rank, (key, _label) in enumerate(ORDER_LIST_STATES)}
 
 
+# The purchase states of tectora_purchase, from the least to the most advanced.
+PURCHASE_RANK = {"rfq": 0, "ordered": 1, "received": 2}
+
+
 class TectoraRoofMaterial(models.Model):
     _inherit = "tectora.roof.material"
+
+    order_list_product_ids = fields.Many2many(
+        "tectora.project.order.product",
+        "tectora_roof_material_order_product_rel",
+        "material_id",
+        "order_product_id",
+        string="Bestellijstproducten",
+        compute="_compute_order_list_product_ids",
+        store=True,
+        help="De producten op de bestellijst van het project voor dit product.",
+    )
+    purchase_order_id = fields.Many2one(
+        "purchase.order",
+        related=None,
+        compute="_compute_purchase_order_id",
+        store=True,
+        index=True,
+        help="De aankooporder van dit materiaal: die van de materiaallijst "
+        "zelf, anders die van de bestellijst.",
+    )
 
     order_list_state = fields.Selection(
         ORDER_LIST_STATES,
@@ -44,19 +72,22 @@ class TectoraRoofMaterial(models.Model):
         help="Bij welke leverancier en op welke aankooporder of levering.",
     )
 
-    @api.depends("project_id", "product_id", "quantity", "product_uom_id")
-    def _compute_order_list_state(self):
-        projects = self.project_id.project_id
-        product_lines = self.env["tectora.project.order.product"].search([
-            ("order_line_id.project_id", "in", projects.ids),
-            ("product_id", "in", self.product_id.ids),
-        ]) if projects else self.env["tectora.project.order.product"]
+    @api.depends(
+        "product_id",
+        "project_id.project_id.tectora_order_line_ids.product_line_ids.product_id",
+    )
+    def _compute_order_list_product_ids(self):
         for material in self:
-            lines = product_lines.filtered(
-                lambda pl: pl.product_id == material.product_id
-                and pl.order_line_id.project_id == material.project_id.project_id
+            material.order_list_product_ids = (
+                material.project_id.project_id.tectora_order_line_ids.product_line_ids.filtered(
+                    lambda pl: material.product_id and pl.product_id == material.product_id
+                )
             )
-            state, covered, details = material._order_list_status(lines)
+
+    @api.depends("order_list_product_ids", "quantity", "product_uom_id")
+    def _compute_order_list_state(self):
+        for material in self:
+            state, covered, details = material._order_list_status(material.order_list_product_ids)
             material.order_list_state = state
             material.order_list_covered_qty = covered
             material.order_list_info = details
@@ -113,3 +144,49 @@ class TectoraRoofMaterial(models.Model):
         from the warehouse), whatever is still missing."""
         self.ensure_one()
         return self.order_list_state not in ("none", "to_order")
+
+    # ------------------------------------------------- tectora_purchase status
+    def _own_purchase_line(self):
+        """The material list's own live purchase order line, if any."""
+        self.ensure_one()
+        line = self.purchase_line_id
+        return line if line and line.state != "cancel" else line.browse()
+
+    def _order_list_purchase_lines(self):
+        """The live purchase order lines the order list made for this product."""
+        self.ensure_one()
+        return self.order_list_product_ids.filtered(
+            lambda pl: pl.source == "ordered"
+        ).purchase_line_id.sorted("id")
+
+    @api.depends("purchase_line_id.order_id", "order_list_product_ids.purchase_line_id.order_id.state")
+    def _compute_purchase_order_id(self):
+        for material in self:
+            material.purchase_order_id = (
+                material._own_purchase_line() or material._order_list_purchase_lines()[:1]
+            ).order_id
+
+    @api.depends(
+        "order_list_product_ids.purchase_line_id.order_id.state",
+        "order_list_product_ids.purchase_line_id.product_qty",
+        "order_list_product_ids.purchase_line_id.qty_received",
+        "order_list_product_ids.move_id.state",
+    )
+    def _compute_purchase_state(self):
+        super()._compute_purchase_state()
+        for material in self:
+            if material._own_purchase_line():
+                continue
+            states = []
+            for line in material._order_list_purchase_lines():
+                if line.order_id.state in ("draft", "sent", "to approve"):
+                    states.append("rfq")
+                elif line.uom_id.compare(line.qty_received, line.product_qty) >= 0:
+                    states.append("received")
+                else:
+                    states.append("ordered")
+            if states:
+                # Ordered in two goes: the step that is still behind.
+                material.purchase_state = min(states, key=PURCHASE_RANK.get)
+            elif any(pl.source == "stock" for pl in material.order_list_product_ids):
+                material.purchase_state = "stock"
