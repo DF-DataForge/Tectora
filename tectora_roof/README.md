@@ -123,7 +123,9 @@ install on Odoo 17 or earlier without adjustments.
 ## Offerte-pdf
 
 De offerte-pdf (afdrukken, e-mailen, klantenportaal) is het standaard
-offertedocument van Odoo, in de documentlay-out van het bedrijf. Staat
+offertedocument van Odoo, in de documentlay-out van het bedrijf. Elke lijn en
+elke som per sectie staat er zowel **excl. btw** als **incl. btw** op (twee
+kolommen, ongeacht de btw-weergave van het bedrijf). Staat
 **Dakplan toevoegen** aangevinkt op de verkooporder (alleen bij een
 dakproject), dan volgt het meetblad met tekening, maten en producten, en
 toont het klantenportaal het dakplan met de kerncijfers in de zijbalk (op een
