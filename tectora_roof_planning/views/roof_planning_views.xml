@@ -2,9 +2,12 @@
 <odoo>
 
     <!-- The team planner: one row per ploeg, one project block per work block
-         (project name and site address on the bar). Dragging or resizing a
-         block moves the shifts of every employee on it; the block's summary
-         form lists those employees and lets one be taken off. -->
+         (customer, municipality, roof area, project type and crew size on the
+         bar). The block's colour is its project's, its style its state: a
+         concept is hatched, a finished block greyed out (team_gantt.scss). Dragging
+         or resizing a block moves the shifts of every employee on it; the
+         block's summary form lists those employees and lets one be taken
+         off. -->
     <record id="view_tectora_roof_planning_gantt_team" model="ir.ui.view">
         <field name="name">tectora.roof.planning.gantt.team</field>
         <field name="model">tectora.roof.planning</field>
@@ -133,6 +136,48 @@
                         in de Planning-app
                     </button>
                 </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- The weather on a work block (Open-Meteo, refreshed every morning and
+         with "Weer vernieuwen"): the worst day in the summary, every day in
+         the detail, and why the weather is no good for roofing work. -->
+    <record id="view_tectora_roof_planning_form_summary_weather" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.summary.weather</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group[1]" position="after">
+                <div class="alert alert-warning d-flex align-items-center gap-2 mb-2" role="alert"
+                     invisible="not weather_alert">
+                    <i class="oi" data-icon="warning"/>
+                    <span>Weerswaarschuwing voor dakwerken: <field name="weather_alert_reason" readonly="1" class="oe_inline fw-bold"/></span>
+                </div>
+                <group string="Weer" name="tectora_weather">
+                    <field name="weather_alert" invisible="1"/>
+                    <field name="weather_summary" readonly="1" string="Slechtste dag"
+                           placeholder="Nog geen voorspelling (binnen 16 dagen, werf met locatie)"/>
+                    <field name="weather_days" readonly="1" string="Per dag" invisible="not weather_days"/>
+                    <field name="weather_updated" readonly="1" invisible="not weather_updated"/>
+                </group>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_tectora_refresh_weather" type="object" string="Weer vernieuwen"
+                        class="btn-secondary" icon="partly_cloudy_day"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_list_weather" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.list.weather</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='team_id']" position="before">
+                <field name="weather_alert" column_invisible="1"/>
+                <field name="weather_summary" optional="show"
+                       decoration-danger="weather_alert"/>
             </xpath>
         </field>
     </record>

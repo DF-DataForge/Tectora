@@ -36,6 +36,34 @@ class PlanningSlot(models.Model):
         related="roof_project_id.partner_id", string="Klant"
     )
     roof_address = fields.Char(related="roof_project_id.address", string="Werfadres")
+    tectora_resource_team_id = fields.Many2one(
+        "tectora.roof.team",
+        string="Ploeg van de medewerker",
+        compute="_compute_tectora_resource_team_id",
+        store=True,
+        index=True,
+        help="De ploeg op de werknemersfiche van de ingeplande medewerker: "
+        "de planner per resource groepeert er de medewerkers mee, ploeg per "
+        "ploeg.",
+    )
+    roof_color = fields.Integer(
+        string="Kleur (dakproject)",
+        compute="_compute_roof_color",
+        help="Kleur van de shift in de planner: die van het dakproject, zodat "
+        "alle shifts van een project dezelfde kleur hebben; zonder dakproject "
+        "de eigen kleur van de shift (die van de rol).",
+    )
+
+    @api.depends("roof_project_id.color")
+    def _compute_roof_color(self):
+        own_color = "color" in self._fields
+        for slot in self:
+            slot.roof_color = slot.roof_project_id.color or (slot.color if own_color else 0)
+
+    @api.depends("resource_ids", "resource_ids.employee_id.roof_team_id")
+    def _compute_tectora_resource_team_id(self):
+        for slot in self:
+            slot.tectora_resource_team_id = slot.resource_ids.employee_id[:1].roof_team_id
 
     # ------------------------------------------------------- roof project link
     def _tectora_derive_roof_project(self):

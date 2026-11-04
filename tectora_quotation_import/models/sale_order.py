@@ -41,6 +41,25 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
+    # A generic works item (Omschrijving als label) shows only the line's
+    # description; every other product keeps Odoo's label (name + description).
+    def _tectora_description_only(self):
+        return self.filtered(
+            lambda line: line.product_id.tectora_description_label and line.name
+        )
+
+    @api.depends("product_id.tectora_description_label")
+    def _compute_label(self):
+        super()._compute_label()
+        for line in self._tectora_description_only():
+            line.label = line.name
+
+    def _inverse_label(self):
+        own = self.filtered(lambda line: line.product_id.tectora_description_label)
+        for line in own:
+            line.name = line.label
+        super(SaleOrderLine, self - own)._inverse_label()
+
     def _tectora_legacy_invoiced(self):
         return self.filtered(
             lambda line: line.order_id.tectora_legacy_invoiced == "invoiced"

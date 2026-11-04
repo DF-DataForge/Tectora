@@ -246,21 +246,28 @@ class ProjectProject(models.Model):
           billed yet (only with Purchase installed).
         """
         self.ensure_one()
-        if not self.id or not self.account_id:
+        return self._tectora_profitability_by_project().get(self.id, {})
+
+    def _tectora_profitability_by_project(self):
+        """The totals of _tectora_profitability_totals for many projects at
+        once, read with one query per kind of record instead of per project
+        (the projects overview): {project id: totals}, projects without an
+        analytic account left out."""
+        projects = self.filtered(lambda project: project.id and project.account_id)
+        if not projects:
             return {}
-        account = self.account_id
-        order = self.tectora_sale_order_id.sudo()
-        sale_lines = order.order_line.filtered(lambda line: not line.display_type)
-        costs = self.env["account.analytic.line"].sudo()._read_group(
-            [("account_id", "=", account.id), ("amount", "<", 0)],
-            aggregates=["amount:sum"],
-        )
-        to_bill = 0.0
+        accounts = projects.account_id
+        costs = dict(self.env["account.analytic.line"].sudo()._read_group(
+            [("account_id", "in", accounts.ids), ("amount", "<", 0)],
+            ["account_id"],
+            ["amount:sum"],
+        ))
+        to_bill = dict.fromkeys(accounts.ids, 0.0)
         PurchaseLine = self.env.get("purchase.order.line")
         if PurchaseLine is not None:
             # As Odoo 19 counted it: what was ordered for the project, less
             # what posted vendor bills already cover (those are "billed").
-            def share(distribution):
+            def share(distribution, account):
                 # A key can combine accounts of several plans ("12,40").
                 return sum(
                     float(percentage)
@@ -268,29 +275,46 @@ class ProjectProject(models.Model):
                     if str(account.id) in key.split(",")
                 ) / 100.0
 
-            def in_project_currency(line, amount):
-                return line.currency_id._convert(
-                    amount, self.currency_id, self.company_id, fields.Date.context_today(self)
-                )
-
             purchase_lines = PurchaseLine.sudo().search(
-                [("analytic_distribution", "in", [account.id]), ("display_type", "=", False)]
+                [("analytic_distribution", "in", accounts.ids), ("display_type", "=", False)]
             ).filtered(lambda line: line.order_id.state in ("purchase", "done"))
+            lines_by_account = {}
             for line in purchase_lines:
-                ordered = in_project_currency(line, line.price_subtotal) * share(line.analytic_distribution)
-                billed = sum(
-                    in_project_currency(bill_line, bill_line.price_subtotal)
-                    * share(bill_line.analytic_distribution)
-                    for bill_line in line.invoice_lines
-                    if bill_line.parent_state == "posted" and not bill_line.is_refund
-                )
-                to_bill += ordered - billed
-        return {
-            "invoiced": sum(sale_lines.mapped("untaxed_amount_invoiced")),
-            "to_invoice": sum(sale_lines.mapped("untaxed_amount_to_invoice")),
-            "billed": costs[0][0] if costs else 0.0,
-            "to_bill": -to_bill,
-        }
+                for key in line.analytic_distribution or {}:
+                    for account_id in str(key).split(","):
+                        if account_id.isdigit():
+                            lines_by_account.setdefault(int(account_id), []).append(line)
+            for project in projects:
+                account = project.account_id
+
+                def in_project_currency(line, amount):
+                    return line.currency_id._convert(
+                        amount, project.currency_id, project.company_id,
+                        fields.Date.context_today(project),
+                    )
+
+                for line in dict.fromkeys(lines_by_account.get(account.id, [])):
+                    line_share = share(line.analytic_distribution, account)
+                    ordered = in_project_currency(line, line.price_subtotal) * line_share
+                    billed = sum(
+                        in_project_currency(bill_line, bill_line.price_subtotal)
+                        * share(bill_line.analytic_distribution, account)
+                        for bill_line in line.invoice_lines
+                        if bill_line.parent_state == "posted" and not bill_line.is_refund
+                    )
+                    to_bill[account.id] += ordered - billed
+        totals = {}
+        for project in projects:
+            order = project.tectora_sale_order_id.sudo()
+            sale_lines = order.order_line.filtered(lambda line: not line.display_type)
+            account = project.account_id
+            totals[project.id] = {
+                "invoiced": sum(sale_lines.mapped("untaxed_amount_invoiced")),
+                "to_invoice": sum(sale_lines.mapped("untaxed_amount_to_invoice")),
+                "billed": costs.get(account, 0.0),
+                "to_bill": -to_bill[account.id],
+            }
+        return totals
 
     @api.depends(
         "account_id", "tectora_sale_order_id.amount_untaxed",

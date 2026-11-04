@@ -18,7 +18,10 @@ from an empty list of standard parts.
   Bestellijst importeren, with the list to download).
 * Per project: tick a part off, choose the supplier, the order date and the
   expected delivery date, add the products needed, and create the request for
-  quotation in one click. "Stock eerst" orders only what the free stock does
+  quotation in one click. On the order list page, "Producten" under a part
+  lists the products its supplier delivers (their supplier prices): tick
+  them, set the quantity, and "Bestellen" puts exactly those on the request
+  for quotation. "Stock eerst" orders only what the free stock does
   not cover. The purchase order carries the project (and so its analytic
   account) and the order list line; the line's status follows it
   (te bestellen, uit stock, prijsaanvraag, besteld, ontvangen, afgevinkt) and
@@ -30,13 +33,17 @@ from an empty list of standard parts.
   the task page.
 * Dakmeting -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
+* The material list follows the order list, per product: what the order list
+  ordered or delivers from the warehouse shows in the column "Bestellijst"
+  and also in the material list's own purchase status ("Inkoopstatus") and
+  purchase order, so the two never contradict each other.
     """,
-    "version": "20.0.1.1.0",
+    "version": "20.0.1.10.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["tectora_project_tasks", "purchase_stock", "project_purchase"],
+    "depends": ["tectora_project_tasks", "tectora_purchase", "purchase_stock", "project_purchase"],
     "data": [
         "security/ir.access.csv",
         "views/order_list_template_views.xml",
@@ -44,6 +51,7 @@ from an empty list of standard parts.
         "views/purchase_order_views.xml",
         "views/task_template_views.xml",
         "views/project_project_views.xml",
+        "views/roof_material_views.xml",
         "wizard/order_list_import_views.xml",
         "views/menus.xml",
     ],

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- The gantt's own buttons, then "Weer vernieuwen" (team_gantt.js). -->
+    <t t-name="tectora_roof_planning.TeamGanttButtons">
+        <t t-call="{{ this.constructor.tectoraButtons }}"/>
+        <button type="button" class="btn btn-secondary o_tectora_refresh_weather"
+                title="Weersvoorspelling nu ophalen (Open-Meteo); gebeurt ook elke ochtend"
+                t-on-click="() => this.onTectoraRefreshWeather()">
+            <i class="oi me-1" data-icon="partly_cloudy_day"/>Weer vernieuwen
+        </button>
+    </t>
+
+</templates>

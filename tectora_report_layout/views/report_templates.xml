@@ -101,8 +101,6 @@
                 <div t-if="footer_lines['banks']" t-out="footer_lines['banks']"/>
             </div>
             <div class="o_tectora_lh_accent" t-att-style="not letterhead_light and 'background-color: %s;' % tectora_color"/>
-            <div t-if="report_type == 'pdf'" class="o_tectora_lh_pager">Pagina <span class="page"/> / <span class="topage"/></div>
-            <div t-if="is_preview" class="o_tectora_lh_pager">Pagina 1 / 1</div>
         </div>
     </template>
 

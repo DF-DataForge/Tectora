@@ -118,6 +118,25 @@ class TestSaleBom(TransactionCase):
         self.assertAlmostEqual(materials[self.primer], 10.0)
         self.assertAlmostEqual(materials[self.container], 1.0)
 
+    def test_material_list_has_one_line_per_product(self):
+        """Several order lines needing the same material, and a credit line
+        taking some back, give one material line per product."""
+        self.order.write({"order_line": [
+            Command.create({"product_id": self.roofing.id, "product_uom_qty": 40.0,
+                            "price_unit": 50.0}),
+            Command.create({"product_id": self.roofing.id, "product_uom_qty": -10.0,
+                            "price_unit": 50.0}),
+        ]})
+        self.order.action_confirm()
+        lines = self.env["tectora.roof.material"].search([("sale_order_id", "=", self.order.id)])
+        self.assertEqual(len(lines), 2, "EPDM and glue, once each")
+        self.assertEqual(len(lines.product_id), 2)
+        materials = self.materials()
+        # (100 + 40 - 10) m2 x 1,1 m2 EPDM and x 0,2 glue per m2
+        self.assertAlmostEqual(materials[self.epdm], 143.0)
+        self.assertAlmostEqual(materials[self.glue], 26.0)
+        self.assertFalse(lines.sale_order_line_id, "from several order lines")
+
     def test_change_after_confirmation_rebuilds_material_list(self):
         self.order.action_confirm()
         self.assertNotIn(self.primer, self.materials())
@@ -241,10 +260,15 @@ class TestSaleBom(TransactionCase):
         template.write({"tectora_length": 1.0, "tectora_width": 0.5})
         self.order.action_confirm()
         self.assertEqual(self.materials()[board], 200.0)
-        # In the dialog the board costs per m²: 6 per board of 0,5 m².
+        # In the dialog: 1 m² per m² of roof, 100 m² = 200 boards of 6 each,
+        # no extra margin as the board has no safety margin.
         form = self.open_dialog()
         component = form.line_ids.edit(2)
-        self.assertAlmostEqual(component.unit_cost, 12.0)
+        self.assertAlmostEqual(component.unit_cost, 6.0, msg="the cost of one board")
+        self.assertEqual(component.extra_margin, 0.0)
+        self.assertEqual(component.pieces, 200.0)
+        self.assertAlmostEqual(component.cost_subtotal, 1200.0, msg="pieces × cost per piece")
+        self.assertIn("200 stuks", component.tectora_recalc_info)
 
     def test_recalculation_unit_and_safety_margin(self):
         """A component with hercalculatie is counted in its Reken-UoM on the
@@ -276,12 +300,23 @@ class TestSaleBom(TransactionCase):
         self.order.action_confirm()
         self.assertEqual(self.materials()[roll], 5.0)
 
-        # In the dialog: in metres, and a metre costs its share of a roll
-        # plus the margin: 420 / 25 × 1,05.
+        # In the dialog: in metres, the extra margin starts at the product's
+        # safety margin, 100 m + 5 % = 105 m = 5 rolls of 420.
         form = self.open_dialog()
         component = form.line_ids.edit(2)
         self.assertEqual(component.product_uom_id, metre)
-        self.assertAlmostEqual(component.unit_cost, 17.64)
+        self.assertAlmostEqual(component.unit_cost, 420.0, msg="the cost of one roll")
+        self.assertEqual(component.extra_margin, 5.0)
+        self.assertEqual(component.pieces, 5.0)
+        self.assertAlmostEqual(component.cost_subtotal, 2100.0)
+        # Without the margin on this line: 4 rolls, here and on the
+        # material list.
+        component.extra_margin = 0.0
+        self.assertEqual(component.pieces, 4.0)
+        self.assertAlmostEqual(component.cost_subtotal, 1680.0)
+        component.save()
+        form.save()
+        self.assertEqual(self.materials()[roll], 4.0)
 
         # Another Reken-UoM moves the lines along.
         template.write({"tectora_recalc_uom": "m2", "tectora_width_mm": 1000.0})

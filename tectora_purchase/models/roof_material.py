@@ -273,11 +273,15 @@ class TectoraRoofMaterial(models.Model):
         that are not on a live purchase order yet and are not taken from
         stock. Services (labour exploded from a bill of materials) are never
         ordered."""
+        # With the order list (tectora_project_order_list): what it ordered
+        # or takes from the warehouse already is not ordered a second time.
+        covered_by_order_list = "order_list_state" in self._fields
         return self.filtered(
             lambda line: line.purchase_state == "to_order"
             and line.product_id
             and line.product_id.type == "consu"
             and line.quantity > 0
+            and not (covered_by_order_list and line._order_list_covers())
         )
 
     def _lines_via_warehouse(self):

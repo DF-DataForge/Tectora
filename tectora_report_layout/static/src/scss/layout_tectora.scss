@@ -134,13 +134,13 @@ $o-tectora-lh-side: 8.65mm;
 
     // In the PDF the footer area is the 32mm bottom margin of the paper
     // format; the band fills its lower 27.8mm, down to the edge of the page.
+    // wkhtmltopdf only prints what the footer takes up in the flow (a fixed
+    // or absolute band has no height and left the footer empty), so the band
+    // stays in the flow, like the header's: pushed down by the 4.2mm above
+    // it and past the footer's own margins, as the header band is.
     &.o_tectora_lh_footer_pdf {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 0;
+        margin: calc(32mm - #{$o-tectora-lh-footer-height} - #{$o-default-report-margins})
+            (-$o-default-report-margins) (-$o-default-report-margins);
     }
 }
 
@@ -152,10 +152,6 @@ $o-tectora-lh-side: 8.65mm;
     .o_tectora_lh_accent {
         background-color: #ffffff;
     }
-
-    .o_tectora_lh_pager {
-        color: rgba(255, 255, 255, .75);
-    }
 }
 
 .o_tectora_lh_accent {
@@ -164,14 +160,6 @@ $o-tectora-lh-side: 8.65mm;
     right: 0;
     width: 10.6mm;
     height: .82mm;
-}
-
-.o_tectora_lh_pager {
-    position: absolute;
-    top: 3.25mm;
-    right: $o-tectora-lh-side;
-    font-size: 7pt;
-    color: #6c757d;
 }
 
 // The parties under the letterhead with the roof edge: the recipient's name
