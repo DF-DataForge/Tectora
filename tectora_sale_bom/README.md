@@ -15,8 +15,15 @@ de stuklijst van de lijn:
 * hoeveelheden **per eenheid van het verkochte product** (per m², per m), of
   **Vast** voor de hele lijn (één container per werf, wat de oppervlakte ook
   is); de kolom *Totaal* toont wat de lijn nodig heeft;
-* per component een **kostprijs** (standaard de kostprijs van het product, aan
-  te passen) en de kost; bovenaan de **kostprijs per eenheid**, een **marge**
+* per component een **extra marge** (standaard de veiligheidsmarge van het
+  product, anders 0 %) en de **stuks** die voorzien moeten worden: het totaal
+  plus de extra marge, bij een product met hercalculatie omgerekend naar stuks
+  en naar boven afgerond, zoals op de materiaallijst (ga met de muis over het
+  getal voor de berekening, bv. "535,60 m² + 1,05 % = 541,22 m² ÷ 2,88 m² per
+  stuk = 187,92 stuks → 188");
+* per component een **kostprijs** (standaard de kostprijs van het product, per
+  stuk bij hercalculatie, aan te passen) en de **kost** = stuks × kostprijs;
+  bovenaan de **kostprijs per eenheid**, een **marge**
   en de **berekende prijs**. Bij het openen staat de marge zo dat de berekende
   prijs gelijk is aan de huidige prijs van de lijn.
 

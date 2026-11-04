@@ -36,6 +36,19 @@ class PlanningSlot(models.Model):
         related="roof_project_id.partner_id", string="Klant"
     )
     roof_address = fields.Char(related="roof_project_id.address", string="Werfadres")
+    roof_color = fields.Integer(
+        string="Kleur (dakproject)",
+        compute="_compute_roof_color",
+        help="Kleur van de shift in de planner: die van het dakproject, zodat "
+        "alle shifts van een project dezelfde kleur hebben; zonder dakproject "
+        "de eigen kleur van de shift (die van de rol).",
+    )
+
+    @api.depends("roof_project_id.color")
+    def _compute_roof_color(self):
+        own_color = "color" in self._fields
+        for slot in self:
+            slot.roof_color = slot.roof_project_id.color or (slot.color if own_color else 0)
 
     # ------------------------------------------------------- roof project link
     def _tectora_derive_roof_project(self):

@@ -8,8 +8,8 @@ from odoo.tests import TransactionCase, tagged
 from .test_quote_rules import HEADER, row
 
 
-@tagged("post_install", "-at_install")
-class TestQuotationImport(TransactionCase):
+class ImportCase(TransactionCase):
+    """Taxes, stages and a works item; the helpers that run an import."""
 
     @classmethod
     def setUpClass(cls):
@@ -88,7 +88,11 @@ class TestQuotationImport(TransactionCase):
                 status="goedgekeurd", vat=0, customer="Garage Noord BV", vat_number=""),
         ]
 
-    # --------------------------------------------------------------- tests
+
+
+@tagged("post_install", "-at_install")
+class TestQuotationImport(ImportCase):
+
     def test_import_states_and_opportunities(self):
         job = self._import(self._rows())
         self.assertIn("3 offertes aangemaakt", job.summary)
@@ -102,14 +106,22 @@ class TestQuotationImport(TransactionCase):
         self.assertEqual(running.opportunity_id.stage_id, self.stage_open)
         self.assertEqual(running.opportunity_id.partner_id, running.partner_id)
         self.assertAlmostEqual(running.amount_untaxed, 104.30)
-        lines = running.order_line.sorted("sequence")
-        self.assertEqual(len(lines), 2, "the title line is skipped")
+        lines = running.order_line.filtered(lambda l: not l.display_type).sorted("sequence")
+        self.assertEqual(len(lines), 2)
+        self.assertFalse(running.order_line.filtered("display_type"),
+                         "a title without lines is left out")
         self.assertEqual(lines[0].product_id, self.works_item)
+        self.assertEqual(lines[0].label, self.works_item.display_name,
+                         "a catalogue works item is shown once, as Odoo shows it")
         self.assertEqual(lines[0].price_unit, 22.15, "the old price, not the catalogue's")
         self.assertEqual(lines[0].tax_ids, self.taxes[6])
         generic = lines[1]
-        self.assertEqual(generic.product_id.default_code, "TECTORA-IMPORT")
+        meter = self.env.ref("uom.product_uom_meter")
+        self.assertEqual(generic.product_id.default_code, "TECTORA-IMPORT-%s" % meter.id)
+        self.assertEqual(generic.product_id.uom_id, meter, "no unit conversion on the quote")
         self.assertEqual(generic.name, "Speciale opstand")
+        self.assertEqual(generic.label, "Speciale opstand",
+                         "the generic works item shows only the description")
         self.assertEqual(generic.product_uom_qty, 6, "the multiplied line takes the factor")
         self.assertEqual(generic.product_uom_id, self.env.ref("uom.product_uom_meter"))
         self.assertTrue(running.roof_project_id)
@@ -172,12 +184,41 @@ class TestQuotationImport(TransactionCase):
         self.assertTrue(self._order("2026/0003"))
         self.assertIn("3 offertes aangemaakt", job.summary)
 
-    def test_text_lines_as_notes(self):
-        self._import(self._rows(), text_lines="note")
-        notes = self._order("2026/0001").order_line.filtered(
-            lambda line: line.display_type == "line_note"
-        )
-        self.assertEqual(notes.mapped("name"), ["ALGEMENE WERKEN"])
+    def test_sections(self):
+        def quote_row(description, quantity, unit, price):
+            return row("2026/0010", description, quantity, unit, price, quantity * price,
+                       customer="Mevr. Claeys", vat_number="")
+        rows = [  # alphabetical, as the export gives them
+            quote_row("Actie maand februari", 1, "st", -50),
+            quote_row("AFBOUWWERKEN THV HET PLAT DAK", 0, "", 0),
+            quote_row("ALGEMENE NOTA'S", 0, "", 0),
+            quote_row("ALGEMENE WERKEN", 0, "", 0),
+            quote_row("Algemene vaste kosten", 1, "stuks", 85),
+            quote_row("COMMERCIËLE TEGEMOETKOMING", 0, "", 0),
+            quote_row("Leveren en plaatsen van de PE-tapbuis", 1, "st", 120),
+            quote_row("OPBOUWWERKEN THV HET PLAT DAK", 0, "", 0),
+            quote_row("Verwijderen van de tapbuis", 1, "st", 22.15),
+        ]
+        job = self._import(rows)
+        order = self._order("2026/0010")
+        self.assertEqual(order.order_line.sorted("sequence").mapped("label"), [
+            "ALGEMENE WERKEN",
+            "Algemene vaste kosten",
+            "AFBOUWWERKEN THV HET PLAT DAK",
+            "Verwijderen van de tapbuis",
+            "OPBOUWWERKEN THV HET PLAT DAK",
+            "Leveren en plaatsen van de PE-tapbuis",
+            "COMMERCIËLE TEGEMOETKOMING",
+            "Actie maand februari",
+        ])
+        sections = order.order_line.filtered(lambda l: l.display_type == "line_section")
+        self.assertEqual(len(sections), 4)
+        self.assertIn("4 secties", job.summary)
+        self.assertAlmostEqual(order.amount_untaxed, 177.15)
+
+    def test_titles_skipped(self):
+        self._import(self._rows(), text_lines="skip")
+        self.assertFalse(self._order("2026/0001").order_line.filtered("display_type"))
 
     def test_unknown_status_stops_the_import(self):
         rows = [row("2026/0009", "Verwijderen van de tapbuis", 1, "st", 25, 25,
@@ -185,3 +226,121 @@ class TestQuotationImport(TransactionCase):
         with self.assertRaisesRegex(UserError, "in opmaak"):
             self._import(rows)
         self.assertFalse(self._order("2026/0009"))
+
+
+PROJECT_HEADER = (
+    "nummer", "naam", "klantnummer", "klantnaam", "BTW-nummer klant", "adres klant",
+    "postcode klant", "stad klant", "land klant", "adres project", "postcode project",
+    "stad project", "omschrijving", "referentie voor klant", "status", "deadline",
+    "verantwoordelijke gebruiker", "totaal offertes ex BTW",
+)
+
+
+def project_row(number, customer, total, status, deadline="", responsible="",
+                description=""):
+    return (number, "Roeselare - %s" % customer, "K001", customer, "", "Kerkstraat 1",
+            "8800", "Roeselare", "", "Werfstraat 9", "8800", "Roeselare", description,
+            "", status, deadline, responsible, total)
+
+
+@tagged("post_install", "-at_install")
+class TestProjectImport(ImportCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.team_1 = cls.env["tectora.roof.team"].create({"name": "Team 1"})
+        cls.team_2 = cls.env["tectora.roof.team"].create({"name": "Team 2"})
+
+    def _import_projects(self, rows, **options):
+        import openpyxl
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Export Simpla"
+        sheet.append(PROJECT_HEADER)
+        for values in rows:
+            sheet.append(values)
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        wizard = self.env["tectora.project.import"].create({
+            "file": base64.b64encode(buffer.getvalue()).decode(),
+            "filename": "projecten.xlsx",
+            **options,
+        })
+        action = wizard.action_import()
+        if wizard.dry_run:
+            return wizard
+        job = self.env[action["res_model"]].browse(action["res_id"])
+        job._process(commit=False)
+        return job
+
+    def test_projects_linked_and_planned(self):
+        self._import(self._rows())
+        rows = [
+            project_row("2026/0100", "Garage Noord BV", 25, "in uitvoering",
+                        "30/10/2026", "TEAM 1 TECTORA: MARIUSZ & MARCIN",
+                        "Branden van het dampscherm"),
+            project_row("2026/0101", "Garage Noord BV", 100, "afgesloten",
+                        "15/09/2026", "TEAM 1 + TEAM 2"),
+            project_row("2026/0102", "Dhr. Peeters", 104.30, "lopend", "", "Onbekend BV"),
+            project_row("2026/0103", "Mevr. Niemand", 0, "lopend"),
+        ]
+        preview = self._import_projects(rows, dry_run=True, create_missing_teams=False)
+        self.assertIn("3 projecten gevonden", preview.summary)
+        self.assertIn("GEEN PLOEG", preview.summary)
+        self.assertFalse(self.env["tectora.project.import.team"].search([]))
+
+        job = self._import_projects(rows, create_missing_teams=False)
+        self.assertEqual(job.state, "done", job.summary)
+
+        approved = self._order("2026/0003").roof_project_id
+        self.assertEqual(approved.tectora_legacy_project_number, "2026/0100")
+        self.assertEqual(approved.team_id, self.team_1)
+        self.assertEqual(str(approved.date_deadline), "2026-10-30")
+        self.assertEqual(approved.address, "Werfstraat 9, 8800 Roeselare")
+        self.assertIn("dampscherm", str(approved.project_id.description))
+        block = approved.planning_ids
+        self.assertEqual(len(block), 1)
+        self.assertEqual(block.team_id, self.team_1)
+        self.assertEqual(block.state, "published")
+
+        # The invoiced order had no roof project: it gets one, and a project.
+        invoiced = self._order("2026/0002").roof_project_id
+        self.assertTrue(invoiced.project_id)
+        self.assertEqual(invoiced.state, "done")
+        self.assertEqual(invoiced.planning_ids.state, "done")
+        self.assertEqual(invoiced.planning_ids.employee_ids,
+                         (self.team_1 | self.team_2).member_ids)
+
+        # A quotation not confirmed yet: linked, no project; no team known.
+        running = self._order("2026/0001").roof_project_id
+        self.assertEqual(running.tectora_legacy_project_number, "2026/0102")
+        self.assertFalse(running.team_id)
+        self.assertIn("Onbekend BV (1)", job.summary)
+        self.assertIn("2026/0103", job.summary)  # no order found
+
+        # Again: nothing doubles; a corrected team table is applied.
+        self.env["tectora.project.import.team"].search([("name", "=", "Onbekend BV")]).team_ids = self.team_2
+        job = self._import_projects(rows, create_missing_teams=False)
+        self.assertEqual(running.team_id, self.team_2)
+        self.assertEqual(len(approved.planning_ids), 1)
+        self.assertIn("3 bijgewerkt", job.summary)
+
+    def test_missing_team_created(self):
+        self._import(self._rows())
+        rows = [project_row("2026/0102", "Dhr. Peeters", 104.30, "lopend", "30/10/2026",
+                            "MIKO ROOF")]
+        preview = self._import_projects(rows, dry_run=True)
+        self.assertIn("NIEUWE PLOEG 'MIKO ROOF'", preview.summary)
+        self.assertFalse(self.env["tectora.roof.team"].search([("name", "=", "MIKO ROOF")]))
+        self._import_projects(rows)
+        team = self.env["tectora.roof.team"].search([("name", "=", "MIKO ROOF")])
+        self.assertEqual(len(team), 1)
+        self.assertEqual(self._order("2026/0001").roof_project_id.team_id, team)
+        self.assertEqual(
+            self.env["tectora.project.import.team"].search([("name", "=", "MIKO ROOF")]).team_ids,
+            team,
+        )
+        # Again: the same team, not a second one.
+        self._import_projects(rows)
+        self.assertEqual(self.env["tectora.roof.team"].search_count([("name", "=", "MIKO ROOF")]), 1)

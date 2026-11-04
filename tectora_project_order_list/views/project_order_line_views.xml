@@ -92,7 +92,7 @@
                             <field name="allowed_partner_ids" widget="many2many_tags" readonly="1"/>
                         </page>
                         <page string="Inkooporders" name="purchases">
-                            <field name="purchase_order_ids" readonly="1">
+                            <field name="tectora_purchase_ids" readonly="1">
                                 <list>
                                     <field name="name"/>
                                     <field name="partner_id"/>

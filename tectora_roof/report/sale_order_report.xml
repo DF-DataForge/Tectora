@@ -1,38 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- The estimated execution time under the totals of the quotation:
-         "Geschatte uitvoeringstijd: 42 u 30 (± 5,3 werkdagen)". Only when
-         the products carry a time norm; a quotation without one is unchanged. -->
-    <template id="report_saleorder_document_inherit_tectora"
+    <!-- Every price on the quotation both without and with VAT: the amount
+         column always shows the price excluding VAT (Odoo picks one of the
+         two after the company's tax display), and a column next to it the
+         price including VAT, on the lines and on the totals per section. -->
+    <template id="report_saleorder_document_vat_columns"
               inherit_id="sale.report_saleorder_document">
-        <xpath expr="//div[@name='so_total_summary']" position="after">
-            <div t-if="doc.tectora_estimated_hours" class="row" name="tectora_estimated_time">
-                <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ms-auto">
-                    <table class="table table-sm table-borderless mb-0">
-                        <tr>
-                            <td class="text-start"><strong>Geschatte uitvoeringstijd</strong></td>
-                            <td class="text-end">
-                                <span t-out="doc._tectora_estimated_time_label()"/>
-                            </td>
-                        </tr>
-                        <t t-if="doc.tectora_demolition_hours">
-                            <tr class="text-muted small">
-                                <td class="text-start ps-4">waarvan afbraakwerken</td>
-                                <td class="text-end">
-                                    <span t-out="doc._tectora_hours_label(doc.tectora_demolition_hours)"/>
-                                </td>
-                            </tr>
-                            <tr class="text-muted small">
-                                <td class="text-start ps-4">waarvan uitvoeringswerken</td>
-                                <td class="text-end">
-                                    <span t-out="doc._tectora_hours_label(doc.tectora_execution_hours)"/>
-                                </td>
-                            </tr>
-                        </t>
-                    </table>
-                </div>
-            </div>
+        <xpath expr="//t[@t-set='price_field']" position="attributes">
+            <attribute name="t-value">'price_subtotal'</attribute>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
+            <span>Prijs excl. BTW</span>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']" position="after">
+            <th name="th_total_incl" class="text-end"><span>Prijs incl. BTW</span></th>
+        </xpath>
+        <xpath expr="//td[@name='td_product_subtotal']" position="after">
+            <td name="td_product_total_incl" class="text-end o_price_total">
+                <t t-if="not line.is_downpayment and not collapse_prices">
+                    <span t-field="line.price_total"/>
+                </t>
+            </td>
+        </xpath>
+        <xpath expr="//td[@name='td_section_price']" position="after">
+            <td t-if="show_section_total" name="td_section_price_incl" class="text-end o_price_total">
+                <span t-out="line._get_section_totals('price_total')"
+                      t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+            </td>
+        </xpath>
+        <xpath expr="//td[@name='td_section_group_total']" position="after">
+            <td name="td_section_group_total_incl" class="text-end o_price_total">
+                <span t-if="show_section_total" t-out="section_line['price_total']"
+                      t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+            </td>
         </xpath>
     </template>
 

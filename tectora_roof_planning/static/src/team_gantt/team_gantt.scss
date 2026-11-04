@@ -1,6 +1,5 @@
 // The team planner: project blocks carry the key data of the site (customer,
-// project, address, roof area, type, crew size). The label is set a little
-// smaller to fit more of the data on the bar.
+// project, address, roof area, type, crew size).
 .o_tectora_team_gantt {
     .o_gantt_pill_title,
     .o_gantt_pill .o_gantt_pill_content {
@@ -8,26 +7,42 @@
         letter-spacing: -0.01em;
     }
 
-    // Rows three times as high (team_gantt.js scales the gantt's row spans and
-    // adds this class only when that worked): the blocks grow with them and
-    // show their label on several lines.
+    // Blocks three times as high (team_gantt.js scales the gantt's rows and
+    // adds this class only when that worked): the block fills its taller row
+    // and its label runs over several lines instead of one truncated line.
     &.o_tectora_tall {
-        .o_gantt_pill {
+        // A block fills the row it sits in (the scaled rows), instead of the
+        // gantt's own block height: it never runs over the next team.
+        .o_gantt_pill_wrapper {
             height: auto !important;
-            min-height: 5.4rem;
-            align-items: flex-start;
-            padding-top: 0.35rem;
-            padding-bottom: 0.35rem;
+            align-self: stretch;
+        }
+
+        .o_gantt_pill {
+            align-items: flex-start !important;
+            padding-top: 0.3rem;
+            padding-bottom: 0.3rem;
+            border-radius: 0.4rem;
+            overflow: hidden;
+
+            // whatever element carries the label (title, content, a
+            // text-truncate span): allowed to wrap
+            &,
+            * {
+                white-space: normal !important;
+                text-overflow: clip;
+            }
         }
 
         .o_gantt_pill_title,
-        .o_gantt_pill .o_gantt_pill_content {
-            white-space: normal !important;
+        .o_gantt_pill .o_gantt_pill_content,
+        .o_gantt_pill .text-truncate {
             line-height: 1.3;
             font-size: 0.85rem;
+            font-weight: 500;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
         }
 
@@ -35,5 +50,31 @@
             font-size: 1rem;
             font-weight: 600;
         }
+    }
+
+    // The block's colour is its project's; its state shows in its style.
+    // The gantt puts a decoration-<name> class on the pill (or on the item
+    // around it, depending on the version), so match both.
+    // Concept (decoration-info): hatched, with a dashed border.
+    .o_gantt_pill[class*="decoration-info"],
+    .o_gantt_pill[class*="decoration_info"],
+    [class*="decoration-info"] > .o_gantt_pill,
+    [class*="decoration_info"] > .o_gantt_pill {
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.45) 0 6px,
+            transparent 6px 12px
+        ) !important;
+        outline: 2px dashed rgba(0, 0, 0, 0.35);
+        outline-offset: -2px;
+    }
+
+    // Uitgevoerd (decoration-secondary): greyed out, the open work stands out.
+    .o_gantt_pill[class*="decoration-secondary"],
+    .o_gantt_pill[class*="decoration_secondary"],
+    [class*="decoration-secondary"] > .o_gantt_pill,
+    [class*="decoration_secondary"] > .o_gantt_pill {
+        filter: grayscale(0.85);
+        opacity: 0.55;
     }
 }

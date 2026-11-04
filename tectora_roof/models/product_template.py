@@ -183,31 +183,38 @@ class ProductTemplate(models.Model):
         }.get(self.tectora_recalc_uom)
         return xmlid and self.env.ref(xmlid, raise_if_not_found=False) or self.env["uom.uom"]
 
-    def _tectora_recalc_factor(self):
-        """1 plus the safety margin: 1,05 for 5 %."""
+    def _tectora_recalc_factor(self, margin=None):
+        """1 plus the safety margin: 1,05 for 5 %. ``margin`` (in %) instead
+        of the product's, for a line with a margin of its own."""
         self.ensure_one()
-        return 1.0 + (self.tectora_recalc_margin or 0.0) / 100.0
+        if margin is None:
+            margin = self.tectora_recalc_margin
+        return 1.0 + (margin or 0.0) / 100.0
 
-    def _tectora_recalc_pieces(self, quantity):
+    def _tectora_recalc_pieces(self, quantity, margin=None):
         """Pieces, not rounded, for ``quantity`` m, m² or m³ of this product,
         the safety margin included; the quantity unchanged when the product
         has no hercalculatie."""
         self.ensure_one()
         if not self.tectora_recalc or self.tectora_recalc_size <= 0.0:
             return quantity
-        return quantity * self._tectora_recalc_factor() / self.tectora_recalc_size
+        return quantity * self._tectora_recalc_factor(margin) / self.tectora_recalc_size
 
-    def _tectora_recalculate(self, quantity):
+    def _tectora_recalculate(self, quantity, margin=None):
         """Pieces for ``quantity`` m, m² or m³ of this product, the safety
         margin included, rounded up; the quantity unchanged when the product
         has no hercalculatie."""
         self.ensure_one()
         if not self.tectora_recalc or self.tectora_recalc_size <= 0.0:
             return quantity
-        # Up to whole pieces, without 20.000000001 becoming 21.
-        return float(math.ceil(round(self._tectora_recalc_pieces(quantity), 6)))
+        return self._tectora_round_pieces(self._tectora_recalc_pieces(quantity, margin))
 
-    def _tectora_recalc_explanation(self, quantity, rounded=False):
+    @api.model
+    def _tectora_round_pieces(self, pieces):
+        """Up to whole pieces, without 20.000000001 becoming 21."""
+        return float(math.ceil(round(pieces, 6)))
+
+    def _tectora_recalc_explanation(self, quantity, rounded=False, margin=None):
         """How ``quantity`` in the Reken-UoM becomes pieces, as a line of
         text for a bill of materials: "1,00 m² ÷ 0,72 m² per stuk = 1,39
         stuks", with a safety margin "1,00 m + 5 % = 1,05 m ÷ 30 m per stuk
@@ -222,14 +229,16 @@ class ProductTemplate(models.Model):
             # Without trailing zeros: 30 m, 0,72 m², 2,5 %.
             return formatLang(self.env, value, digits=digits).rstrip("0").rstrip(",.")
 
+        if margin is None:
+            margin = self.tectora_recalc_margin
         unit = dict(self._fields["tectora_recalc_uom"].selection).get(self.tectora_recalc_uom, "")
         amount = _("%(qty)s %(unit)s", qty=formatLang(self.env, quantity, digits=2), unit=unit)
-        if self.tectora_recalc_margin:
+        if margin:
             amount = _(
                 "%(amount)s + %(margin)s %% = %(total)s %(unit)s",
                 amount=amount,
-                margin=number(self.tectora_recalc_margin, 2),
-                total=formatLang(self.env, quantity * self._tectora_recalc_factor(), digits=2),
+                margin=number(margin, 2),
+                total=formatLang(self.env, quantity * self._tectora_recalc_factor(margin), digits=2),
                 unit=unit,
             )
         text = _(
@@ -237,11 +246,11 @@ class ProductTemplate(models.Model):
             amount=amount,
             unit=unit,
             size=number(size, 4) or "0",
-            pieces=formatLang(self.env, self._tectora_recalc_pieces(quantity), digits=2),
+            pieces=formatLang(self.env, self._tectora_recalc_pieces(quantity, margin), digits=2),
         )
         if rounded:
             text = _("%(text)s → %(whole)s stuks op de materiaallijst", text=text,
-                     whole=formatLang(self.env, self._tectora_recalculate(quantity), digits=0))
+                     whole=formatLang(self.env, self._tectora_recalculate(quantity, margin), digits=0))
         return text
 
 

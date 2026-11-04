@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- The task stages every project of a roof project shares. Without them
+         Odoo 20 gives every new project four stages of its own (New, In
+         Progress, Done, Cancelled), one set per site. -->
+    <record id="project_task_type_nieuw" model="project.task.type">
+        <field name="name">Nieuw</field>
+        <field name="sequence">5</field>
+        <field name="user_id" eval="False"/>
+    </record>
+
+    <record id="project_task_type_bezig" model="project.task.type">
+        <field name="name">Bezig</field>
+        <field name="sequence">10</field>
+        <field name="user_id" eval="False"/>
+    </record>
+
+    <record id="project_task_type_klaar" model="project.task.type">
+        <field name="name">Klaar</field>
+        <field name="sequence">15</field>
+        <field name="user_id" eval="False"/>
+    </record>
+
+    <record id="project_task_type_geannuleerd" model="project.task.type">
+        <field name="name">Geannuleerd</field>
+        <field name="sequence">20</field>
+        <field name="fold" eval="True"/>
+        <field name="user_id" eval="False"/>
+    </record>
+
+</odoo>

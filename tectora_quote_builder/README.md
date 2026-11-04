@@ -69,5 +69,10 @@ offerte.
   kader heeft daarom een onzichtbare lijn van 1 px.
 - Kan het kader niet gemaakt worden, dan wordt het document afgedrukt zoals
   het is (en staat de fout in het log).
+- Het kader hangt enkel af van het bedrijf (lay-out, logo, kleuren, adres en
+  bankrekeningen), het papierformaat en de taal, niet van de offerte: het wordt
+  één keer gerenderd en daarna hergebruikt (per Odoo-proces), tot een van die
+  gegevens wijzigt of de modules opnieuw geladen worden. De voorpagina krijgt
+  de naam van de klant en het kader in één doorgang.
 - Formuliervelden in een kop- of voettekst worden niet ondersteund wanneer die
   in de lay-out afgedrukt wordt.

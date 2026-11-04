@@ -34,6 +34,18 @@ FORM_FIELDS = """
 VIEW_EXTENSIONS = [
     (
         "gantt",
+        # Shifts coloured per roof project (like the team planner's blocks);
+        # the variant without it keeps the fields if a gantt refuses it.
+        """
+        <xpath expr="//gantt" position="attributes">
+            <attribute name="color">roof_color</attribute>
+        </xpath>
+        <xpath expr="//gantt" position="inside">
+            <field name="roof_project_id"/>
+            <field name="roof_team_id"/>
+            <field name="roof_color"/>
+        </xpath>
+        """,
         """
         <xpath expr="//gantt" position="inside">
             <field name="roof_project_id"/>

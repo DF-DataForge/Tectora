@@ -4,3 +4,5 @@ from . import test_roofs
 from . import test_terms_pdf
 from . import test_report_label
 from . import test_product_dimensions
+from . import test_task_stages
+from . import test_project_overview
