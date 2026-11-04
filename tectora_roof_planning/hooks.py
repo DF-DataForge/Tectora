@@ -18,7 +18,9 @@ Every step runs in its own savepoint and only logs on failure, so a Planning
 release whose structure differs never breaks the install -- and
 ``uninstall_hook`` puts the app's default planner and the Ploegen menu back.
 """
+import json
 import logging
+import re
 
 _logger = logging.getLogger(__name__)
 
@@ -63,6 +65,8 @@ VIEW_EXTENSIONS = [
                     context="{'group_by': 'roof_project_id'}"/>
             <filter name="tectora_group_roof_team" string="Ploeg"
                     context="{'group_by': 'roof_team_id'}"/>
+            <filter name="tectora_group_resource_team" string="Ploeg van de medewerker"
+                    context="{'group_by': 'tectora_resource_team_id'}"/>
         </xpath>
         """,
     ),
@@ -334,9 +338,73 @@ def _move_teams_menu(env, config):
         )
 
 
+# The resource planner's actions as they were before they were grouped by
+# team, {action id: context}, so uninstalling puts them back.
+RESOURCE_CONTEXTS_PARAM = "tectora_roof_planning.previous_resource_contexts"
+TEAM_GROUP_FILTER = "search_default_tectora_group_resource_team"
+
+
+def _team_first_context(context):
+    """The context of a planner grouped by resource, grouped by the team of
+    the employee first; None when it does not group by resource or already
+    groups by team. A default group-by of the search view is ranked by its
+    value (the lowest first): the team gets 1, the resource after it."""
+    if not context or TEAM_GROUP_FILTER in context:
+        return None
+    # 'group_by': 'resource_ids' or ['resource_ids', ...] in the context.
+    group_by = re.search(r"""(['"]group_by['"]\s*:\s*)(\[[^\]]*\]|'[^']*'|"[^"]*")""", context)
+    if group_by and "resource" in group_by.group(2):
+        fields = re.findall(r"""['"]([\w:]+)['"]""", group_by.group(2))
+        if fields and "tectora_resource_team_id" not in fields:
+            value = repr(["tectora_resource_team_id"] + fields)
+            return context[:group_by.start(2)] + value + context[group_by.end(2):]
+        return None
+    # A search default that groups by resource: 'search_default_..resource..': n
+    defaults = list(re.finditer(r"""(['"]search_default_\w*resource\w*['"]\s*:\s*)(\d+)""", context))
+    if not defaults:
+        return None
+    for match in reversed(defaults):
+        rank = max(int(match.group(2)), 1) + 1
+        context = context[:match.start(2)] + str(rank) + context[match.end(2):]
+    inner = context.strip()
+    if not inner.startswith("{"):
+        return None
+    return "{'%s': 1, %s" % (TEAM_GROUP_FILTER, inner[1:].lstrip())
+
+
+def _group_resource_planner_by_team(env):
+    """The Planning app's planner per resource shows its employees team by
+    team: its actions group by the team of the employee first."""
+    Param = env["ir.config_parameter"].sudo()
+    previous = {}
+    try:
+        previous = json.loads(Param.get_str(RESOURCE_CONTEXTS_PARAM) or "{}")
+    except ValueError:
+        previous = {}
+    actions = env["ir.actions.act_window"].search([("res_model", "=", "planning.slot")])
+    for action in actions:
+        context = _team_first_context(action.context or "")
+        if not context:
+            continue
+        try:
+            with env.cr.savepoint():
+                previous.setdefault(str(action.id), action.context)
+                action.context = context
+            _logger.info(
+                "tectora_roof_planning: planner %s grouped by team first", action.name
+            )
+        except Exception as error:
+            _logger.warning(
+                "tectora_roof_planning: could not group planner %s by team: %s",
+                action.name, error,
+            )
+    Param.set_str(RESOURCE_CONTEXTS_PARAM, json.dumps(previous))
+
+
 def post_init_hook(env):
     _extend_planning_views(env)
     _install_team_planner(env)
+    _group_resource_planner_by_team(env)
     # Existing shifts get their roof project from their work block or from the
     # project dossier they hang on.
     slots = env["planning.slot"].search([])
@@ -378,3 +446,23 @@ def uninstall_hook(env):
                 error,
             )
     Param.set_str(PARENT_MENU_PARAM, "")
+
+    # The planners per resource group by resource again, as they did.
+    try:
+        previous = json.loads(Param.get_str(RESOURCE_CONTEXTS_PARAM) or "{}")
+    except ValueError:
+        previous = {}
+    for action_id, context in previous.items():
+        action = env["ir.actions.act_window"].browse(int(action_id)).exists()
+        if action and TEAM_GROUP_FILTER in (action.context or "") or (
+            action and "tectora_resource_team_id" in (action.context or "")
+        ):
+            try:
+                with env.cr.savepoint():
+                    action.context = context
+            except Exception as error:
+                _logger.warning(
+                    "tectora_roof_planning: could not restore planner %s: %s",
+                    action.name, error,
+                )
+    Param.set_str(RESOURCE_CONTEXTS_PARAM, "")

@@ -205,3 +205,4 @@ Releases and the modules they need upgraded:
 | Aankooporder vanuit een project: leveranciersreferentie = referentie van de werf | `tectora_roof` (20.0.3.59.0), `tectora_project_order_list` (20.0.1.7.0), `tectora_purchase` (20.0.1.4.0) |
 | Eén aankooporder per leverancier per project (bestellijst en materiaallijst) | `tectora_project_order_list` (20.0.1.8.0), `tectora_purchase` (20.0.1.5.0) |
 | Materiaallijst volgt de bestellijst (status per product); geen dubbele bestelling vanuit de materiaallijst | `tectora_project_order_list` (20.0.1.9.0), `tectora_purchase` (20.0.1.6.0) |
+| Planning per resource: medewerkers gegroepeerd per ploeg | `tectora_roof_planning` (20.0.1.20.0) |
