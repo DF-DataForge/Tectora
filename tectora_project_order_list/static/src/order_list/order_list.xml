@@ -26,7 +26,7 @@
                     </div>
                     <div t-else="" class="text-muted">
                         Nog geen bestellijst-onderdelen ingesteld. Maak ze aan in
-                        <b>Dakmeting › Projectopvolging › Bestellijst-onderdelen</b>; elk
+                        <b>Project › Configuratie › Bestellijst-onderdelen</b>; elk
                         nieuw project krijgt dan een bestellijst met die onderdelen.
                     </div>
                 </t>
@@ -136,7 +136,7 @@
                             <span>Dit project heeft nog geen bestellijst.</span>
                             <button class="btn btn-primary" t-on-click="() => this.createOrderList()">Bestellijst aanmaken</button>
                         </t>
-                        <span t-else="">Nog geen bestellijst-onderdelen ingesteld (Dakmeting › Projectopvolging › Bestellijst-onderdelen).</span>
+                        <span t-else="">Nog geen bestellijst-onderdelen ingesteld (Project › Configuratie › Bestellijst-onderdelen).</span>
                     </div>
                     <t t-else="">
                         <div class="d-flex flex-wrap align-items-center gap-3 mb-2">

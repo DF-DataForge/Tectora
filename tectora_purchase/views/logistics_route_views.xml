@@ -86,16 +86,9 @@
         </field>
     </record>
 
-    <menuitem id="menu_tectora_logistics_routes"
-              name="Logistieke routes"
-              parent="tectora_roof.menu_tectora_root"
-              action="action_tectora_logistics_route"
-              groups="purchase.group_purchase_manager,base.group_system"
-              sequence="85"/>
-
     <!-- Purchase people configure them where they configure the rest. -->
     <menuitem id="menu_tectora_logistics_routes_purchase"
-              name="Logistieke routes (Dakmeting)"
+              name="Logistieke routes"
               parent="purchase.menu_purchase_config"
               action="action_tectora_logistics_route"
               sequence="60"/>

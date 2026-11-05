@@ -280,11 +280,31 @@ project (start- en einddatum) en omgekeerd.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
 
+## Werfadres
+
+Het **werfadres** van een dakproject is een contact: standaard een
+**afleveradres** van de klant (in het veld maak je er meteen een aan onder de
+klant). Het is het **afleveradres van de offerte en de order**: wie het op het
+ene wijzigt, wijzigt het op het andere. Een nieuwe klant brengt zijn eigen
+adres mee. Het adres op één lijn (*Werfadres (tekst)*), voor het
+satellietbeeld, de planning en het weer, volgt het contact; zonder klant blijft
+het een getypt adres. Een dakproject uit een verkoopkans krijgt de klant of,
+als de verkoopkans een ander adres heeft, een nieuw afleveradres met dat adres.
+
+## Menu's: Dakmeting en Project
+
+**Dakmeting** bevat enkel de gegevens van de werf: *Dakprojecten* (de meting),
+*Dakobjecten*, *Producten* en *Instellingen*. Wat het werk organiseert, staat in
+de **Project**-app bij de projecten: *Overzicht*, *Projecten* en het menu
+**Werf** met *Werkblokken*, *Materiaalbehoefte*, *Inkoop organiseren*,
+*Bestellijst*, *Urenregistraties* en *Uitvoeringsverslagen*. De fases,
+taaksjablonen en bestellijst-onderdelen (met hun imports) staan in *Project ›
+Configuratie*, de logistieke routes in *Inkoop › Configuratie*.
+
 ## Projectoverzicht
 
-De Project-app opent op het **Projectoverzicht** (menu *Overzicht*, ook in
-Dakmeting › Projectoverzicht): de kerncijfers van alle projecten van een
-dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
+De Project-app opent op het **Projectoverzicht** (menu *Overzicht*): de
+kerncijfers van alle projecten van een dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
 projectdashboard), elk project in een lijst opent zijn projectdashboard.
 *Alle projecten* opent de gewone projectkaarten.
 

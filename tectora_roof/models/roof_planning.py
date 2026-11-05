@@ -4,6 +4,7 @@ from datetime import datetime, time, timedelta
 import pytz
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class TectoraRoofPlanning(models.Model):
@@ -215,6 +216,24 @@ class TectoraRoofPlanning(models.Model):
             )
             cursor = segment_end
         return ranges
+
+    def action_tectora_split_at(self, day):
+        """Cut this block in two at the start (local midnight) of ``day``
+        ("2026-11-05"), the scissors of the team planner: the first part
+        keeps the block, the second is a copy with the same team and
+        employees, each with its own shifts."""
+        self.ensure_one()
+        tz = pytz.timezone(self.env.user.tz or "UTC")
+        cut_day = fields.Date.to_date(day)
+        cut = tz.localize(datetime.combine(cut_day, time.min)).astimezone(pytz.utc).replace(tzinfo=None)
+        if not (self.start_datetime and self.end_datetime
+                and self.start_datetime < cut < self.end_datetime):
+            raise UserError(_("Een blok kan enkel binnen zijn eigen periode geknipt worden."))
+        end = self.end_datetime
+        self.write({"end_datetime": cut})
+        second = self.copy({"start_datetime": cut, "end_datetime": end})
+        (self | second)._sync_employee_items()
+        return True
 
     def action_split(self):
         """Split every selected block into one block per calendar day.

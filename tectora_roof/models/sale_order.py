@@ -27,6 +27,8 @@ SYNC_PAIRS = [
     ("user_id", "project_manager_id"),
     ("commitment_date", "date_deadline"),
     ("pricelist_id", "project_type"),
+    # The order's delivery address is the site.
+    ("partner_shipping_id", "site_partner_id"),
 ]
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
@@ -327,9 +329,7 @@ class SaleOrder(models.Model):
         values = {
             "name": name,
             "company_id": self.company_id.id or self.env.company.id,
-            "address": address._display_address(without_name=True).replace(
-                "\n", ", "
-            ) if address else False,
+            "site_partner_id": address.id if address else False,
             "state": "confirmed" if self.state in ("sale", "done") else "quoted",
         }
         values.update(self._tectora_roof_values_from_order())
@@ -697,6 +697,12 @@ class SaleOrder(models.Model):
             project_type = self._tectora_project_type_from_pricelist()
             if project_type:
                 values["project_type"] = project_type
+        # Another customer gets its own delivery address (Odoo recomputes it
+        # without it being written), so the site follows that too.
+        site_changed = explicit and "partner_id" in changed and not only_missing
+        if (wanted("partner_shipping_id", "site_partner_id") or site_changed) \
+                and self.partner_shipping_id:
+            values["site_partner_id"] = self.partner_shipping_id.id
         return values
 
     def _tectora_order_values_from_roof(self, roof, changed=None, only_missing=False):
@@ -734,6 +740,8 @@ class SaleOrder(models.Model):
             pricelist = roof._find_pricelist()
             if pricelist:
                 values["pricelist_id"] = pricelist.id
+        if wanted("partner_shipping_id", "site_partner_id") and roof.site_partner_id:
+            values["partner_shipping_id"] = roof.site_partner_id.id
         return values
 
     def _tectora_project_type_from_pricelist(self):

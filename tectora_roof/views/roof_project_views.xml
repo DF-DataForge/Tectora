@@ -135,7 +135,16 @@
                             <field name="color" widget="color_picker"/>
                         </group>
                         <group>
-                            <field name="address" placeholder="Straat nr, postcode gemeente"/>
+                            <!-- The site as a contact: a delivery address of the
+                                 customer, the order's delivery address. -->
+                            <field name="site_partner_id"
+                                   domain="partner_id and ['|', ('id', '=', partner_id), ('parent_id', '=', partner_id)] or []"
+                                   context="{'default_parent_id': partner_id, 'default_type': 'delivery', 'show_address': 1}"
+                                   options="{'always_reload': True}"
+                                   placeholder="Afleveradres van de klant"/>
+                            <field name="address" string="Werfadres (tekst)"
+                                   invisible="site_partner_id"
+                                   placeholder="Straat nr, postcode gemeente"/>
                             <field name="opportunity_id"/>
                             <field name="sale_order_id"
                                    context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>

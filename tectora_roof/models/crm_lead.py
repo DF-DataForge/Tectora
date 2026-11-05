@@ -14,6 +14,27 @@ class CrmLead(models.Model):
         for lead in self:
             lead.roof_project_count = len(lead.roof_project_ids)
 
+    def _tectora_site_partner(self, address):
+        """The contact of the site of this opportunity: its customer when the
+        opportunity's address is the customer's (or empty), else a new
+        delivery address under the customer. None without a customer."""
+        self.ensure_one()
+        partner = self.partner_id
+        if not partner:
+            return self.env["res.partner"]
+        if not address or address == partner._tectora_one_line_address():
+            return partner
+        return self.env["res.partner"].create({
+            "parent_id": partner.commercial_partner_id.id,
+            "type": "delivery",
+            "street": self.street,
+            "street2": self.street2,
+            "zip": self.zip,
+            "city": self.city,
+            "state_id": self.state_id.id,
+            "country_id": self.country_id.id or partner.country_id.id,
+        })
+
     def action_create_roof_project(self):
         """Create a roof measurement project prefilled from the opportunity."""
         self.ensure_one()
@@ -25,6 +46,7 @@ class CrmLead(models.Model):
                 "name": self.name,
                 "partner_id": self.partner_id.id or False,
                 "opportunity_id": self.id,
+                "site_partner_id": self._tectora_site_partner(address).id or False,
                 "address": address or False,
                 "company_id": self.company_id.id or self.env.company.id,
             }

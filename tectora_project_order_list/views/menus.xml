@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Dakmeting -> Bestellijst: the order lists of all projects. -->
+    <!-- Project -> Werf -> Bestellijst: the order lists of all projects. -->
     <menuitem id="menu_tectora_order_lists"
               name="Bestellijst"
-              parent="tectora_roof.menu_tectora_root"
-              sequence="26"/>
+              parent="tectora_roof.menu_project_worksite"
+              sequence="40"/>
 
     <menuitem id="menu_tectora_order_lines_project"
               name="Per project"
@@ -19,19 +19,14 @@
               action="action_tectora_project_order_line_supplier"
               sequence="20"/>
 
-    <!-- Configuration of the (empty) standard parts, next to the phases
-         and task templates. -->
-    <menuitem id="menu_tectora_order_list_templates"
-              name="Bestellijst-onderdelen"
-              parent="tectora_project_tasks.menu_tectora_task_phases"
-              action="action_tectora_order_list_template"
-              sequence="30"/>
-
+    <!-- Configuration of the (empty) standard parts, in Project ->
+         Configuration next to the phases and task templates. -->
     <menuitem id="menu_tectora_order_list_import"
               name="Bestellijst importeren"
-              parent="tectora_project_tasks.menu_tectora_task_phases"
+              parent="project.menu_project_config"
               action="action_tectora_order_list_import"
-              sequence="35"/>
+              groups="project.group_project_manager"
+              sequence="45"/>
 
     <menuitem id="menu_project_config_tectora_order_list_templates"
               name="Bestellijst-onderdelen"
