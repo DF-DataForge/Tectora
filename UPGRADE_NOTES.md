@@ -217,3 +217,4 @@ Releases and the modules they need upgraded:
 | Fix Dakopbouw: systeemparameters lezen met get_str (Odoo 20) | `tectora_roof` (20.0.3.67.0) |
 | Fix Dakopbouw: keuze dampscherm (parseInt in template) | `tectora_roof` (20.0.3.68.0) |
 | Naad splitst het dakvlak niet meer: één sectie, de naden delen ze in EPDM-doeken (label op de tekening, berekening per doek); "Samenvoegen tot één sectie" voor vroeger gesplitste vlakken | `tectora_roof` (20.0.3.69.0) |
+| Naad tekenen: klik zijde → andere zijde maakt de naad af (klikken snappen op de omtrek) | `tectora_roof` (20.0.3.70.0) |

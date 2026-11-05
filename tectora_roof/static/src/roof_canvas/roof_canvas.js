@@ -1347,7 +1347,73 @@ export class RoofCanvasField extends Component {
     }
 
     // --------------------------------------------------------------- shapes
+    /**
+     * The point on the outline of a roof section nearest to ``point``,
+     * within the snap distance (a corner first): {point, onEdge}. A seam
+     * runs from side to side, so its clicks land exactly on the outline.
+     */
+    seamSnap(point) {
+        const snap = CLOSE_SNAP_PX / this.view.zoom;
+        let best = null;
+        for (const shape of this.shapes) {
+            if ((shape.kind || "section") !== "section" || shape.shape === "circle") {
+                continue;
+            }
+            const points = shape.points;
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i];
+                const b = points[(i + 1) % points.length];
+                const corner = Math.hypot(point[0] - a[0], point[1] - a[1]);
+                if (corner <= snap && (!best || corner - snap < best.distance)) {
+                    // A corner wins over a side at the same distance.
+                    best = { point: [a[0], a[1]], distance: corner - snap };
+                }
+                const dx = b[0] - a[0];
+                const dy = b[1] - a[1];
+                const length2 = dx * dx + dy * dy;
+                if (!length2) {
+                    continue;
+                }
+                const t = Math.max(0, Math.min(1,
+                    ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length2));
+                const foot = [a[0] + dx * t, a[1] + dy * t];
+                const distance = Math.hypot(point[0] - foot[0], point[1] - foot[1]);
+                if (distance <= snap && (!best || distance < best.distance)) {
+                    best = { point: foot, distance };
+                }
+            }
+        }
+        return best ? { point: best.point, onEdge: true } : { point, onEdge: false };
+    }
+
     addPolygonPoint(point) {
+        if (this.state.tool === "seam") {
+            // Click a side, then the other side: the seam is done. Started
+            // inside the surface, it takes points until a double-click (or a
+            // click on a side).
+            const snapped = this.seamSnap(point);
+            point = snapped.point;
+            if (!this.draftPolygon) {
+                this.draftPolygon = [point];
+                this.draftCursor = null;
+                this.updateStatus();
+                this.draw();
+                return;
+            }
+            const last = this.draftPolygon[this.draftPolygon.length - 1];
+            if (Math.hypot(point[0] - last[0], point[1] - last[1]) <= CLOSE_SNAP_PX / this.view.zoom) {
+                return; // the same spot again (the second click of a double-click)
+            }
+            this.draftPolygon.push(point);
+            if (snapped.onEdge) {
+                this.closePolygon();
+                this.draw();
+                return;
+            }
+            this.updateStatus();
+            this.draw();
+            return;
+        }
         if (!this.draftPolygon) {
             this.draftPolygon = [point];
             this.draftCursor = null;
@@ -3155,7 +3221,7 @@ export class RoofCanvasField extends Component {
         if (this.draftPolygon) {
             this.state.status =
                 this.state.tool === "seam"
-                    ? `Naad: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om af te sluiten, Esc om te annuleren`
+                    ? `Naad: ${this.draftPolygon.length} punt(en) — klik op de andere zijde om de naad af te werken (of dubbelklik/Enter), Esc om te annuleren`
                     : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
             return;
         }
@@ -3815,6 +3881,9 @@ export class RoofCanvasField extends Component {
     // pointer is close enough to close the polygon.
     draftSnap(point) {
         const points = this.draftPolygon;
+        if (this.state.tool === "seam") {
+            return this.seamSnap(point).point;
+        }
         if (this.state.tool !== "seam" && points.length >= 3) {
             const [fx, fy] = points[0];
             if (Math.hypot(point[0] - fx, point[1] - fy) <= CLOSE_SNAP_PX / this.view.zoom) {
