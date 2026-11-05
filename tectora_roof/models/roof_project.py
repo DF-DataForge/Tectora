@@ -1123,10 +1123,12 @@ class TectoraRoofProject(models.Model):
         roof = self.env["tectora.roof.project.roof"].create({"project_id": self.id})
         return roof.action_open_plan()
 
-    def _parse_canvas_shapes(self):
+    def _parse_canvas_shapes(self, canvas_data=None):
+        """The shapes of the drawing (``canvas_data``: another roof's plan,
+        by default the one on the drawing)."""
         self.ensure_one()
         try:
-            data = json.loads(self.canvas_data or "{}")
+            data = json.loads((self.canvas_data if canvas_data is None else canvas_data) or "{}")
         except (ValueError, TypeError):
             raise UserError(_("The canvas data is not valid JSON."))
         shapes = []

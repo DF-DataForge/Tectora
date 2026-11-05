@@ -316,6 +316,9 @@ class ProductTemplate(models.Model):
             code = (entry.get("code") or "").strip()
             path = entry.get("category_path")
             if code and path:
+                # The file was generated before some sub-categories existed:
+                # refine on the name, as an import does.
+                path = catalog_rules.refine_path(path, entry.get("name") or "")
                 wanted[code] = catalog_rules.branch_path(
                     path, entry.get("is_service", True)
                 )
@@ -406,6 +409,50 @@ class ProductTemplate(models.Model):
         _logger.info("tectora_products: %s works items back on sale", len(works))
         return len(works)
 
+    @api.model
+    def _tectora_refile_subcategories(self, root_name=None):
+        """Move the products that sit in a chapter with sub-categories (e.g.
+        04. Opbouwwerken plat dak/Afdichting) into the sub-category their name
+        belongs to (Dampscherm, Dakbedekking/EPDM, ...), in both branches.
+
+        Covers every product in the database, also those not in the shipped
+        catalogue (added by hand or by a later import). A product in a
+        sub-category already, or outside the works tree, is left alone.
+        """
+        root_name = root_name or DEFAULT_ROOT_CATEGORY
+        Product = self.with_context(active_test=False)
+        cache = {}
+        moved = 0
+        for key in catalog_rules.SUBCATEGORY_RULES:
+            chapter = catalog_rules.CATEGORY_PATHS.get(key)
+            if not chapter:
+                continue
+            for is_service in (True, False):
+                path = catalog_rules.branch_path(chapter, is_service)
+                category = self._tectora_find_category(path, root_name)
+                if not category:
+                    continue
+                for product in Product.search([("categ_id", "=", category.id)]):
+                    refined = catalog_rules.refine_path(path, product.name)
+                    if refined == path:
+                        continue
+                    if refined not in cache:
+                        cache[refined] = self._tectora_resolve_category(refined, root_name)
+                    product.categ_id = cache[refined]
+                    moved += 1
+        _logger.info("tectora_products: %s products moved to a sub-category", moved)
+        return moved
+
+    def _tectora_find_category(self, path, root_name):
+        """The category at ``path`` under the root, without creating it."""
+        Category = self.env["product.category"]
+        node = Category.search([("name", "=", root_name), ("parent_id", "=", False)], limit=1)
+        for part in [p.strip() for p in str(path).split("/") if p.strip()]:
+            if not node:
+                break
+            node = Category.search([("name", "=", part), ("parent_id", "=", node.id)], limit=1)
+        return node
+
     def _tectora_in_tree(self, category, root_name):
         node = category
         while node:
@@ -436,7 +483,12 @@ class ProductTemplate(models.Model):
                 [("name", "=", part), ("parent_id", "=", parent.id)], limit=1
             )
             if not category:
-                category = Category.create({"name": part, "parent_id": parent.id})
+                values = {"name": part, "parent_id": parent.id}
+                # A new sub-category is offered where its parent is (the
+                # drawing's usages, when Dakmeting is installed).
+                if "tectora_usage_ids" in Category._fields and parent.tectora_usage_ids:
+                    values["tectora_usage_ids"] = [(6, 0, parent.tectora_usage_ids.ids)]
+                category = Category.create(values)
             parent = category
         return parent
 

@@ -12,6 +12,13 @@ Vult de Odoo-productendatabase met de **leverancierscatalogus** van Tectora
   **subcategorieën onder 04. Opbouwwerken plat dak**: Afvoer, Isolatie,
   Afdichting, Bevestigingsmaterialen, Hout & plaatmateriaal, Doorvoeren &
   schoorsteen, Gereedschap & klein materiaal.
+- **Dakopbouw**: onder 04. Opbouwwerken plat dak staan de lagen van een plat
+  dak elk in een eigen categorie: **Dampscherm**, **Isolatie** met **PIR**,
+  **Minerale wol** en **Coverboard**, en **Dakbedekking** met **EPDM** en
+  **Bitumen & Resitrix** (in beide takken). De producten worden op hun naam
+  ingedeeld (dampscherm/Alutrix/Sopraglass, Utherm/PIR, Rockwool/Rhinoxx,
+  "dakbedekking type: ... EPDM"); aansluitingen, slabben en toebehoren blijven
+  in Afdichting. Een upgrade deelt de bestaande producten zo in.
 - **Classificatie** in drie signalen: de kolom `productgroup` (565 producten),
   daarna trefwoorden in de Nederlandse naam (793) en als laatste de
   leverancier, wiens assortiment homogeen is (143). Geen enkel product valt
