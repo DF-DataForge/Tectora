@@ -89,6 +89,17 @@ CATEGORY_PATHS = OrderedDict([
     ("afvoer", "04. Opbouwwerken plat dak/Afvoer"),
     ("isolatie", "04. Opbouwwerken plat dak/Isolatie"),
     ("afdichting", "04. Opbouwwerken plat dak/Afdichting"),
+    # The three layers of a flat roof's build-up, each in a category of its
+    # own so the drawing's "Dakopbouw" offers the right products per layer:
+    # the vapour barrier, the insulation (per material, the thickness and the
+    # fixing are in the name) and the roof covering.
+    ("dampscherm", "04. Opbouwwerken plat dak/Dampscherm"),
+    ("isolatie_pir", "04. Opbouwwerken plat dak/Isolatie/PIR"),
+    ("isolatie_wol", "04. Opbouwwerken plat dak/Isolatie/Minerale wol"),
+    ("isolatie_coverboard", "04. Opbouwwerken plat dak/Isolatie/Coverboard"),
+    ("dakbedekking", "04. Opbouwwerken plat dak/Dakbedekking"),
+    ("dakbedekking_epdm", "04. Opbouwwerken plat dak/Dakbedekking/EPDM"),
+    ("dakbedekking_bitumen", "04. Opbouwwerken plat dak/Dakbedekking/Bitumen & Resitrix"),
     ("bevestiging", "04. Opbouwwerken plat dak/Bevestigingsmaterialen"),
     ("hout", "04. Opbouwwerken plat dak/Hout & plaatmateriaal"),
     ("doorvoer", "04. Opbouwwerken plat dak/Doorvoeren & schoorsteen"),
@@ -118,6 +129,20 @@ CATEGORY_PATHS = OrderedDict([
 # Ordered, first match wins; no match leaves the product in the chapter itself
 # (which is where the werkuren belong).
 SUBCATEGORY_RULES = {
+    # Afdichting holds what makes the roof watertight: the vapour barrier and
+    # the roof covering itself get their own category, the connections,
+    # slabben, kit and accessories stay.
+    "afdichting": [
+        ("dampscherm", r"dampscherm|dampopen|alutrix|sopraglass|franaglass|"
+                       r"v-gard|tyvek|soprastick venti"),
+        ("dakbedekking_epdm", r"dakbedekking type:.*epdm|\bepdm folie\b"),
+        ("dakbedekking_bitumen", r"dakbedekking type:|sopralene|resitrix skw"),
+    ],
+    "isolatie": [
+        ("isolatie_pir", r"\bpir\b|utherm"),
+        ("isolatie_wol", r"rockwool|rhinoxx|isover|minerale wol|steenwol"),
+        ("isolatie_coverboard", r"coverboard|isogard"),
+    ],
     "afbraak": [
         ("afbraak_koepels", r"koepel|dakluik|lichtstraat"),
         ("afbraak_installaties", r"airco|zonnepane|warmtepomp|antenne|schotel"),
@@ -303,6 +328,22 @@ def refine(key, name):
         if re.search(pattern, lowered):
             return sub_key
     return key
+
+
+def refine_path(path, name):
+    """``path`` refined to the sub-category the name belongs to, keeping the
+    Grondstoffen branch: "04. Opbouwwerken plat dak/Afdichting" becomes
+    ".../Dampscherm" for a vapour barrier. Any other path is returned as is."""
+    path = str(path or "").strip().strip("/")
+    chapter = chapter_path(path)
+    for key, candidate in CATEGORY_PATHS.items():
+        if candidate == chapter and key in SUBCATEGORY_RULES:
+            refined = refine(key, name)
+            if refined == key:
+                return path
+            new = CATEGORY_PATHS[refined]
+            return new if chapter == path else "%s/%s" % (GOODS_BRANCH, new)
+    return path
 
 
 def classify(name, group, supplier):

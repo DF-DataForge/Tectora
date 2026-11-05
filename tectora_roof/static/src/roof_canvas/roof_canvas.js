@@ -2664,12 +2664,45 @@ export class RoofCanvasField extends Component {
         const preselected = extraHits
             .map((extra) => this.hitTargetKey(extra))
             .filter((key) => key !== clickedKey && available.has(key));
+        // The categories offered here: their own usages, or (a new
+        // sub-category such as Isolatie/PIR) those of their parent.
+        let categoryIds = [];
+        try {
+            categoryIds = await this.orm.call(
+                "product.category", "tectora_category_ids_for_usages", [usages]
+            );
+        } catch (error) {
+            console.warn("Roof canvas: could not load the product categories", error);
+        }
+        // The sections a choice in the dialog goes to: the clicked surface
+        // and the other surfaces ticked.
+        const sectionIdsFor = (targetKeys) => {
+            const picked = new Set(targetKeys || []);
+            return [
+                targetIds[0],
+                ...others
+                    .filter((item) => picked.has(item.key))
+                    .map((item) => recordByShape[item.shapeId]),
+            ].filter(Boolean);
+        };
+        const buildup = isSurface && !isObject
+            ? {
+                  projectId: record.resId,
+                  preview: (targetKeys, margin) =>
+                      this.orm.call(
+                          "tectora.roof.project", "tectora_preview_epdm_sheets",
+                          [[record.resId], sectionIdsFor(targetKeys)], { margin }
+                      ),
+                  apply: (choice, targetKeys) => this.applyBuildup(sectionIdsFor(targetKeys), choice),
+              }
+            : undefined;
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
                 ["sale_ok", "=", true],
-                ["categ_id.tectora_usage_ids.code", "in", usages],
+                ["categ_id", "in", categoryIds],
             ],
+            buildup,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -2780,6 +2813,43 @@ export class RoofCanvasField extends Component {
                 this.refreshPanel();
             },
         });
+    }
+
+    /** The "Dakopbouw" of the picker: the layers on the surfaces, and their
+     * EPDM sheets. */
+    async applyBuildup(sectionIds, choice) {
+        const record = this.props.record;
+        try {
+            const result = await this.orm.call(
+                "tectora.roof.project", "tectora_apply_buildup",
+                [[record.resId], sectionIds],
+                {
+                    vapour_id: choice.vapour_id,
+                    insulation_id: choice.insulation_id,
+                    membrane_id: choice.membrane_id,
+                    sheets: choice.sheets,
+                    margin: choice.margin,
+                }
+            );
+            await record.load();
+            let message = _t("Dakopbouw toegepast op %s dakvlak(ken).", sectionIds.length);
+            if (choice.sheets) {
+                const sheets = result.sheets || [];
+                const area = sheets.reduce((sum, sheet) => sum + sheet.area, 0);
+                message += " " + _t("%(count)s EPDM-doek(en) berekend, samen %(area)s m² (tab Werf).", {
+                    count: sheets.length,
+                    area: area.toFixed(2),
+                });
+            }
+            this.notification.add(message, { type: "success" });
+        } catch (error) {
+            console.warn("Roof canvas: applying the build-up failed", error);
+            this.notification.add(_t("Dakopbouw toepassen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        }
+        this.draw();
+        this.refreshPanel();
     }
 
     measurements(points) {

@@ -210,3 +210,4 @@ Releases and the modules they need upgraded:
 | Menu: Dakmeting enkel werfgegevens; werforganisatie in Project › Werf | `tectora_roof` (20.0.3.61.0), `tectora_portal` (20.0.1.3.0), `tectora_project_tasks` (20.0.1.3.0), `tectora_project_order_list` (20.0.1.11.0), `tectora_purchase` (20.0.1.7.0) |
 | Werfadres als contact = afleveradres van de offerte/order | `tectora_roof` (20.0.3.62.0) |
 | Tekening: offerte-opbouw per hoofdstuk naast de tekening, met kleur per offertelijn op de vlakken, zijden en dakobjecten | `tectora_roof` (20.0.3.63.0) |
+| Tekening: Dakopbouw (dampscherm, isolatie, dakbedekking) per dakvlak en EPDM-doeken berekenen; categorieën Dampscherm, Isolatie/PIR·Minerale wol·Coverboard, Dakbedekking/EPDM·Bitumen & Resitrix | `tectora_roof` (20.0.3.64.0), `tectora_products` (20.0.2.6.0) |

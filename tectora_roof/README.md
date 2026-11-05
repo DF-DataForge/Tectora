@@ -79,6 +79,24 @@ install on Odoo 17 or earlier without adjustments.
    bar stay in view, the plan fills the screen and the side panel (selected
    element, products, sides) scrolls on its own, to draw, assign products and
    describe without the form scrolling away. Changes are saved as you go.
+   Clicking a roof surface opens the product picker on its **Dakopbouw**
+   tab: the standard build-up of a flat roof, one product per layer --
+   dampscherm, isolatie (type, then thickness, then format and fixing) and
+   dakbedekking (type, thickness, fixing) -- read from the categories
+   04. Opbouwwerken plat dak/Dampscherm, /Isolatie and /Dakbedekking. It
+   replaces that layer's product on the surface (a layer on "niet wijzigen"
+   is left alone), on the clicked surface or on several at once (*Alle
+   dakvlakken*). The choice is remembered on the project; the company's
+   default build-up (Instellingen › Tectora Dakmeting) is proposed until
+   then. *EPDM-doeken berekenen* sizes one sheet per surface -- a seam cuts
+   a surface in two, so it is the joint between two sheets: the smallest
+   rectangle around the surface inside the roof edges, plus per side the
+   upstand and the roof edge's width and a margin (default 10 cm). The
+   sheets are previewed in the dialog and stored on the Werf tab (EPDM-
+   doeken), replacing the sheets calculated earlier for those surfaces;
+   sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
+   is flagged. *Alle producten* is the full product list as before; a
+   category without usages of its own is offered where its parent is.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter
