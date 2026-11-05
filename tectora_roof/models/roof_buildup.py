@@ -115,40 +115,29 @@ def epdm_sheet_size(points, extensions):
     return max(along, across), min(along, across)
 
 
-class ResCompany(models.Model):
-    _inherit = "res.company"
+class ResConfigSettings(models.TransientModel):
+    """The default build-up, as system parameters: no column on the company,
+    which every request reads."""
+    _inherit = "res.config.settings"
 
     tectora_buildup_vapour_id = fields.Many2one(
         "product.product", string="Standaard dampscherm",
+        config_parameter="tectora_roof.buildup_vapour_id",
         help="Voorgesteld in de dakopbouw van een nieuw dakvlak.",
     )
     tectora_buildup_insulation_id = fields.Many2one(
         "product.product", string="Standaard isolatie",
+        config_parameter="tectora_roof.buildup_insulation_id",
     )
     tectora_buildup_membrane_id = fields.Many2one(
         "product.product", string="Standaard dakbedekking",
+        config_parameter="tectora_roof.buildup_membrane_id",
     )
     tectora_epdm_margin = fields.Float(
-        string="Marge EPDM-doek per zijde (m)", digits=(16, 2), default=0.10,
+        string="Marge EPDM-doek per zijde (m)", digits=(16, 2),
+        config_parameter="tectora_roof.epdm_margin", default=0.10,
         help="Komt bij elk doek op elke zijde bij, bovenop de opstand en de "
         "breedte van de dakrand: om over de rand te plooien en vast te zetten.",
-    )
-
-
-class ResConfigSettings(models.TransientModel):
-    _inherit = "res.config.settings"
-
-    tectora_buildup_vapour_id = fields.Many2one(
-        related="company_id.tectora_buildup_vapour_id", readonly=False,
-    )
-    tectora_buildup_insulation_id = fields.Many2one(
-        related="company_id.tectora_buildup_insulation_id", readonly=False,
-    )
-    tectora_buildup_membrane_id = fields.Many2one(
-        related="company_id.tectora_buildup_membrane_id", readonly=False,
-    )
-    tectora_epdm_margin = fields.Float(
-        related="company_id.tectora_epdm_margin", readonly=False,
     )
 
 
@@ -171,6 +160,30 @@ class TectoraRoofProject(models.Model):
     )
     buildup_insulation_id = fields.Many2one("product.product", string="Isolatie", copy=False)
     buildup_membrane_id = fields.Many2one("product.product", string="Dakbedekking", copy=False)
+
+    @api.model
+    def _tectora_buildup_defaults(self):
+        """The company's default build-up (Instellingen, system parameters)."""
+        params = self.env["ir.config_parameter"].sudo()
+        Product = self.env["product.product"]
+
+        def product(key):
+            try:
+                product_id = int(params.get_param("tectora_roof.%s" % key) or 0)
+            except (TypeError, ValueError):
+                return False
+            return Product.browse(product_id).exists().id or False
+
+        try:
+            margin = float(params.get_param("tectora_roof.epdm_margin", "0.10") or 0.0)
+        except (TypeError, ValueError):
+            margin = 0.10
+        return {
+            "vapour": product("buildup_vapour_id"),
+            "insulation": product("buildup_insulation_id"),
+            "membrane": product("buildup_membrane_id"),
+            "margin": max(margin, 0.0),
+        }
 
     # ------------------------------------------------------------- products
     @api.model
@@ -250,21 +263,21 @@ class TectoraRoofProject(models.Model):
         """The products per layer for the "Dakopbouw" dialog, with the
         build-up last applied on this project (else the company's) chosen."""
         self.ensure_one()
-        company = self.company_id or self.env.company
+        defaults = self._tectora_buildup_defaults()
         options = {}
         for layer in LAYERS:
             infos = [self._tectora_layer_info(layer, p) for p in self._tectora_layer_products(layer)]
             infos.sort(key=lambda i: (i["type"].lower(), i["thickness"], i["variant"], i["fixing"], i["name"]))
             options[layer] = infos
         current = {
-            "vapour": (self.buildup_vapour_id or company.tectora_buildup_vapour_id).id or False,
-            "insulation": (self.buildup_insulation_id or company.tectora_buildup_insulation_id).id or False,
-            "membrane": (self.buildup_membrane_id or company.tectora_buildup_membrane_id).id or False,
+            "vapour": self.buildup_vapour_id.id or defaults["vapour"],
+            "insulation": self.buildup_insulation_id.id or defaults["insulation"],
+            "membrane": self.buildup_membrane_id.id or defaults["membrane"],
         }
         return {
             "options": options,
             "current": current,
-            "margin": company.tectora_epdm_margin,
+            "margin": defaults["margin"],
             "max_width": EPDM_MAX_WIDTH,
         }
 
@@ -360,9 +373,8 @@ class TectoraRoofProject(models.Model):
 
     def _tectora_epdm_sheet_values(self, section_ids, margin=None):
         self.ensure_one()
-        company = self.company_id or self.env.company
         if margin is None or margin is False:
-            margin = company.tectora_epdm_margin
+            margin = self._tectora_buildup_defaults()["margin"]
         margin = max(float(margin or 0.0), 0.0)
         several_roofs = len(self.roof_ids) > 1
         cache = {}

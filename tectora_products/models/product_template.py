@@ -34,6 +34,22 @@ CATALOG_UOM_NAMES = {
 }
 
 
+# What a new sub-category takes over from its parent, when the field exists.
+INHERITED_CATEGORY_FIELDS = (
+    "tectora_usage_ids",
+    "property_cost_method",
+    "property_valuation",
+    "property_account_income_categ_id",
+    "property_account_expense_categ_id",
+    "property_stock_valuation_account_id",
+    "property_stock_account_input_categ_id",
+    "property_stock_account_output_categ_id",
+    "property_stock_journal",
+    "route_ids",
+    "removal_strategy_id",
+)
+
+
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
@@ -342,8 +358,7 @@ class ProductTemplate(models.Model):
             if not product.categ_id or self._tectora_in_tree(
                 product.categ_id, root_name
             ):
-                product.categ_id = category
-                moved += 1
+                moved += self._tectora_move_product(product, category)
         _logger.info("tectora_products: %s products re-categorised", moved)
         return moved
 
@@ -439,8 +454,7 @@ class ProductTemplate(models.Model):
                     continue
                 if refined not in cache:
                     cache[refined] = self._tectora_resolve_category(refined, root_name)
-                product.categ_id = cache[refined]
-                moved += 1
+                moved += self._tectora_move_product(product, cache[refined])
         _logger.info("tectora_products: %s products moved to a sub-category", moved)
         return moved
 
@@ -466,8 +480,7 @@ class ProductTemplate(models.Model):
                 continue
             if wanted not in cache:
                 cache[wanted] = self._tectora_resolve_category(wanted, root_name)
-            product.categ_id = cache[wanted]
-            moved += 1
+            moved += self._tectora_move_product(product, cache[wanted])
         # The mirrored chapters (Grondstoffen/02. Dakranden, ...) that no
         # product uses any more.
         keep = {prefix + path for path in catalog_rules.GOODS_TYPE_PATHS.values()}
@@ -493,6 +506,22 @@ class ProductTemplate(models.Model):
             moved, removed,
         )
         return moved
+
+    def _tectora_move_product(self, product, category):
+        """Put ``product`` in ``category``; 1 when it moved. A product that
+        cannot move (stock valuation, a constraint) stays where it is and is
+        logged: re-filing never makes an upgrade fail."""
+        try:
+            with self.env.cr.savepoint():
+                product.categ_id = category
+                product.flush_recordset(["categ_id"])
+            return 1
+        except Exception as error:  # noqa: BLE001
+            _logger.warning(
+                "tectora_products: %s not moved to %s: %s",
+                product.display_name, category.complete_name, error,
+            )
+            return 0
 
     def _tectora_category_path(self, category, root_name):
         """The 'A/B' path of ``category`` under the root."""
@@ -545,9 +574,20 @@ class ProductTemplate(models.Model):
             if not category:
                 values = {"name": part, "parent_id": parent.id}
                 # A new sub-category is offered where its parent is (the
-                # drawing's usages, when Dakmeting is installed).
-                if "tectora_usage_ids" in Category._fields and parent.tectora_usage_ids:
-                    values["tectora_usage_ids"] = [(6, 0, parent.tectora_usage_ids.ids)]
+                # drawing's usages, when Dakmeting is installed) and keeps its
+                # parent's costing, valuation, accounts and routes: moving a
+                # product with stock into it changes nothing in accounting.
+                for field_name in INHERITED_CATEGORY_FIELDS:
+                    field = Category._fields.get(field_name)
+                    if not field or not parent[field_name]:
+                        continue
+                    value = parent[field_name]
+                    if field.type == "many2many":
+                        values[field_name] = [(6, 0, value.ids)]
+                    elif field.type == "many2one":
+                        values[field_name] = value.id
+                    else:
+                        values[field_name] = value
                 category = Category.create(values)
             parent = category
         return parent
