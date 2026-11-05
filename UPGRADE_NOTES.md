@@ -219,3 +219,4 @@ Releases and the modules they need upgraded:
 | Naad splitst het dakvlak niet meer: één sectie, de naden delen ze in EPDM-doeken (label op de tekening, berekening per doek); "Samenvoegen tot één sectie" voor vroeger gesplitste vlakken | `tectora_roof` (20.0.3.69.0) |
 | Naad tekenen: klik zijde → andere zijde maakt de naad af (klikken snappen op de omtrek) | `tectora_roof` (20.0.3.70.0) |
 | EPDM-doeken: berekening per doek zichtbaar (vlak + per zijde opstand, dakrand, marge of naadoverlap, afronding, snijverlies) | `tectora_roof` (20.0.3.71.0) |
+| Tekening: Randafwerking per zijde (dakrand met binnen-/buitenhoeken, of aansluiting); categorieën 02. Dakranden/Dakrandprofielen·Kralen·Hoeken & eindstukken en 04/Aansluitingen | `tectora_roof` (20.0.3.72.0), `tectora_products` (20.0.2.8.0) |

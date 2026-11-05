@@ -112,6 +112,14 @@ CATEGORY_PATHS = OrderedDict([
     ("dakbedekking", "04. Opbouwwerken plat dak/Dakbedekking"),
     ("dakbedekking_epdm", "04. Opbouwwerken plat dak/Dakbedekking/EPDM"),
     ("dakbedekking_bitumen", "04. Opbouwwerken plat dak/Dakbedekking/Bitumen & Resitrix"),
+    # The finish of the roof's sides, as the drawing's "Randafwerking"
+    # offers it: a free side gets a roof edge (profile or kraal, with its
+    # corners), a side against a wall, the neighbours or a gutter a
+    # connection.
+    ("dakranden_profielen", "02. Dakranden/Dakrandprofielen"),
+    ("dakranden_kralen", "02. Dakranden/Kralen"),
+    ("dakranden_hoeken", "02. Dakranden/Hoeken & eindstukken"),
+    ("aansluitingen", "04. Opbouwwerken plat dak/Aansluitingen"),
     ("bevestiging", "04. Opbouwwerken plat dak/Bevestigingsmaterialen"),
     ("hout", "04. Opbouwwerken plat dak/Hout & plaatmateriaal"),
     ("doorvoer", "04. Opbouwwerken plat dak/Doorvoeren & schoorsteen"),
@@ -149,6 +157,12 @@ SUBCATEGORY_RULES = {
                        r"v-gard|tyvek|soprastick venti"),
         ("dakbedekking_epdm", r"dakbedekking type:.*epdm|\bepdm folie\b"),
         ("dakbedekking_bitumen", r"dakbedekking type:|sopralene|resitrix skw"),
+        ("aansluitingen", r"aansluit|solin|onderkapping|slabbe|lood dat behouden"),
+    ],
+    "dakranden": [
+        ("dakranden_hoeken", r"binnenhoek|buitenhoek|eindstuk"),
+        ("dakranden_kralen", r"\bkralen\b|\bkraal\b"),
+        ("dakranden_profielen", r"dakrand"),
     ],
     "isolatie": [
         ("isolatie_pir", r"\bpir\b|utherm"),

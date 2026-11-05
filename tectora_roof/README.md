@@ -98,6 +98,19 @@ install on Odoo 17 or earlier without adjustments.
    sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
    is flagged. *Alle producten* is the full product list as before; a
    category without usages of its own is offered where its parent is.
+   Clicking a side of a roof surface opens the picker on its
+   **Randafwerking** tab: *Dakrand* for a free side -- type (2-delige alu,
+   enkelvoudige dakrand, zinken kraal, alu kraal), height and finish, from
+   02. Dakranden/Dakrandprofielen and /Kralen -- with *Binnen- en
+   buitenhoeken mee toevoegen*: where two sides with that roof edge meet,
+   the matching corner piece (02. Dakranden/Hoeken & eindstukken, same type,
+   height and finish; inner or outer from the drawing) is put on the corner,
+   previewed in the dialog. *Aansluiting* for a side against a wall, the
+   neighbours' roof, a gutter or a pitched roof, from 04. Opbouwwerken plat
+   dak/Aansluitingen, grouped by what the side meets. The choice replaces
+   the side's earlier roof edge or connection; corner pieces go where two
+   roof-edge sides no longer meet. Several sides at once as in the other
+   tabs.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

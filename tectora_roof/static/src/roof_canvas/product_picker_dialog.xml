@@ -4,10 +4,14 @@
     <t t-name="tectora_roof.RoofProductPickerDialog">
         <Dialog title="this.props.title" size="'xl'">
             <div class="o_roof_product_picker">
-                <ul t-if="this.props.buildup" class="nav nav-tabs mb-2">
-                    <li class="nav-item">
+                <ul t-if="this.props.buildup or this.props.edges" class="nav nav-tabs mb-2">
+                    <li t-if="this.props.buildup" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'buildup'}"
                            t-on-click.prevent="() => this.setTab('buildup')">Dakopbouw</a>
+                    </li>
+                    <li t-if="this.props.edges" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'edges'}"
+                           t-on-click.prevent="() => this.setTab('edges')">Randafwerking</a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'products'}"
@@ -22,6 +26,7 @@
                                t-on-change="(ev) => this.toggleMulti(ev.target.checked)"/>
                         <label class="form-check-label" for="o_roof_picker_multi">
                             <strong t-if="this.state.tab === 'buildup'">Dakopbouw toepassen op meerdere dakvlakken</strong>
+                            <strong t-elif="this.state.tab === 'edges'">Randafwerking toepassen op meerdere zijden</strong>
                             <strong t-else="">Producten toewijzen aan meerdere items</strong>
                         </label>
                         <button t-if="this.state.tab === 'buildup'" type="button"
@@ -84,6 +89,109 @@
                         </div>
                     </div>
                 </t>
+                <div t-if="this.state.tab === 'edges'" class="o_roof_edges">
+                    <t t-set="e" t-value="this.edges"/>
+                    <div t-if="!e.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <p class="text-muted small mb-2">
+                            Een vrije zijde krijgt een dakrand, een zijde tegen een muur, het dak
+                            van de buren of een goot een aansluiting. De keuze vervangt de
+                            vorige dakrand of aansluiting van de zijde.
+                        </p>
+                        <div class="btn-group mb-2" role="group">
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="e.kind === 'edge' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setEdgeKind('edge')">Dakrand</button>
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="e.kind === 'connection' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setEdgeKind('connection')">Aansluiting</button>
+                        </div>
+
+                        <div t-if="e.kind === 'edge'" class="border rounded p-2 mb-2">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="small text-muted mb-0">Type dakrand</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('type', ev.target.value)">
+                                        <option value="" t-att-selected="!e.edge.type">— kies —</option>
+                                        <option t-foreach="this.edgeTypes" t-as="type" t-key="type"
+                                                t-att-value="type" t-att-selected="type === e.edge.type"
+                                                t-out="type"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-3" t-if="e.edge.type and this.edgeHasHeights">
+                                    <label class="small text-muted mb-0">Hoogte</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('height', ev.target.value)">
+                                        <option t-foreach="this.edgeHeights" t-as="height" t-key="height"
+                                                t-att-value="height" t-att-selected="height === e.edge.height"
+                                                t-out="height || '—'"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-5" t-if="e.edge.type">
+                                    <label class="small text-muted mb-0">Afwerking</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('product', ev.target.value)">
+                                        <option t-foreach="this.edgeFinishes" t-as="product" t-key="product.id"
+                                                t-att-value="product.id" t-att-selected="product.id === e.edge.product"
+                                                t-out="this.edgeFinishLabel(product)"/>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-check mt-2 mb-0">
+                                <input class="form-check-input" type="checkbox" id="o_roof_edges_corners"
+                                       t-att-checked="e.corners"
+                                       t-on-change="(ev) => this.toggleEdgeCorners(ev.target.checked)"/>
+                                <label class="form-check-label" for="o_roof_edges_corners">
+                                    Binnen- en buitenhoeken mee toevoegen (waar twee zijden met deze dakrand samenkomen)
+                                </label>
+                                <i t-if="e.previewLoading" class="fa fa-circle-o-notch fa-spin text-muted ms-1"/>
+                            </div>
+                            <div t-if="e.corners and e.preview and e.preview.missing.length" class="small text-warning mt-1">
+                                Geen passende <t t-out="e.preview.missing.join(' / ')"/> gevonden voor deze dakrand:
+                                voeg die hoek(en) apart toe.
+                            </div>
+                            <div t-if="!e.options.edges.length" class="small text-warning mt-1">
+                                Geen dakrandprofielen gevonden (categorie 02. Dakranden).
+                            </div>
+                        </div>
+
+                        <div t-if="e.kind === 'connection'" class="border rounded p-2 mb-2">
+                            <label class="small text-muted mb-0">Aansluiting</label>
+                            <select class="form-select form-select-sm"
+                                    t-on-change="(ev) => this.setConnection(ev.target.value)">
+                                <option value="0" t-att-selected="!e.connection">— kies —</option>
+                                <optgroup t-foreach="this.connectionGroups" t-as="group" t-key="group.label"
+                                          t-att-label="group.label">
+                                    <option t-foreach="group.products" t-as="product" t-key="product.id"
+                                            t-att-value="product.id" t-att-selected="product.id === e.connection">
+                                        <t t-out="product.name"/> — € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                    </option>
+                                </optgroup>
+                            </select>
+                            <div t-if="!e.options.connections.length" class="small text-warning mt-1">
+                                Geen aansluitingen gevonden (categorie Aansluitingen).
+                            </div>
+                        </div>
+
+                        <table t-if="this.edgeLines.length" class="table table-sm mb-0">
+                            <tbody>
+                                <tr t-foreach="this.edgeLines" t-as="line" t-key="line.key">
+                                    <td t-out="line.name"/>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="line.key === 'side' ? line.quantity.toFixed(2) : line.quantity"/>
+                                        <t t-out="line.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Randafwerking (excl. btw)</td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="this.edgeTotal.toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
                 <div t-if="this.state.tab === 'buildup'" class="o_roof_buildup">
                     <t t-set="b" t-value="this.buildup"/>
                     <div t-if="!b.loaded" class="text-muted p-3">Laden…</div>
@@ -369,6 +477,14 @@
                     Dakopbouw toepassen
                     <t t-if="this.itemCount > 1">
                         op <t t-out="this.itemCount"/> dakvlakken
+                    </t>
+                </button>
+                <button t-elif="this.state.tab === 'edges'" type="button" class="btn btn-primary"
+                        t-att-disabled="!this.edgeProductId"
+                        t-on-click="() => this.applyEdges()">
+                    Randafwerking toepassen
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> zijden
                     </t>
                 </button>
                 <button t-else="" type="button" class="btn btn-primary"

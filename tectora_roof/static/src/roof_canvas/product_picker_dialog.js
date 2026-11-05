@@ -40,6 +40,9 @@ export class RoofProductPickerDialog extends Component {
         // dakbedekking and the EPDM sheets) -- {projectId, preview(targetKeys,
         // margin), apply(choice, targetKeys)}.
         buildup: t.object().optional(),
+        // A side of a roof surface: the "Randafwerking" tab (roof edge or
+        // connection) -- {projectId, apply(choice, targetKeys, dryRun)}.
+        edges: t.object().optional(),
     });
 
     setup() {
@@ -72,12 +75,28 @@ export class RoofProductPickerDialog extends Component {
             previewLoading: false,
             details: true, // the calculation under every sheet
         });
+        // The edge tab: a roof edge (type, height, finish) or a connection.
+        this.edges = proxy({
+            loaded: false,
+            options: { edges: [], connections: [] },
+            kind: "edge", // "edge" (dakrand) or "connection" (aansluiting)
+            edge: { type: "", height: "", product: 0 },
+            connection: 0,
+            corners: true,
+            preview: null,
+            previewLoading: false,
+        });
         if (this.props.buildup) {
             this.state.tab = "buildup";
+        } else if (this.props.edges) {
+            this.state.tab = "edges";
         }
         onWillStart(async () => {
             if (this.props.buildup) {
                 await this.loadBuildup();
+            }
+            if (this.props.edges) {
+                await this.loadEdges();
             }
             this.state.products = await this.orm.searchRead(
                 "product.product",
@@ -119,6 +138,7 @@ export class RoofProductPickerDialog extends Component {
         }
         b.loaded = true;
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     setTab(tab) {
@@ -234,6 +254,7 @@ export class RoofProductPickerDialog extends Component {
         const value = parseFloat(String(ev.target.value).replace(",", "."));
         this.buildup.margin = value >= 0 ? value / 100 : 0;
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     toggleSheetDetails(checked) {
@@ -243,6 +264,7 @@ export class RoofProductPickerDialog extends Component {
     toggleSheets(checked) {
         this.buildup.sheets = checked;
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     async refreshSheets() {
@@ -282,6 +304,175 @@ export class RoofProductPickerDialog extends Component {
         };
         this.props.close();
         await this.props.buildup.apply(choice, targetKeys);
+    }
+
+    // ------------------------------------------------------- edge finish
+    async loadEdges() {
+        const data = await this.orm.call(
+            "tectora.roof.project", "tectora_get_edge_options", [[this.props.edges.projectId]]
+        );
+        this.edges.options = data;
+        this.edges.loaded = true;
+    }
+
+    get edgeTypes() {
+        return [...new Set(this.edges.options.edges.map((p) => p.type))];
+    }
+
+    get edgeHeights() {
+        const choice = this.edges.edge;
+        const seen = new Map();
+        for (const product of this.edges.options.edges) {
+            if (product.type === choice.type && !seen.has(product.height_label)) {
+                seen.set(product.height_label, product.height);
+            }
+        }
+        return [...seen.entries()].sort((a, b) => a[1] - b[1]).map(([label]) => label);
+    }
+
+    get edgeHasHeights() {
+        return this.edgeHeights.some((height) => height);
+    }
+
+    get edgeFinishes() {
+        const choice = this.edges.edge;
+        return this.edges.options.edges.filter(
+            (p) => p.type === choice.type && p.height_label === choice.height
+        );
+    }
+
+    edgeFinishLabel(product) {
+        return `${product.finish || product.name} — € ${product.price.toFixed(2)}/${product.uom}`;
+    }
+
+    get connectionGroups() {
+        const groups = [];
+        for (const product of this.edges.options.connections) {
+            let group = groups.find((g) => g.label === product.group);
+            if (!group) {
+                group = { label: product.group, products: [] };
+                groups.push(group);
+            }
+            group.products.push(product);
+        }
+        return groups;
+    }
+
+    setEdgeKind(kind) {
+        this.edges.kind = kind;
+        this.refreshEdgeCorners();
+    }
+
+    pickEdge(field, value) {
+        const choice = this.edges.edge;
+        if (field === "product") {
+            choice.product = parseInt(value) || 0;
+        } else {
+            choice[field] = value;
+            if (field === "type") {
+                const heights = this.edgeHeights;
+                if (!heights.includes(choice.height)) {
+                    choice.height = heights[0] || "";
+                }
+            }
+            const finishes = this.edgeFinishes;
+            if (!finishes.some((p) => p.id === choice.product)) {
+                choice.product = finishes.length ? finishes[0].id : 0;
+            }
+        }
+        if (!choice.type) {
+            choice.height = "";
+            choice.product = 0;
+        }
+        this.refreshEdgeCorners();
+    }
+
+    setConnection(value) {
+        this.edges.connection = parseInt(value) || 0;
+    }
+
+    toggleEdgeCorners(checked) {
+        this.edges.corners = checked;
+        this.refreshEdgeCorners();
+    }
+
+    get edgeProductId() {
+        return this.edges.kind === "edge" ? this.edges.edge.product : this.edges.connection;
+    }
+
+    get edgeProduct() {
+        const id = this.edgeProductId;
+        const list = this.edges.kind === "edge" ? this.edges.options.edges : this.edges.options.connections;
+        return list.find((p) => p.id === id) || null;
+    }
+
+    get edgeChoice() {
+        return { kind: this.edges.kind, product_id: this.edgeProductId, corners: this.edges.corners };
+    }
+
+    /** The corner pieces the roof edge brings (dry run on the server). */
+    async refreshEdgeCorners() {
+        const e = this.edges;
+        if (!this.props.edges || e.kind !== "edge" || !e.corners || !this.edgeProductId) {
+            e.preview = null;
+            return;
+        }
+        const ticket = (this._edgeTicket = (this._edgeTicket || 0) + 1);
+        e.previewLoading = true;
+        try {
+            const preview = await this.props.edges.apply(this.edgeChoice, this.selectedTargetKeys, true);
+            if (ticket === this._edgeTicket) {
+                e.preview = preview;
+            }
+        } finally {
+            if (ticket === this._edgeTicket) {
+                e.previewLoading = false;
+            }
+        }
+    }
+
+    get edgeLines() {
+        const product = this.edgeProduct;
+        if (!product) {
+            return [];
+        }
+        const lines = [{
+            key: "side",
+            name: product.name,
+            quantity: this.totalQuantity,
+            uom: product.uom,
+            subtotal: product.price * this.totalQuantity,
+        }];
+        const preview = this.edges.kind === "edge" && this.edges.corners ? this.edges.preview : null;
+        if (preview) {
+            for (const kind of ["inner", "outer"]) {
+                const count = preview.corners[kind];
+                if (count) {
+                    lines.push({
+                        key: kind,
+                        name: preview[`${kind}_product`],
+                        quantity: count,
+                        uom: "st",
+                        subtotal: count * preview[`${kind}_price`],
+                    });
+                }
+            }
+        }
+        return lines;
+    }
+
+    get edgeTotal() {
+        return this.edgeLines.reduce((sum, line) => sum + line.subtotal, 0);
+    }
+
+    async applyEdges() {
+        if (!this.edgeProductId) {
+            return;
+        }
+        const targetKeys = this.selectedTargetKeys;
+        const choice = this.edgeChoice;
+        this.props.close();
+        await this.props.edges.apply(choice, targetKeys, false);
     }
 
     lineSummary(line) {
@@ -395,6 +586,7 @@ export class RoofProductPickerDialog extends Component {
             this.state.selectedTargets = {};
         }
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     get baseLabel() {
@@ -408,6 +600,7 @@ export class RoofProductPickerDialog extends Component {
             this.state.selectedTargets[target.key] = true;
         }
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     selectAllTargets(select) {
@@ -415,6 +608,7 @@ export class RoofProductPickerDialog extends Component {
             ? Object.fromEntries(this.targets.map((target) => [target.key, true]))
             : {};
         this.refreshSheets();
+        this.refreshEdgeCorners();
     }
 
     setCategory(categoryId) {
