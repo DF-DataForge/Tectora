@@ -112,8 +112,10 @@ install on Odoo 17 or earlier without adjustments.
    with the area and perimeter it would have if closed now; the length of a
    seam.
    A **naad** (seam) is the joint between two EPDM sheets: draw it with the
-   *Naad* tool as an open dotted line (click points, double-click to
-   finish). The roof surface stays one section (Sectie 1, with its products
+   *Naad* tool as an open dotted line: click a side of the surface, then the
+   other side, and the seam is done (clicks snap onto the outline; the tool
+   stays on for the next seam). Started inside the surface it takes points
+   until a click on a side or a double-click. The roof surface stays one section (Sectie 1, with its products
    and quantities); the seams divide it into sheets, labelled on the drawing
    ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
    berekenen*. A seam ending inside a section is extended to its outline.

@@ -38,7 +38,7 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'seam' }"
                             t-on-click="() => this.setTool('seam')"
-                            title="Naad tekenen: stippellijn die aangeeft dat twee dakvlakken gescheiden zijn (klik punten, dubbelklik om af te sluiten). Klik nadien op het label om naadproducten toe te wijzen.">
+                            title="Naad tekenen: de grens tussen twee EPDM-doeken. Klik op een zijde van het dakvlak en dan op de andere zijde: de naad is klaar en de volgende kan beginnen. Klik nadien op het label om naadproducten toe te wijzen.">
                         <i class="oi" data-icon="more_horiz"/> Naad
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
