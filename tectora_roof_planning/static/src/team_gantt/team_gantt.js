@@ -128,10 +128,129 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
                 clearTimeout(timer);
             }
         });
+        this.setupScissors();
+    }
+
+    // ------------------------------------------------------------- scissors
+    // As in the Planning app's planner: hovering a block near a day boundary
+    // shows a dashed line with scissors; a click there cuts the block in two
+    // at the start of that day (tectora.roof.planning.action_tectora_split_at).
+
+    setupScissors() {
+        this.tectoraOrm = useService("orm");
+        this.tectoraAction = useService("action");
+        this.tectoraCut = null;
+        const cutter = document.createElement("div");
+        cutter.className = "o_tectora_cutter d-none";
+        cutter.innerHTML = '<i class="oi" data-icon="content_cut"></i><span class="o_tectora_cutter_label"></span>';
+        const hide = () => {
+            cutter.classList.add("d-none");
+            this.tectoraCut = null;
+        };
+        const onMove = (ev) => {
+            const pill = ev.target.closest && ev.target.closest(".o_gantt_pill");
+            // Not while a block is dragged or resized.
+            const cut = pill && ev.buttons === 0 ? this.tectoraCutAt(pill, ev.clientX) : null;
+            if (!cut) {
+                return hide();
+            }
+            const rect = pill.getBoundingClientRect();
+            cutter.style.left = `${cut.x}px`;
+            cutter.style.top = `${rect.top}px`;
+            cutter.style.height = `${rect.height}px`;
+            cutter.querySelector(".o_tectora_cutter_label").textContent = cut.label;
+            cutter.classList.remove("d-none");
+            this.tectoraCut = { pill, day: cut.day };
+        };
+        // The cut aimed at when the button goes down: the click comes after
+        // the press, which hides the scissors (a press may start a drag).
+        const onPress = () => {
+            this.tectoraPressedCut = this.tectoraCut;
+            hide();
+        };
+        let root = null;
+        onMounted(() => {
+            root = document.querySelector(".o_tectora_team_gantt");
+            if (!root) {
+                return;
+            }
+            document.body.appendChild(cutter);
+            root.addEventListener("mousemove", onMove);
+            root.addEventListener("mouseleave", hide);
+            root.addEventListener("mousedown", onPress, true);
+        });
+        onWillUnmount(() => {
+            if (root) {
+                root.removeEventListener("mousemove", onMove);
+                root.removeEventListener("mouseleave", hide);
+                root.removeEventListener("mousedown", onPress, true);
+            }
+            cutter.remove();
+        });
+    }
+
+    /**
+     * The day boundary nearest to ``clientX`` inside ``pill``, within a few
+     * pixels: {x, day: "yyyy-MM-dd", label}, or null. The cells span the
+     * gantt's whole period, so a moment maps linearly onto their width.
+     */
+    tectoraCutAt(pill, clientX) {
+        const metaData = (this.props.model || this.model || {}).metaData || {};
+        const start = metaData.globalStart || metaData.startDate;
+        const stop = metaData.globalStop || metaData.stopDate;
+        const cells = pill.closest(".o_gantt_cells");
+        if (!start || !stop || !cells || !start.toMillis) {
+            return null;
+        }
+        const area = cells.getBoundingClientRect();
+        const span = stop.toMillis() - start.toMillis();
+        if (span <= 0 || area.width <= 0) {
+            return null;
+        }
+        const toX = (moment) => area.left + ((moment.toMillis() - start.toMillis()) / span) * area.width;
+        const toMoment = (x) => start.plus({ milliseconds: ((x - area.left) / area.width) * span });
+        const rect = pill.getBoundingClientRect();
+        const EDGE = 10;
+        // The midnights inside the block (not at its very edges).
+        let day = toMoment(rect.left + EDGE).startOf("day").plus({ days: 1 });
+        const last = toMoment(rect.right - EDGE);
+        let best = null;
+        while (day <= last) {
+            const x = toX(day);
+            const distance = Math.abs(x - clientX);
+            if (x > rect.left + EDGE && x < rect.right - EDGE && distance <= 12
+                && (!best || distance < best.distance)) {
+                best = { x, distance, day };
+            }
+            day = day.plus({ days: 1 });
+        }
+        if (!best) {
+            return null;
+        }
+        return {
+            x: best.x,
+            day: best.day.toFormat("yyyy-MM-dd"),
+            label: `Knippen op ${best.day.setLocale("nl").toFormat("ccc d LLL")}`,
+        };
+    }
+
+    async tectoraSplit(recordId, day) {
+        await this.tectoraOrm.call("tectora.roof.planning", "action_tectora_split_at", [
+            [recordId],
+            day,
+        ]);
+        await this.tectoraAction.doAction({ type: "ir.actions.client", tag: "soft_reload" });
     }
 
     onPillClicked(ev, pill) {
         const record = pill && pill.record;
+        // A click on the scissors cuts the block instead of opening it.
+        const cut = this.tectoraPressedCut;
+        this.tectoraPressedCut = null;
+        const target = ev && ev.target && ev.target.closest && ev.target.closest(".o_gantt_pill");
+        if (cut && record && record.id && target === cut.pill) {
+            return this.tectoraSplit(record.id, cut.day);
+        }
         if (record && record.id && typeof this.props.openDialog === "function") {
             if (this.popover && this.popover.isOpen) {
                 this.popover.close();
