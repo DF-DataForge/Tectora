@@ -15,10 +15,37 @@ Vult de Odoo-productendatabase met de **leverancierscatalogus** van Tectora
 - **Dakopbouw**: onder 04. Opbouwwerken plat dak staan de lagen van een plat
   dak elk in een eigen categorie: **Dampscherm**, **Isolatie** met **PIR**,
   **Minerale wol** en **Coverboard**, en **Dakbedekking** met **EPDM** en
-  **Bitumen & Resitrix** (in beide takken). De producten worden op hun naam
+  **Bitumen & Resitrix** (verkoopproducten). De producten worden op hun naam
   ingedeeld (dampscherm/Alutrix/Sopraglass, Utherm/PIR, Rockwool/Rhinoxx,
   "dakbedekking type: ... EPDM"); aansluitingen, slabben en toebehoren blijven
   in Afdichting. Een upgrade deelt de bestaande producten zo in.
+- **Twee indelingen.** De **verkoopproducten** (werkposten) volgen de
+  hoofdstukken van de dakplanner, de structuur van de offerte (01. Algemene
+  werken … 13. Upsale, met hun subcategorieën). De **grondstoffen** staan in de
+  tak **Grondstoffen**, ingedeeld per **materiaaltype** zoals ze aangekocht en
+  gestockeerd worden:
+
+  | Grondstoffen/… | Bv. |
+  |---|---|
+  | Dakbanen/EPDM, Dakbanen/Bitumen & Resitrix | Elevate EPDM-folie, Sopralene, Resitrix |
+  | Dampschermen & folies | Alutrix, Sopraglass, PE-folie, DBR/KSD |
+  | Isolatie/PIR, Isolatie/Minerale wol, Isolatie/Overige isolatie | Utherm, Rockwool Rhinoxx |
+  | Lijmen, primers & kitten | bonding adhesive, primers, kit, silicone, PU-schuim |
+  | Tapes, strips & flashings | splice tape, formflash, manchetten, bladlood |
+  | Dakranden & profielen | Bendec-dakranden en hoeken, muurkappen, solins, grindvang |
+  | Zinkwerk & hemelwater | zinken afvoerbuizen, afleiders, bochten, haken |
+  | Afvoerleidingen PE & PP | Geberit, Wavin Wafix |
+  | Dakafvoeren & spuwers | aflopen met slab, spuwers, bladvangers |
+  | Doorvoeren & ventilatie | verluchtingen, kabeldoorvoeren |
+  | Bevestigingsmaterialen | schroeven, pluggen, isolatieplaatjes, balkdragers |
+  | Hout & plaatmateriaal | OSB, multiplex, Douglas |
+  | Koepels & dakramen, Valbeveiliging, Terras & ballast | spindels, ankerpunten, tegeldragers |
+  | Gereedschap & verbruiksmateriaal | bits, boren, zaagbladen, borstels, handschoenen |
+
+  Het type komt uit de naam (trefwoorden), anders uit het hoofdstuk waar het
+  product vroeger stond; niets valt nog in *Overige*. Een upgrade deelt de
+  bestaande grondstoffen zo in en ruimt de lege gespiegelde hoofdstukken
+  (Grondstoffen/02. Dakranden, …) op.
 - **Classificatie** in drie signalen: de kolom `productgroup` (565 producten),
   daarna trefwoorden in de Nederlandse naam (793) en als laatste de
   leverancier, wiens assortiment homogeen is (143). Geen enkel product valt

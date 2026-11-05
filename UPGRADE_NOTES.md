@@ -211,3 +211,4 @@ Releases and the modules they need upgraded:
 | Werfadres als contact = afleveradres van de offerte/order | `tectora_roof` (20.0.3.62.0) |
 | Tekening: offerte-opbouw per hoofdstuk naast de tekening, met kleur per offertelijn op de vlakken, zijden en dakobjecten | `tectora_roof` (20.0.3.63.0) |
 | Tekening: Dakopbouw (dampscherm, isolatie, dakbedekking) per dakvlak en EPDM-doeken berekenen; categorieën Dampscherm, Isolatie/PIR·Minerale wol·Coverboard, Dakbedekking/EPDM·Bitumen & Resitrix | `tectora_roof` (20.0.3.64.0), `tectora_products` (20.0.2.6.0) |
+| Grondstoffen per materiaaltype (Dakbanen, Dampschermen, Isolatie, Lijmen, Tapes, Dakranden, Zinkwerk, Afvoerleidingen, Bevestiging, …) i.p.v. gespiegelde offertehoofdstukken; lege gespiegelde hoofdstukken opgeruimd | `tectora_products` (20.0.2.7.0) |
