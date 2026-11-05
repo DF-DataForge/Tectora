@@ -167,15 +167,21 @@ class TectoraRoofProject(models.Model):
         params = self.env["ir.config_parameter"].sudo()
         Product = self.env["product.product"]
 
+        def param(key):
+            # Odoo 20 reads parameters with get_str (get_param is gone).
+            getter = getattr(params, "get_str", None) or getattr(params, "get_param")
+            return getter("tectora_roof.%s" % key) or ""
+
         def product(key):
             try:
-                product_id = int(params.get_param("tectora_roof.%s" % key) or 0)
+                product_id = int(param(key) or 0)
             except (TypeError, ValueError):
                 return False
             return Product.browse(product_id).exists().id or False
 
+        raw_margin = param("epdm_margin")
         try:
-            margin = float(params.get_param("tectora_roof.epdm_margin", "0.10") or 0.0)
+            margin = float(raw_margin) if raw_margin != "" else 0.10
         except (TypeError, ValueError):
             margin = 0.10
         return {
