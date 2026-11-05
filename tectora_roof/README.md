@@ -88,10 +88,11 @@ install on Odoo 17 or earlier without adjustments.
    is left alone), on the clicked surface or on several at once (*Alle
    dakvlakken*). The choice is remembered on the project; the company's
    default build-up (Instellingen › Tectora Dakmeting) is proposed until
-   then. *EPDM-doeken berekenen* sizes one sheet per surface -- a seam cuts
-   a surface in two, so it is the joint between two sheets: the smallest
-   rectangle around the surface inside the roof edges, plus per side the
-   upstand and the roof edge's width and a margin (default 10 cm). The
+   then. *EPDM-doeken berekenen* sizes one sheet per part of the surface
+   between the seams: the smallest rectangle around that part inside the
+   roof edges, plus per side the upstand and the roof edge's width and a
+   margin (default 10 cm); a side along a seam gets the margin only, as the
+   overlap with the next sheet. The
    sheets are previewed in the dialog and stored on the Werf tab (EPDM-
    doeken), replacing the sheets calculated earlier for those surfaces;
    sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
@@ -110,13 +111,17 @@ install on Odoo 17 or earlier without adjustments.
    rectangle; every side of a polygon (also the one following the pointer)
    with the area and perimeter it would have if closed now; the length of a
    seam.
-   A **naad** (seam) marks that two roof surfaces are separate: draw it with
-   the *Naad* tool as an open dotted line (click points, double-click to
-   finish). Every section the seam crosses is cut in two along it (the halves
-   are named "Sectie 1 A" and "Sectie 1 B" and take over the products of the
-   whole surface; per-side products are not carried over). A seam ending
-   inside a section is extended to its outline. It is stored as a roof
-   object of type *Naad* with its length;
+   A **naad** (seam) is the joint between two EPDM sheets: draw it with the
+   *Naad* tool as an open dotted line (click points, double-click to
+   finish). The roof surface stays one section (Sectie 1, with its products
+   and quantities); the seams divide it into sheets, labelled on the drawing
+   ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
+   berekenen*. A seam ending inside a section is extended to its outline.
+   Sections a seam split into parts before (Sectie 1 A, Sectie 1 B) show
+   *Samenvoegen tot één sectie* in the side panel: the parts become one
+   section again (the largest part's products carry on), the seams stay as
+   sheet joints. It is stored as a roof object of type *Naad* with its
+   length;
    clicking its label assigns products from categories whose *Kan gebruikt
    worden voor* includes **Naden**, measured by the seam length.
 4. Click **Meting bijwerken uit tekening**: sections and roof objects are

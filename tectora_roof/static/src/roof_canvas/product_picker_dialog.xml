@@ -99,7 +99,7 @@
                                 <div class="border rounded p-2 h-100">
                                     <div class="fw-bold mb-1">1. Dampscherm</div>
                                     <select class="form-select form-select-sm"
-                                            t-on-change="(ev) => { this.buildup.vapour = parseInt(ev.target.value) || 0; }">
+                                            t-on-change="(ev) => this.setVapour(ev.target.value)">
                                         <option value="0" t-att-selected="!b.vapour">— niet wijzigen —</option>
                                         <option t-foreach="b.options.vapour" t-as="product" t-key="product.id"
                                                 t-att-value="product.id" t-att-selected="product.id === b.vapour"
@@ -194,8 +194,8 @@
                             </div>
                             <t t-if="b.sheets">
                                 <div class="small text-muted mt-1">
-                                    Eén doek per dakvlak: een naad op de tekening deelt het vlak en
-                                    is dus de overlap tussen twee doeken. Elk doek dekt het vlak binnen
+                                    Eén doek per deel van het dakvlak tussen de naden: een naad op
+                                    de tekening is de overlap tussen twee doeken. Elk doek dekt het vlak binnen
                                     de dakranden, plus per zijde de opstand en de breedte van de
                                     dakrand, plus de marge. Bestaande berekende doeken van deze vlakken
                                     worden vervangen; met de hand ingegeven doeken blijven.
@@ -210,7 +210,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr t-foreach="b.preview" t-as="sheet" t-key="sheet.section_id">
+                                        <tr t-foreach="b.preview" t-as="sheet" t-key="sheet.key">
                                             <td>
                                                 <t t-out="sheet.name"/>
                                                 <div t-if="sheet.width > b.maxWidth" class="small text-warning">

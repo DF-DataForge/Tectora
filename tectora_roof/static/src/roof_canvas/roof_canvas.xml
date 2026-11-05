@@ -152,6 +152,18 @@
             </div>
             <div class="o_roof_canvas_sidebar">
                 <t t-if="this.state.panel">
+                    <!-- A section a seam cut in parts before seams stopped
+                         splitting: one click makes it one section again. -->
+                    <t t-set="family" t-value="this.mergeableFamily"/>
+                    <div t-if="family.length" class="alert alert-info small m-2 p-2">
+                        Dit dakvlak werd vroeger door een naad in
+                        <t t-out="family.length"/> secties gesplitst. Een naad deelt
+                        het dakvlak nu enkel in EPDM-doeken.
+                        <button type="button" class="btn btn-sm btn-primary mt-1 d-block"
+                                t-on-click="() => this.mergeSplitSections()">
+                            Samenvoegen tot één sectie
+                        </button>
+                    </div>
                     <!-- The selected side, surface or dakobject in three
                          parts: original state, future state, products. -->
                     <t t-set="focus" t-value="this.focus"/>

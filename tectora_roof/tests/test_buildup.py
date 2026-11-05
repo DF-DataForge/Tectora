@@ -46,19 +46,16 @@ class TestBuildup(TransactionCase):
         cls.epdm = product("Leveren en plaatsen van de dakbedekking type: Elevate Rubbergard EPDM "
                            "1,5mm dik verkleefd", membrane_categ, 49.99)
 
-        # Two surfaces side by side, cut by a seam at x = 5 m (0.02 m/px):
-        # roof edges 0.30 m wide with a 0.20 m upstand on the outer sides,
-        # nothing on the seam.
-        def side_values(value, seam_side):
-            return {str(i): (0 if i == seam_side else value) for i in range(4)}
-
+        # One roof surface of 10 x 6 m (0.02 m/px) with a seam across at
+        # x = 5 m: one section, two EPDM sheets. Roof edges 0.30 m wide with
+        # a 0.20 m upstand on every side.
+        all_sides = {str(i): 0.3 for i in range(4)}
         drawing = {"shapes": [
-            {"id": "a", "kind": "section", "name": "Vlak A",
-             "points": [[0, 0], [250, 0], [250, 300], [0, 300]],
-             "edgeWidths": side_values(0.3, 1), "edgeUpstands": side_values(0.2, 1)},
-            {"id": "b", "kind": "section", "name": "Vlak B",
-             "points": [[250, 0], [500, 0], [500, 300], [250, 300]],
-             "edgeWidths": side_values(0.3, 3), "edgeUpstands": side_values(0.2, 3)},
+            {"id": "a", "kind": "section", "name": "Sectie 1",
+             "points": [[0, 0], [500, 0], [500, 300], [0, 300]],
+             "edgeWidths": all_sides, "edgeUpstands": {str(i): 0.2 for i in range(4)}},
+            {"id": "n", "kind": "seam", "name": "Naad 1",
+             "points": [[250, 0], [250, 300]]},
         ]}
         cls.project = env["tectora.roof.project"].create({
             "name": "Dakopbouw", "partner_id": env["res.partner"].create({"name": "Klant"}).id,
@@ -92,7 +89,7 @@ class TestBuildup(TransactionCase):
         self.assertIn(self.vapour.id, [o["id"] for o in options["vapour"]])
 
     def test_apply_and_sheets(self):
-        self.assertEqual(len(self.sections), 2)
+        self.assertEqual(len(self.sections), 1, "a seam no longer splits the surface")
         result = self.project.tectora_apply_buildup(
             self.sections.ids, vapour_id=self.vapour.id, insulation_id=self.pir_10.id,
             membrane_id=self.epdm.id, sheets=True, margin=0.1,
@@ -100,13 +97,15 @@ class TestBuildup(TransactionCase):
         for section in self.sections:
             surface = section.product_line_ids.filtered(lambda l: l.coverage == "surface")
             self.assertEqual(surface.product_id, self.vapour | self.pir_10 | self.epdm)
-        self.assertEqual(result["lines"], 6)
-        # One sheet per surface: the seam is the joint. Vlak A: 4.70 x 5.40 m
+        self.assertEqual(result["lines"], 3)
+        # The seam divides the surface into two sheets. Each: 4.70 x 5.40 m
         # inside the edges, +0.60 m (0.30 edge, 0.20 upstand, 0.10 margin) on
-        # the outer sides, +0.10 m on the seam.
+        # the outer sides, +0.10 m (overlap) on the seam.
         sheets = self.project.epdm_sheet_ids.filtered("section_id").sorted("name")
         self.assertEqual(len(sheets), 2)
-        self.assertEqual((sheets[0].length, sheets[0].width), (6.6, 5.4))
+        self.assertEqual(sheets.section_id, self.sections)
+        for sheet in sheets:
+            self.assertEqual((sheet.length, sheet.width), (6.6, 5.4))
         self.assertEqual(self.project.epdm_thickness, 1.5)
 
         # Another insulation replaces the first; the sheets are recalculated,

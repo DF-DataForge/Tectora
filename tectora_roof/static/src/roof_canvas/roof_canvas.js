@@ -206,6 +206,122 @@ function splitPolygonByPolyline(polygon, polyline) {
     return [a, b];
 }
 
+// A polygon cut by every seam crossing it: the EPDM sheets of a surface.
+function splitBySeams(polygon, seams) {
+    let pieces = [polygon];
+    for (const seam of seams) {
+        const next = [];
+        for (const piece of pieces) {
+            next.push(...(splitPolygonByPolyline(piece, seam) || [piece]));
+        }
+        pieces = next;
+    }
+    return pieces;
+}
+
+// Area centroid of a polygon (falls back to the bounding box centre).
+function polygonCentroid(points) {
+    let area = 0;
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < points.length; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        const cross = x1 * y2 - x2 * y1;
+        area += cross;
+        cx += (x1 + x2) * cross;
+        cy += (y1 + y2) * cross;
+    }
+    if (Math.abs(area) < 1e-9) {
+        const box = boundingBox(points);
+        return [box.x + box.w / 2, box.y + box.h / 2];
+    }
+    return [cx / (3 * area), cy / (3 * area)];
+}
+
+const MERGE_TOLERANCE_PX = 0.6;
+
+function samePoint(a, b) {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]) <= MERGE_TOLERANCE_PX;
+}
+
+function pointOnSegment(p, a, b) {
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-9) {
+        return samePoint(p, a);
+    }
+    const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (length * length);
+    if (t <= 1e-6 || t >= 1 - 1e-6) {
+        return false;
+    }
+    return Math.abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / length <= MERGE_TOLERANCE_PX;
+}
+
+// ``polygon`` with every point of ``others`` that lies on one of its sides
+// inserted as a vertex, so shared sides match vertex for vertex.
+function withVerticesOf(polygon, others) {
+    const out = [];
+    for (let i = 0; i < polygon.length; i++) {
+        const a = polygon[i];
+        const b = polygon[(i + 1) % polygon.length];
+        out.push(a);
+        const between = others
+            .filter((p) => pointOnSegment(p, a, b))
+            .sort(
+                (p, q) =>
+                    Math.hypot(p[0] - a[0], p[1] - a[1]) - Math.hypot(q[0] - a[0], q[1] - a[1])
+            );
+        for (const p of between) {
+            if (!samePoint(p, out[out.length - 1])) {
+                out.push(p);
+            }
+        }
+    }
+    return out;
+}
+
+// The union of two polygons that share (part of) their outline, e.g. the
+// two halves of a section split along a seam; null when they do not touch
+// or the result is not one closed outline.
+function mergePolygons(a, b) {
+    const pa = withVerticesOf(a, b);
+    const pb = withVerticesOf(b, a);
+    const edges = (poly) => poly.map((p, i) => [p, poly[(i + 1) % poly.length]]);
+    const ea = edges(pa);
+    const eb = edges(pb);
+    const shared = (edge, list) => list.some(([p, q]) => samePoint(edge[0], q) && samePoint(edge[1], p));
+    const keepA = ea.filter((edge) => !shared(edge, eb));
+    const keepB = eb.filter((edge) => !shared(edge, ea));
+    if (keepA.length === ea.length) {
+        return null; // nothing in common
+    }
+    const remaining = [...keepA, ...keepB];
+    const result = [remaining[0][0]];
+    let current = remaining.shift();
+    while (remaining.length) {
+        const index = remaining.findIndex(([p]) => samePoint(p, current[1]));
+        if (index < 0) {
+            return null;
+        }
+        current = remaining.splice(index, 1)[0];
+        result.push(current[0]);
+    }
+    if (!samePoint(current[1], result[0])) {
+        return null;
+    }
+    // Points on a straight side are no corners.
+    const clean = result.filter((p, i) => {
+        const prev = result[(i - 1 + result.length) % result.length];
+        const next = result[(i + 1) % result.length];
+        const cross = (p[0] - prev[0]) * (next[1] - p[1]) - (p[1] - prev[1]) * (next[0] - p[0]);
+        const scale = Math.hypot(p[0] - prev[0], p[1] - prev[1]) * Math.hypot(next[0] - p[0], next[1] - p[1]) || 1;
+        return Math.abs(cross) / scale > 1e-3;
+    });
+    return clean.length >= 3 ? clean : null;
+}
+
 // Point halfway along an open polyline, for its label.
 function polylineMidpoint(points) {
     const total = polygonPerimeter(points, false);
@@ -1254,12 +1370,16 @@ export class RoofCanvasField extends Component {
 
     closePolygon() {
         if (this.state.tool === "seam") {
-            // An open line: two points make a seam, and the surfaces on either
-            // side of it become separate sections.
+            // An open line: two points make a seam. The roof surface stays
+            // one section; the seam divides it into EPDM sheets (the joint
+            // between two sheets).
             if (this.draftPolygon && this.draftPolygon.length >= 2) {
                 this.addShape(this.draftPolygon, "seam");
                 const seam = this._shapes[this._shapes.length - 1];
-                this.splitSectionsBySeam(seam);
+                this.state.status = _t(
+                    "%s getekend: het dakvlak blijft één sectie, de naad deelt het in EPDM-doeken.",
+                    seam.name || KIND_NAMES.seam
+                );
             }
         } else if (this.draftPolygon && this.draftPolygon.length >= 3) {
             this.addShape(this.draftPolygon);
@@ -1294,48 +1414,6 @@ export class RoofCanvasField extends Component {
     // A seam marks separate surfaces: every section it crosses is cut in two
     // along it. The halves are new shapes that remember the section they came
     // from, so the server copies its whole-surface products onto both.
-    splitSectionsBySeam(seam) {
-        if (!seam || !isSeam(seam)) {
-            return;
-        }
-        const shapes = [...this.shapes];
-        let split = 0;
-        for (const section of this.shapes) {
-            if ((section.kind || "section") !== "section" || section.shape === "circle") {
-                continue;
-            }
-            const parts = splitPolygonByPolyline(section.points, seam.points);
-            if (!parts) {
-                continue;
-            }
-            const baseName = section.name || KIND_NAMES.section;
-            // Both halves keep the description of the surface, like its
-            // products; the sides are new, so their descriptions stay behind.
-            const surface = section.descriptions && section.descriptions.surface;
-            const make = (points, suffix) => ({
-                id: makeId(),
-                kind: "section",
-                name: `${baseName} ${suffix}`,
-                points: points.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
-                splitFrom: section.id,
-                ...(surface ? { descriptions: { surface: { ...surface } } } : {}),
-            });
-            const index = shapes.indexOf(section);
-            shapes.splice(index, 1, make(parts[0], "A"), make(parts[1], "B"));
-            split += 1;
-        }
-        if (!split) {
-            return;
-        }
-        this._shapes = shapes;
-        this.state.selectedId = seam.id;
-        this.commit();
-        this.state.status = _t(
-            "%(count)s sectie(s) gesplitst langs %(seam)s: de dakvlakken aan weerszijden zijn nu aparte secties. De producten van het oppervlak zijn overgenomen op beide delen.",
-            { count: split, seam: seam.name || KIND_NAMES.seam }
-        );
-    }
-
     hitTest(point) {
         const shapes = this.shapes;
         const seamTolerance = SEAM_HIT_SCREEN_PX / this.view.zoom;
@@ -1596,6 +1674,173 @@ export class RoofCanvasField extends Component {
         ctx.lineTo(b[0], b[1]);
         ctx.stroke();
         ctx.restore();
+    }
+
+    // ------------------------------------------------------------ EPDM sheets
+    // A roof surface stays one section; the seams drawn on it divide it into
+    // EPDM sheets, labelled on the drawing.
+
+    get seamLines() {
+        return this.shapes.filter((shape) => isSeam(shape)).map((shape) => shape.points);
+    }
+
+    sheetPieces(shape) {
+        if ((shape.kind || "section") !== "section" || shape.shape === "circle") {
+            return [];
+        }
+        const seams = this.seamLines;
+        return seams.length ? splitBySeams(shape.points, seams) : [shape.points];
+    }
+
+    drawSheetLabels(ctx) {
+        if (!this.seamLines.length) {
+            return;
+        }
+        const zoom = this.view.zoom;
+        const scale = this.scaleMPerPx;
+        ctx.save();
+        ctx.font = `italic ${11 / zoom}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (const shape of this.shapes) {
+            const pieces = this.sheetPieces(shape);
+            if (pieces.length < 2) {
+                continue;
+            }
+            const box = boundingBox(shape.points);
+            const labelAt = [box.x + box.w / 2, box.y + box.h / 2];
+            pieces.forEach((piece, index) => {
+                let [x, y] = polygonCentroid(piece);
+                // Clear of the section's own name and area.
+                if (Math.hypot(x - labelAt[0], y - labelAt[1]) * zoom < 45) {
+                    y += 40 / zoom;
+                }
+                const area = polygonArea(piece) * scale * scale;
+                const text = _t("EPDM-doek %(index)s · %(area)s m²", {
+                    index: index + 1,
+                    area: area.toFixed(1),
+                });
+                const width = ctx.measureText(text).width + 10 / zoom;
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.fillRect(x - width / 2, y - 8 / zoom, width, 16 / zoom);
+                ctx.fillStyle = "#475569";
+                ctx.fillText(text, x, y);
+            });
+        }
+        ctx.restore();
+    }
+
+    /** Sections that were cut by a seam before seams stopped splitting
+     * them: the parts touching ``shape`` (and those touching them). */
+    splitFamily(shape) {
+        if (!shape || (shape.kind || "section") !== "section" || !shape.splitFrom) {
+            return [];
+        }
+        const candidates = this.shapes.filter(
+            (s) => (s.kind || "section") === "section" && s.splitFrom && s.shape !== "circle"
+        );
+        const family = [shape];
+        let outline = shape.points;
+        let grew = true;
+        while (grew) {
+            grew = false;
+            for (const candidate of candidates) {
+                if (family.includes(candidate)) {
+                    continue;
+                }
+                const merged = mergePolygons(outline, candidate.points);
+                if (merged) {
+                    family.push(candidate);
+                    outline = merged;
+                    grew = true;
+                }
+            }
+        }
+        return family.length > 1 ? family : [];
+    }
+
+    get mergeableFamily() {
+        return this.splitFamily(this.selectedShape);
+    }
+
+    /** One section again from the parts a seam had cut it into: the seams
+     * stay, now as the joints between the EPDM sheets. The largest part's
+     * section (with its products) carries on. */
+    mergeSplitSections() {
+        const family = this.mergeableFamily;
+        if (!family.length) {
+            return;
+        }
+        const base = [...family].sort((a, b) => polygonArea(b.points) - polygonArea(a.points))[0];
+        let outline = base.points;
+        const rest = family.filter((s) => s !== base);
+        while (rest.length) {
+            const index = rest.findIndex((s) => mergePolygons(outline, s.points));
+            if (index < 0) {
+                break;
+            }
+            outline = mergePolygons(outline, rest[index].points);
+            rest.splice(index, 1);
+        }
+        // Per-side values follow the side they lay on in one of the parts.
+        const sideValue = (key, a, b) => {
+            for (const part of family) {
+                const values = part[key];
+                if (!values) {
+                    continue;
+                }
+                const n = part.points.length;
+                for (let i = 0; i < n; i++) {
+                    const p = part.points[i];
+                    const q = part.points[(i + 1) % n];
+                    const on = (pt) => samePoint(pt, p) || samePoint(pt, q) || pointOnSegment(pt, p, q);
+                    if (on(a) && on(b) && values[i] !== undefined && values[i] !== "") {
+                        return values[i];
+                    }
+                }
+            }
+            return undefined;
+        };
+        const merged = {
+            ...base,
+            name: (base.name || KIND_NAMES.section).replace(/( [AB])+$/, ""),
+            points: outline.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
+        };
+        delete merged.splitFrom;
+        for (const key of ["edgeWidths", "edgeUpstands", "edgeNames"]) {
+            const values = {};
+            merged.points.forEach((a, i) => {
+                const value = sideValue(key, a, merged.points[(i + 1) % merged.points.length]);
+                if (value !== undefined) {
+                    values[i] = value;
+                }
+            });
+            if (Object.keys(values).length) {
+                merged[key] = values;
+            } else {
+                delete merged[key];
+            }
+        }
+        if (merged.descriptions) {
+            merged.descriptions = merged.descriptions.surface
+                ? { surface: merged.descriptions.surface }
+                : undefined;
+            if (!merged.descriptions) {
+                delete merged.descriptions;
+            }
+        }
+        const removed = new Set(family.filter((s) => s !== base).map((s) => s.id));
+        this._shapes = this.shapes
+            .filter((s) => !removed.has(s.id))
+            .map((s) => (s.id === base.id ? merged : s));
+        this.state.selectedId = merged.id;
+        this.state.focus = this.surfaceFocus(merged);
+        this.commit();
+        this.state.status = _t(
+            "%(count)s delen samengevoegd tot %(name)s; de naden blijven als grens tussen de EPDM-doeken.",
+            { count: family.length, name: merged.name }
+        );
+        this.refreshPanel();
     }
 
     // ------------------------------------------------------ quotation build-up
@@ -3002,6 +3247,11 @@ export class RoofCanvasField extends Component {
             this.drawQuoteMarks(ctx);
         } catch (error) {
             console.warn("Roof canvas: could not draw the quotation colours", error);
+        }
+        try {
+            this.drawSheetLabels(ctx);
+        } catch (error) {
+            console.warn("Roof canvas: could not label the EPDM sheets", error);
         }
         this.drawFocus(ctx);
         if (this.drag && this.drag.mode === "rect") {

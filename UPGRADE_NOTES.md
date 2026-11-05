@@ -215,3 +215,5 @@ Releases and the modules they need upgraded:
 | Fix Internal Server Error: standaard dakopbouw als systeemparameter i.p.v. kolommen op het bedrijf; herindeling van producten laat een upgrade niet meer mislukken | `tectora_roof` (20.0.3.65.0), `tectora_products` (20.0.2.7.1) |
 | Fix upgrade: veld EPDM-doek "Dakvlak" stond per vergissing ook in de lijst Daksecties | `tectora_roof` (20.0.3.66.0) |
 | Fix Dakopbouw: systeemparameters lezen met get_str (Odoo 20) | `tectora_roof` (20.0.3.67.0) |
+| Fix Dakopbouw: keuze dampscherm (parseInt in template) | `tectora_roof` (20.0.3.68.0) |
+| Naad splitst het dakvlak niet meer: één sectie, de naden delen ze in EPDM-doeken (label op de tekening, berekening per doek); "Samenvoegen tot één sectie" voor vroeger gesplitste vlakken | `tectora_roof` (20.0.3.69.0) |
