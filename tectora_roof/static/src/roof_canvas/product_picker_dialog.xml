@@ -99,7 +99,7 @@
                                 <div class="border rounded p-2 h-100">
                                     <div class="fw-bold mb-1">1. Dampscherm</div>
                                     <select class="form-select form-select-sm"
-                                            t-on-change="(ev) => { this.buildup.vapour = parseInt(ev.target.value) || 0; }">
+                                            t-on-change="(ev) => this.setVapour(ev.target.value)">
                                         <option value="0" t-att-selected="!b.vapour">— niet wijzigen —</option>
                                         <option t-foreach="b.options.vapour" t-as="product" t-key="product.id"
                                                 t-att-value="product.id" t-att-selected="product.id === b.vapour"

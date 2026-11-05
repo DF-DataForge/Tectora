@@ -159,6 +159,10 @@ export class RoofProductPickerDialog extends Component {
         return `${head}${product.type} — € ${product.price.toFixed(2)}/${product.uom}`;
     }
 
+    setVapour(value) {
+        this.buildup.vapour = parseInt(value) || 0;
+    }
+
     /** After a type or thickness change: the first product that fits. */
     pickLayer(layer, field, value) {
         const choice = this.buildup[layer];
