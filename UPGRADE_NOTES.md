@@ -207,3 +207,4 @@ Releases and the modules they need upgraded:
 | Materiaallijst volgt de bestellijst (status per product); geen dubbele bestelling vanuit de materiaallijst | `tectora_project_order_list` (20.0.1.9.0), `tectora_purchase` (20.0.1.6.0) |
 | Planning per resource: medewerkers gegroepeerd per ploeg | `tectora_roof_planning` (20.0.1.20.0) |
 | Planning per ploeg: blokken knippen met de schaar | `tectora_roof` (20.0.3.60.0), `tectora_roof_planning` (20.0.1.21.0) |
+| Menu: Dakmeting enkel werfgegevens; werforganisatie in Project › Werf | `tectora_roof` (20.0.3.61.0), `tectora_portal` (20.0.1.3.0), `tectora_project_tasks` (20.0.1.3.0), `tectora_project_order_list` (20.0.1.11.0), `tectora_purchase` (20.0.1.7.0) |

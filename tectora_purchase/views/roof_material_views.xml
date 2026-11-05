@@ -107,9 +107,9 @@
 
     <menuitem id="menu_tectora_material_organize"
               name="Inkoop organiseren"
-              parent="tectora_roof.menu_tectora_root"
+              parent="tectora_roof.menu_project_worksite"
               action="action_tectora_material_organize"
-              sequence="26"/>
+              sequence="30"/>
 
     <!-- ============================================================ -->
     <!-- Materiaalbehoefte list: vendor, route, stock and purchase state -->

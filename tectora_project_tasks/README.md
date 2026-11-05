@@ -7,7 +7,7 @@ fills them in itself.
 
 ## Configuration
 
-*Dakmeting › Projectopvolging* (or *Project › Configuratie*):
+*Project › Configuratie*:
 
 - **Projectfases**: name, short description, order, and optionally a
   deadline for the phase milestone relative to the project's start or end date.
@@ -17,7 +17,7 @@ fills them in itself.
 
 ## Importeren uit Excel
 
-*Dakmeting › Projectopvolging › Taaksjablonen importeren*: download de
+*Project › Configuratie › Taaksjablonen importeren*: download de
 **standaardlijst** (`Taaksjablonen.xlsx`), vul ze aan en laad ze terug op.
 
 - Tabblad **Taaksjablonen**, één regel per taak of subtaak: *Fase* (verplicht),

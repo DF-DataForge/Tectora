@@ -223,7 +223,7 @@ class TectoraPurchaseFromMaterial(models.TransientModel):
             raise UserError(
                 _(
                     "Geen logistieke route gevonden. Maak er een aan onder "
-                    "Dakmeting -> Logistieke routes."
+                    "Inkoop -> Configuratie -> Logistieke routes."
                 )
             )
         orders = self.env["purchase.order"]

@@ -9,7 +9,7 @@ Data Forge Dakmeting — Taakopvolging per fase
 Task follow-up per project phase, as on the Congristruct project dashboard,
 starting from an empty task template.
 
-* **Projectfases** (Dakmeting -> Projectopvolging): every phase becomes a
+* **Projectfases** (Project -> Configuratie): every phase becomes a
   milestone on each new project.
 * **Taaksjablonen**: per phase the tasks and their subtasks, optional tasks
   (switched off by default, switched on per project) and deadlines relative to
@@ -30,7 +30,7 @@ New projects get their phases and tasks on creation (once phases exist); an
 existing project starts the follow-up with "Taakopvolging starten" on the
 dashboard.
     """,
-    "version": "20.0.1.2.0",
+    "version": "20.0.1.3.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",

@@ -280,11 +280,20 @@ project (start- en einddatum) en omgekeerd.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
 
+## Menu's: Dakmeting en Project
+
+**Dakmeting** bevat enkel de gegevens van de werf: *Dakprojecten* (de meting),
+*Dakobjecten*, *Producten* en *Instellingen*. Wat het werk organiseert, staat in
+de **Project**-app bij de projecten: *Overzicht*, *Projecten* en het menu
+**Werf** met *Werkblokken*, *Materiaalbehoefte*, *Inkoop organiseren*,
+*Bestellijst*, *Urenregistraties* en *Uitvoeringsverslagen*. De fases,
+taaksjablonen en bestellijst-onderdelen (met hun imports) staan in *Project ›
+Configuratie*, de logistieke routes in *Inkoop › Configuratie*.
+
 ## Projectoverzicht
 
-De Project-app opent op het **Projectoverzicht** (menu *Overzicht*, ook in
-Dakmeting › Projectoverzicht): de kerncijfers van alle projecten van een
-dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
+De Project-app opent op het **Projectoverzicht** (menu *Overzicht*): de
+kerncijfers van alle projecten van een dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
 projectdashboard), elk project in een lijst opent zijn projectdashboard.
 *Alle projecten* opent de gewone projectkaarten.
 
