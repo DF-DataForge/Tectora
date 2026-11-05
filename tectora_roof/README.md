@@ -79,6 +79,15 @@ install on Odoo 17 or earlier without adjustments.
    bar stay in view, the plan fills the screen and the side panel (selected
    element, products, sides) scrolls on its own, to draw, assign products and
    describe without the form scrolling away. Changes are saved as you go.
+   Under the selected element the side panel shows the **Offerte-opbouw**:
+   the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
+   ...), one line per product with its quantity and list price, the chapter
+   totals and the total excl. btw; lines added to the quotation by hand are
+   listed apart. Every line that comes from the drawing has a colour, drawn
+   on the parts it comes from: a band along the sides (inside the shape), a
+   dot on the corners, a dot under the middle of a surface or dakobject.
+   Hovering a line makes its parts stand out, a click selects the part; the
+   palette button hides the colours. It follows the roof on the drawing.
    While drawing, the dimensions show live: width, length and area of a
    rectangle; every side of a polygon (also the one following the pointer)
    with the area and perimeter it would have if closed now; the length of a

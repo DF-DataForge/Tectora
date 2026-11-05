@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools.misc import format_amount
 from odoo.tools.binary import BinaryBytes
 from odoo.tools.image import image_data_uri
 
@@ -1605,6 +1606,136 @@ class TectoraRoofProject(models.Model):
                 prefixed(target, header), aggregated_order_lines(target.product_line_ids)
             ))
         return blocks
+
+    # ------------------------------------------------- quotation preview
+    def tectora_get_quote_preview(self):
+        """The quotation as the drawing builds it, for the panel next to the
+        drawing: per chapter (Afbraak, Opbouw, ...) the products, one line
+        per (product, coverage) with the quantities summed, and the parts of
+        the drawing each one comes from (``targets``: canvas id of the
+        surface or dakobject, coverage and side), so the drawing can show
+        them in the line's colour.
+
+        Only the roof on the drawing (with several roofs), plus the project
+        lines without a roof. Prices are list prices (excl. btw), as on the
+        product panel; the order lines added to the quotation by hand are
+        listed apart (``manual``).
+        """
+        self.ensure_one()
+        roof = self.active_roof_id
+        sections = self.section_ids
+        objects = self.roof_object_ids
+        direct = self.direct_line_ids
+        if roof:
+            sections = sections.filtered(lambda s: s.roof_id == roof)
+            objects = objects.filtered(lambda o: o.roof_id == roof)
+            direct = direct.filtered(lambda l: not l.roof_id or l.roof_id == roof)
+        currency = self.currency_id or self.env.company.currency_id
+        coverage_labels = dict(
+            self.env["tectora.roof.section.product"]._fields["coverage"].selection
+        )
+
+        def money(amount):
+            return format_amount(self.env, amount, currency)
+
+        chapters = {}
+        groups = {}
+
+        def add(line, target=None, kind=None):
+            product = line.product_id
+            if not product:
+                return
+            chapter, label = self._chapter_of(product.categ_id)
+            entry = chapters.setdefault(chapter.id, {
+                "key": chapter.id,
+                "sort": chapter.name or "",
+                "label": label,
+                "total": 0.0,
+                "lines": [],
+            })
+            key = (chapter.id, product.id, line.coverage, bool(target))
+            group = groups.get(key)
+            if not group:
+                group = groups[key] = {
+                    "key": "%s-%s-%s-%s" % (chapter.id, product.id, line.coverage, int(bool(target))),
+                    "product_id": product.id,
+                    "product": product.display_name,
+                    "coverage": line.coverage,
+                    "coverage_label": coverage_labels.get(line.coverage, line.coverage or ""),
+                    "uom": line.uom_id.name or "",
+                    "quantity": 0.0,
+                    "subtotal": 0.0,
+                    "line_ids": [],
+                    "targets": [],
+                    "project_line": not target,
+                }
+                entry["lines"].append(group)
+            group["quantity"] += line.quantity
+            group["subtotal"] += line.price_subtotal
+            group["line_ids"].append(line.id)
+            entry["total"] += line.price_subtotal
+            if target and target.canvas_ref:
+                group["targets"].append({
+                    "canvas_ref": target.canvas_ref,
+                    "kind": kind,
+                    "name": target.name or "",
+                    "coverage": line.coverage,
+                    "edge_index": line.edge_index or 0,
+                })
+
+        for section in sections:
+            for line in section.product_line_ids:
+                add(line, section, "section")
+        for roof_object in objects:
+            for line in roof_object.product_line_ids:
+                add(line, roof_object, "object")
+        measured = (sections.product_line_ids | objects.product_line_ids).product_id
+        for line in direct:
+            # As on the quotation: a project line of a product the drawing
+            # prices is superseded by the drawing.
+            if line.product_id not in measured:
+                add(line)
+
+        result_chapters = sorted(chapters.values(), key=lambda c: c["sort"])
+        for chapter in result_chapters:
+            chapter["total_display"] = money(chapter["total"])
+            chapter["lines"].sort(key=lambda g: (g["project_line"], g["product"].lower()))
+            for group in chapter["lines"]:
+                group["subtotal_display"] = money(group["subtotal"])
+                group["quantity"] = round(group["quantity"], 2)
+            del chapter["sort"]
+
+        manual = []
+        order = self.sale_order_id
+        if order:
+            for line in order.order_line.sorted(lambda l: (l.sequence, l.id)):
+                if (line.display_type or line.roof_line_id or line.roof_measurement_line
+                        or not line.product_id):
+                    continue
+                manual.append({
+                    "id": line.id,
+                    "product": line.name.split("\n")[0] if line.name else line.product_id.display_name,
+                    "quantity": round(line.product_uom_qty, 2),
+                    "uom": line.product_uom_id.name or "",
+                    "subtotal": line.price_subtotal,
+                    "subtotal_display": format_amount(
+                        self.env, line.price_subtotal, order.currency_id or currency
+                    ),
+                })
+        total = sum(c["total"] for c in result_chapters)
+        manual_total = sum(m["subtotal"] for m in manual)
+        return {
+            "roof": roof.name if roof and len(self.roof_ids) > 1 else "",
+            "chapters": result_chapters,
+            "manual": manual,
+            "manual_total_display": money(manual_total),
+            "total": total,
+            "total_display": money(total),
+            "grand_total_display": money(total + manual_total),
+            "order": order.name if order else "",
+            "order_id": order.id if order else False,
+            "follows": bool(order and order.tectora_follow_measurement),
+        }
 
     # ------------------------------------------------- quotation mirroring
     @api.model

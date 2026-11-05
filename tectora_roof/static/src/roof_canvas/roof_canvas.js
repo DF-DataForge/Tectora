@@ -54,6 +54,14 @@ function circlePoints(cx, cy, radius) {
     }
     return points;
 }
+// The colours of the quotation lines, shown in the quotation panel and on the
+// parts of the drawing each line comes from.
+const QUOTE_COLORS = [
+    "#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#0ea5b7",
+    "#f032e6", "#9a6324", "#469990", "#b45309", "#808000", "#1e3a8a",
+    "#be185d", "#15803d", "#7c2d12", "#6d28d9",
+];
+
 const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
 
 const KIND_STYLES = {
@@ -396,6 +404,7 @@ export class RoofCanvasField extends Component {
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
+        this.action = useService("action");
         this.state = proxy({
             tool: "select",
             showBackground: true,
@@ -421,6 +430,14 @@ export class RoofCanvasField extends Component {
             // Ctrl-clicked sides, surfaces or corners waiting for Ctrl to be
             // released; they then all get the same products at once.
             multiSelect: [],
+            // The quotation as the drawing builds it (tectora_get_quote_preview),
+            // shown beside the drawing; each line with parts of the drawing has
+            // a colour, drawn on those parts while quoteMarks is on.
+            quote: null,
+            quoteLoading: false,
+            quoteOpen: true,
+            quoteMarks: true,
+            quoteHover: null, // key of the line hovered in the panel
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -455,6 +472,7 @@ export class RoofCanvasField extends Component {
 
         onMounted(() => {
             this.resizeCanvas();
+            this.loadQuote();
             this.loadBackground();
             window.addEventListener("resize", this.onWindowResize);
             window.addEventListener("keyup", this.onWindowKeyUp);
@@ -478,6 +496,7 @@ export class RoofCanvasField extends Component {
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
+            clearTimeout(this._quoteTimer);
             if (this._resizeObserver) {
                 this._resizeObserver.disconnect();
             }
@@ -1579,6 +1598,288 @@ export class RoofCanvasField extends Component {
         ctx.restore();
     }
 
+    // ------------------------------------------------------ quotation build-up
+    // Beside the drawing: the quotation as the drawing builds it, per chapter
+    // (Afbraak, Opbouw, ...), each line in the colour it has on the drawing.
+
+    scheduleQuote() {
+        clearTimeout(this._quoteTimer);
+        this._quoteTimer = setTimeout(() => this.loadQuote(), 150);
+    }
+
+    async loadQuote() {
+        const resId = this.props.record.resId;
+        if (!resId || this._destroyed) {
+            this.state.quote = null;
+            return;
+        }
+        const ticket = (this._quoteTicket = (this._quoteTicket || 0) + 1);
+        this.state.quoteLoading = true;
+        try {
+            const quote = await this.orm.call(
+                "tectora.roof.project", "tectora_get_quote_preview", [[resId]]
+            );
+            if (ticket !== this._quoteTicket || this._destroyed) {
+                return;
+            }
+            let index = 0;
+            for (const chapter of quote.chapters) {
+                for (const line of chapter.lines) {
+                    line.color = line.targets.length
+                        ? QUOTE_COLORS[index++ % QUOTE_COLORS.length]
+                        : null;
+                }
+            }
+            this.state.quote = quote;
+        } catch (error) {
+            console.warn("Roof canvas: could not load the quotation", error);
+        } finally {
+            if (ticket === this._quoteTicket) {
+                this.state.quoteLoading = false;
+            }
+        }
+        this.draw();
+    }
+
+    toggleQuoteOpen() {
+        this.state.quoteOpen = !this.state.quoteOpen;
+    }
+
+    toggleQuoteMarks() {
+        this.state.quoteMarks = !this.state.quoteMarks;
+        this.draw();
+    }
+
+    setQuoteHover(line) {
+        const key = line && line.targets.length ? line.key : null;
+        if (this.state.quoteHover !== key) {
+            this.state.quoteHover = key;
+            this.draw();
+        }
+    }
+
+    /** Whether ``line`` comes (partly) from the selected shape. */
+    quoteLineSelected(line) {
+        const id = this.state.selectedId;
+        return Boolean(id && line.targets.some((target) => target.canvas_ref === String(id)));
+    }
+
+    quoteLineParts(line) {
+        if (line.project_line) {
+            return line.coverage_label ? `${line.coverage_label} · hele dak` : "Hele dak";
+        }
+        const names = [];
+        for (const target of line.targets) {
+            const shape = this.shapes.find((s) => String(s.id) === target.canvas_ref);
+            const name = (shape && shape.name) || target.name || "";
+            let part = name;
+            if (target.edge_index) {
+                part += target.coverage === "corners"
+                    ? ` hoek ${target.edge_index}`
+                    : ` zijde ${target.edge_index}`;
+            }
+            if (part && !names.includes(part)) {
+                names.push(part);
+            }
+        }
+        const shown = names.slice(0, 3).join(", ");
+        const more = names.length > 3 ? ` +${names.length - 3}` : "";
+        return `${line.coverage_label} · ${shown}${more}`;
+    }
+
+    formatQuantity(value) {
+        return (Math.round((value || 0) * 100) / 100).toLocaleString("nl-BE");
+    }
+
+    /** A click on a quotation line selects the part of the drawing it comes from. */
+    selectQuoteLine(line) {
+        const target = line.targets[0];
+        const shape = target && this.shapes.find((s) => String(s.id) === target.canvas_ref);
+        if (!shape) {
+            return;
+        }
+        if (target.coverage === "edges" && target.edge_index && !isSeam(shape)
+                && shape.shape !== "circle") {
+            this.focusTarget({
+                type: "edge",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                edgeIndex: target.edge_index - 1,
+                name: shape.name || "",
+            });
+            return;
+        }
+        this.state.selectedId = shape.id;
+        this.state.focus = this.surfaceFocus(shape);
+        this.state.copyTargets = [];
+        this.updateStatus();
+        this.draw();
+        this.refreshPanel();
+    }
+
+    async openQuoteOrder() {
+        const quote = this.state.quote;
+        if (!quote || !quote.order_id) {
+            return;
+        }
+        await this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "sale.order",
+            res_id: quote.order_id,
+            views: [[false, "form"]],
+        });
+    }
+
+    /** The outline of a shape as segments, for the colour marks. */
+    quoteOutline(shape) {
+        let points = shape.points || [];
+        if (shape.shape === "circle") {
+            const box = boundingBox(points);
+            points = circlePoints(box.x + box.w / 2, box.y + box.h / 2, Math.max(box.w, box.h) / 2);
+        }
+        const closed = !isSeam(shape);
+        const segments = [];
+        const n = points.length;
+        for (let i = 0; i < (closed ? n : n - 1); i++) {
+            segments.push([points[i], points[(i + 1) % n]]);
+        }
+        return { points, segments, closed };
+    }
+
+    /**
+     * The colour of every quotation line on the parts it comes from: a band
+     * along each side (inside the shape, one band per line, side by side), a
+     * dot on each corner, and a row of dots under the middle of a surface or
+     * dakobject for what covers it as a whole. The line hovered in the panel
+     * stands out, the others fade.
+     */
+    drawQuoteMarks(ctx) {
+        const quote = this.state.quote;
+        if (!quote || !this.state.quoteMarks) {
+            return;
+        }
+        const zoom = this.view.zoom;
+        const hover = this.state.quoteHover;
+        // Per shape: what is drawn on its sides, corners and surface.
+        const marks = new Map();
+        for (const chapter of quote.chapters) {
+            for (const line of chapter.lines) {
+                if (!line.color) {
+                    continue;
+                }
+                for (const target of line.targets) {
+                    let entry = marks.get(target.canvas_ref);
+                    if (!entry) {
+                        entry = { edges: {}, corners: {}, surface: [] };
+                        marks.set(target.canvas_ref, entry);
+                    }
+                    const mark = { color: line.color, key: line.key };
+                    if (target.coverage === "edges" || target.coverage === "corners") {
+                        const bucket = target.coverage === "edges" ? entry.edges : entry.corners;
+                        // 0: every side (corner) of the shape.
+                        const slot = target.edge_index || 0;
+                        (bucket[slot] = bucket[slot] || []).push(mark);
+                    } else {
+                        entry.surface.push(mark);
+                    }
+                }
+            }
+        }
+        const alpha = (mark) => (!hover || mark.key === hover ? 1 : 0.18);
+        ctx.save();
+        ctx.lineCap = "butt";
+        for (const shape of this.shapes) {
+            const entry = marks.get(String(shape.id));
+            if (!entry || !shape.points || !shape.points.length) {
+                continue;
+            }
+            const { points, segments, closed } = this.quoteOutline(shape);
+            const box = boundingBox(points);
+            const center = [box.x + box.w / 2, box.y + box.h / 2];
+            const band = 4 / zoom;
+            // Sides: the bands of "every side" first, then those of the side.
+            segments.forEach(([a, b], i) => {
+                const own = shape.shape === "circle" ? [] : entry.edges[i + 1] || [];
+                const lanes = [...(entry.edges[0] || []), ...own];
+                if (!lanes.length) {
+                    return;
+                }
+                const dx = b[0] - a[0];
+                const dy = b[1] - a[1];
+                const length = Math.hypot(dx, dy) || 1;
+                // Inwards: the inside lies left of every side of a polygon
+                // with a positive signed area, right of it otherwise.
+                const inward = closed && polygonSignedArea(points) < 0 ? -1 : 1;
+                const nx = (-dy / length) * inward;
+                const ny = (dx / length) * inward;
+                lanes.forEach((mark, lane) => {
+                    const highlighted = hover && mark.key === hover;
+                    const offset = closed
+                        ? band * (lane + 0.5)
+                        : band * (lane - (lanes.length - 1) / 2);
+                    ctx.globalAlpha = alpha(mark);
+                    ctx.strokeStyle = mark.color;
+                    ctx.lineWidth = highlighted ? band * 2 : band;
+                    ctx.beginPath();
+                    ctx.moveTo(a[0] + nx * offset, a[1] + ny * offset);
+                    ctx.lineTo(b[0] + nx * offset, b[1] + ny * offset);
+                    ctx.stroke();
+                });
+            });
+            // Corners.
+            if (shape.shape !== "circle" && !isSeam(shape)) {
+                points.forEach(([x, y], i) => {
+                    const dots = [...(entry.corners[0] || []), ...(entry.corners[i + 1] || [])];
+                    const towards = Math.hypot(center[0] - x, center[1] - y) || 1;
+                    const ux = (center[0] - x) / towards;
+                    const uy = (center[1] - y) / towards;
+                    dots.forEach((mark, k) => {
+                        const highlighted = hover && mark.key === hover;
+                        const distance = (12 + k * 10) / zoom;
+                        ctx.globalAlpha = alpha(mark);
+                        ctx.fillStyle = mark.color;
+                        ctx.beginPath();
+                        ctx.arc(x + ux * distance, y + uy * distance,
+                            (highlighted ? 7 : 4.5) / zoom, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                });
+            }
+            // The surface (or the dakobject as a whole).
+            if (entry.surface.length) {
+                const anchor = isSeam(shape) ? polylineMidpoint(shape.points) : center;
+                const step = 13 / zoom;
+                const width = (entry.surface.length - 1) * step;
+                entry.surface.forEach((mark, k) => {
+                    const highlighted = hover && mark.key === hover;
+                    const x = anchor[0] - width / 2 + k * step;
+                    const y = anchor[1] + 26 / zoom;
+                    ctx.globalAlpha = alpha(mark);
+                    ctx.fillStyle = mark.color;
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.lineWidth = 1.5 / zoom;
+                    ctx.beginPath();
+                    ctx.arc(x, y, (highlighted ? 8 : 5.5) / zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+                if (hover && entry.surface.some((mark) => mark.key === hover) && !isSeam(shape)) {
+                    const mark = entry.surface.find((m) => m.key === hover);
+                    ctx.globalAlpha = 0.22;
+                    ctx.fillStyle = mark.color;
+                    ctx.beginPath();
+                    ctx.moveTo(points[0][0], points[0][1]);
+                    for (let i = 1; i < points.length; i++) {
+                        ctx.lineTo(points[i][0], points[i][1]);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+        ctx.restore();
+    }
+
     // ------------------------------------------------------- product panel
     coverageLabel(line) {
         const labels = {
@@ -1601,6 +1902,9 @@ export class RoofCanvasField extends Component {
     }
 
     async refreshPanel() {
+        // Whatever changed the panel (products, measurements) changes the
+        // quotation too.
+        this.scheduleQuote();
         try {
             await this._refreshPanel();
         } catch (error) {
@@ -2623,6 +2927,11 @@ export class RoofCanvasField extends Component {
             } catch (error) {
                 console.warn("Roof canvas: could not label shape", shape, error);
             }
+        }
+        try {
+            this.drawQuoteMarks(ctx);
+        } catch (error) {
+            console.warn("Roof canvas: could not draw the quotation colours", error);
         }
         this.drawFocus(ctx);
         if (this.drag && this.drag.mode === "rect") {
