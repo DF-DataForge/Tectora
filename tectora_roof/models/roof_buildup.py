@@ -5,18 +5,24 @@ dakbedekking) and the EPDM sheets it takes, from the drawing.
 The drawing's product picker offers a "Dakopbouw" tab for a roof surface:
 one product per layer, chosen by type, thickness and fixing instead of from a
 list of a hundred insulation boards, applied to the surface (and any other
-surfaces ticked) at once. The EPDM sheets follow from the surfaces: one sheet
-per surface -- a seam (naad) cuts a surface in two, so it is the joint between
-two sheets -- sized on the roof surface inside the roof edges, plus per side
-the upstand (opstand) and the width of the roof edge (dakrand) it runs over,
-plus a margin.
+surfaces ticked) at once. The EPDM sheets follow from the surfaces: a surface
+stays one section (its products, its quantities), and the seams (naden)
+drawn on it divide it into sheets -- the joints between them. Each sheet is
+sized on its part of the surface inside the roof edges, plus per side the
+upstand (opstand) and the width of the roof edge (dakrand) it runs over, plus
+a margin; a side along a seam gets the margin only, as the overlap.
 """
 import math
 import re
 
 from odoo import _, api, fields, models
 
-from .roof_project import DEFAULT_SCALE_M_PER_PX, _inset_polygon_px
+from .roof_project import (
+    DEFAULT_SCALE_M_PER_PX,
+    _inset_polygon_px,
+    _point_in_polygon,
+    _polygon_area_px,
+)
 
 # The widest EPDM roll in the catalogue (15,25 m): a wider sheet needs a joint.
 EPDM_MAX_WIDTH = 15.25
@@ -61,6 +67,132 @@ def _fixing(name):
 
 def _round_up(value, step=0.05):
     return math.ceil(round(value / step, 6)) * step
+
+
+def _segment_intersection(a, b, c, d):
+    """Where segments a-b and c-d cross: (point, t along a-b, u along c-d),
+    or None (mirror of the drawing's segmentIntersection)."""
+    rx, ry = b[0] - a[0], b[1] - a[1]
+    sx, sy = d[0] - c[0], d[1] - c[1]
+    denom = rx * sy - ry * sx
+    if abs(denom) < 1e-9:
+        return None
+    qx, qy = c[0] - a[0], c[1] - a[1]
+    t = (qx * sy - qy * sx) / denom
+    u = (qx * ry - qy * rx) / denom
+    eps = 1e-7
+    if t < -eps or t > 1 + eps or u < -eps or u > 1 + eps:
+        return None
+    return (a[0] + rx * t, a[1] + ry * t), t, u
+
+
+def split_polygon_by_polyline(polygon, polyline):
+    """The two parts of ``polygon`` on either side of the open ``polyline``
+    (a seam), or None when it does not cross cleanly. Seam ends stopping
+    inside the polygon are extended to its outline. Mirror of the drawing's
+    splitPolygonByPolyline."""
+    n = len(polygon)
+    if n < 3 or len(polyline) < 2:
+        return None
+    xs = [p[0] for p in polygon]
+    ys = [p[1] for p in polygon]
+    reach = ((max(xs) - min(xs)) + (max(ys) - min(ys))) * 4 + 10
+    line = [tuple(p) for p in polyline]
+
+    def extend(start, end):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        length = math.hypot(dx, dy) or 1.0
+        return (end[0] + dx / length * reach, end[1] + dy / length * reach)
+
+    if _point_in_polygon(line[0], polygon):
+        line[0] = extend(line[1], line[0])
+    if _point_in_polygon(line[-1], polygon):
+        line[-1] = extend(line[-2], line[-1])
+    crossings = []
+    for k in range(len(line) - 1):
+        for i in range(n):
+            hit = _segment_intersection(line[k], line[k + 1], polygon[i], polygon[(i + 1) % n])
+            if hit:
+                crossings.append({"seg": k, "t": hit[1], "edge": i, "u": hit[2], "point": hit[0]})
+    if len(crossings) < 2:
+        return None
+    crossings.sort(key=lambda c: (c["seg"], c["t"]))
+    entry, exit_ = crossings[0], crossings[-1]
+    if entry["seg"] == exit_["seg"] and abs(entry["t"] - exit_["t"]) < 1e-6:
+        return None
+    inside = [line[k] for k in range(entry["seg"] + 1, exit_["seg"] + 1)]
+
+    def walk(from_edge, to_edge, from_u, to_u):
+        count = (to_edge - from_edge + n) % n
+        if from_edge == to_edge and to_u < from_u:
+            count = n
+        return [polygon[(from_edge + step) % n] for step in range(1, count + 1)]
+
+    part_a = [entry["point"]] + walk(entry["edge"], exit_["edge"], entry["u"], exit_["u"]) \
+        + [exit_["point"]] + list(reversed(inside))
+    part_b = [exit_["point"]] + walk(exit_["edge"], entry["edge"], exit_["u"], entry["u"]) \
+        + [entry["point"]] + inside
+
+    def clean(part):
+        out = []
+        for p in part:
+            if not out or math.hypot(p[0] - out[-1][0], p[1] - out[-1][1]) > 0.5:
+                out.append(p)
+        if len(out) > 2 and math.hypot(out[0][0] - out[-1][0], out[0][1] - out[-1][1]) <= 0.5:
+            out.pop()
+        return out
+
+    a, b = clean(part_a), clean(part_b)
+    total = _polygon_area_px(polygon)
+    if len(a) < 3 or len(b) < 3:
+        return None
+    if _polygon_area_px(a) < total * 0.01 or _polygon_area_px(b) < total * 0.01:
+        return None
+    return a, b
+
+
+def split_by_seams(polygon, seams):
+    """``polygon`` cut by every seam (open polylines) that crosses it: the
+    EPDM sheets of one roof surface."""
+    pieces = [list(polygon)]
+    for seam in seams:
+        result = []
+        for piece in pieces:
+            parts = split_polygon_by_polyline(piece, seam)
+            result.extend(parts if parts else [piece])
+        pieces = result
+    return pieces
+
+
+def _on_segment(point, a, b, tolerance):
+    """Whether ``point`` lies on segment a-b (within ``tolerance``)."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    if length < 1e-9:
+        return math.hypot(point[0] - a[0], point[1] - a[1]) <= tolerance
+    t = ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / (length * length)
+    if t < -tolerance / length or t > 1 + tolerance / length:
+        return False
+    distance = abs((point[0] - a[0]) * dy - (point[1] - a[1]) * dx) / length
+    return distance <= tolerance
+
+
+def piece_extensions(piece, outline, extensions, tolerance=1.0):
+    """Per side of ``piece`` (a part of ``outline``): the extension of the
+    outline side it lies on, or 0 for a side along a seam (the overlap with
+    the next sheet)."""
+    n = len(outline)
+    result = []
+    for i in range(len(piece)):
+        p, q = piece[i], piece[(i + 1) % len(piece)]
+        value = 0.0
+        for j in range(n):
+            a, b = outline[j], outline[(j + 1) % n]
+            if _on_segment(p, a, b, tolerance) and _on_segment(q, a, b, tolerance):
+                value = extensions[j]
+                break
+        result.append(value)
+    return result
 
 
 def epdm_sheet_size(points, extensions):
@@ -342,8 +474,9 @@ class TectoraRoofProject(models.Model):
 
     # ----------------------------------------------------------- EPDM sheets
     def _tectora_section_shape(self, section, cache):
-        """(points in m, per-side extension in m without margin) of a
-        surface, from the plan of its roof."""
+        """The sheets of a surface, from the plan of its roof: per part
+        between the seams, (points in m, per-side extension in m without
+        margin)."""
         source = self
         if section.roof_id and section.roof_id != self.active_roof_id:
             source = section.roof_id
@@ -355,6 +488,7 @@ class TectoraRoofProject(models.Model):
                 source.scale_m_per_px or DEFAULT_SCALE_M_PER_PX,
             )
         shapes, scale = cache[key]
+        seams = [s["points"] for s in shapes.values() if s["kind"] == "seam"]
         shape = shapes.get(section.canvas_ref or "")
         if not shape or shape["kind"] != "section" or len(shape["points"]) < 3:
             return None
@@ -373,9 +507,17 @@ class TectoraRoofProject(models.Model):
             polygon = inner
             extensions = [upstands[i] + widths[i] for i in range(n)]
         else:
-            polygon = points
-            extensions = upstands
-        return [(x * scale, y * scale) for x, y in polygon], extensions
+            polygon = [tuple(p) for p in points]
+            extensions = list(upstands)
+        # The seams on the surface are the joints between its sheets: one
+        # sheet per part; a side along a seam only gets the margin (overlap).
+        sheets = []
+        for piece in split_by_seams(polygon, seams):
+            sheets.append((
+                [(x * scale, y * scale) for x, y in piece],
+                piece_extensions(piece, polygon, extensions),
+            ))
+        return sheets
 
     def _tectora_epdm_sheet_values(self, section_ids, margin=None):
         self.ensure_one()
@@ -386,26 +528,30 @@ class TectoraRoofProject(models.Model):
         cache = {}
         result = []
         for section in self._tectora_buildup_sections(section_ids).sorted(lambda s: (s.roof_id.id or 0, s.name or "", s.id)):
-            shape = self._tectora_section_shape(section, cache)
-            if not shape:
+            sheets = self._tectora_section_shape(section, cache)
+            if not sheets:
                 continue
-            polygon, extensions = shape
-            length, width = epdm_sheet_size(polygon, [e + margin for e in extensions])
-            length, width = _round_up(length), _round_up(width)
             name = section.name or _("Dakvlak")
             if several_roofs and section.roof_id:
                 name = "%s · %s" % (section.roof_id.name, name)
-            notes = [_("opstand en dakrand inbegrepen, marge %s cm per zijde") % round(margin * 100)]
-            if width > EPDM_MAX_WIDTH:
-                notes.append(_("breder dan %s m: met een naad uit twee rollen") % EPDM_MAX_WIDTH)
-            result.append({
-                "section_id": section.id,
-                "name": _("EPDM-doek %s") % name,
-                "length": round(length, 2),
-                "width": round(width, 2),
-                "area": round(length * width, 2),
-                "note": "; ".join(notes),
-            })
+            for index, (polygon, extensions) in enumerate(sheets, start=1):
+                length, width = epdm_sheet_size(polygon, [e + margin for e in extensions])
+                length, width = _round_up(length), _round_up(width)
+                notes = [_("opstand en dakrand inbegrepen, marge %s cm per zijde") % round(margin * 100)]
+                if len(sheets) > 1:
+                    notes.append(_("naad met het volgende doek: marge als overlap"))
+                if width > EPDM_MAX_WIDTH:
+                    notes.append(_("breder dan %s m: met een naad uit twee rollen") % EPDM_MAX_WIDTH)
+                result.append({
+                    "key": "%s-%s" % (section.id, index),
+                    "section_id": section.id,
+                    "name": (_("EPDM-doek %(name)s · %(index)s", name=name, index=index)
+                             if len(sheets) > 1 else _("EPDM-doek %s") % name),
+                    "length": round(length, 2),
+                    "width": round(width, 2),
+                    "area": round(length * width, 2),
+                    "note": "; ".join(notes),
+                })
         return result
 
     def tectora_preview_epdm_sheets(self, section_ids, margin=None):
