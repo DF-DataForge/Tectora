@@ -212,3 +212,49 @@
         overflow: visible;
     }
 }
+
+// The quotation build-up beside the drawing (RoofCanvasQuote): each line's
+// colour is the colour of its parts on the drawing.
+.o_roof_canvas_quote {
+    background: #fff;
+
+    .o_roof_canvas_quote_chapter_title {
+        background: #eef2f4;
+        letter-spacing: 0.02em;
+        font-size: 0.72rem;
+    }
+
+    .o_roof_canvas_quote_line {
+        border-left: 3px solid transparent;
+        line-height: 1.25;
+
+        &.o_quote_clickable {
+            cursor: pointer;
+        }
+
+        &.o_quote_selected {
+            border-left-color: #111827;
+            background: #f8fafc;
+        }
+
+        &.o_quote_active {
+            background: #fff7e6;
+        }
+    }
+
+    .o_roof_canvas_quote_parts {
+        font-size: 0.72rem;
+    }
+
+    .o_roof_canvas_quote_swatch {
+        width: 0.8rem;
+        height: 0.8rem;
+        margin-top: 0.15rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+
+        &.o_quote_swatch_none {
+            background: repeating-linear-gradient(45deg, #cbd5e1 0 2px, #fff 2px 4px);
+        }
+    }
+}

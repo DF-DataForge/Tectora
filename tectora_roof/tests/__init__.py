@@ -8,3 +8,4 @@ from . import test_task_stages
 from . import test_project_overview
 from . import test_planning_split
 from . import test_site_address
+from . import test_quote_preview
