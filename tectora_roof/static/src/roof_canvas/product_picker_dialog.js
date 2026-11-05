@@ -70,6 +70,7 @@ export class RoofProductPickerDialog extends Component {
             maxWidth: 15.25,
             preview: [],
             previewLoading: false,
+            details: true, // the calculation under every sheet
         });
         if (this.props.buildup) {
             this.state.tab = "buildup";
@@ -233,6 +234,10 @@ export class RoofProductPickerDialog extends Component {
         const value = parseFloat(String(ev.target.value).replace(",", "."));
         this.buildup.margin = value >= 0 ? value / 100 : 0;
         this.refreshSheets();
+    }
+
+    toggleSheetDetails(checked) {
+        this.buildup.details = checked;
     }
 
     toggleSheets(checked) {

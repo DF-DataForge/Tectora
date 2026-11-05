@@ -218,3 +218,4 @@ Releases and the modules they need upgraded:
 | Fix Dakopbouw: keuze dampscherm (parseInt in template) | `tectora_roof` (20.0.3.68.0) |
 | Naad splitst het dakvlak niet meer: één sectie, de naden delen ze in EPDM-doeken (label op de tekening, berekening per doek); "Samenvoegen tot één sectie" voor vroeger gesplitste vlakken | `tectora_roof` (20.0.3.69.0) |
 | Naad tekenen: klik zijde → andere zijde maakt de naad af (klikken snappen op de omtrek) | `tectora_roof` (20.0.3.70.0) |
+| EPDM-doeken: berekening per doek zichtbaar (vlak + per zijde opstand, dakrand, marge of naadoverlap, afronding, snijverlies) | `tectora_roof` (20.0.3.71.0) |

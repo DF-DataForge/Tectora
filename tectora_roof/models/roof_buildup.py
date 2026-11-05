@@ -177,37 +177,43 @@ def _on_segment(point, a, b, tolerance):
     return distance <= tolerance
 
 
-def piece_extensions(piece, outline, extensions, tolerance=1.0):
-    """Per side of ``piece`` (a part of ``outline``): the extension of the
-    outline side it lies on, or 0 for a side along a seam (the overlap with
-    the next sheet)."""
+def piece_sources(piece, outline, tolerance=1.0):
+    """Per side of ``piece`` (a part of ``outline``): the index of the
+    outline side it lies on, or None for a side along a seam."""
     n = len(outline)
     result = []
     for i in range(len(piece)):
         p, q = piece[i], piece[(i + 1) % len(piece)]
-        value = 0.0
+        source = None
         for j in range(n):
             a, b = outline[j], outline[(j + 1) % n]
             if _on_segment(p, a, b, tolerance) and _on_segment(q, a, b, tolerance):
-                value = extensions[j]
+                source = j
                 break
-        result.append(value)
+        result.append(source)
     return result
 
 
-def epdm_sheet_size(points, extensions):
-    """Length and width (m) of the sheet covering polygon ``points`` (m),
-    with ``extensions[i]`` (m) added beyond side i (from points[i] to
-    points[i+1]).
+def piece_extensions(piece, outline, extensions, tolerance=1.0):
+    """Per side of ``piece``: the extension of the outline side it lies on,
+    or 0 for a side along a seam (the overlap with the next sheet)."""
+    return [
+        extensions[j] if j is not None else 0.0
+        for j in piece_sources(piece, outline, tolerance)
+    ]
 
-    The sheet is the smallest rectangle around the surface (aligned with one
-    of its sides, so a roof drawn at an angle gets an angled sheet); each of
-    its four sides is moved out by the largest extension of the polygon sides
-    lying on it. Returns (length, width), length the longer.
-    """
+
+def sheet_layout(points, extensions):
+    """How the sheet covering polygon ``points`` (m) is laid out: the
+    smallest rectangle around it (aligned with one of its sides, so a roof
+    drawn at an angle gets an angled sheet), each of its four sides moved out
+    by the largest ``extensions`` of the polygon sides lying on it.
+
+    Returns two dimensions, longest first, each {"base": extent of the
+    surface, "ends": [polygon side index or None, same], "size": total}."""
     n = len(points)
     if n < 3:
-        return 0.0, 0.0
+        return []
     best = None
     for i in range(n):
         ax, ay = points[i]
@@ -222,29 +228,45 @@ def epdm_sheet_size(points, extensions):
         if best is None or area < best[0] - 1e-9:
             best = (area, us, vs)
     if best is None:
-        return 0.0, 0.0
+        return []
     _area, us, vs = best
 
-    def side_extension(values, target):
+    def end_side(values, target):
+        """The polygon side that sets the extension at this end."""
         extent = max(values) - min(values)
         tolerance = max(0.02, extent * 0.01)
         on_side = [
-            extensions[i] for i in range(n)
+            i for i in range(n)
             if abs(values[i] - target) <= tolerance
             and abs(values[(i + 1) % n] - target) <= tolerance
         ]
         if not on_side:
             # Only a corner touches this side: the sides meeting there.
             on_side = [
-                extensions[i] for i in range(n)
+                i for i in range(n)
                 if abs(values[i] - target) <= tolerance
                 or abs(values[(i + 1) % n] - target) <= tolerance
             ]
-        return max(on_side) if on_side else 0.0
+        return max(on_side, key=lambda i: extensions[i]) if on_side else None
 
-    along = (max(us) - min(us)) + side_extension(us, min(us)) + side_extension(us, max(us))
-    across = (max(vs) - min(vs)) + side_extension(vs, min(vs)) + side_extension(vs, max(vs))
-    return max(along, across), min(along, across)
+    dimensions = []
+    for values in (us, vs):
+        ends = [end_side(values, min(values)), end_side(values, max(values))]
+        base = max(values) - min(values)
+        size = base + sum(extensions[i] for i in ends if i is not None)
+        dimensions.append({"base": base, "ends": ends, "size": size})
+    dimensions.sort(key=lambda d: -d["size"])
+    return dimensions
+
+
+def epdm_sheet_size(points, extensions):
+    """Length and width (m) of the sheet covering polygon ``points`` (m),
+    with ``extensions[i]`` (m) added beyond side i (see sheet_layout).
+    Returns (length, width), length the longer."""
+    layout = sheet_layout(points, extensions)
+    if not layout:
+        return 0.0, 0.0
+    return layout[0]["size"], layout[1]["size"]
 
 
 class ResConfigSettings(models.TransientModel):
@@ -511,12 +533,21 @@ class TectoraRoofProject(models.Model):
             extensions = list(upstands)
         # The seams on the surface are the joints between its sheets: one
         # sheet per part; a side along a seam only gets the margin (overlap).
+        # Per side of a part: what it adds beyond the surface.
         sheets = []
         for piece in split_by_seams(polygon, seams):
-            sheets.append((
-                [(x * scale, y * scale) for x, y in piece],
-                piece_extensions(piece, polygon, extensions),
-            ))
+            sides = []
+            for j in piece_sources(piece, polygon):
+                if j is None:
+                    sides.append({"label": _("naad"), "seam": True, "upstand": 0.0, "width": 0.0})
+                else:
+                    sides.append({
+                        "label": "Z%s" % (j + 1),
+                        "seam": False,
+                        "upstand": upstands[j],
+                        "width": widths[j] if inner else 0.0,
+                    })
+            sheets.append(([(x * scale, y * scale) for x, y in piece], sides))
         return sheets
 
     def _tectora_epdm_sheet_values(self, section_ids, margin=None):
@@ -534,15 +565,48 @@ class TectoraRoofProject(models.Model):
             name = section.name or _("Dakvlak")
             if several_roofs and section.roof_id:
                 name = "%s · %s" % (section.roof_id.name, name)
-            for index, (polygon, extensions) in enumerate(sheets, start=1):
-                length, width = epdm_sheet_size(polygon, [e + margin for e in extensions])
-                length, width = _round_up(length), _round_up(width)
-                notes = [_("opstand en dakrand inbegrepen, marge %s cm per zijde") % round(margin * 100)]
-                if len(sheets) > 1:
-                    notes.append(_("naad met het volgende doek: marge als overlap"))
+            for index, (polygon, sides) in enumerate(sheets, start=1):
+                extensions = [side["upstand"] + side["width"] + margin for side in sides]
+                layout = sheet_layout(polygon, extensions)
+                if not layout:
+                    continue
+                dimensions = []
+                for label, dimension in zip((_("Lengte"), _("Breedte")), layout):
+                    ends = []
+                    for side_index in dimension["ends"]:
+                        if side_index is None:
+                            continue
+                        side = sides[side_index]
+                        ends.append({
+                            "label": side["label"],
+                            "seam": side["seam"],
+                            "upstand": round(side["upstand"], 2),
+                            "width": round(side["width"], 2),
+                            "margin": round(margin, 2),
+                            "total": round(extensions[side_index], 2),
+                        })
+                    dimensions.append({
+                        "label": label,
+                        "base": round(dimension["base"], 2),
+                        "ends": ends,
+                        "raw": round(dimension["size"], 2),
+                        "size": round(_round_up(dimension["size"]), 2),
+                    })
+                length, width = dimensions[0]["size"], dimensions[1]["size"]
+                surface = _polygon_area_px(polygon)
+                waste = length * width - surface
+                notes = [self._tectora_dimension_text(d) for d in dimensions]
+                notes.append(_("vlak %(surface)s m², doek %(sheet)s m², snijverlies %(waste)s m²",
+                               surface="%.2f" % surface, sheet="%.2f" % (length * width),
+                               waste="%.2f" % waste))
                 if width > EPDM_MAX_WIDTH:
                     notes.append(_("breder dan %s m: met een naad uit twee rollen") % EPDM_MAX_WIDTH)
                 result.append({
+                    "dimensions": dimensions,
+                    "surface": round(surface, 2),
+                    "waste": round(waste, 2),
+                    "waste_pct": round(waste / (length * width) * 100) if length * width else 0,
+                    "margin": round(margin, 2),
                     "key": "%s-%s" % (section.id, index),
                     "section_id": section.id,
                     "name": (_("EPDM-doek %(name)s · %(index)s", name=name, index=index)
@@ -553,6 +617,30 @@ class TectoraRoofProject(models.Model):
                     "note": "; ".join(notes),
                 })
         return result
+
+    @api.model
+    def _tectora_dimension_text(self, dimension):
+        """'Lengte: 5,90 vlak + Z2 0,60 (opstand 0,20 + dakrand 0,30 + marge
+        0,10) + naad 0,10 (overlap) = 7,30 → 7,35 m'"""
+        def number(value):
+            return ("%.2f" % value).replace(".", ",")
+
+        parts = [_("%s vlak") % number(dimension["base"])]
+        for end in dimension["ends"]:
+            if end["seam"]:
+                parts.append(_("naad %s (overlap)") % number(end["total"]))
+                continue
+            detail = []
+            if end["upstand"]:
+                detail.append(_("opstand %s") % number(end["upstand"]))
+            if end["width"]:
+                detail.append(_("dakrand %s") % number(end["width"]))
+            detail.append(_("marge %s") % number(end["margin"]))
+            parts.append("%s %s (%s)" % (end["label"], number(end["total"]), " + ".join(detail)))
+        text = "%s: %s = %s" % (dimension["label"], " + ".join(parts), number(dimension["raw"]))
+        if abs(dimension["size"] - dimension["raw"]) > 0.001:
+            text += " → %s" % number(dimension["size"])
+        return text + " m"
 
     def tectora_preview_epdm_sheets(self, section_ids, margin=None):
         """The sheets the surfaces take, without saving them."""
