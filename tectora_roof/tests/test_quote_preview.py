@@ -63,7 +63,7 @@ class TestQuotePreview(TransactionCase):
     def test_chapters_and_parts(self):
         quote = self.project.tectora_get_quote_preview()
         labels = [chapter["label"] for chapter in quote["chapters"]]
-        self.assertEqual(labels, ["Afbraakwerken", "Opbouwwerken plat dak"])
+        self.assertEqual(labels, ["AFBOUWWERKEN THV HET PLAT DAK", "OPBOUWWERKEN THV HET PLAT DAK"])
         demolition, buildup = quote["chapters"]
 
         epdm = [line for line in buildup["lines"] if line["product_id"] == self.epdm.id]
@@ -87,13 +87,24 @@ class TestQuotePreview(TransactionCase):
         self.assertTrue(quote["total_display"])
         self.assertFalse(quote["order"])
 
-    def test_manual_order_lines_apart(self):
+    def test_quotation_lines_in_their_segment(self):
         self.project.action_create_sale_order()
         order = self.project.sale_order_id
         extra = self.env["product.product"].create({"name": "Werfinrichting", "list_price": 500})
         self.env["sale.order.line"].create({"order_id": order.id, "product_id": extra.id})
         quote = self.project.tectora_get_quote_preview()
         self.assertEqual(quote["order"], order.name)
-        self.assertEqual([line["product"] for line in quote["manual"]], ["Werfinrichting"])
-        drawn = {line["product_id"] for c in quote["chapters"] for line in c["lines"]}
-        self.assertNotIn(extra.id, drawn)
+        # A line added on the quotation becomes a project line too, in the
+        # segment of its product (no chapter: Overige).
+        rows = {line["product_id"]: chapter["label"] for chapter in quote["chapters"] for line in chapter["lines"]}
+        self.assertEqual(rows.get(extra.id), "OVERIGE")
+
+    def test_builder_segments(self):
+        builder = self.project.tectora_get_quote_builder()
+        kinds = [segment["kind"] for segment in builder["segments"]]
+        self.assertEqual(kinds, ["general", "safety", "demolition", "buildup", "notes"])
+        self.project.tectora_builder_add("demolition:0", [self.container.id])
+        self.assertEqual(
+            len(self.project.direct_line_ids.filtered(lambda l: l.product_id == self.container)), 1,
+            "a product already in the segment is not added twice",
+        )

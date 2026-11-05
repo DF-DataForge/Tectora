@@ -24,3 +24,4 @@ from . import crm_lead
 from . import sale_order_template
 from . import roof_buildup
 from . import roof_edges
+from . import roof_quote

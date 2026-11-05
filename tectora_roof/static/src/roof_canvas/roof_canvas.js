@@ -1976,6 +1976,9 @@ export class RoofCanvasField extends Component {
     }
 
     quoteLineParts(line) {
+        if (line.source === "order") {
+            return "Op de offerte toegevoegd";
+        }
         if (line.project_line) {
             return line.coverage_label ? `${line.coverage_label} · hele dak` : "Hele dak";
         }
