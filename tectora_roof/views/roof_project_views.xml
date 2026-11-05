@@ -205,8 +205,6 @@
                                 <list>
                                     <field name="roof_id" optional="show"/>
                                     <field name="name"/>
-                                    <field name="section_id" optional="show" readonly="1"
-                                           options="{'no_open': True}"/>
                                     <field name="width"/>
                                     <field name="length"/>
                                     <field name="area" sum="Totaal"/>
