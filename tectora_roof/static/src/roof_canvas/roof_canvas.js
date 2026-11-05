@@ -3007,6 +3007,34 @@ export class RoofCanvasField extends Component {
                   apply: (choice, targetKeys) => this.applyBuildup(sectionIdsFor(targetKeys), choice),
               }
             : undefined;
+        // A side of a roof surface: the Randafwerking (roof edge or
+        // connection) for it and the other sides ticked.
+        const edgeItemsFor = (targetKeys) => {
+            const picked = new Set(targetKeys || []);
+            return [
+                { section_id: targetIds[0], side: sideNumber, quantity },
+                ...others
+                    .filter((item) => picked.has(item.key) && item.sideNumber)
+                    .map((item) => ({
+                        section_id: recordByShape[item.shapeId],
+                        side: item.sideNumber,
+                        quantity: item.quantity,
+                    })),
+            ].filter((item) => item.section_id && item.side);
+        };
+        const edges = hit.type === "edge" && !isObject && sideNumber
+            ? {
+                  projectId: record.resId,
+                  apply: (choice, targetKeys, dryRun) =>
+                      dryRun
+                          ? this.orm.call(
+                                "tectora.roof.project", "tectora_apply_edges",
+                                [[record.resId], edgeItemsFor(targetKeys), choice.kind, choice.product_id],
+                                { corners: choice.corners, dry_run: true }
+                            )
+                          : this.applyEdges(edgeItemsFor(targetKeys), choice),
+              }
+            : undefined;
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -3014,6 +3042,7 @@ export class RoofCanvasField extends Component {
                 ["categ_id", "in", categoryIds],
             ],
             buildup,
+            edges,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -3124,6 +3153,43 @@ export class RoofCanvasField extends Component {
                 this.refreshPanel();
             },
         });
+    }
+
+    /** The "Randafwerking" of the picker: a roof edge (with its corners)
+     * or a connection on the sides. */
+    async applyEdges(items, choice) {
+        const record = this.props.record;
+        try {
+            const result = await this.orm.call(
+                "tectora.roof.project", "tectora_apply_edges",
+                [[record.resId], items, choice.kind, choice.product_id],
+                { corners: choice.corners }
+            );
+            await record.load();
+            let message = _t("Randafwerking toegepast op %s zijde(n).", result.lines);
+            const corners = result.corners || {};
+            if (corners.inner || corners.outer) {
+                message += " " + _t("%(inner)s binnenhoek(en) en %(outer)s buitenhoek(en) toegevoegd.", {
+                    inner: corners.inner || 0,
+                    outer: corners.outer || 0,
+                });
+            }
+            this.notification.add(message, { type: "success" });
+            if ((result.missing || []).length) {
+                this.notification.add(
+                    _t("Geen passende %s gevonden voor deze dakrand: voeg die hoek(en) apart toe.",
+                        result.missing.join(" / ")),
+                    { type: "warning" }
+                );
+            }
+        } catch (error) {
+            console.warn("Roof canvas: applying the edge finish failed", error);
+            this.notification.add(_t("Randafwerking toepassen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        }
+        this.draw();
+        this.refreshPanel();
     }
 
     /** The "Dakopbouw" of the picker: the layers on the surfaces, and their

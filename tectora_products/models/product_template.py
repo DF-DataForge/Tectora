@@ -454,6 +454,10 @@ class ProductTemplate(models.Model):
                     continue
                 if refined not in cache:
                     cache[refined] = self._tectora_resolve_category(refined, root_name)
+                    # Offered in the drawing where its products were.
+                    target = cache[refined]
+                    if "tectora_usage_ids" in target._fields and category.tectora_usage_ids:
+                        target.tectora_usage_ids = target.tectora_usage_ids | category.tectora_usage_ids
                 moved += self._tectora_move_product(product, cache[refined])
         _logger.info("tectora_products: %s products moved to a sub-category", moved)
         return moved

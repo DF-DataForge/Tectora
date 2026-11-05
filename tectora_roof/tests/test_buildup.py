@@ -108,6 +108,18 @@ class TestBuildup(TransactionCase):
             self.assertEqual((sheet.length, sheet.width), (6.6, 5.4))
         self.assertEqual(self.project.epdm_thickness, 1.5)
 
+        # The calculation behind a sheet: per dimension the surface plus
+        # what each end adds (side: upstand + edge + margin; seam: overlap).
+        preview = self.project.tectora_preview_epdm_sheets(self.sections.ids, margin=0.1)
+        length, width = preview[0]["dimensions"]
+        self.assertEqual((length["base"], length["size"]), (5.4, 6.6))
+        self.assertEqual([(e["upstand"], e["width"], e["total"]) for e in length["ends"]],
+                         [(0.2, 0.3, 0.6), (0.2, 0.3, 0.6)])
+        self.assertEqual((width["base"], width["size"]), (4.7, 5.4))
+        self.assertEqual(sorted(e["seam"] for e in width["ends"]), [False, True])
+        self.assertEqual(preview[0]["surface"], round(4.7 * 5.4, 2))
+        self.assertIn("naad 0,10 (overlap)", sheets[0].note)
+
         # Another insulation replaces the first; the sheets are recalculated,
         # not added.
         self.project.tectora_apply_buildup(
