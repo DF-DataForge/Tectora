@@ -157,8 +157,20 @@ class TectoraRoofProject(models.Model):
         "res.partner", string="Klant", tracking=True, check_company=True
     )
     opportunity_id = fields.Many2one("crm.lead", string="Opportuniteit")
+    site_partner_id = fields.Many2one(
+        "res.partner",
+        string="Werfadres",
+        tracking=True,
+        index=True,
+        help="Het adres van de werf als contact, standaard een afleveradres "
+        "van de klant. Het is het afleveradres van de offerte en de order, in "
+        "beide richtingen.",
+    )
     address = fields.Char(
-        string="Werfadres", compute="_compute_address", store=True, readonly=False
+        string="Werfadres (tekst)", compute="_compute_address", store=True, readonly=False,
+        help="Het werfadres op één lijn, voor het satellietbeeld, de planning "
+        "en het weer: dat van het werfadres-contact, anders het adres van de "
+        "klant of wat hier getypt is.",
     )
     description = fields.Text(string="Notities")
     state = fields.Selection(
@@ -406,13 +418,17 @@ class TectoraRoofProject(models.Model):
     )
 
     # ------------------------------------------------------------------ compute
-    @api.depends("partner_id")
+    @api.depends(
+        "partner_id", "site_partner_id", "site_partner_id.street", "site_partner_id.street2",
+        "site_partner_id.zip", "site_partner_id.city", "site_partner_id.country_id",
+    )
     def _compute_address(self):
         for project in self:
-            if not project.address and project.partner_id:
-                project.address = project.partner_id._display_address(
-                    without_name=True
-                ).replace("\n", ", ")
+            site = project.site_partner_id
+            if site:
+                project.address = site._tectora_one_line_address()
+            elif not project.address and project.partner_id:
+                project.address = project.partner_id._tectora_one_line_address()
 
     def _compute_has_background_image(self):
         for project in self:
@@ -751,6 +767,9 @@ class TectoraRoofProject(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            # Without a site of its own, the site is the customer's address.
+            if vals.get("partner_id") and not vals.get("site_partner_id") and not vals.get("address"):
+                vals["site_partner_id"] = vals["partner_id"]
             if not vals.get("code") or vals["code"] == _("New"):
                 vals["code"] = (
                     self.env["ir.sequence"].next_by_code("tectora.roof.project")
@@ -764,6 +783,16 @@ class TectoraRoofProject(models.Model):
         return projects
 
     def write(self, vals):
+        if vals.get("partner_id") and "site_partner_id" not in vals:
+            # The site of another customer is not this one's: it becomes the
+            # new customer (or one of its addresses, chosen afterwards).
+            customer = self.env["res.partner"].browse(vals["partner_id"]).commercial_partner_id
+            if any(
+                project.site_partner_id
+                and project.site_partner_id.commercial_partner_id != customer
+                for project in self
+            ):
+                vals = dict(vals, site_partner_id=vals["partner_id"])
         result = super().write(vals)
         drawing = {name: vals[name] for name in DRAWING_FIELDS if name in vals}
         if drawing and not self.env.context.get("tectora_roof_switch"):
