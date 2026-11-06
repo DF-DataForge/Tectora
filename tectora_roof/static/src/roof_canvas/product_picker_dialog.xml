@@ -4,7 +4,7 @@
     <t t-name="tectora_roof.RoofProductPickerDialog">
         <Dialog title="this.props.title" size="'xl'">
             <div class="o_roof_product_picker">
-                <ul t-if="this.props.buildup or this.props.edges" class="nav nav-tabs mb-2">
+                <ul t-if="this.props.buildup or this.props.edges or this.props.demolition" class="nav nav-tabs mb-2">
                     <li t-if="this.props.buildup" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'buildup'}"
                            t-on-click.prevent="() => this.setTab('buildup')">Dakopbouw</a>
@@ -12,6 +12,10 @@
                     <li t-if="this.props.edges" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'edges'}"
                            t-on-click.prevent="() => this.setTab('edges')">Randafwerking</a>
+                    </li>
+                    <li t-if="this.props.demolition" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'demolition'}"
+                           t-on-click.prevent="() => this.setTab('demolition')">Afbouw</a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'products'}"
@@ -27,6 +31,7 @@
                         <label class="form-check-label" for="o_roof_picker_multi">
                             <strong t-if="this.state.tab === 'buildup'">Dakopbouw toepassen op meerdere dakvlakken</strong>
                             <strong t-elif="this.state.tab === 'edges'">Randafwerking toepassen op meerdere zijden</strong>
+                            <strong t-elif="this.state.tab === 'demolition'">Afbouw toepassen op meerdere items</strong>
                             <strong t-else="">Producten toewijzen aan meerdere items</strong>
                         </label>
                         <button t-if="this.state.tab === 'buildup'" type="button"
@@ -89,6 +94,58 @@
                         </div>
                     </div>
                 </t>
+                <div t-if="this.state.tab === 'demolition'" class="o_roof_demolition">
+                    <t t-set="d" t-value="this.demolition"/>
+                    <div t-if="!d.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <p class="text-muted small mb-2">
+                            Wat er afgebroken of verwijderd wordt (hoofdstuk Afbraakwerken).
+                            Vink aan wat erop moet: het aangevinkte komt op de offerte in de
+                            afbouwwerken van dit dak, wat uitgevinkt wordt gaat eraf.
+                        </p>
+                        <div t-if="!d.options.length" class="small text-warning">
+                            Geen afbraakwerken gevonden (hoofdstuk 03. Afbraakwerken plat dak).
+                        </div>
+                        <div class="row g-2">
+                            <div t-foreach="this.demolitionGroups" t-as="group" t-key="group.label" class="col-lg-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="fw-bold small text-uppercase text-muted mb-1" t-out="group.label"/>
+                                    <div t-foreach="group.products" t-as="product" t-key="product.id"
+                                         class="form-check d-flex justify-content-between gap-2">
+                                        <span>
+                                            <input class="form-check-input" type="checkbox"
+                                                   t-attf-id="o_roof_demo_{{product.id}}"
+                                                   t-att-checked="d.selected[product.id]"
+                                                   t-on-change="() => this.toggleDemolition(product)"/>
+                                            <label class="form-check-label" t-attf-for="o_roof_demo_{{product.id}}">
+                                                <t t-out="product.name"/>
+                                            </label>
+                                        </span>
+                                        <span class="text-muted small text-nowrap">
+                                            € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <table t-if="this.demolitionSelected.length" class="table table-sm mt-2 mb-0">
+                            <tbody>
+                                <tr t-foreach="this.demolitionSelected" t-as="product" t-key="product.id">
+                                    <td t-out="product.name"/>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="this.totalQuantity.toFixed(2)"/> <t t-out="product.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold"
+                                        t-out="(product.price * this.totalQuantity).toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Afbouw (excl. btw)</td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="this.demolitionTotal.toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
                 <div t-if="this.state.tab === 'edges'" class="o_roof_edges">
                     <t t-set="e" t-value="this.edges"/>
                     <div t-if="!e.loaded" class="text-muted p-3">Laden…</div>
@@ -373,7 +430,7 @@
                                                     <div t-foreach="sheet.dimensions" t-as="dim" t-key="dim.label"
                                                          class="d-flex flex-wrap align-items-center gap-1 mb-1">
                                                         <span class="fw-bold" style="min-width: 4.5rem;" t-out="dim.label"/>
-                                                        <span class="badge text-bg-light border">
+                                                        <span class="badge bg-white text-dark border">
                                                             vlak <t t-out="dim.base.toFixed(2)"/>
                                                         </span>
                                                         <t t-foreach="dim.ends" t-as="end" t-key="end_index">
@@ -515,6 +572,14 @@
                     Randafwerking toepassen
                     <t t-if="this.itemCount > 1">
                         op <t t-out="this.itemCount"/> zijden
+                    </t>
+                </button>
+                <button t-elif="this.state.tab === 'demolition'" type="button" class="btn btn-primary"
+                        t-att-disabled="!this.demolition.options.length"
+                        t-on-click="() => this.applyDemolition()">
+                    Afbouw toepassen
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> items
                     </t>
                 </button>
                 <button t-else="" type="button" class="btn btn-primary"

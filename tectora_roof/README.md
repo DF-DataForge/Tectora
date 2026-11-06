@@ -127,6 +127,13 @@ install on Odoo 17 or earlier without adjustments.
    quantity of a project line editable, *Product toevoegen* (from that
    segment's chapters, for that roof) and removing; the drawing's lines
    show where they come from.
+   Surfaces and sides also have an **Afbouw** tab: the demolition works of
+   chapter 03 (Afbraakwerken plat dak) that fit -- per m² for a surface
+   (dakbedekking, isolatie & hellingschape, dakvloer, ballast ...), per m for
+   a side (dakranden & muurkappen, solins ...) -- grouped by what is
+   removed, to tick; what the element has is ticked. Applying puts exactly
+   the ticked works on it (and on the other items ticked), which land in
+   the roof's Afbouwwerken on the quotation.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

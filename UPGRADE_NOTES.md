@@ -223,3 +223,4 @@ Releases and the modules they need upgraded:
 | Offerte in vaste segmenten (algemene werken, veiligheid, per dak afbouw- en opbouwwerken, andere hoofdstukken, algemene nota's) op de offerte, in de nieuwe tab Offerte van het dakproject en naast de tekening; tabs Algemene werken/Veiligheid/Afbraak/Opbouw/Overige vervangen | `tectora_roof` (20.0.3.73.0) |
 | Randafwerking: breedte dakrand en opstand op de gekozen zijden zetten | `tectora_roof` (20.0.3.74.0) |
 | Tekening: geen kleuren per offertelijn meer; enkel de geselecteerde zijde/vlak en de offertelijnen eraan gemarkeerd | `tectora_roof` (20.0.3.75.0) |
+| Tekening: tab Afbouw bij oppervlak en zijde (afbraakwerken aanvinken); leeg vakje "vlak" in de EPDM-berekening hersteld | `tectora_roof` (20.0.3.76.0) |
