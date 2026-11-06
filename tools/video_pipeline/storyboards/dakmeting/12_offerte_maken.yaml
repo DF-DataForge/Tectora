@@ -1,0 +1,346 @@
+# Storyboard for docs/video_scripts/dakmeting/12_offerte_maken.md
+# The quotation from the roof measurement: the quote panel by the drawing,
+# the Offerte tab, Offerte maken, a line on the order, a change on the
+# drawing and Offerte bijwerken uit meting, one VAT rate, the pdf and
+# sending it. Starts from video 11's roof project (prepare: its shots
+# 3-16, off camera). Demo data: stage two_roofs in seed_demo.py.
+
+script: docs/video_scripts/dakmeting/12_offerte_maken.md
+name: dakmeting_12_offerte_maken
+series: Tectora Dakmeting
+stage: two_roofs
+prepare:
+  storyboard: tools/video_pipeline/storyboards/dakmeting/11_dakproject_met_twee_daken.yaml
+  shots:
+  - 3
+  - 16
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 8
+start: /odoo/action-tectora_roof.action_tectora_roof_project
+pronunciation:
+  PIR: P I R
+  EPDM: E P D M
+shots:
+  1:
+    card: title
+  2:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;display:flex;flex-direction:column;align-items:center;gap:30px\"\
+        >\n  <div style=\"display:flex;align-items:center;gap:16px;font-size:28px;font-weight:700\">\n    <div style=\"\
+        padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\">Tekening</div><div style=\"color:#2D8D8F\"\
+        >→</div>\n    <div style=\"padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\">Offerte-opbouw</div><div\
+        \ style=\"color:#2D8D8F\">→</div>\n    <div style=\"padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\"\
+        >Tab Offerte</div><div style=\"color:#2D8D8F\">→</div>\n    <div style=\"padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\"\
+        >Offerte maken</div>\n  </div>\n  <div style=\"font-size:26px;font-weight:600;color:#2D8D8F\">↓</div>\n\
+        \  <div style=\"display:flex;align-items:center;gap:16px;font-size:26px;font-weight:600\">\n    <div style=\"\
+        padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Bijwerken uit meting</div>\n\
+        \    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Btw-tarief</div>\n\
+        \    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Pdf met\
+        \ meetblad</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Verzenden</div>\n  </div>\n  <div style=\"font-size:24px;margin-top:6px\">Voorbeeld: familie Lambrecht,\
+        \ Kortrijk · woning en garage (video 11)</div>\n</div>"
+  3:
+    setup:
+    - click:
+        selector: .o_data_row:has-text('Woning en garage Lambrecht')
+    - wait: 1.0
+    steps:
+    - &id001
+      click:
+        selector: .o_roof_canvas_mode_btn
+    - wait: 1.2
+    - highlight:
+        selector: .o_roof_canvas_quote
+        seconds: 1.6
+    - hover:
+        selector: .o_roof_canvas_quote_line:has-text('dakrandprofielen')
+    - wait: 2.6
+    - hover:
+        selector: .o_roof_canvas_quote_line:has-text('Aansluiting van de EPDM')
+    - wait: 2.6
+    - hover:
+        selector: .o_roof_canvas_quote_line:has-text('isolatie')
+    - wait: 2.0
+  4:
+    steps:
+    - *id001
+    - wait: 0.8
+    - click:
+        selector: .o_notebook_headers button.nav-link[name=quote]
+    - wait: 1.0
+    - scroll_to:
+        selector: .o_tectora_quote_builder
+    - scroll:
+        dy: 700
+    - wait: 1.2
+    - scroll:
+        dy: 700
+    - wait: 1.2
+  5:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('ALGEMENE WERKEN')) button:has-text('Product
+          toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('ALGEMENE WERKEN')) button:has-text('Product
+          toevoegen')
+    - wait: 1.0
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Algemene vaste kosten')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verticaal transport van de materialen met camionkraan')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Afvalverwerking forfaitair')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('ALGEMENE WERKEN')) tr:has-text('Afvalverwerking
+          forfaitair') input
+    - key: Control+a
+    - type:
+        text: '2'
+        delay: 150
+    - key: Tab
+    - wait: 1.0
+  6:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) button:has-text('Product toevoegen')
+    - wait: 1.0
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Gebruik van tijdelijke balustrades Securilisse EVO')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Leveren en plaatsen ankerpunt ABS-Lock-T-21 EPDM')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) tr:has-text('Securilisse') input
+        seconds: 2.0
+  7:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          button:has-text('Product toevoegen')
+    - wait: 1.0
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen ballastlaag (rolgrind/kiezel)')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 2 laags''))
+          input[type=checkbox]'
+    - wait: 0.3
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen van de dakranden'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen van de dakranden')) input[type=checkbox]
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          table
+        seconds: 1.6
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('Garage'))
+          button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('Garage'))
+          button:has-text('Product toevoegen')
+    - wait: 1.0
+    - click:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 1 laag''))
+          input[type=checkbox]'
+    - wait: 0.3
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('Garage'))
+          table
+        seconds: 1.4
+  8:
+    steps:
+    - scroll_to:
+        selector: button[name=action_create_sale_order]
+    - click:
+        selector: button[name=action_create_sale_order]
+    - wait: 1.5
+    - highlight:
+        selector: .o_list_renderer .o_data_row:has-text('OPBOUWWERKEN') >> nth=0
+        seconds: 1.4
+    - scroll:
+        dy: 600
+    - wait: 1.0
+    - scroll:
+        dy: 700
+    - wait: 1.0
+    - scroll_to:
+        selector: div[name=tax_totals]
+    - highlight:
+        selector: :text('Geschatte uitvoeringstijd') >> xpath=../..
+        seconds: 2.4
+  9:
+    steps:
+    - scroll_to:
+        selector: .o_list_renderer .o_data_row:has-text('ALGEMENE WERKEN')
+    - click:
+        selector: .o_list_renderer .o_data_row:has-text('ALGEMENE WERKEN') td:last-child button
+    - wait: 0.5
+    - click:
+        selector: .o-dropdown--menu .dropdown-item:has-text('Regel toevoegen')
+    - wait: 0.6
+    - type:
+        text: Parkeervergunning
+        delay: 60
+    - wait: 1.2
+    - click:
+        selector: .o-autocomplete--dropdown-menu a:has-text('Parkeervergunning')
+    - wait: 0.8
+    - save: null
+  10:
+    steps:
+    - click:
+        selector: button.oe_stat_button:has-text('Dakproject')
+    - wait: 1.2
+    - *id001
+    - wait: 1.2
+    - canvas_click:
+        at:
+        - 800
+        - 500
+        double: true
+    - wait: 0.8
+    - select_option:
+        selector: .modal-dialog select >> nth=1
+        label: Unilin Utherm Roof PIR
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=2
+        label: 16 cm
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=3
+        contains: verkleefd
+    - wait: 0.7
+    - highlight:
+        selector: .modal-dialog table >> nth=0
+        seconds: 1.6
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Dakopbouw toepassen')
+    - wait: 1.5
+  11:
+    steps:
+    - *id001
+    - wait: 0.8
+    - scroll_to:
+        selector: button[name=action_create_sale_order]
+    - click:
+        selector: button[name=action_create_sale_order]
+    - wait: 0.8
+    - highlight:
+        selector: .modal-dialog
+        seconds: 2.0
+    - click:
+        selector: .modal-footer button.btn-primary
+    - wait: 1.8
+    - scroll_to:
+        selector: .o_list_renderer .o_data_row:has-text('16cm')
+    - highlight:
+        selector: .o_list_renderer .o_data_row:has-text('16cm')
+        seconds: 2.0
+    - scroll_to:
+        selector: .o_list_renderer .o_data_row:has-text('Parkeervergunning')
+    - highlight:
+        selector: .o_list_renderer .o_data_row:has-text('Parkeervergunning')
+        seconds: 1.8
+  12:
+    steps:
+    - click:
+        selector: .o_notebook_headers button:has-text('Overige info')
+    - wait: 0.8
+    - scroll_to:
+        selector: div[name=tectora_follow_measurement]
+    - highlight:
+        selector: div[name=tectora_follow_measurement]
+        seconds: 2.2
+    - highlight:
+        selector: div[name=tectora_include_roof_plan]
+        seconds: 2.0
+  13:
+    steps:
+    - scroll_to:
+        selector: div[name=tectora_tax_id]
+    - fill:
+        field: tectora_tax_id
+        value: 6%
+        pick: 6%
+    - click:
+        selector: button[name=action_apply_tectora_tax]
+    - wait: 0.8
+    - click:
+        selector: .modal-footer button.btn-primary
+    - wait: 1.5
+    - click:
+        selector: .o_notebook_headers button:has-text('Orderregels')
+    - wait: 0.8
+    - scroll_to:
+        selector: div[name=tax_totals]
+    - highlight:
+        selector: div[name=tax_totals]
+        seconds: 2.4
+  14:
+    setup:
+    - fetch_pdf:
+        url: /report/pdf/sale.report_saleorder/{id}
+    steps:
+    - show_pdf:
+        url: /report/pdf/sale.report_saleorder/{id}
+        pages:
+        - 1
+        - 3
+        title: Offerte
+  15:
+    caption: false
+    steps:
+    - click:
+        selector: button[name=action_quotation_send]
+    - wait: 1.5
+    - highlight:
+        selector: .modal-dialog :text('.pdf')
+        seconds: 2.0
+    - click:
+        selector: .modal-dialog button.btn-primary:has-text('Verzenden')
+    - wait: 2.0
+    - highlight:
+        selector: .o_form_statusbar .o_statusbar_status
+        seconds: 2.0
+  16:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;max-width:1250px\">\n  <div style=\"\
+        font-size:46px;font-weight:700;color:#2D8D8F;margin-bottom:28px;text-align:center\">Samengevat</div>\n \
+        \ <ol style=\"font-size:29px;line-height:1.6;margin:0;padding-left:44px\">\n    <li>De <b>offerte-opbouw</b>\
+        \ groeit mee met de tekening</li>\n    <li>Tab <b>Offerte</b>: algemene werken, veiligheid en de afbraak\
+        \ per dak</li>\n    <li><b>Offerte maken</b>: vaste structuur, uren en werkdagen</li>\n    <li>Gewijzigd\
+        \ op de tekening? <b>Offerte bijwerken uit meting</b>; eigen lijnen blijven</li>\n    <li>Als laatste: <b>één\
+        \ btw-tarief</b>, de <b>pdf met meetblad</b> en <b>Verzenden</b></li>\n  </ol>\n</div>"
+  17:
+    card:
+      kind: title
+      subtitle: Tectora Dakmeting

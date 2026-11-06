@@ -91,6 +91,19 @@ def main():
     from recorder import record
     from assemble import assemble
 
+    # A video that continues another one starts from where that one got:
+    # play those shots of the other storyboard first, off camera.
+    prepare = board.get("prepare")
+    if prepare:
+        with open(os.path.join(REPO, prepare["storyboard"]), encoding="utf-8") as handle:
+            prep_board = yaml.safe_load(handle)
+        prep_script = parse_script(os.path.join(REPO, prep_board["script"]))
+        first, last = prepare.get("shots", [1, len(prep_script.shots)])
+        prep_script.shots = [s for s in prep_script.shots if first <= s.number <= last]
+        print(f"prepare: shots {first}–{last} of {prepare['storyboard']}")
+        record(prep_script, prep_board, {}, os.path.join(out_dir, "prepare"), args.url, args.login,
+               args.password, capture="none", chromium=args.chromium, db=args.db)
+
     meta = record(script, board, clips, out_dir, args.url, args.login, args.password,
                   capture=args.capture, display=args.display, chromium=args.chromium, db=args.db)
     if args.capture == "none":
