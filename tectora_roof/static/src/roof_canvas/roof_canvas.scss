@@ -213,8 +213,9 @@
     }
 }
 
-// The quotation build-up beside the drawing (RoofCanvasQuote): each line's
-// colour is the colour of its parts on the drawing.
+// The quotation build-up beside the drawing (RoofCanvasQuote): the lines
+// attached to the side or surface selected on the drawing are highlighted,
+// in the drawing's highlight colour.
 .o_roof_canvas_quote {
     background: #fff;
 
@@ -232,13 +233,14 @@
             cursor: pointer;
         }
 
-        &.o_quote_selected {
-            border-left-color: #111827;
+        &.o_quote_active {
             background: #f8fafc;
         }
 
-        &.o_quote_active {
-            background: #fff7e6;
+        &.o_quote_selected {
+            border-left-color: #f59e0b;
+            background: #fff4e0;
+            font-weight: 500;
         }
     }
 
@@ -246,15 +248,21 @@
         font-size: 0.72rem;
     }
 
+    // A neutral dot: drawn on the drawing or for the whole roof.
     .o_roof_canvas_quote_swatch {
-        width: 0.8rem;
-        height: 0.8rem;
-        margin-top: 0.15rem;
+        width: 0.6rem;
+        height: 0.6rem;
+        margin-top: 0.3rem;
         border-radius: 50%;
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        background: #94a3b8;
 
         &.o_quote_swatch_none {
-            background: repeating-linear-gradient(45deg, #cbd5e1 0 2px, #fff 2px 4px);
+            background: transparent;
+            box-shadow: inset 0 0 0 1px #cbd5e1;
         }
+    }
+
+    .o_quote_selected .o_roof_canvas_quote_swatch {
+        background: #f59e0b;
     }
 }

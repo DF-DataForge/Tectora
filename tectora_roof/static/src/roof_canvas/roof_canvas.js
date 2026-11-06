@@ -54,13 +54,9 @@ function circlePoints(cx, cy, radius) {
     }
     return points;
 }
-// The colours of the quotation lines, shown in the quotation panel and on the
-// parts of the drawing each line comes from.
-const QUOTE_COLORS = [
-    "#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#0ea5b7",
-    "#f032e6", "#9a6324", "#469990", "#b45309", "#808000", "#1e3a8a",
-    "#be185d", "#15803d", "#7c2d12", "#6d28d9",
-];
+// The one colour the drawing marks with: the selected side (or surface) and
+// the parts a hovered quotation line comes from.
+const HIGHLIGHT = "#f59e0b";
 
 const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
 
@@ -548,11 +544,10 @@ export class RoofCanvasField extends Component {
             multiSelect: [],
             // The quotation as the drawing builds it (tectora_get_quote_preview),
             // shown beside the drawing; each line with parts of the drawing has
-            // a colour, drawn on those parts while quoteMarks is on.
+            // its parts highlighted on the drawing while hovered.
             quote: null,
             quoteLoading: false,
             quoteOpen: true,
-            quoteMarks: true,
             quoteHover: null, // key of the line hovered in the panel
         });
         this.world = { ...DEFAULT_WORLD };
@@ -1732,7 +1727,7 @@ export class RoofCanvasField extends Component {
             return;
         }
         ctx.save();
-        ctx.strokeStyle = "#f59e0b";
+        ctx.strokeStyle = HIGHLIGHT;
         ctx.lineWidth = 5 / this.view.zoom;
         ctx.lineCap = "round";
         ctx.beginPath();
@@ -1933,14 +1928,6 @@ export class RoofCanvasField extends Component {
             if (ticket !== this._quoteTicket || this._destroyed) {
                 return;
             }
-            let index = 0;
-            for (const chapter of quote.chapters) {
-                for (const line of chapter.lines) {
-                    line.color = line.targets.length
-                        ? QUOTE_COLORS[index++ % QUOTE_COLORS.length]
-                        : null;
-                }
-            }
             this.state.quote = quote;
         } catch (error) {
             console.warn("Roof canvas: could not load the quotation", error);
@@ -1956,11 +1943,6 @@ export class RoofCanvasField extends Component {
         this.state.quoteOpen = !this.state.quoteOpen;
     }
 
-    toggleQuoteMarks() {
-        this.state.quoteMarks = !this.state.quoteMarks;
-        this.draw();
-    }
-
     setQuoteHover(line) {
         const key = line && line.targets.length ? line.key : null;
         if (this.state.quoteHover !== key) {
@@ -1969,10 +1951,36 @@ export class RoofCanvasField extends Component {
         }
     }
 
-    /** Whether ``line`` comes (partly) from the selected shape. */
+    /** Whether ``target`` (a part a quotation line comes from) is the
+     * element selected on the drawing: the side (its own products, those on
+     * every side, the corners at its ends) or the surface (or dakobject). */
+    targetOnFocus(target) {
+        const focus = this.focus;
+        if (!focus || target.canvas_ref !== String(focus.shapeId)) {
+            return false;
+        }
+        if (focus.type === "edge" && focus.edgeIndex >= 0) {
+            const side = focus.edgeIndex + 1;
+            if (target.coverage === "edges") {
+                return !target.edge_index || target.edge_index === side;
+            }
+            if (target.coverage === "corners") {
+                const shape = this.selectedShape;
+                const n = shape ? shape.points.length : 0;
+                const next = side === n ? 1 : side + 1;
+                return !target.edge_index || target.edge_index === side || target.edge_index === next;
+            }
+            return false;
+        }
+        if (focus.kind !== "section") {
+            return true; // a dakobject: everything on it
+        }
+        return !["edges", "corners"].includes(target.coverage);
+    }
+
+    /** Whether ``line`` is attached to the element selected on the drawing. */
     quoteLineSelected(line) {
-        const id = this.state.selectedId;
-        return Boolean(id && line.targets.some((target) => target.canvas_ref === String(id)));
+        return line.targets.some((target) => this.targetOnFocus(target));
     }
 
     quoteLineParts(line) {
@@ -2061,134 +2069,74 @@ export class RoofCanvasField extends Component {
     }
 
     /**
-     * The colour of every quotation line on the parts it comes from: a band
-     * along each side (inside the shape, one band per line, side by side), a
-     * dot on each corner, and a row of dots under the middle of a surface or
-     * dakobject for what covers it as a whole. The line hovered in the panel
-     * stands out, the others fade.
+     * The parts of the drawing the hovered quotation line comes from, in the
+     * highlight colour: its sides, corners and surfaces. Nothing is drawn
+     * while no line is hovered; the selected side is drawFocus's.
      */
     drawQuoteMarks(ctx) {
         const quote = this.state.quote;
-        if (!quote || !this.state.quoteMarks) {
+        const hover = this.state.quoteHover;
+        if (!quote || !hover) {
+            return;
+        }
+        const line = quote.chapters.flatMap((chapter) => chapter.lines).find((l) => l.key === hover);
+        if (!line) {
             return;
         }
         const zoom = this.view.zoom;
-        const hover = this.state.quoteHover;
-        // Per shape: what is drawn on its sides, corners and surface.
-        const marks = new Map();
-        for (const chapter of quote.chapters) {
-            for (const line of chapter.lines) {
-                if (!line.color) {
-                    continue;
-                }
-                for (const target of line.targets) {
-                    let entry = marks.get(target.canvas_ref);
-                    if (!entry) {
-                        entry = { edges: {}, corners: {}, surface: [] };
-                        marks.set(target.canvas_ref, entry);
-                    }
-                    const mark = { color: line.color, key: line.key };
-                    if (target.coverage === "edges" || target.coverage === "corners") {
-                        const bucket = target.coverage === "edges" ? entry.edges : entry.corners;
-                        // 0: every side (corner) of the shape.
-                        const slot = target.edge_index || 0;
-                        (bucket[slot] = bucket[slot] || []).push(mark);
-                    } else {
-                        entry.surface.push(mark);
-                    }
-                }
-            }
-        }
-        const alpha = (mark) => (!hover || mark.key === hover ? 1 : 0.18);
         ctx.save();
-        ctx.lineCap = "butt";
-        for (const shape of this.shapes) {
-            const entry = marks.get(String(shape.id));
-            if (!entry || !shape.points || !shape.points.length) {
+        ctx.strokeStyle = HIGHLIGHT;
+        ctx.fillStyle = HIGHLIGHT;
+        ctx.lineCap = "round";
+        for (const target of line.targets) {
+            const shape = this.shapes.find((s) => String(s.id) === target.canvas_ref);
+            if (!shape || !shape.points || !shape.points.length) {
                 continue;
             }
-            const { points, segments, closed } = this.quoteOutline(shape);
-            const box = boundingBox(points);
-            const center = [box.x + box.w / 2, box.y + box.h / 2];
-            const band = 4 / zoom;
-            // Sides: the bands of "every side" first, then those of the side.
-            segments.forEach(([a, b], i) => {
-                const own = shape.shape === "circle" ? [] : entry.edges[i + 1] || [];
-                const lanes = [...(entry.edges[0] || []), ...own];
-                if (!lanes.length) {
-                    return;
-                }
-                const dx = b[0] - a[0];
-                const dy = b[1] - a[1];
-                const length = Math.hypot(dx, dy) || 1;
-                // Inwards: the inside lies left of every side of a polygon
-                // with a positive signed area, right of it otherwise.
-                const inward = closed && polygonSignedArea(points) < 0 ? -1 : 1;
-                const nx = (-dy / length) * inward;
-                const ny = (dx / length) * inward;
-                lanes.forEach((mark, lane) => {
-                    const highlighted = hover && mark.key === hover;
-                    const offset = closed
-                        ? band * (lane + 0.5)
-                        : band * (lane - (lanes.length - 1) / 2);
-                    ctx.globalAlpha = alpha(mark);
-                    ctx.strokeStyle = mark.color;
-                    ctx.lineWidth = highlighted ? band * 2 : band;
-                    ctx.beginPath();
-                    ctx.moveTo(a[0] + nx * offset, a[1] + ny * offset);
-                    ctx.lineTo(b[0] + nx * offset, b[1] + ny * offset);
-                    ctx.stroke();
-                });
-            });
-            // Corners.
-            if (shape.shape !== "circle" && !isSeam(shape)) {
-                points.forEach(([x, y], i) => {
-                    const dots = [...(entry.corners[0] || []), ...(entry.corners[i + 1] || [])];
-                    const towards = Math.hypot(center[0] - x, center[1] - y) || 1;
-                    const ux = (center[0] - x) / towards;
-                    const uy = (center[1] - y) / towards;
-                    dots.forEach((mark, k) => {
-                        const highlighted = hover && mark.key === hover;
-                        const distance = (12 + k * 10) / zoom;
-                        ctx.globalAlpha = alpha(mark);
-                        ctx.fillStyle = mark.color;
-                        ctx.beginPath();
-                        ctx.arc(x + ux * distance, y + uy * distance,
-                            (highlighted ? 7 : 4.5) / zoom, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                });
-            }
-            // The surface (or the dakobject as a whole).
-            if (entry.surface.length) {
-                const anchor = isSeam(shape) ? polylineMidpoint(shape.points) : center;
-                const step = 13 / zoom;
-                const width = (entry.surface.length - 1) * step;
-                entry.surface.forEach((mark, k) => {
-                    const highlighted = hover && mark.key === hover;
-                    const x = anchor[0] - width / 2 + k * step;
-                    const y = anchor[1] + 26 / zoom;
-                    ctx.globalAlpha = alpha(mark);
-                    ctx.fillStyle = mark.color;
-                    ctx.strokeStyle = "#ffffff";
-                    ctx.lineWidth = 1.5 / zoom;
-                    ctx.beginPath();
-                    ctx.arc(x, y, (highlighted ? 8 : 5.5) / zoom, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                });
-                if (hover && entry.surface.some((mark) => mark.key === hover) && !isSeam(shape)) {
-                    const mark = entry.surface.find((m) => m.key === hover);
-                    ctx.globalAlpha = 0.22;
-                    ctx.fillStyle = mark.color;
-                    ctx.beginPath();
-                    ctx.moveTo(points[0][0], points[0][1]);
-                    for (let i = 1; i < points.length; i++) {
-                        ctx.lineTo(points[i][0], points[i][1]);
+            const { points, segments } = this.quoteOutline(shape);
+            if (target.coverage === "edges") {
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 6 / zoom;
+                segments.forEach(([a, b], i) => {
+                    if (target.edge_index && shape.shape !== "circle" && target.edge_index !== i + 1) {
+                        return;
                     }
-                    ctx.closePath();
+                    ctx.beginPath();
+                    ctx.moveTo(a[0], a[1]);
+                    ctx.lineTo(b[0], b[1]);
+                    ctx.stroke();
+                });
+            } else if (target.coverage === "corners") {
+                ctx.globalAlpha = 1;
+                points.forEach(([x, y], i) => {
+                    if (target.edge_index && target.edge_index !== i + 1) {
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(x, y, 7 / zoom, 0, Math.PI * 2);
                     ctx.fill();
+                });
+            } else if (!isSeam(shape)) {
+                ctx.globalAlpha = 0.25;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i][0], points[i][1]);
                 }
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 3 / zoom;
+                ctx.stroke();
+            } else {
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 6 / zoom;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i][0], points[i][1]);
+                }
+                ctx.stroke();
             }
         }
         ctx.restore();

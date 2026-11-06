@@ -131,11 +131,12 @@ install on Odoo 17 or earlier without adjustments.
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter
    totals and the total excl. btw; lines added to the quotation by hand are
-   listed apart. Every line that comes from the drawing has a colour, drawn
-   on the parts it comes from: a band along the sides (inside the shape), a
-   dot on the corners, a dot under the middle of a surface or dakobject.
-   Hovering a line makes its parts stand out, a click selects the part; the
-   palette button hides the colours. It follows the roof on the drawing.
+   listed apart. The lines attached to the side or surface selected on the
+   drawing are highlighted (orange, the colour of the selected side): for a
+   side its own products, those on every side and the corners at its ends;
+   for a surface or dakobject what covers it. Hovering a line marks the parts
+   it comes from on the drawing in the same colour, a click selects the part.
+   No other colours are drawn. It follows the roof on the drawing.
    While drawing, the dimensions show live: width, length and area of a
    rectangle; every side of a polygon (also the one following the pointer)
    with the area and perimeter it would have if closed now; the length of a
