@@ -85,6 +85,12 @@ export class RoofProductPickerDialog extends Component {
             corners: true,
             preview: null,
             previewLoading: false,
+            // Width (dakrand) and upstand (opstand) of the sides, in m; set on
+            // every chosen side once changed here.
+            width: (this.props.edges && this.props.edges.width) || 0,
+            upstand: (this.props.edges && this.props.edges.upstand) || 0,
+            widthChanged: false,
+            upstandChanged: false,
         });
         if (this.props.buildup) {
             this.state.tab = "buildup";
@@ -407,7 +413,25 @@ export class RoofProductPickerDialog extends Component {
     }
 
     get edgeChoice() {
-        return { kind: this.edges.kind, product_id: this.edgeProductId, corners: this.edges.corners };
+        const e = this.edges;
+        const geometry = e.widthChanged || e.upstandChanged
+            ? {
+                  width: e.widthChanged ? e.width : null,
+                  upstand: e.upstandChanged ? e.upstand : null,
+              }
+            : null;
+        return { kind: e.kind, product_id: this.edgeProductId, corners: e.corners, geometry };
+    }
+
+    setSideValue(field, ev) {
+        const value = parseFloat(String(ev.target.value).replace(",", "."));
+        this.edges[field] = value > 0 ? Math.round(value * 100) / 100 : 0;
+        this.edges[`${field}Changed`] = true;
+        ev.target.value = this.edges[field];
+    }
+
+    get canApplyEdges() {
+        return Boolean(this.edgeProductId || this.edges.widthChanged || this.edges.upstandChanged);
     }
 
     /** The corner pieces the roof edge brings (dry run on the server). */
@@ -466,7 +490,7 @@ export class RoofProductPickerDialog extends Component {
     }
 
     async applyEdges() {
-        if (!this.edgeProductId) {
+        if (!this.canApplyEdges) {
             return;
         }
         const targetKeys = this.selectedTargetKeys;
