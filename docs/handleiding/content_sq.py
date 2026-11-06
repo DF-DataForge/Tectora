@@ -175,7 +175,7 @@ CHAPTERS = [
         ("h2", "Planifikimi"),
         ("ul", [
             "Në projektin e çatisë zgjidhni një <b>ekip</b> dhe <b>fillimin dhe mbarimin e planifikuar</b>. Krijohet automatikisht një <b>bllok pune</b> me të gjithë anëtarët e ekipit.",
-            "<b>Splits per dag</b> e ndan një bllok shumëditor në një bllok për çdo ditë; çdo bllok mund të marrë punonjësit e vet.",
+            "<b>Prerja</b>: në planifikimin për ekip shfaqet një gërshërë në kufirin e ditës së një blloku; një klikim e pret bllokun në dy pjesë me të njëjtin ekip, punonjës dhe udhëzime.",
             "Me aplikacionin Planning çdo punonjës bëhet një <b>turn</b> i vërtetë. Në planifikuesin <b>Per ploeg</b> zgjidhni një projekt çatie dhe një ekip në një turn dhe planifikohet gjithë ekipi.",
             "Datat e projektit të çatisë dhe të projektit ndjekin njëra-tjetrën; paneli tregon ditën e ardhshme të punës dhe punonjësit e planifikuar.",
         ]),
