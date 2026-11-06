@@ -162,11 +162,31 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
             cutter.classList.remove("d-none");
             this.tectoraCut = { pill, day: cut.day };
         };
-        // The cut aimed at when the button goes down: the click comes after
-        // the press, which hides the scissors (a press may start a drag).
-        const onPress = () => {
-            this.tectoraPressedCut = this.tectoraCut;
+        // A press on the scissors is the cut's, not the gantt's: it would
+        // start a drag or, on release, open the block. The cut is aimed at
+        // when the button goes down and made on the click.
+        const onPress = (ev) => {
+            const cut = this.tectoraCut;
+            this.tectoraPressedCut = cut ? { ...cut, x: ev.clientX, at: Date.now() } : null;
+            if (cut) {
+                ev.preventDefault();
+                ev.stopPropagation();
+            }
             hide();
+        };
+        const onClick = (ev) => {
+            const cut = this.tectoraPressedCut;
+            if (!cut || Date.now() - cut.at > 1500) {
+                return;
+            }
+            const recordId = this.tectoraRecordId(cut.pill);
+            if (!recordId) {
+                return; // onPillClicked makes the cut with the record it gets
+            }
+            this.tectoraPressedCut = null;
+            ev.preventDefault();
+            ev.stopPropagation();
+            this.tectoraSplit(recordId, cut.day);
         };
         let root = null;
         onMounted(() => {
@@ -177,13 +197,17 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
             document.body.appendChild(cutter);
             root.addEventListener("mousemove", onMove);
             root.addEventListener("mouseleave", hide);
+            root.addEventListener("pointerdown", onPress, true);
             root.addEventListener("mousedown", onPress, true);
+            root.addEventListener("click", onClick, true);
         });
         onWillUnmount(() => {
             if (root) {
                 root.removeEventListener("mousemove", onMove);
                 root.removeEventListener("mouseleave", hide);
+                root.removeEventListener("pointerdown", onPress, true);
                 root.removeEventListener("mousedown", onPress, true);
+                root.removeEventListener("click", onClick, true);
             }
             cutter.remove();
         });
@@ -234,6 +258,16 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
         };
     }
 
+    /** The record of a block element: the gantt keeps its pills by the id
+     * on their wrapper. */
+    tectoraRecordId(pillEl) {
+        const wrapper = pillEl && pillEl.closest && pillEl.closest("[data-pill-id]");
+        const pillId = wrapper && wrapper.dataset.pillId;
+        const pills = this.pills || (this.model && this.model.pills) || {};
+        const pill = pillId && (pills[pillId] || (pills.get && pills.get(pillId)));
+        return (pill && pill.record && pill.record.id) || null;
+    }
+
     async tectoraSplit(recordId, day) {
         await this.tectoraOrm.call("tectora.roof.planning", "action_tectora_split_at", [
             [recordId],
@@ -245,10 +279,13 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
     onPillClicked(ev, pill) {
         const record = pill && pill.record;
         // A click on the scissors cuts the block instead of opening it.
+        // The press aimed at the scissors: this click is the cut (the
+        // gantt may have re-drawn the block in between, so it goes by the
+        // time and place of the press, not by the element).
         const cut = this.tectoraPressedCut;
         this.tectoraPressedCut = null;
-        const target = ev && ev.target && ev.target.closest && ev.target.closest(".o_gantt_pill");
-        if (cut && record && record.id && target === cut.pill) {
+        const near = (c) => !ev || typeof ev.clientX !== "number" || Math.abs(ev.clientX - c.x) <= 12;
+        if (cut && record && record.id && Date.now() - cut.at <= 1500 && near(cut)) {
             return this.tectoraSplit(record.id, cut.day);
         }
         if (record && record.id && typeof this.props.openDialog === "function") {
