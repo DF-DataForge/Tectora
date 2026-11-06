@@ -1,0 +1,631 @@
+# Storyboard for docs/video_scripts/dakmeting/11_dakproject_met_twee_daken.md
+# A roof project with two roofs, from the drawing to the quotation: plans,
+# scaling, original and future state, the Dakopbouw and Randafwerking
+# wizards, general works, safety, demolition per roof, the site and the
+# quotation. Demo data: stage two_roofs in seed_demo.py; the canvas clicks
+# are in pixels of the plans of make_plans.py.
+
+script: docs/video_scripts/dakmeting/11_dakproject_met_twee_daken.md
+name: dakmeting_11_dakproject_met_twee_daken
+series: Tectora Dakmeting
+stage: two_roofs
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 12
+start: /odoo/action-tectora_roof.action_tectora_roof_project
+pronunciation:
+  PIR: P I R
+  EPDM: E P D M
+  Z1: Z één
+  Z2: Z twee
+shots:
+  1:
+    card: title
+  2:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;display:flex;flex-direction:column;align-items:center;gap:30px\"\
+        >\n  <div style=\"display:flex;align-items:center;gap:16px;font-size:28px;font-weight:700\">\n    <div style=\"\
+        padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\">Dakproject</div><div style=\"color:#2D8D8F\"\
+        >→</div>\n    <div style=\"padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\">Per dak\
+        \ tekenen en schalen</div><div style=\"color:#2D8D8F\">→</div>\n    <div style=\"padding:20px 24px;border-radius:16px;background:#2D8D8F;color:#fff\"\
+        >Originele en toekomstige staat</div>\n  </div>\n  <div style=\"display:flex;align-items:center;gap:16px;font-size:26px;font-weight:600\"\
+        >\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Wizard\
+        \ Dakopbouw</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Wizard Randafwerking</div>\n  </div>\n  <div style=\"display:flex;align-items:center;gap:16px;font-size:26px;font-weight:600\"\
+        >\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\">Algemene\
+        \ werken</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Veiligheid</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Afbraak per dak</div>\n    <div style=\"padding:16px 22px;border-radius:14px;border:4px solid #2D8D8F;background:#fff\"\
+        >Werf</div>\n  </div>\n  <div style=\"font-size:26px;font-weight:600;color:#2D8D8F\">↓</div>\n  <div style=\"\
+        padding:20px 34px;border-radius:16px;background:#1d2b2b;color:#fff;font-size:34px;font-weight:700\">Offerte</div>\n\
+        \  <div style=\"font-size:24px;margin-top:6px\">Voorbeeld: familie Lambrecht, Kortrijk · woning (plat dak\
+        \ in L-vorm) en garage</div>\n</div>"
+  3:
+    steps:
+    - click:
+        selector: .o_list_button_add
+    - wait: 0.6
+    - fill:
+        field: name
+        value: Woning en garage Lambrecht
+    - fill:
+        field: partner_id
+        value: Lambrecht
+        pick: Lambrecht
+        exact: true
+    - wait: 0.6
+    - highlight:
+        field: address
+        seconds: 2.0
+    - save: null
+  4:
+    steps:
+    - click:
+        selector: button[name=action_add_roof]
+    - wait: 1.0
+    - edit_cell:
+        in: div[name=roof_ids]
+        row: Dak 1
+        column: name
+        value: Woning
+    - type:
+        text: Plat dak in L-vorm
+        delay: 55
+    - save: null
+    - highlight:
+        selector: div[name=roof_ids] .o_data_row
+        seconds: 1.8
+  5:
+    steps:
+    - &id001
+      click:
+        selector: .o_roof_canvas_mode_btn
+    - wait: 1.0
+    - click:
+        selector: button[title^='Achtergrond:']
+    - wait: 0.5
+    - upload:
+        click:
+          selector: .o_roof_canvas_bgmenu button:has-text('plan uploaden')
+        file: tools/video_pipeline/assets/plan_woning.png
+    - wait: 1.0
+  6:
+    steps:
+    - click:
+        selector: button[title^='Polygoon tekenen']
+    - wait: 0.3
+    - canvas_clicks:
+        points:
+        - - 330
+          - 130
+        - - 1272
+          - 130
+        - - 1272
+          - 586
+        - - 862
+          - 586
+        - - 862
+          - 852
+        - - 330
+          - 852
+        pause: 0.45
+    - key: Enter
+    - wait: 1.0
+  7:
+    steps:
+    - canvas_click:
+        at:
+        - 801
+        - 130
+        button: right
+    - wait: 0.6
+    - click:
+        selector: '#o_roof_edge_length'
+    - key: Control+a
+    - type:
+        text: 12,40
+        delay: 160
+    - wait: 0.6
+    - highlight:
+        selector: .modal-dialog .alert-info
+        seconds: 2.2
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toepassen')
+    - wait: 1.5
+  8:
+    steps:
+    - canvas_click:
+        at:
+        - 801
+        - 491
+    - wait: 0.6
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=0
+    - type:
+        text: Roofing in 2 lagen met grind, lekt op meerdere plaatsen.
+        delay: 40
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - wait: 1.2
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - type:
+        text: Dampscherm, 12 cm PIR en EPDM.
+        delay: 40
+    - key: Tab
+    - wait: 0.6
+  9:
+    steps:
+    - canvas_click:
+        at:
+        - 801
+        - 130
+    - wait: 0.6
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=0
+    - type:
+        text: Oude alu dakrand, deels los.
+        delay: 40
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - wait: 1.2
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - type:
+        text: Nieuwe 2-delige alu dakrand.
+        delay: 40
+    - key: Tab
+    - wait: 0.6
+    - click:
+        selector: .o_roof_canvas_focus button:has-text('Alle zijden')
+    - wait: 0.6
+    - click:
+        selector: .o_roof_canvas_focus button:has-text('Toepassen')
+    - wait: 1.0
+  10:
+    steps:
+    - canvas_click:
+        at:
+        - 801
+        - 491
+        double: true
+    - wait: 0.8
+    - select_option:
+        selector: .modal-dialog select >> nth=0
+        contains: Alutrix (op beton
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=1
+        label: Unilin Utherm Roof PIR
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=2
+        label: 12 cm
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=3
+        contains: verkleefd
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=4
+        label: Elevate Rubbergard EPDM
+    - wait: 1.0
+    - highlight:
+        selector: .modal-dialog table >> nth=0
+        seconds: 2.0
+  11:
+    steps:
+    - highlight:
+        selector: .modal-dialog table >> nth=1
+        seconds: 3.5
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Dakopbouw toepassen')
+    - wait: 1.5
+  12:
+    steps:
+    - canvas_clicks:
+        points:
+        - - 801
+          - 130
+        - - 1272
+          - 358
+        - - 1067
+          - 586
+        - - 862
+          - 719
+        - - 596
+          - 852
+        - - 330
+          - 491
+        ctrl: true
+        pause: 0.35
+    - wait: 1.0
+    - click:
+        selector: '#o_roof_edges_width'
+    - key: Control+a
+    - type:
+        text: 0,20
+        delay: 140
+    - click:
+        selector: '#o_roof_edges_upstand'
+    - key: Control+a
+    - type:
+        text: 0,15
+        delay: 140
+    - key: Tab
+    - wait: 0.6
+    - select_option:
+        selector: .modal-dialog select >> nth=0
+        label: 2-delige alu dakrand
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=1
+        contains: Geanodiseerd
+    - wait: 0.7
+    - highlight:
+        selector: .modal-dialog table
+        seconds: 2.5
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Randafwerking toepassen')
+    - wait: 1.5
+  13:
+    steps:
+    - *id001
+    - wait: 0.8
+    - click:
+        selector: button[name=action_add_roof]
+    - wait: 1.0
+    - edit_cell:
+        in: div[name=roof_ids]
+        row: Dak 2
+        column: name
+        value: Garage
+    - type:
+        text: Garage tegen de woning
+        delay: 55
+    - save: null
+  14:
+    steps:
+    - *id001
+    - wait: 1.0
+    - click:
+        selector: button[title^='Achtergrond:']
+    - wait: 0.5
+    - upload:
+        click:
+          selector: .o_roof_canvas_bgmenu button:has-text('plan uploaden')
+        file: tools/video_pipeline/assets/plan_garage.png
+    - wait: 1.0
+    - click:
+        selector: button[title='Rechthoekige sectie tekenen']
+    - wait: 0.3
+    - canvas_drag:
+        from:
+        - 366
+        - 248
+        to:
+        - 1234
+        - 752
+    - wait: 0.6
+    - click:
+        selector: button[title='Selecteren / verplaatsen']
+    - canvas_click:
+        at:
+        - 800
+        - 248
+        button: right
+    - wait: 0.6
+    - click:
+        selector: '#o_roof_edge_length'
+    - key: Control+a
+    - type:
+        text: 6,20
+        delay: 160
+    - wait: 0.6
+    - highlight:
+        selector: .modal-dialog .alert-info
+        seconds: 2.2
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toepassen')
+    - wait: 1.5
+  15:
+    steps:
+    - canvas_click:
+        at:
+        - 800
+        - 500
+    - wait: 0.5
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=0
+    - type:
+        text: Roofing 1 laag, versleten.
+        delay: 30
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - wait: 1.2
+    - click:
+        selector: .o_roof_canvas_focus textarea >> nth=1
+    - type:
+        text: Dampscherm, 12 cm PIR en EPDM.
+        delay: 30
+    - key: Tab
+    - wait: 0.6
+    - canvas_click:
+        at:
+        - 800
+        - 500
+        double: true
+    - wait: 0.8
+    - select_option:
+        selector: .modal-dialog select >> nth=0
+        contains: Alutrix (op beton
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=1
+        label: Unilin Utherm Roof PIR
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=2
+        label: 12 cm
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=3
+        contains: verkleefd
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=4
+        label: Elevate Rubbergard EPDM
+    - wait: 1.0
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Dakopbouw toepassen')
+    - wait: 1.5
+  16:
+    steps:
+    - canvas_clicks:
+        points:
+        - - 800
+          - 248
+        - - 1234
+          - 500
+        - - 800
+          - 752
+        ctrl: true
+        pause: 0.35
+    - wait: 1.0
+    - click:
+        selector: '#o_roof_edges_width'
+    - key: Control+a
+    - type:
+        text: 0,20
+        delay: 140
+    - click:
+        selector: '#o_roof_edges_upstand'
+    - key: Control+a
+    - type:
+        text: 0,15
+        delay: 140
+    - key: Tab
+    - wait: 0.6
+    - select_option:
+        selector: .modal-dialog select >> nth=0
+        label: 2-delige alu dakrand
+    - wait: 0.7
+    - select_option:
+        selector: .modal-dialog select >> nth=1
+        contains: Geanodiseerd
+    - wait: 0.7
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Randafwerking toepassen')
+    - wait: 1.5
+    - canvas_click:
+        at:
+        - 366
+        - 500
+        double: true
+    - wait: 0.8
+    - click:
+        selector: .modal-dialog button:has-text('Aansluiting')
+    - wait: 0.6
+    - select_option:
+        selector: .modal-dialog select >> nth=0
+        contains: EPDM thv de gevelafwerking
+    - wait: 0.7
+    - highlight:
+        selector: .modal-dialog table
+        seconds: 1.8
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Randafwerking toepassen')
+    - wait: 1.5
+  17:
+    steps:
+    - *id001
+    - wait: 0.8
+    - highlight:
+        selector: div[name=roof_ids] .o_list_renderer
+        seconds: 2.0
+    - click:
+        selector: .o_notebook_headers button.nav-link[name=quote]
+    - wait: 1.2
+    - scroll_to:
+        selector: .o_tectora_quote_builder
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('ALGEMENE WERKEN')) button:has-text('Product
+          toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('ALGEMENE WERKEN')) button:has-text('Product
+          toevoegen')
+    - wait: 1.0
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Algemene vaste kosten'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Algemene vaste kosten')) input[type=checkbox]
+    - wait: 0.4
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Verticaal transport van de materialen met camionkraan'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verticaal transport van de materialen met camionkraan')) input[type=checkbox]
+    - wait: 0.4
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Afvalverwerking forfaitair'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Afvalverwerking forfaitair')) input[type=checkbox]
+    - wait: 0.4
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+  18:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) button:has-text('Product toevoegen')
+    - wait: 1.0
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Gebruik van tijdelijke balustrades Securilisse EVO'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Gebruik van tijdelijke balustrades Securilisse EVO')) input[type=checkbox]
+    - wait: 0.4
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Leveren en plaatsen ankerpunt ABS-Lock-T-21 EPDM'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Leveren en plaatsen ankerpunt ABS-Lock-T-21 EPDM')) input[type=checkbox]
+    - wait: 0.4
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('VEILIGHEID')) tr:has-text('Securilisse') input
+        seconds: 2.2
+  19:
+    steps:
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          button:has-text('Product toevoegen')
+    - wait: 1.0
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen ballastlaag (rolgrind/kiezel)'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen ballastlaag (rolgrind/kiezel)')) input[type=checkbox]
+    - wait: 0.4
+    - scroll_to:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 2 laags''))'
+    - click:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 2 laags''))
+          input[type=checkbox]'
+    - wait: 0.4
+    - scroll_to:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen van de dakranden'))
+    - click:
+        selector: .modal-dialog tr:has(span:text-is('Verwijderen van de dakranden')) input[type=checkbox]
+    - wait: 0.4
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+    - highlight:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('L-vorm'))
+          table
+        seconds: 2.0
+    - scroll_to:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('Garage'))
+          button:has-text('Product toevoegen')
+    - click:
+        selector: .o_tectora_quote_segment:has(.card-header:has-text('AFBOUWWERKEN')):has(.card-header:has-text('Garage'))
+          button:has-text('Product toevoegen')
+    - wait: 1.0
+    - scroll_to:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 1 laag''))'
+    - click:
+        selector: '.modal-dialog tr:has(span:text-is(''Verwijderen van de dakbedekking type: roofing 1 laag''))
+          input[type=checkbox]'
+    - wait: 0.4
+    - click:
+        selector: .modal-dialog .modal-footer button:has-text('Toevoegen')
+    - wait: 1.5
+  20:
+    steps:
+    - scroll_to:
+        selector: .o_notebook_headers
+    - click:
+        selector: .o_notebook_headers button.nav-link[name=project_info]
+    - wait: 0.8
+    - fill:
+        field: project_manager_id
+        value: Jan
+        pick: Jan Verbeke
+    - fill:
+        field: site_contact_id
+        value: Lambrecht
+        pick: Lambrecht
+        exact: true
+    - fill:
+        field: roof_height
+        value: 6,5
+    - click:
+        selector: div[name=roof_substrate] input
+    - wait: 0.5
+    - click:
+        selector: .o_select_menu_item:has-text('Beton'), .o-dropdown--menu .dropdown-item:has-text('Beton')
+    - click:
+        selector: div[name=material_direct_roof] input
+    - fill:
+        field: roof_access_crane
+        value: Camionkraan via de oprit
+    - scroll_to:
+        selector: div[name=easy_parking]
+    - click:
+        selector: div[name=easy_parking] input
+    - click:
+        selector: div[name=driveway_paved] input
+    - scroll_to:
+        selector: div[name=epdm_total_area]
+    - highlight:
+        selector: div[name=epdm_sheet_ids]
+        seconds: 2.0
+    - save: null
+  21:
+    setup:
+    - fetch_pdf:
+        url: /report/pdf/tectora_roof.report_roof_project/{id}
+    steps:
+    - show_pdf:
+        url: /report/pdf/tectora_roof.report_roof_project/{id}
+        pages:
+        - 1
+        - 3
+        title: Meetblad
+  22:
+    steps:
+    - scroll_to:
+        selector: button[name=action_create_sale_order]
+    - click:
+        selector: button[name=action_create_sale_order]
+    - wait: 1.5
+    - scroll:
+        dy: 500
+    - wait: 1.5
+    - scroll:
+        dy: 700
+    - wait: 1.5
+    - scroll_to:
+        selector: .o_tectora_hours_total, div[name=tax_totals]
+    - wait: 2.0
+  23:
+    card:
+      kind: html
+      html: "\n<div style=\"font-family:Montserrat,sans-serif;color:#1d2b2b;max-width:1250px\">\n  <div style=\"\
+        font-size:46px;font-weight:700;color:#2D8D8F;margin-bottom:28px;text-align:center\">Samengevat</div>\n \
+        \ <ol style=\"font-size:29px;line-height:1.6;margin:0;padding-left:44px\">\n    <li>Elk dak een eigen plan:\
+        \ <b>Dak toevoegen</b>, satellietbeeld of plan</li>\n    <li>Tekenen met Polygoon of Rechthoek, schalen\
+        \ met een <b>rechtsklik</b> op één gemeten zijde</li>\n    <li>Per vlak en per zijde de <b>originele</b>\
+        \ en de <b>toekomstige staat</b></li>\n    <li>Wizards <b>Dakopbouw</b> (lagen en EPDM-doeken) en <b>Randafwerking</b>\
+        \ (dakrand of aansluiting)</li>\n    <li>Tab Offerte: algemene werken, veiligheid en de <b>afbraak per dak</b></li>\n\
+        \    <li>Tab <b>Werf</b>, het <b>meetblad</b> en dan <b>Offerte maken</b></li>\n  </ol>\n</div>"
+  24:
+    card:
+      kind: title
+      subtitle: Tectora Dakmeting

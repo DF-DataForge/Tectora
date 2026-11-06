@@ -16,6 +16,9 @@ starts. ``VIDEO_STAGE`` (set by make_video.py from the storyboard's
 * ``quote_norecalc`` the same, with hercalculatie still off on the PIR board (07)
 * ``project``        the quotation confirmed: project, tasks, work block (09–11)
 * ``timer``          as ``project``, plus a running site timer (11)
+* ``so_logistics``   from sales order to purchase order (standaard 12)
+* ``two_roofs``      a client only: the roof project is drawn in the video
+                     (dakmeting 11)
 """
 
 import os
@@ -38,7 +41,7 @@ NOTES = (
 # Quotation quantities after the measurement (video 04).
 MEASURED = {"S00177": 96, "S00400": 38, "S00182": 38, "S00043": 38, "S00023": 38}
 STAGES = ("lead_new", "lead", "lead_notes", "quote", "quote_norecalc", "project", "timer",
-          "so_logistics")
+          "so_logistics", "two_roofs")
 
 # No field tracking: it only adds chatter noise to seeded data, and it trips
 # over records the clean-up below deletes.
@@ -504,6 +507,29 @@ if stage == "so_logistics":
     # No task templates in this video: the dashboard stays about materials.
     if "tectora.task.template" in env:
         env["tectora.task.template"].with_context(active_test=False).search([]).write({"active": False})
+
+# ----------------------------------- a roof project with two roofs (video)
+# A fictional client whose house (L-shaped flat roof) and garage get a new
+# roof. The video creates the roof project itself, draws both roofs on the
+# plans of make_plans.py and makes the quotation: only the client exists.
+if stage == "two_roofs":
+    client = upsert("res.partner", [("name", "in", ("Lambrecht", "Familie Lambrecht"))], {
+        "name": "Lambrecht", "is_company": False, "street": "Rijselstraat 21", "zip": "8500",
+        "city": "Kortrijk", "country_id": belgium.id, "lang": "nl_BE",
+        "email": "familie.lambrecht@example.com", "phone": "+32 56 11 22 33",
+        "tectora_title_id": title_family.id,
+    })
+    c_roofs = env["tectora.roof.project"].with_context(active_test=False).search(
+        ["|", ("partner_id", "=", client.id), ("name", "=like", "Woning en garage %")])
+    c_orders = env["sale.order"].search(
+        ["|", ("partner_id", "=", client.id), ("id", "in", c_roofs.sale_order_ids.ids)])
+    c_projects = env["project.project"].with_context(active_test=False).search(
+        [("partner_id", "=", client.id)])
+    c_orders.filtered(lambda o: o.state not in ("draft", "cancel"))._action_cancel()
+    c_orders.unlink()
+    c_roofs.unlink()
+    c_projects.with_context(active_test=False).task_ids.unlink()
+    c_projects.unlink()
 
 # The company logo, in every stage: the portal header (video 11) and the
 # customer preview of the quotation (video 04) show Tectora, not "Your logo".

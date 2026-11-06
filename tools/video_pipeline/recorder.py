@@ -25,6 +25,8 @@ from playwright.sync_api import sync_playwright
 
 WIDTH, HEIGHT = 1920, 1080
 OVERLAY_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "overlay.js")
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PLAN_SIZE = (1600, 1000)  # the plans of make_plans.py: the drawing's world size
 
 VOICE_LEAD = 0.4   # caption/card first, voice a beat later
 VOICE_TAIL = 0.6   # breathing room after the last word of a shot
@@ -340,11 +342,20 @@ class Director:
         self.ready(settle=0.3)
 
     def step_select_option(self, spec):
-        """{selector: css of a <select>, label: visible option}: a plain
-        HTML dropdown (outside a form field, e.g. on a client action)."""
+        """{selector: css of a <select>, label: visible option (or
+        contains: part of it)}: a plain HTML dropdown (outside a form field,
+        e.g. on a client action or in a dialog)."""
         select = self.target({"selector": spec["selector"]})
         self.move_to(select)
-        select.select_option(label=spec["label"])
+        if "contains" in spec:
+            # Labels that carry a price or a code: pick by a part of the label.
+            index = select.evaluate(
+                "(s, t) => Array.from(s.options).findIndex(o => o.text.includes(t))", spec["contains"])
+            if index < 0:
+                raise StepError(f"no option containing {spec['contains']!r}")
+            select.select_option(index=index)
+        else:
+            select.select_option(label=spec["label"])
         self.ready(settle=0.6)
 
     def step_type(self, spec):
@@ -371,6 +382,68 @@ class Director:
         self.page.mouse.up()
         self.ready(settle=0.6)
 
+    # -- the roof drawing (tectora_roof's canvas)
+    def _canvas_point(self, point, image=PLAN_SIZE):
+        """A point of the plan → the screen. The drawing's world coordinates
+        are the pixels of its background image, fitted into the canvas the
+        way "Passend maken" does, so a storyboard clicks in plan pixels."""
+        info = self.page.locator(".o_roof_canvas canvas").first.evaluate(
+            "c => { const r = c.getBoundingClientRect(); return {l: r.left, t: r.top, "
+            "w: r.width, h: r.height, cw: c.width, ch: c.height}; }")
+        zoom = min(info["cw"] / image[0], info["ch"] / image[1])
+        x = (info["cw"] - image[0] * zoom) / 2 + point[0] * zoom
+        y = (info["ch"] - image[1] * zoom) / 2 + point[1] * zoom
+        return (info["l"] + x * info["w"] / info["cw"], info["t"] + y * info["h"] / info["ch"])
+
+    def step_canvas_click(self, spec):
+        """{at: [x, y], button: left|right, double: false}: a click on the
+        drawing, in plan pixels (see _canvas_point)."""
+        x, y = self._canvas_point(spec["at"], spec.get("image", PLAN_SIZE))
+        self.page.mouse.move(x, y, steps=spec.get("steps", 28))
+        self.page.wait_for_timeout(180)
+        if spec.get("double"):
+            self.page.mouse.dblclick(x, y)
+        else:
+            self.page.mouse.click(x, y, button=spec.get("button", "left"))
+        self.ready(settle=spec.get("settle", 0.6))
+
+    def step_canvas_clicks(self, spec):
+        """{points: [[x, y], …], ctrl: false}: one click per point, e.g. the
+        corners of a polygon; with ``ctrl`` Ctrl is held down throughout and
+        released at the end (the drawing's multi-select)."""
+        image = spec.get("image", PLAN_SIZE)
+        if spec.get("ctrl"):
+            self.page.keyboard.down("Control")
+        for point in spec["points"]:
+            x, y = self._canvas_point(point, image)
+            self.page.mouse.move(x, y, steps=spec.get("steps", 22))
+            self.page.wait_for_timeout(120)
+            self.page.mouse.click(x, y)
+            self.page.wait_for_timeout(int(spec.get("pause", 0.35) * 1000))
+        if spec.get("ctrl"):
+            self.page.keyboard.up("Control")
+        self.ready(settle=spec.get("settle", 0.6))
+
+    def step_canvas_drag(self, spec):
+        """{from: [x, y], to: [x, y]}: press, glide, release on the drawing."""
+        image = spec.get("image", PLAN_SIZE)
+        start = self._canvas_point(spec["from"], image)
+        end = self._canvas_point(spec["to"], image)
+        self.page.mouse.move(*start, steps=24)
+        self.page.mouse.down()
+        self.page.mouse.move(*end, steps=spec.get("steps", 45))
+        self.page.wait_for_timeout(200)
+        self.page.mouse.up()
+        self.ready(settle=0.6)
+
+    def step_upload(self, spec):
+        """{click: target that opens the file dialog, file: path from the
+        repository root}: choose a file without the system dialog."""
+        with self.page.expect_file_chooser() as chooser:
+            self._click(self.target(spec["click"]))
+        chooser.value.set_files(os.path.join(REPO, spec["file"]))
+        self.ready(settle=spec.get("settle", 1.5))
+
     def step_edit_cell(self, spec):
         """{row: text in the row, column: field name, value: …} in a list."""
         scope = self.scope.locator(spec.get("in", ".o_list_renderer")).first
@@ -378,7 +451,11 @@ class Director:
         cell = row.locator(f"td[name='{spec['column']}']")
         self._click(cell)
         self.page.wait_for_timeout(300)
-        field = row.locator(f"td[name='{spec['column']}'] input").first
+        # The row in edit mode: its text now sits in inputs, so look it up
+        # as the selected row rather than by its text.
+        editing = scope.locator("tr.o_data_row.o_selected_row")
+        field = editing.locator(f"td[name='{spec['column']}'] input, "
+                                f"td[name='{spec['column']}'] textarea").first
         field.wait_for(timeout=5000)
         field.select_text()
         field.press_sequentially(str(spec["value"]), delay=spec.get("delay", 90))
