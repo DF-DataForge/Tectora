@@ -43,6 +43,10 @@ export class RoofProductPickerDialog extends Component {
         // A side of a roof surface: the "Randafwerking" tab (roof edge or
         // connection) -- {projectId, apply(choice, targetKeys, dryRun)}.
         edges: t.object().optional(),
+        // A surface or side: the "Afbouw" tab (demolition works to tick) --
+        // {projectId, scope ("surface"|"edge"), apply(productIds, optionIds,
+        // targetKeys)}.
+        demolition: t.object().optional(),
     });
 
     setup() {
@@ -92,10 +96,14 @@ export class RoofProductPickerDialog extends Component {
             widthChanged: false,
             upstandChanged: false,
         });
+        // The demolition tab: the works to tick, grouped.
+        this.demolition = proxy({ loaded: false, options: [], selected: {} });
         if (this.props.buildup) {
             this.state.tab = "buildup";
         } else if (this.props.edges) {
             this.state.tab = "edges";
+        } else if (this.props.demolition) {
+            this.state.tab = "demolition";
         }
         onWillStart(async () => {
             if (this.props.buildup) {
@@ -122,6 +130,9 @@ export class RoofProductPickerDialog extends Component {
                         this.lineSummary(line)
                     );
                 }
+            }
+            if (this.props.demolition) {
+                await this.loadDemolition();
             }
         });
     }
@@ -497,6 +508,57 @@ export class RoofProductPickerDialog extends Component {
         const choice = this.edgeChoice;
         this.props.close();
         await this.props.edges.apply(choice, targetKeys, false);
+    }
+
+    // ------------------------------------------------------------ demolition
+    async loadDemolition() {
+        const options = await this.orm.call(
+            "tectora.roof.project", "tectora_get_demolition_options",
+            [[this.props.demolition.projectId], this.props.demolition.scope]
+        );
+        this.demolition.options = options;
+        // What the clicked surface or side has already is ticked.
+        this.demolition.selected = Object.fromEntries(
+            options.filter((p) => this.assignedByProduct[p.id]).map((p) => [p.id, true])
+        );
+        this.demolition.loaded = true;
+    }
+
+    get demolitionGroups() {
+        const groups = [];
+        for (const product of this.demolition.options) {
+            let group = groups.find((g) => g.label === product.group);
+            if (!group) {
+                group = { label: product.group, products: [] };
+                groups.push(group);
+            }
+            group.products.push(product);
+        }
+        return groups;
+    }
+
+    toggleDemolition(product) {
+        if (this.demolition.selected[product.id]) {
+            delete this.demolition.selected[product.id];
+        } else {
+            this.demolition.selected[product.id] = true;
+        }
+    }
+
+    get demolitionSelected() {
+        return this.demolition.options.filter((p) => this.demolition.selected[p.id]);
+    }
+
+    get demolitionTotal() {
+        return this.demolitionSelected.reduce((sum, p) => sum + p.price * this.totalQuantity, 0);
+    }
+
+    async applyDemolition() {
+        const productIds = this.demolitionSelected.map((p) => p.id);
+        const optionIds = this.demolition.options.map((p) => p.id);
+        const targetKeys = this.selectedTargetKeys;
+        this.props.close();
+        await this.props.demolition.apply(productIds, optionIds, targetKeys);
     }
 
     lineSummary(line) {
