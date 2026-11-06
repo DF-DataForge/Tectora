@@ -221,3 +221,4 @@ Releases and the modules they need upgraded:
 | EPDM-doeken: berekening per doek zichtbaar (vlak + per zijde opstand, dakrand, marge of naadoverlap, afronding, snijverlies) | `tectora_roof` (20.0.3.71.0) |
 | Tekening: Randafwerking per zijde (dakrand met binnen-/buitenhoeken, of aansluiting); categorieën 02. Dakranden/Dakrandprofielen·Kralen·Hoeken & eindstukken en 04/Aansluitingen | `tectora_roof` (20.0.3.72.0), `tectora_products` (20.0.2.8.0) |
 | Offerte in vaste segmenten (algemene werken, veiligheid, per dak afbouw- en opbouwwerken, andere hoofdstukken, algemene nota's) op de offerte, in de nieuwe tab Offerte van het dakproject en naast de tekening; tabs Algemene werken/Veiligheid/Afbraak/Opbouw/Overige vervangen | `tectora_roof` (20.0.3.73.0) |
+| Randafwerking: breedte dakrand en opstand op de gekozen zijden zetten | `tectora_roof` (20.0.3.74.0) |

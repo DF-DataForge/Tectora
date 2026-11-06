@@ -3015,19 +3015,24 @@ export class RoofCanvasField extends Component {
         const edgeItemsFor = (targetKeys) => {
             const picked = new Set(targetKeys || []);
             return [
-                { section_id: targetIds[0], side: sideNumber, quantity },
+                { section_id: targetIds[0], shape_id: hit.shapeId, side: sideNumber, quantity },
                 ...others
                     .filter((item) => picked.has(item.key) && item.sideNumber)
                     .map((item) => ({
                         section_id: recordByShape[item.shapeId],
+                        shape_id: item.shapeId,
                         side: item.sideNumber,
                         quantity: item.quantity,
                     })),
             ].filter((item) => item.section_id && item.side);
         };
+        const clickedShape = this.shapes.find((shape) => shape.id === hit.shapeId);
         const edges = hit.type === "edge" && !isObject && sideNumber
             ? {
                   projectId: record.resId,
+                  // The side's roof edge as drawn: width and upstand (m).
+                  width: clickedShape ? this.edgeWidth(clickedShape, sideNumber - 1) : 0,
+                  upstand: clickedShape ? this.edgeUpstand(clickedShape, sideNumber - 1) : 0,
                   apply: (choice, targetKeys, dryRun) =>
                       dryRun
                           ? this.orm.call(
@@ -3162,6 +3167,18 @@ export class RoofCanvasField extends Component {
      * or a connection on the sides. */
     async applyEdges(items, choice) {
         const record = this.props.record;
+        if (choice.geometry) {
+            this.setSidesGeometry(items, choice.geometry);
+            // Saved before the products go on, so the two do not cross.
+            await record.save();
+        }
+        if (!choice.product_id) {
+            this.notification.add(
+                _t("Breedte en opstand gezet op %s zijde(n).", items.length),
+                { type: "success" }
+            );
+            return;
+        }
         try {
             const result = await this.orm.call(
                 "tectora.roof.project", "tectora_apply_edges",
@@ -3192,6 +3209,38 @@ export class RoofCanvasField extends Component {
             });
         }
         this.draw();
+        this.refreshPanel();
+    }
+
+    /** Width (dakrand) and upstand (opstand) of the sides, in metres, as
+     * the side panel sets them one side at a time. */
+    setSidesGeometry(items, geometry) {
+        const set = (shape, key, index, value) => {
+            const values = { ...(shape[key] || {}) };
+            if (value > 0) {
+                values[index] = Math.round(value * 100) / 100;
+            } else {
+                delete values[index];
+            }
+            if (Object.keys(values).length) {
+                shape[key] = values;
+            } else {
+                delete shape[key];
+            }
+        };
+        for (const item of items) {
+            const shape = this.shapes.find((s) => s.id === item.shape_id);
+            if (!shape || !item.side) {
+                continue;
+            }
+            if (geometry.width !== null && geometry.width !== undefined) {
+                set(shape, "edgeWidths", item.side - 1, geometry.width);
+            }
+            if (geometry.upstand !== null && geometry.upstand !== undefined) {
+                set(shape, "edgeUpstands", item.side - 1, geometry.upstand);
+            }
+        }
+        this.commit();
         this.refreshPanel();
     }
 

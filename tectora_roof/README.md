@@ -109,7 +109,9 @@ install on Odoo 17 or earlier without adjustments.
    neighbours' roof, a gutter or a pitched roof, from 04. Opbouwwerken plat
    dak/Aansluitingen, grouped by what the side meets. The choice replaces
    the side's earlier roof edge or connection; corner pieces go where two
-   roof-edge sides no longer meet. Several sides at once as in the other
+   roof-edge sides no longer meet. The tab also sets the *Breedte dakrand* and
+   the *Opstand* of the chosen sides (as the side panel does per side): they
+   count in the inner area, the upstand and the EPDM sheets. Several sides at once as in the other
    tabs.
    The quotation has a fixed structure, the same on the order, on the roof
    project's **Offerte** tab and next to the drawing: *Algemene werken*,
