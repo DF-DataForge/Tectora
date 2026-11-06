@@ -29,6 +29,10 @@
                         <setting string="Dakbedekking">
                             <field name="tectora_buildup_membrane_id" options="{'no_create': True}"/>
                         </setting>
+                        <setting string="Standaard algemene nota's"
+                                 help="De tekst waarmee de Algemene nota's van een nieuw dakproject beginnen (laatste segment van de offerte).">
+                            <field name="tectora_quote_notes" widget="text"/>
+                        </setting>
                         <setting string="Marge EPDM-doek"
                                  help="Per zijde bovenop de opstand en de breedte van de dakrand (m).">
                             <field name="tectora_epdm_margin"/>

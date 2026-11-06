@@ -287,6 +287,12 @@ class ResConfigSettings(models.TransientModel):
         "product.product", string="Standaard dakbedekking",
         config_parameter="tectora_roof.buildup_membrane_id",
     )
+    tectora_quote_notes = fields.Char(
+        string="Standaard algemene nota's",
+        config_parameter="tectora_roof.quote_notes",
+        help="De tekst waarmee de Algemene nota's van een nieuw dakproject "
+        "beginnen (laatste segment van de offerte).",
+    )
     tectora_epdm_margin = fields.Float(
         string="Marge EPDM-doek per zijde (m)", digits=(16, 2),
         config_parameter="tectora_roof.epdm_margin", default=0.10,

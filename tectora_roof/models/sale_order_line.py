@@ -51,6 +51,14 @@ class SaleOrderLine(models.Model):
         help="Het dak van het dakproject waartoe deze lijn behoort: de "
         "subsectie van dat dak en de lijnen eronder.",
     )
+    tectora_segment = fields.Char(
+        string="Segment",
+        copy=False,
+        help="Het segment van de offerte dat deze hoofding opent (general, "
+        "safety, demolition:<dak>, buildup:<dak>, other:<hoofdstuk>, notes), "
+        "of 'notes' voor de tekst van de algemene nota's. Zet de offerte in "
+        "haar standaardstructuur.",
+    )
     roof_measurement_line = fields.Boolean(
         string="Meetlijn",
         copy=False,

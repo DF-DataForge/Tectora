@@ -111,6 +111,20 @@ install on Odoo 17 or earlier without adjustments.
    the side's earlier roof edge or connection; corner pieces go where two
    roof-edge sides no longer meet. Several sides at once as in the other
    tabs.
+   The quotation has a fixed structure, the same on the order, on the roof
+   project's **Offerte** tab and next to the drawing: *Algemene werken*,
+   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv het
+   plat dak – <dak>* and *Opbouwwerken thv het plat dak – <dak>* (the
+   drawing's products of that roof, one line per product, and the roof's
+   project lines), the other chapters (worst case, garantie, andere werken,
+   upsale), headers of the user's own, and *Algemene nota's* (the project's
+   text, a default in Instellingen). A line goes to the segment of its
+   product's chapter; a line without chapter stays under the header it was
+   under. The **Offerte** tab replaces the former tabs Algemene werken,
+   Veiligheid, Afbraak, Opbouw and Overige: per segment its lines, the
+   quantity of a project line editable, *Product toevoegen* (from that
+   segment's chapters, for that roof) and removing; the drawing's lines
+   show where they come from.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

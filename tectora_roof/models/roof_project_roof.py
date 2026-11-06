@@ -187,11 +187,17 @@ class TectoraRoofProjectRoof(models.Model):
         name and description."""
         lines = self.env["sale.order.line"].search([
             ("tectora_roof_id", "in", self.ids),
-            ("display_type", "=", "line_subsection"),
+            ("display_type", "in", ("line_section", "line_subsection")),
             ("order_id.state", "in", ("draft", "sent")),
         ])
+        Project = self.env["tectora.roof.project"]
         for line in lines:
-            name = line.tectora_roof_id._subsection_name()
+            roof = line.tectora_roof_id
+            if line.tectora_segment:
+                # A roof's segment: "AFBOUWWERKEN THV HET PLAT DAK – Dak 2 – ...".
+                name = Project._tectora_segment_title(line.tectora_segment.split(":")[0], roof)
+            else:
+                name = roof._subsection_name()
             if line.name != name:
                 line.with_context(tectora_sync=True).write({"name": name})
 
