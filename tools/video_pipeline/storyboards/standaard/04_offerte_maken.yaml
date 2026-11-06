@@ -1,0 +1,86 @@
+# Storyboard for docs/video_scripts/standaard/04_offerte_maken.md
+script: docs/video_scripts/standaard/04_offerte_maken.md
+name: standaard_04_offerte_maken
+series: Tectora · de standaardflow
+stage: lead_notes
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 3
+start: /odoo/crm
+pronunciation:
+  CRM: C R M
+
+shots:
+  1:
+    card: title
+
+  2:
+    setup:
+      - click: {selector: ".o_kanban_record:has-text('Renovatie plat dak Peeters')"}
+    steps:
+      - wait: 0.5
+      - click: {button: Nieuwe offerte}
+      - wait: 0.5
+      - highlight: {field: partner_id, seconds: 1.5}
+      - highlight: {selector: ".o_breadcrumb a:has-text('Renovatie plat dak Peeters')", seconds: 1.5}
+
+  3:
+    steps:
+      - fill:
+          field: sale_order_template_id
+          value: "Renovatie plat dak - roofing 1"
+          pick: "Renovatie plat dak - roofing 1 laag, PIR 12 cm, EPDM 1,1 mm, 2-delige dakrand"
+      - wait: 1.0
+      - scroll: {selector: ".o_field_widget[name=order_line]", dy: 700}
+      - wait: 1.5
+      - scroll: {selector: ".o_field_widget[name=order_line]", dy: -700}
+      - highlight: {field: pricelist_id, seconds: 1.8}
+
+  4:
+    steps:
+      - scroll_to: {selector: "tr.o_data_row:has-text('S00177')"}
+      - click: {selector: "tr.o_data_row:has-text('S00177') td[name=sol_qty]"}
+      - key: Control+a
+      - type: {text: "96", delay: 150}
+      - key: Tab
+      - click: {selector: "tr.o_data_row:has-text('S00400') td[name=sol_qty]"}
+      - key: Control+a
+      - type: {text: "38", delay: 150}
+      - wait: 0.4
+      # Enter: a new line right below, in the same section.
+      - key: Enter
+      - wait: 1.5
+      - type: {text: "EPDM in de zinken", delay: 70}
+      - wait: 1.0
+      - click: {selector: ".o-autocomplete--dropdown-menu .dropdown-item:has-text('in de zinken/PVC goot')"}
+      - wait: 0.6
+
+  5:
+    steps:
+      - scroll_to: {selector: ".o_notebook .nav-link:has-text('Overige info')"}
+      - click: {selector: ".o_notebook .nav-link:has-text('Overige info')"}
+      - scroll_to: {field: tectora_tax_id}
+      - fill: {field: tectora_tax_id, value: "6", pick: "6%"}
+      - click: {button: Toepassen op alle regels}
+      - wait: 0.8
+      - click: {button: Ok, in: ".modal"}
+      - click: {selector: ".o_notebook .nav-link:has-text('Orderregels')"}
+      - scroll_to: {field: tax_totals}
+      - highlight: {field: tax_totals, seconds: 2.0}
+
+  6:
+    steps:
+      - open_here: {button: Voorbeeld}
+      - wait: 1.2
+      - highlight: {selector: "a:has-text('Accepteer & Teken'), button:has-text('Accepteer & Teken')", seconds: 1.5}
+      - back:
+      - click: {button: Verzenden}
+      - wait: 0.8
+      - highlight: {selector: ".modal .o_field_widget[name=attachment_ids]", seconds: 1.5}
+      - click: {button: Verzenden, in: ".modal"}
+      - wait: 0.8
+      - highlight: {selector: ".o-mail-Message:has-text('Offerte')", seconds: 1.8}
+
+  7:
+    card: title

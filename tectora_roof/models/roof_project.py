@@ -1671,7 +1671,7 @@ class TectoraRoofProject(models.Model):
         for line in lines.sorted(lambda l: (l.product_id.categ_id.complete_name or "", l.product_id.display_name or "", l.id)):
             if not line.product_id:
                 continue
-            key = (line.roof_id, line.product_id)
+            key = (line._tectora_roof(), line.product_id)
             totals[key] = totals.get(key, 0.0) + line.quantity
         return {key: round(quantity, 2) for key, quantity in totals.items()}
 

@@ -1,0 +1,102 @@
+# Storyboard for docs/video_scripts/standaard/09_taakopvolging.md
+script: docs/video_scripts/standaard/09_taakopvolging.md
+name: standaard_09_taakopvolging
+series: Tectora · de standaardflow
+stage: project
+bumper: docs/handleiding/dataforge_logo.png
+voice: nl_BE-nathalie-medium
+tempo: 1.15
+thumbnail_shot: 5
+start: /odoo/action-tectora_roof.action_tectora_projects
+
+shots:
+  1:
+    card: title
+
+  2:
+    steps:
+      - menu: Projectopvolging
+      - wait: 0.4
+      - click: Projectfases
+      - wait: 0.6
+      - highlight: {selector: ".o_list_renderer tbody", seconds: 2.2}
+      - menu: Projectopvolging
+      - click: Taaksjablonen
+      - click: {selector: ".o_group_header:has-text('Voorbereiding')"}
+      - click: {selector: ".o_group_header:has-text('Uitvoering')"}
+      - click: {selector: ".o_group_header:has-text('Oplevering')"}
+      # Deadline t.o.v. and Dagen are optional columns: switch them on.
+      - click: {selector: ".o_optional_columns_dropdown_toggle"}
+      - click: {selector: ".o-dropdown--menu label:has-text('Deadline t.o.v.')"}
+      - click: {selector: ".o-dropdown--menu label:has-text('Dagen')"}
+      - click: {selector: ".o_optional_columns_dropdown_toggle"}
+      - wait: 0.5
+      - highlight: {selector: ".o_data_row:has-text('Plaatsbezoek bevestigen')", seconds: 2.0}
+      - highlight: {selector: ".o_data_row:has-text('Stelling bestellen')", seconds: 2.4}
+
+  3:
+    steps:
+      - menu: Projectopvolging
+      - click: Taaksjablonen importeren
+      - wait: 1.2
+      - highlight: {selector: ".modal button:has-text('Standaardlijst downloaden')", seconds: 1.4}
+      - card:
+          html: >-
+            <div style="font-family:Arial,sans-serif;background:#fff;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden">
+            <div style="background:#1d6f42;color:#fff;padding:14px 22px;font-size:28px">standaardlijst_taaksjablonen.xlsx</div>
+            <table style="border-collapse:collapse;font-size:30px;color:#222">
+            <tr style="background:#e8f1ec;font-weight:bold"><td style="padding:12px 20px;border:1px solid #ccc">Fase</td><td style="padding:12px 20px;border:1px solid #ccc">Omschrijving fase</td><td style="padding:12px 20px;border:1px solid #ccc">Taak</td><td style="padding:12px 20px;border:1px solid #ccc">Subtaak</td><td style="padding:12px 20px;border:1px solid #ccc">Optie</td><td style="padding:12px 20px;border:1px solid #ccc">Deadline t.o.v.</td><td style="padding:12px 20px;border:1px solid #ccc">Dagen</td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Voorbereiding</td><td style="padding:12px 20px;border:1px solid #ddd">vóór de uitvoering</td><td style="padding:12px 20px;border:1px solid #ddd">Werfbezoek en opmeting</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">start</td><td style="padding:12px 20px;border:1px solid #ddd">-14</td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Voorbereiding</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">Materiaal besteld</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">start</td><td style="padding:12px 20px;border:1px solid #ddd">-7</td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Voorbereiding</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">Materiaal besteld</td><td style="padding:12px 20px;border:1px solid #ddd">Isolatie</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Voorbereiding</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">Kraan reserveren</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">ja</td><td style="padding:12px 20px;border:1px solid #ddd">start</td><td style="padding:12px 20px;border:1px solid #ddd">-3</td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Uitvoering</td><td style="padding:12px 20px;border:1px solid #ddd">op de werf</td><td style="padding:12px 20px;border:1px solid #ddd">Afbraakwerken</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td></tr>
+            <tr><td style="padding:12px 20px;border:1px solid #ddd">Oplevering</td><td style="padding:12px 20px;border:1px solid #ddd">en nazorg</td><td style="padding:12px 20px;border:1px solid #ddd">Oplevering met de klant</td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd"></td><td style="padding:12px 20px;border:1px solid #ddd">einde</td><td style="padding:12px 20px;border:1px solid #ddd">0</td></tr>
+            </table></div>
+      - wait: 3.5
+      - hide_card:
+      - highlight: {field: file, seconds: 1.2}
+      - highlight: {selector: ".modal-footer button:has-text('Importeren')", seconds: 1.2}
+      - click: {selector: ".modal-footer button:has-text('Annuleren')"}
+
+  4:
+    steps:
+      - menu: Projecten
+      - click: {selector: ".o_kanban_record:has-text('Peeters — Izegem')"}
+      - zoom: {selector: ".o_tectora_task_phases", scale: 1.6}
+      - highlight: {selector: ".o_tectora_task_phases .o_tectora_steps", seconds: 1.8}
+      - highlight: {selector: ".o_tectora_task_phases .fw-bold:has-text('Huidige fase')", seconds: 1.6}
+      - highlight: {selector: ".o_tectora_task_phases .card-header .badge.text-bg-light", seconds: 1.3}
+      - highlight: {selector: ".o_tectora_task_phases .card-header .badge.text-bg-danger", seconds: 1.3}
+      - unzoom:
+
+  5:
+    steps:
+      - click: {selector: ".o_tectora_task_phases .card-header button"}
+      - wait: 0.6
+      - click: {selector: "button:has-text('Uitgezette opties')"}
+      - wait: 0.6
+      - click: {selector: ".o_tectora_task_row:has-text('Stelling bestellen') .o_tectora_meta_toggle button"}
+      - wait: 0.8
+      - click: {selector: "button:has-text('Uitgezette opties')"}
+      - click: {selector: ".o_tectora_task_row:has-text('Stelling bestellen') input.o_tectora_check"}
+      - wait: 0.8
+      - hover: {selector: ".o_tectora_phase_card:has-text('Voorbereiding') .o_tectora_phase_progress"}
+      - wait: 1.2
+      - click: {selector: ".o_tectora_phase_card:has-text('Voorbereiding') .o_tectora_phase_head button"}
+      - wait: 0.6
+      - hover: {selector: ".o_tectora_steps .o_tectora_step:has-text('Voorbereiding')"}
+
+  6:
+    steps:
+      - click: {selector: ".o_tectora_subtask_row:has-text('Afspraak met de klant') input"}
+      - wait: 0.5
+      - click: {selector: ".o_tectora_subtask_row:has-text('Werfadres') input"}
+      - wait: 0.6
+      - highlight: {selector: ".o_tectora_task_row:not(.o_tectora_subtask_row):has-text('Plaatsbezoek bevestigen')", seconds: 1.4}
+      - click: {selector: "button:has-text('Enkel open')"}
+      - hover: {selector: ".o_tectora_phase_card:has-text('Voorbereiding')"}
+      - wait: 1.0
+
+  7:
+    card: title

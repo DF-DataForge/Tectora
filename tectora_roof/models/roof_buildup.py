@@ -477,7 +477,9 @@ class TectoraRoofProject(models.Model):
                     lambda l: l.product_id in layer_products and l.product_id.id != product_id
                 )
                 stale.unlink()
-                if not lines.filtered(lambda l: l.product_id.id == product_id):
+                # Only the lines that are left: the deleted ones can no
+                # longer be read.
+                if not (lines - stale).filtered(lambda l: l.product_id.id == product_id):
                     Line.create({
                         "section_id": section.id,
                         "product_id": product_id,
