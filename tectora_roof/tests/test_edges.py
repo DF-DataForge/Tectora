@@ -86,3 +86,28 @@ class TestEdges(TransactionCase):
         side_2 = lines.filtered(lambda l: l.coverage == "edges" and l.edge_index == 2)
         self.assertEqual(side_2.product_id, self.connection)
         self.assertFalse(lines.filtered(lambda l: l.coverage == "corners"))
+
+    def test_demolition_selection(self):
+        """The Afbouw tab: exactly the ticked demolition works on the side."""
+        meter = self.env.ref("uom.product_uom_meter")
+        chapter = self.env["product.category"].create({"name": "03. Afbraakwerken plat dak"})
+        group = self.env["product.category"].create({"name": "Dakranden & muurkappen", "parent_id": chapter.id})
+        Product = self.env["product.product"]
+        edges = Product.create({"name": "Verwijderen van de dakranden", "type": "service",
+                                "uom_id": meter.id, "categ_id": group.id, "list_price": 6.98})
+        solins = Product.create({"name": "Verwijderen van de solins", "type": "service",
+                                 "uom_id": meter.id, "categ_id": group.id, "list_price": 7.45})
+        options = self.project.tectora_get_demolition_options("edge")
+        self.assertEqual({o["id"] for o in options}, {edges.id, solins.id})
+        self.assertEqual(options[0]["group"], "Dakranden & muurkappen")
+        self.assertFalse(self.project.tectora_get_demolition_options("surface"))
+
+        item = [{"record_id": self.section.id, "side": 1, "quantity": 4.0}]
+        self.project.tectora_apply_selection(item, "edges", [edges.id, solins.id], [edges.id, solins.id])
+        side = self.section.product_line_ids.filtered(lambda l: l.edge_index == 1)
+        self.assertEqual(side.product_id, edges | solins)
+        result = self.project.tectora_apply_selection(item, "edges", [edges.id], [edges.id, solins.id])
+        self.assertEqual(result, {"added": 0, "removed": 1})
+        side = self.section.product_line_ids.filtered(lambda l: l.edge_index == 1)
+        self.assertEqual(side.product_id, edges)
+        self.assertEqual(side.quantity, 4.0)

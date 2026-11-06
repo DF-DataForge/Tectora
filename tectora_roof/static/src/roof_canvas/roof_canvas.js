@@ -2991,6 +2991,30 @@ export class RoofCanvasField extends Component {
                           : this.applyEdges(edgeItemsFor(targetKeys), choice),
               }
             : undefined;
+        // The demolition works of a surface or a side ("Afbouw").
+        const selectionItemsFor = (targetKeys) => {
+            const picked = new Set(targetKeys || []);
+            return [
+                { record_id: targetIds[0], side: sideNumber, quantity },
+                ...others
+                    .filter((item) => picked.has(item.key))
+                    .map((item) => ({
+                        record_id: recordByShape[item.shapeId],
+                        side: item.sideNumber,
+                        quantity: item.quantity,
+                    })),
+            ].filter((item) => item.record_id);
+        };
+        const demolition = (isSurface || (hit.type === "edge" && !isObject)) && !isSeamHit
+            ? {
+                  projectId: record.resId,
+                  scope: isSurface ? "surface" : "edge",
+                  apply: (productIds, optionIds, targetKeys) =>
+                      this.applySelection(
+                          selectionItemsFor(targetKeys), coverage, productIds, optionIds, linkField
+                      ),
+              }
+            : undefined;
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -2999,6 +3023,7 @@ export class RoofCanvasField extends Component {
             ],
             buildup,
             edges,
+            demolition,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -3153,6 +3178,33 @@ export class RoofCanvasField extends Component {
         } catch (error) {
             console.warn("Roof canvas: applying the edge finish failed", error);
             this.notification.add(_t("Randafwerking toepassen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        }
+        this.draw();
+        this.refreshPanel();
+    }
+
+    /** The "Afbouw" of the picker: exactly the ticked works on the items. */
+    async applySelection(items, coverage, productIds, optionIds, linkField) {
+        const record = this.props.record;
+        try {
+            const result = await this.orm.call(
+                "tectora.roof.project", "tectora_apply_selection",
+                [[record.resId], items, coverage, productIds, optionIds],
+                { link_field: linkField }
+            );
+            await record.load();
+            this.notification.add(
+                _t("Afbouw bijgewerkt: %(added)s toegevoegd, %(removed)s verwijderd.", {
+                    added: result.added,
+                    removed: result.removed,
+                }),
+                { type: "success" }
+            );
+        } catch (error) {
+            console.warn("Roof canvas: applying the demolition failed", error);
+            this.notification.add(_t("Afbouw toepassen is mislukt, probeer opnieuw."), {
                 type: "danger",
             });
         }
