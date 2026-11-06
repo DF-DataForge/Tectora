@@ -71,7 +71,7 @@ class TectoraRoofProject(models.Model):
         # The drawing's lines, per (product, coverage) within a segment.
         def add_drawn(line, target, target_kind):
             kind, chapter = self._tectora_product_segment(line.product_id)
-            data = segment(kind or "other", line.roof_id, chapter)
+            data = segment(kind or "other", line._tectora_roof(), chapter)
             group_key = (line.product_id.id, line.coverage)
             entry = data["groups"].get(group_key)
             if not entry:

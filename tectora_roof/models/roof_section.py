@@ -377,6 +377,13 @@ class TectoraRoofSectionProduct(models.Model):
             return "edges"
         return "general"
 
+    def _tectora_roof(self):
+        """The roof this line belongs to: its own (a project line of one
+        roof), else that of its section or dakobject (a line of the
+        drawing)."""
+        self.ensure_one()
+        return self.roof_id or self.section_id.roof_id or self.object_id.roof_id
+
     # ------------------------------------------------------ order mirroring
     @api.model_create_multi
     def create(self, vals_list):

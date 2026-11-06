@@ -256,3 +256,32 @@ class TestRoofs(TransactionCase):
         self.assertIn(measured, block)
         self.assertEqual(lines[-2].name, "ALGEMENE NOTA'S")
         self.assertEqual((lines[-1].display_type, lines[-1].name), ("line_note", "Betaling: 30% voorschot."))
+
+    def test_drawn_products_per_roof(self):
+        """The same product drawn on two roofs: one line per roof, each in
+        its roof's opbouwwerken, on the quotation and in the Offerte tab."""
+        order = self.make_order()
+        self.add_roofs(order, "Woning", "Garage")
+        project = order.roof_project_id
+        house, garage = project.roof_ids
+        for roof, area in ((house, 98.95), (garage, 22.32)):
+            section = self.env["tectora.roof.section"].create({
+                "project_id": project.id, "roof_id": roof.id, "name": roof.description,
+                "area": area, "perimeter": 20.0,
+            })
+            self.env["tectora.roof.section.product"].create({
+                "section_id": section.id, "product_id": self.epdm.id, "coverage": "surface",
+            })
+        project._tectora_mirror_to_order()
+        lines = order.order_line.sorted("sequence")
+        measured = lines.filtered("roof_measurement_line")
+        self.assertEqual({(l.tectora_roof_id, l.product_uom_qty) for l in measured},
+                         {(house, 98.95), (garage, 22.32)})
+        for roof in (house, garage):
+            header = lines.filtered(lambda l: l.display_type == "line_section"
+                                    and l.tectora_segment == "buildup:%s" % roof.id)
+            following = lines.filtered(lambda l: l.sequence > header.sequence)
+            self.assertEqual(following[:1].tectora_roof_id, roof, "right under its roof's header")
+        buildup = [s for s in project._tectora_quote_segments() if s["kind"] == "buildup"]
+        self.assertEqual({(s["roof_id"], s["lines"][0]["quantity"]) for s in buildup},
+                         {(house.id, 98.95), (garage.id, 22.32)})
