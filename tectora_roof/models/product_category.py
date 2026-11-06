@@ -40,3 +40,19 @@ class ProductCategory(models.Model):
             category.tectora_allows_objects = "object" in category.tectora_usage_ids.mapped(
                 "code"
             )
+
+    @api.model
+    def tectora_category_ids_for_usages(self, usages):
+        """The categories whose products the drawing offers for ``usages``
+        (codes): a category with usages of its own is offered for those; one
+        without takes them from its nearest parent that has some, so a new
+        sub-category (Isolatie/PIR) is offered where its parent was."""
+        usages = set(usages or [])
+        result = []
+        for category in self.search([]):
+            node = category
+            while node and not node.tectora_usage_ids:
+                node = node.parent_id
+            if node and usages & set(node.tectora_usage_ids.mapped("code")):
+                result.append(category.id)
+        return result

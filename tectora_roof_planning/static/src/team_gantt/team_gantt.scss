@@ -78,3 +78,36 @@
         opacity: 0.55;
     }
 }
+
+// The scissors of the team planner: a dashed line at the day boundary where a
+// click cuts the block, with the day (team_gantt.js).
+.o_tectora_cutter {
+    position: fixed;
+    z-index: 1050;
+    width: 0;
+    border-left: 2px dashed rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+
+    .oi {
+        position: absolute;
+        left: -0.6rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        background: #fff;
+        border-radius: 50%;
+    }
+
+    .o_tectora_cutter_label {
+        position: absolute;
+        left: 0.5rem;
+        top: -1.4rem;
+        white-space: nowrap;
+        font-size: 0.75rem;
+        padding: 0 0.3rem;
+        background: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        border-radius: 3px;
+    }
+}
+

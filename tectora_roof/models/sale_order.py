@@ -27,6 +27,8 @@ SYNC_PAIRS = [
     ("user_id", "project_manager_id"),
     ("commitment_date", "date_deadline"),
     ("pricelist_id", "project_type"),
+    # The order's delivery address is the site.
+    ("partner_shipping_id", "site_partner_id"),
 ]
 # Commercial data is only pushed onto an order that is still a quotation.
 QUOTATION_ONLY = {"partner_id", "pricelist_id"}
@@ -327,9 +329,7 @@ class SaleOrder(models.Model):
         values = {
             "name": name,
             "company_id": self.company_id.id or self.env.company.id,
-            "address": address._display_address(without_name=True).replace(
-                "\n", ", "
-            ) if address else False,
+            "site_partner_id": address.id if address else False,
             "state": "confirmed" if self.state in ("sale", "done") else "quoted",
         }
         values.update(self._tectora_roof_values_from_order())
@@ -553,16 +553,17 @@ class SaleOrder(models.Model):
         )[:1]
 
     def _tectora_add_roof_subsections(self, roofs):
-        """Under the afbouw- and opbouwwerken, a subsection per roof with the
-        works of that chapter: the template's lines move into the first
-        roofs' subsections, every next roof gets the same lines. The roof
-        project gets them as lines of that roof, whose quantities follow the
-        roof's plan once it is drawn."""
+        """Every roof gets the works of the afbouw- and opbouwwerken: the
+        template's lines go to the first roofs, every next roof gets the same
+        lines as the first. The roof project gets them as lines of that roof,
+        whose quantities follow the roof's plan once it is drawn; the
+        quotation is laid out per roof (Afbouwwerken and Opbouwwerken thv
+        each roof)."""
         self.ensure_one()
         Line = self.env["sale.order.line"]
         ordered = list(self.order_line.sorted(lambda l: (l.sequence, l.id)))
         for _kind, keywords in self.ROOF_CHAPTERS:
-            lines = Line.union(ordered)
+            lines = Line.union(*ordered) if ordered else Line
             header = self._tectora_roof_chapter_header(lines, keywords)
             if not header:
                 continue
@@ -577,22 +578,17 @@ class SaleOrder(models.Model):
                 and not line.tectora_roof_id and not line.roof_measurement_line
             ]
             if not pattern:
-                # The chapter was split per roof before: a new roof gets the
-                # lines of the first roof.
+                # Laid out per roof before: a new roof gets the lines of the
+                # first roof.
                 first_roof = next((l.tectora_roof_id for l in block if l.tectora_roof_id), None)
                 if first_roof:
                     pattern = [
                         line for line in block
-                        if not line.display_type and line.tectora_roof_id == first_roof
+                        if not line.display_type and not line.roof_measurement_line
+                        and line.tectora_roof_id == first_roof
                     ]
             values = []
             for roof in roofs:
-                values.append({
-                    "order_id": self.id,
-                    "display_type": "line_subsection",
-                    "name": roof._subsection_name(),
-                    "tectora_roof_id": roof.id,
-                })
                 for line in pattern:
                     values.append({
                         "order_id": self.id,
@@ -603,19 +599,163 @@ class SaleOrder(models.Model):
                         "price_unit": line.price_unit,
                         "discount": line.discount,
                         "tectora_roof_id": roof.id,
+                        "sequence": header.sequence,
                     })
-            new_lines = Line.create(values)
+            Line.create(values)
             loose = [line for line in pattern if not line.tectora_roof_id]
-            ordered = ordered[:end] + list(new_lines) + ordered[end:]
             if loose:
                 ordered = [line for line in ordered if line not in loose]
-                Line.union(loose).unlink()
-        ordered = [line for line in ordered if line.exists()]
-        for index, line in enumerate(ordered, start=1):
-            if line.sequence != index * 10:
-                line.with_context(tectora_sync=True).write({"sequence": index * 10})
+                Line.union(*loose).unlink()
+            ordered = list(self.order_line.sorted(lambda l: (l.sequence, l.id)))
+        self._tectora_restructure()
         if self.roof_project_id:
             self.roof_project_id._tectora_mirror_to_order(self)
+        return True
+
+    # ------------------------------------------------------------ segments
+    def _tectora_header_context(self, line, chapter_kind):
+        """(kind, roof) a header opens, or (None, roof) for a header of the
+        user's own (kept as it is, with its lines)."""
+        project = self.roof_project_id
+        Roof = self.env["tectora.roof.project.roof"]
+        if getattr(line, "is_optional", False):
+            return None, Roof
+        if line.tectora_segment:
+            return line.tectora_segment.split(":")[0], line.tectora_roof_id
+        kind = project._tectora_segment_kind(line.name)
+        if line.tectora_roof_id:
+            # A roof's subsection under a chapter header.
+            return kind or chapter_kind, line.tectora_roof_id
+        if kind == "other":
+            return None, Roof  # a header of the user's own: kept
+        return kind, Roof
+
+    def _tectora_restructure(self):
+        """Lay the quotation out in its standard segments: Algemene werken,
+        Veiligheid, per roof Afbouwwerken and Opbouwwerken thv that roof, the
+        other chapters, the headers of the user's own (with their lines),
+        Algemene nota's.
+
+        A line goes to the segment of its product's chapter (and its roof);
+        a line whose product has no chapter stays in the segment of the
+        header it was under. Notes stay with the line they follow. Lines keep
+        their order within a segment. The segment headers are made (or
+        renamed) by this; the chapter headers and roof subsections of the
+        old layout are dropped.
+        """
+        for order in self:
+            project = order.roof_project_id
+            if not project or order.state not in ("draft", "sent"):
+                continue
+            Line = self.env["sale.order.line"].with_context(tectora_sync=True)
+            Roof = self.env["tectora.roof.project.roof"]
+            Category = self.env["product.category"]
+            roofs = project.roof_ids
+            segments = {}
+            dropped = []
+
+            def segment(key, kind, roof=Roof, chapter=Category, position=0):
+                if key not in segments:
+                    segments[key] = {
+                        "kind": kind, "roof": roof, "chapter": chapter,
+                        "header": None, "items": [], "position": position,
+                    }
+                return segments[key]
+
+            context_kind, context_roof, context_key = None, Roof, None
+            last_item = None
+            for position, line in enumerate(order.order_line.sorted(lambda l: (l.sequence, l.id))):
+                if line.display_type in ("line_section", "line_subsection"):
+                    last_item = None
+                    if line.roof_measurement_line:
+                        dropped.append(line)  # a header of the old measurement blocks
+                        continue
+                    kind, roof = order._tectora_header_context(line, context_kind)
+                    if not kind:
+                        context_kind, context_roof = None, Roof
+                        context_key = "custom:%s" % line.id
+                        segment(context_key, "custom", position=position)["header"] = line
+                        continue
+                    context_kind, context_roof, context_key = kind, roof, None
+                    if kind in ("demolition", "buildup") and not roof and len(roofs) == 1:
+                        roof = roofs
+                    key = project._tectora_segment_key(kind, roof)
+                    target = segment(key, kind, roof)
+                    if target["header"] is None and line.display_type == "line_section":
+                        target["header"] = line
+                    else:
+                        dropped.append(line)
+                    continue
+                if line.display_type == "line_note" and line.tectora_segment == "notes":
+                    segment("notes", "notes")["items"].append([line])
+                    continue
+                if line.display_type:
+                    if last_item is not None:
+                        last_item.append(line)
+                        continue
+                    item = [line]
+                    if context_key:
+                        segments[context_key]["items"].append(item)
+                    else:
+                        key = project._tectora_segment_key(context_kind or "other", context_roof)
+                        segment(key, context_kind or "other", context_roof)["items"].append(item)
+                    last_item = item
+                    continue
+                # A product line.
+                item = [line]
+                last_item = item
+                if context_key and not line.roof_line_id and not line.roof_measurement_line:
+                    segments[context_key]["items"].append(item)
+                    continue
+                kind, chapter = project._tectora_product_segment(line.product_id)
+                kind = kind or context_kind or "other"
+                roof = line.tectora_roof_id or line.roof_line_id.roof_id
+                if kind in ("demolition", "buildup"):
+                    roof = roof or context_roof
+                    if not roof and len(roofs) == 1:
+                        roof = roofs
+                else:
+                    roof = Roof
+                key = project._tectora_segment_key(kind, roof, chapter)
+                segment(key, kind, roof, chapter)["items"].append(item)
+
+            ranked = sorted(segments.items(), key=lambda kv: project._tectora_segment_rank(
+                kv[1]["kind"], kv[1]["roof"], kv[1]["chapter"], kv[1]["position"]
+            ))
+            final = []
+            for key, data in ranked:
+                header = data["header"]
+                if data["kind"] == "custom":
+                    final.append(header)
+                elif data["items"]:
+                    title = project._tectora_segment_title(data["kind"], data["roof"], data["chapter"])
+                    values = {
+                        "display_type": "line_section",
+                        "name": title,
+                        "tectora_segment": key,
+                        "tectora_roof_id": data["roof"].id or False,
+                    }
+                    if header:
+                        changed = {
+                            field: value for field, value in values.items()
+                            if (header[field].id if field == "tectora_roof_id" else header[field]) != value
+                        }
+                        if changed:
+                            header.with_context(tectora_sync=True).write(changed)
+                    else:
+                        header = Line.create(dict(values, order_id=order.id))
+                    final.append(header)
+                elif header:
+                    dropped.append(header)
+                    continue
+                for item in data["items"]:
+                    final.extend(item)
+            leftovers = [line for line in dropped if line not in final]
+            if leftovers:
+                Line.union(*leftovers).unlink()
+            for index, line in enumerate(final, start=1):
+                if line.sequence != index * 10:
+                    line.with_context(tectora_sync=True).write({"sequence": index * 10})
         return True
 
     # --------------------------------------------------------- field mirror
@@ -697,6 +837,12 @@ class SaleOrder(models.Model):
             project_type = self._tectora_project_type_from_pricelist()
             if project_type:
                 values["project_type"] = project_type
+        # Another customer gets its own delivery address (Odoo recomputes it
+        # without it being written), so the site follows that too.
+        site_changed = explicit and "partner_id" in changed and not only_missing
+        if (wanted("partner_shipping_id", "site_partner_id") or site_changed) \
+                and self.partner_shipping_id:
+            values["site_partner_id"] = self.partner_shipping_id.id
         return values
 
     def _tectora_order_values_from_roof(self, roof, changed=None, only_missing=False):
@@ -734,6 +880,8 @@ class SaleOrder(models.Model):
             pricelist = roof._find_pricelist()
             if pricelist:
                 values["pricelist_id"] = pricelist.id
+        if wanted("partner_shipping_id", "site_partner_id") and roof.site_partner_id:
+            values["partner_shipping_id"] = roof.site_partner_id.id
         return values
 
     def _tectora_project_type_from_pricelist(self):

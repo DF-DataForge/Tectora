@@ -68,7 +68,7 @@
             <gantt string="Planning per medewerker"
                    date_start="start_datetime"
                    date_stop="end_datetime"
-                   default_group_by="resource_ids"/>
+                   default_group_by="tectora_resource_team_id,resource_ids"/>
         </field>
     </record>
 

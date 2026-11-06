@@ -6,8 +6,7 @@ its own parts.
 
 ## Configuration
 
-*Dakmeting › Projectopvolging › Bestellijst-onderdelen* (or *Project ›
-Configuratie*): per part the order (longest lead time on top), the action
+*Project › Configuratie › Bestellijst-onderdelen*: per part the order (longest lead time on top), the action
 **Bestellen** (always order for the project) or **Stock eerst** (check the
 stock, order only the shortage), the suggested suppliers (the first one is
 chosen by default) and a note on them.
@@ -18,7 +17,7 @@ is reopened, and links to the order list on the task page.
 
 ## Importeren uit Excel
 
-*Dakmeting › Projectopvolging › Bestellijst importeren*: download de
+*Project › Configuratie › Bestellijst importeren*: download de
 **standaardlijst** (`Bestellijst.xlsx`), vul ze aan en laad ze terug op.
 
 - Tabblad **Bestellijst**, één regel per onderdeel: *Volgorde* (leeg = de
@@ -71,5 +70,5 @@ is reopened, and links to the order list on the task page.
 - The line's status follows its purchase orders: te bestellen, uit stock,
   prijsaanvraag, besteld, ontvangen, afgevinkt; a line whose expected delivery
   date has passed shows *te laat*.
-- *Dakmeting › Bestellijst* lists the open lines of all projects, per project
+- *Project › Werf › Bestellijst* lists the open lines of all projects, per project
   or per supplier.

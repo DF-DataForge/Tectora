@@ -50,22 +50,34 @@ COLUMN_ALIASES = OrderedDict([
                      "sales description"]),
 ])
 
-# Raw materials get the same chapter structure, but under their own branch:
-# a service can be sold, a raw material cannot, and mixing the two in one
-# category makes that impossible to see (and impossible to whitelist per
-# category for the drawing's product picker).
+# Raw materials live in a branch of their own: a service can be sold, a raw
+# material cannot, and mixing the two in one category makes that impossible
+# to see (and impossible to whitelist per category for the drawing's product
+# picker). The sales products (works items) follow the chapters of the roof
+# planner -- the quotation's structure; the raw materials are filed by what
+# they are (Dakbanen, Isolatie, Zinkwerk, Bevestigingsmaterialen, ...), the
+# way they are bought and stocked.
 GOODS_BRANCH = "Grondstoffen"
 
 
-def branch_path(path, is_service):
+def branch_path(path, is_service, name=""):
     """The full category path of a product: services keep the chapter path,
-    raw materials get the same path under the Grondstoffen branch."""
+    raw materials get their material type under the Grondstoffen branch."""
     path = str(path or "").strip().strip("/")
-    if is_service or not path:
+    if is_service:
         return path
-    if path == GOODS_BRANCH or path.startswith(GOODS_BRANCH + "/"):
-        return path  # already branched
-    return "%s/%s" % (GOODS_BRANCH, path)
+    return goods_path(name, path)
+
+
+def goods_path(name, path=""):
+    """Grondstoffen/<material type> for a raw material named ``name``;
+    ``path`` (the chapter, or the type it has now) decides when the name
+    does not."""
+    current = chapter_path(path)
+    key = goods_type(name, current)
+    if key == "overige" and current in GOODS_TYPE_PATHS.values():
+        return "%s/%s" % (GOODS_BRANCH, current)
+    return "%s/%s" % (GOODS_BRANCH, GOODS_TYPE_PATHS[key])
 
 
 def chapter_path(path):
@@ -89,6 +101,25 @@ CATEGORY_PATHS = OrderedDict([
     ("afvoer", "04. Opbouwwerken plat dak/Afvoer"),
     ("isolatie", "04. Opbouwwerken plat dak/Isolatie"),
     ("afdichting", "04. Opbouwwerken plat dak/Afdichting"),
+    # The three layers of a flat roof's build-up, each in a category of its
+    # own so the drawing's "Dakopbouw" offers the right products per layer:
+    # the vapour barrier, the insulation (per material, the thickness and the
+    # fixing are in the name) and the roof covering.
+    ("dampscherm", "04. Opbouwwerken plat dak/Dampscherm"),
+    ("isolatie_pir", "04. Opbouwwerken plat dak/Isolatie/PIR"),
+    ("isolatie_wol", "04. Opbouwwerken plat dak/Isolatie/Minerale wol"),
+    ("isolatie_coverboard", "04. Opbouwwerken plat dak/Isolatie/Coverboard"),
+    ("dakbedekking", "04. Opbouwwerken plat dak/Dakbedekking"),
+    ("dakbedekking_epdm", "04. Opbouwwerken plat dak/Dakbedekking/EPDM"),
+    ("dakbedekking_bitumen", "04. Opbouwwerken plat dak/Dakbedekking/Bitumen & Resitrix"),
+    # The finish of the roof's sides, as the drawing's "Randafwerking"
+    # offers it: a free side gets a roof edge (profile or kraal, with its
+    # corners), a side against a wall, the neighbours or a gutter a
+    # connection.
+    ("dakranden_profielen", "02. Dakranden/Dakrandprofielen"),
+    ("dakranden_kralen", "02. Dakranden/Kralen"),
+    ("dakranden_hoeken", "02. Dakranden/Hoeken & eindstukken"),
+    ("aansluitingen", "04. Opbouwwerken plat dak/Aansluitingen"),
     ("bevestiging", "04. Opbouwwerken plat dak/Bevestigingsmaterialen"),
     ("hout", "04. Opbouwwerken plat dak/Hout & plaatmateriaal"),
     ("doorvoer", "04. Opbouwwerken plat dak/Doorvoeren & schoorsteen"),
@@ -118,6 +149,26 @@ CATEGORY_PATHS = OrderedDict([
 # Ordered, first match wins; no match leaves the product in the chapter itself
 # (which is where the werkuren belong).
 SUBCATEGORY_RULES = {
+    # Afdichting holds what makes the roof watertight: the vapour barrier and
+    # the roof covering itself get their own category, the connections,
+    # slabben, kit and accessories stay.
+    "afdichting": [
+        ("dampscherm", r"dampscherm|dampopen|alutrix|sopraglass|franaglass|"
+                       r"v-gard|tyvek|soprastick venti"),
+        ("dakbedekking_epdm", r"dakbedekking type:.*epdm|\bepdm folie\b"),
+        ("dakbedekking_bitumen", r"dakbedekking type:|sopralene|resitrix skw"),
+        ("aansluitingen", r"aansluit|solin|onderkapping|slabbe|lood dat behouden"),
+    ],
+    "dakranden": [
+        ("dakranden_hoeken", r"binnenhoek|buitenhoek|eindstuk"),
+        ("dakranden_kralen", r"\bkralen\b|\bkraal\b"),
+        ("dakranden_profielen", r"dakrand"),
+    ],
+    "isolatie": [
+        ("isolatie_pir", r"\bpir\b|utherm"),
+        ("isolatie_wol", r"rockwool|rhinoxx|isover|minerale wol|steenwol"),
+        ("isolatie_coverboard", r"coverboard|isogard"),
+    ],
     "afbraak": [
         ("afbraak_koepels", r"koepel|dakluik|lichtstraat"),
         ("afbraak_installaties", r"airco|zonnepane|warmtepomp|antenne|schotel"),
@@ -241,6 +292,98 @@ GOODS_WORDS = {"grondstof", "grondstoffen", "materiaal", "materialen",
                "consu", "storable"}
 
 
+# --- raw materials, by material type ---------------------------------------
+GOODS_TYPE_PATHS = OrderedDict([
+    ("dakbanen_epdm", "Dakbanen/EPDM"),
+    ("dakbanen_bitumen", "Dakbanen/Bitumen & Resitrix"),
+    ("dampscherm", "Dampschermen & folies"),
+    ("isolatie_pir", "Isolatie/PIR"),
+    ("isolatie_wol", "Isolatie/Minerale wol"),
+    ("isolatie", "Isolatie/Overige isolatie"),
+    ("lijm", "Lijmen, primers & kitten"),
+    ("tape", "Tapes, strips & flashings"),
+    ("dakrand", "Dakranden & profielen"),
+    ("zink", "Zinkwerk & hemelwater"),
+    ("afvoerleiding", "Afvoerleidingen PE & PP"),
+    ("dakafvoer", "Dakafvoeren & spuwers"),
+    ("doorvoer", "Doorvoeren & ventilatie"),
+    ("bevestiging", "Bevestigingsmaterialen"),
+    ("hout", "Hout & plaatmateriaal"),
+    ("koepel", "Koepels & dakramen"),
+    ("veiligheid", "Valbeveiliging"),
+    ("terras", "Terras & ballast"),
+    ("gereedschap", "Gereedschap & verbruiksmateriaal"),
+    ("overige", "Overige"),
+])
+
+GOODS_TYPE_RULES = [
+    ("gereedschap", r"pistool|borstel|roller|telescoop|steel\b|vervangrol|handvat|quickscrub|"
+                    r"primer pad|krachtbit|schroefbit|\bbit\b|houder|\bboor\b|boren|diadrill|"
+                    r"gatenzaag|zaagblad|reciprozaag|diaflex|ho-bit|marker|pica dry|potlood|"
+                    r"handsch|beschermingspak|x-twin|meetlint|cutter|\bmes\b|spatel|brander|gasfles"),
+    ("veiligheid", r"ankerpunt|wallfix|abs-lock|valbeveilig|leeflijn|harnas"),
+    ("koepel", r"koepel|spindel|draaistok|dakra[ae]?m|velux|lichtstraat|dakluik"),
+    ("doorvoer", r"doorvoer|verluchting|ontluchting|ventilatie|schouw|schoorsteen|"
+                 r"pipe flashing|conduit flashing"),
+    ("dakafvoer", r"aflopen|afloop|roof afvoer|\bafvoer\b.*\bslab|spuwer|noodoverloop|"
+                  r"bladvanger|kiezelbak"),
+    ("tape", r"tape|formflash|vormfolie|flashing|rma strip|perimeterstrip|manchette|"
+             r"bladlood|aluflexx|franaline"),
+    ("dakrand", r"dakrand|\bdrb|binnenhoek|buitenhoek|koppelplaat|muurkap|kraal|daktrim|"
+                r"eindstuk|clipslijst|inzagen|grindvang|batten bar|kimfixatie|wandaansluit|"
+                r"solin|overzetstuk|basisprofiel"),
+    ("lijm", r"primer|bonding adhes|lijm|kleefstof|\bkit\b|kitpatroon|silicon|silirub|"
+             r"parabond|sealant|mastiek|\bms 500|worst|isolfoam|foam|schuim|cleaner|"
+             r"soprad[eè]re|waterblock"),
+    ("dampscherm", r"dampscherm|dampopen|alutrix|sopraglass|franaglass|v-gard|tyvek|"
+                   r"soprastick venti|\bdbr\b|\bksd\b"),
+    ("dakbanen_epdm", r"\bepdm\b|rubbergard"),
+    ("dakbanen_bitumen", r"bitum|roofing|resitrix|sopralene|derbigum|\bsbs\b"),
+    ("zink", r"zink|zinc|\bvm\b|afleider|ontvanger|scharnierhaak|haak|goot|regenpijp|"
+             r"bocht rond|bocht vk|beugel|afvoerb"),
+    ("afvoerleiding", r"geberit|wavin|wafix|\bpe\b|\bpp\b|\bpvc\b|elektrolas|verloop|"
+                      r"t-stuk|steekmof|buis"),
+    ("bevestiging", r"schroef|schroeven|vijs|plug|pianos|\bbout|moer|nagel|\bring\b|"
+                    r"balkdrager|balkschoen|beglazing|anker|isolatieplaatje|onderlegring"),
+    ("isolatie_pir", r"\bpir\b|utherm|recticel|powerdeck"),
+    ("isolatie_wol", r"rockwool|rhinoxx|isover|multimax|steenwol|glaswol"),
+    ("isolatie", r"isolatie|\beps\b|\bxps\b|resol|isogard|coverboard"),
+    ("hout", r"\bosb\b|multiplex|douglas|\bsls\b|\bcls\b|baddens|profiply|triplex|"
+             r"plaatmateriaal|\bbalk|\blat\b|latten|\bc24\b|meranti|houtvezel"),
+    ("terras", r"tegel|grind|kiezel|ballast|geotextiel|groendak|substraat|sedum|"
+               r"bankirai|vlonder"),
+]
+
+# When the name says nothing: the chapter the product used to be filed in.
+GOODS_CHAPTER_FALLBACK = {
+    "02. Dakranden": "dakrand",
+    "02. Verplichte veiligheidsvoorzieningen": "veiligheid",
+    "04. Opbouwwerken plat dak/Afvoer": "zink",
+    "04. Opbouwwerken plat dak/Isolatie": "isolatie",
+    "04. Opbouwwerken plat dak/Afdichting": "tape",
+    "04. Opbouwwerken plat dak/Bevestigingsmaterialen": "bevestiging",
+    "04. Opbouwwerken plat dak/Hout & plaatmateriaal": "hout",
+    "04. Opbouwwerken plat dak/Doorvoeren & schoorsteen": "doorvoer",
+    "04. Opbouwwerken plat dak/Gereedschap & klein materiaal": "gereedschap",
+    "05. Koepels": "koepel",
+    "06. Dakramen": "koepel",
+    "08. Terrasvloer": "terras",
+}
+
+def goods_type(name, chapter=""):
+    """The material type of a raw material: from its name, else from the
+    chapter it was filed under, else Overige."""
+    lowered = re.sub(r"\s+", " ", str(name or "")).lower()
+    for key, pattern in GOODS_TYPE_RULES:
+        if re.search(pattern, lowered):
+            return key
+    chapter = str(chapter or "").strip("/")
+    for prefix, key in GOODS_CHAPTER_FALLBACK.items():
+        if chapter == prefix or chapter.startswith(prefix + "/"):
+            return key
+    return "overige"
+
+
 def clean(value):
     return re.sub(r"\s+", " ", str(value or "").strip())
 
@@ -303,6 +446,22 @@ def refine(key, name):
         if re.search(pattern, lowered):
             return sub_key
     return key
+
+
+def refine_path(path, name):
+    """``path`` refined to the sub-category the name belongs to, keeping the
+    Grondstoffen branch: "04. Opbouwwerken plat dak/Afdichting" becomes
+    ".../Dampscherm" for a vapour barrier. Any other path is returned as is."""
+    path = str(path or "").strip().strip("/")
+    chapter = chapter_path(path)
+    for key, candidate in CATEGORY_PATHS.items():
+        if candidate == chapter and key in SUBCATEGORY_RULES:
+            refined = refine(key, name)
+            if refined == key:
+                return path
+            new = CATEGORY_PATHS[refined]
+            return new if chapter == path else "%s/%s" % (GOODS_BRANCH, new)
+    return path
 
 
 def classify(name, group, supplier):

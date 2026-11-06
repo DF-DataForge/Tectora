@@ -5,7 +5,7 @@ from odoo import api, fields, models
 class TectoraRoofExecutionReport(models.Model):
     """A day report of the crew on a site: what was done, what was used,
     what went wrong -- with photos. Written from the employee portal, read in
-    the back office (Dakmeting -> Uitvoeringsverslagen and the project
+    the back office (Project -> Werf -> Uitvoeringsverslagen and the project
     dashboard)."""
 
     _name = "tectora.roof.execution.report"

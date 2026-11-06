@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""A roof project with several roofs: one plan each, and a subsection per
-roof under the afbouw- and opbouwwerken of the quotation."""
+"""A roof project with several roofs: one plan each, and per roof its own
+Afbouwwerken and Opbouwwerken on the quotation."""
 import json
 
 from odoo import Command
@@ -94,26 +94,34 @@ class TestRoofs(TransactionCase):
         self.assertEqual(roofs.mapped("name"), ["Dak 1", "Dak 2"])
         self.assertEqual(roofs.mapped("description"), ["Garage", "Achterbouw"])
         self.assertEqual(project.active_roof_id, roofs[0])
+        # Per roof its afbouw- and opbouwwerken; the header of the user's
+        # own (commerciële tegemoetkoming) stays at the end.
         self.assertEqual(self.layout(order), [
             ("line_section", ""), ("Vaste kosten", ""),
-            ("line_section", ""),
-            ("line_subsection", "Dak 1"), ("Bestaande bedekking verwijderen", "Dak 1"),
-            ("line_subsection", "Dak 2"), ("Bestaande bedekking verwijderen", "Dak 2"),
-            ("line_section", ""),
-            ("line_subsection", "Dak 1"), ("EPDM 1,5 mm", "Dak 1"),
-            ("line_subsection", "Dak 2"), ("EPDM 1,5 mm", "Dak 2"),
+            ("line_section", "Dak 1"), ("Bestaande bedekking verwijderen", "Dak 1"),
+            ("line_section", "Dak 1"), ("EPDM 1,5 mm", "Dak 1"),
+            ("line_section", "Dak 2"), ("Bestaande bedekking verwijderen", "Dak 2"),
+            ("line_section", "Dak 2"), ("EPDM 1,5 mm", "Dak 2"),
             ("line_section", ""),
         ])
-        subsection = order.order_line.filtered(
-            lambda l: l.display_type == "line_subsection" and l.tectora_roof_id == roofs[1]
-        )[:1]
-        self.assertEqual(subsection.name, "Dak 2 – Achterbouw")
+        headers = order.order_line.filtered(lambda l: l.display_type == "line_section")
+        self.assertEqual(headers.mapped("name"), [
+            "ALGEMENE WERKEN",
+            "AFBOUWWERKEN THV HET PLAT DAK – Dak 1 – Garage",
+            "OPBOUWWERKEN THV HET PLAT DAK – Dak 1 – Garage",
+            "AFBOUWWERKEN THV HET PLAT DAK – Dak 2 – Achterbouw",
+            "OPBOUWWERKEN THV HET PLAT DAK – Dak 2 – Achterbouw",
+            "COMMERCIËLE TEGEMOETKOMING",
+        ])
+        subsection = headers.filtered(
+            lambda l: l.tectora_roof_id == roofs[1] and "AFBOUW" in l.name
+        )
         # Every roof has its own lines on the roof project.
         epdm_lines = project.direct_line_ids.filtered(lambda l: l.product_id == self.epdm)
         self.assertEqual(epdm_lines.roof_id, roofs)
-        # Renaming a roof renames its subsections.
+        # Renaming a roof renames its segments.
         roofs[1].description = "Bijgebouw"
-        self.assertEqual(subsection.name, "Dak 2 – Bijgebouw")
+        self.assertEqual(subsection.name, "AFBOUWWERKEN THV HET PLAT DAK – Dak 2 – Bijgebouw")
 
     def test_quantities_follow_the_roofs_plan(self):
         order = self.make_order()
@@ -190,8 +198,10 @@ class TestRoofs(TransactionCase):
         ).unlink()
         order = self.make_order(template)
         self.add_roofs(order, "Woning")
-        subsections = order.order_line.filtered(lambda l: l.display_type == "line_subsection")
-        self.assertEqual(len(subsections), 1)
+        roof_headers = order.order_line.filtered(
+            lambda l: l.display_type == "line_section" and l.tectora_roof_id
+        )
+        self.assertEqual(roof_headers.mapped("name"), ["OPBOUWWERKEN THV HET PLAT DAK – Dak 1 – Woning"])
 
     def test_one_plan_per_roof(self):
         order = self.make_order()
@@ -216,3 +226,33 @@ class TestRoofs(TransactionCase):
         first.action_open_plan()
         self.assertEqual(project.canvas_data, first_plan)
         self.assertEqual(first.section_ids.canvas_ref, "a")
+
+    def test_segments_and_notes(self):
+        """The drawing's products go to their roof's segments, the general
+        notes close the quotation."""
+        order = self.make_order()
+        self.add_roofs(order, "Garage")
+        project = order.roof_project_id
+        roof = project.roof_ids
+        section = self.env["tectora.roof.section"].create({
+            "project_id": project.id, "roof_id": roof.id, "name": "Garage",
+            "area": 20.0, "perimeter": 18.0,
+        })
+        insulation = self.env["product.product"].create({
+            "name": "PIR 10 cm", "type": "service", "uom_id": self.env.ref("uom.product_uom_square_meter").id,
+            "categ_id": self.categ_buildup.id, "list_price": 49,
+        })
+        self.env["tectora.roof.section.product"].create({
+            "section_id": section.id, "product_id": insulation.id, "coverage": "surface",
+        })
+        project.quote_notes = "Betaling: 30% voorschot."
+        lines = order.order_line.sorted("sequence")
+        measured = lines.filtered("roof_measurement_line")
+        self.assertEqual((measured.product_id, measured.product_uom_qty, measured.tectora_roof_id),
+                         (insulation, 20.0, roof))
+        # In the roof's opbouwwerken, right after its header.
+        header = lines.filtered(lambda l: l.display_type == "line_section" and l.tectora_segment == "buildup:%s" % roof.id)
+        block = lines.filtered(lambda l: l.sequence > header.sequence)
+        self.assertIn(measured, block)
+        self.assertEqual(lines[-2].name, "ALGEMENE NOTA'S")
+        self.assertEqual((lines[-1].display_type, lines[-1].name), ("line_note", "Betaling: 30% voorschot."))

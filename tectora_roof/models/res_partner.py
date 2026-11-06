@@ -27,6 +27,13 @@ class ResPartner(models.Model):
         "tectora.partner.title", string="Aanspreektitel", ondelete="restrict",
     )
 
+    def _tectora_one_line_address(self):
+        """The address on one line, without the name: "Lostraat 15, 1703
+        Schepdaal"."""
+        self.ensure_one()
+        lines = self._display_address(without_name=True).split("\n")
+        return ", ".join(line.strip() for line in lines if line.strip())
+
     def _tectora_name_with_title(self):
         """The name with the salutation in front: "Dhr. Michiels Philippe"."""
         self.ensure_one()

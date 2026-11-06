@@ -54,6 +54,10 @@ function circlePoints(cx, cy, radius) {
     }
     return points;
 }
+// The one colour the drawing marks with: the selected side (or surface) and
+// the parts a hovered quotation line comes from.
+const HIGHLIGHT = "#f59e0b";
+
 const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
 
 const KIND_STYLES = {
@@ -196,6 +200,122 @@ function splitPolygonByPolyline(polygon, polyline) {
         return null;
     }
     return [a, b];
+}
+
+// A polygon cut by every seam crossing it: the EPDM sheets of a surface.
+function splitBySeams(polygon, seams) {
+    let pieces = [polygon];
+    for (const seam of seams) {
+        const next = [];
+        for (const piece of pieces) {
+            next.push(...(splitPolygonByPolyline(piece, seam) || [piece]));
+        }
+        pieces = next;
+    }
+    return pieces;
+}
+
+// Area centroid of a polygon (falls back to the bounding box centre).
+function polygonCentroid(points) {
+    let area = 0;
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < points.length; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        const cross = x1 * y2 - x2 * y1;
+        area += cross;
+        cx += (x1 + x2) * cross;
+        cy += (y1 + y2) * cross;
+    }
+    if (Math.abs(area) < 1e-9) {
+        const box = boundingBox(points);
+        return [box.x + box.w / 2, box.y + box.h / 2];
+    }
+    return [cx / (3 * area), cy / (3 * area)];
+}
+
+const MERGE_TOLERANCE_PX = 0.6;
+
+function samePoint(a, b) {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]) <= MERGE_TOLERANCE_PX;
+}
+
+function pointOnSegment(p, a, b) {
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-9) {
+        return samePoint(p, a);
+    }
+    const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (length * length);
+    if (t <= 1e-6 || t >= 1 - 1e-6) {
+        return false;
+    }
+    return Math.abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / length <= MERGE_TOLERANCE_PX;
+}
+
+// ``polygon`` with every point of ``others`` that lies on one of its sides
+// inserted as a vertex, so shared sides match vertex for vertex.
+function withVerticesOf(polygon, others) {
+    const out = [];
+    for (let i = 0; i < polygon.length; i++) {
+        const a = polygon[i];
+        const b = polygon[(i + 1) % polygon.length];
+        out.push(a);
+        const between = others
+            .filter((p) => pointOnSegment(p, a, b))
+            .sort(
+                (p, q) =>
+                    Math.hypot(p[0] - a[0], p[1] - a[1]) - Math.hypot(q[0] - a[0], q[1] - a[1])
+            );
+        for (const p of between) {
+            if (!samePoint(p, out[out.length - 1])) {
+                out.push(p);
+            }
+        }
+    }
+    return out;
+}
+
+// The union of two polygons that share (part of) their outline, e.g. the
+// two halves of a section split along a seam; null when they do not touch
+// or the result is not one closed outline.
+function mergePolygons(a, b) {
+    const pa = withVerticesOf(a, b);
+    const pb = withVerticesOf(b, a);
+    const edges = (poly) => poly.map((p, i) => [p, poly[(i + 1) % poly.length]]);
+    const ea = edges(pa);
+    const eb = edges(pb);
+    const shared = (edge, list) => list.some(([p, q]) => samePoint(edge[0], q) && samePoint(edge[1], p));
+    const keepA = ea.filter((edge) => !shared(edge, eb));
+    const keepB = eb.filter((edge) => !shared(edge, ea));
+    if (keepA.length === ea.length) {
+        return null; // nothing in common
+    }
+    const remaining = [...keepA, ...keepB];
+    const result = [remaining[0][0]];
+    let current = remaining.shift();
+    while (remaining.length) {
+        const index = remaining.findIndex(([p]) => samePoint(p, current[1]));
+        if (index < 0) {
+            return null;
+        }
+        current = remaining.splice(index, 1)[0];
+        result.push(current[0]);
+    }
+    if (!samePoint(current[1], result[0])) {
+        return null;
+    }
+    // Points on a straight side are no corners.
+    const clean = result.filter((p, i) => {
+        const prev = result[(i - 1 + result.length) % result.length];
+        const next = result[(i + 1) % result.length];
+        const cross = (p[0] - prev[0]) * (next[1] - p[1]) - (p[1] - prev[1]) * (next[0] - p[0]);
+        const scale = Math.hypot(p[0] - prev[0], p[1] - prev[1]) * Math.hypot(next[0] - p[0], next[1] - p[1]) || 1;
+        return Math.abs(cross) / scale > 1e-3;
+    });
+    return clean.length >= 3 ? clean : null;
 }
 
 // Point halfway along an open polyline, for its label.
@@ -396,6 +516,7 @@ export class RoofCanvasField extends Component {
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
+        this.action = useService("action");
         this.state = proxy({
             tool: "select",
             showBackground: true,
@@ -421,6 +542,13 @@ export class RoofCanvasField extends Component {
             // Ctrl-clicked sides, surfaces or corners waiting for Ctrl to be
             // released; they then all get the same products at once.
             multiSelect: [],
+            // The quotation as the drawing builds it (tectora_get_quote_preview),
+            // shown beside the drawing; each line with parts of the drawing has
+            // its parts highlighted on the drawing while hovered.
+            quote: null,
+            quoteLoading: false,
+            quoteOpen: true,
+            quoteHover: null, // key of the line hovered in the panel
         });
         this.world = { ...DEFAULT_WORLD };
         this.view = { zoom: 1, x: 0, y: 0 };
@@ -455,6 +583,7 @@ export class RoofCanvasField extends Component {
 
         onMounted(() => {
             this.resizeCanvas();
+            this.loadQuote();
             this.loadBackground();
             window.addEventListener("resize", this.onWindowResize);
             window.addEventListener("keyup", this.onWindowKeyUp);
@@ -478,6 +607,7 @@ export class RoofCanvasField extends Component {
         onWillUnmount(() => {
             this._destroyed = true;
             clearTimeout(this._autoSyncTimer);
+            clearTimeout(this._quoteTimer);
             if (this._resizeObserver) {
                 this._resizeObserver.disconnect();
             }
@@ -1212,7 +1342,73 @@ export class RoofCanvasField extends Component {
     }
 
     // --------------------------------------------------------------- shapes
+    /**
+     * The point on the outline of a roof section nearest to ``point``,
+     * within the snap distance (a corner first): {point, onEdge}. A seam
+     * runs from side to side, so its clicks land exactly on the outline.
+     */
+    seamSnap(point) {
+        const snap = CLOSE_SNAP_PX / this.view.zoom;
+        let best = null;
+        for (const shape of this.shapes) {
+            if ((shape.kind || "section") !== "section" || shape.shape === "circle") {
+                continue;
+            }
+            const points = shape.points;
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i];
+                const b = points[(i + 1) % points.length];
+                const corner = Math.hypot(point[0] - a[0], point[1] - a[1]);
+                if (corner <= snap && (!best || corner - snap < best.distance)) {
+                    // A corner wins over a side at the same distance.
+                    best = { point: [a[0], a[1]], distance: corner - snap };
+                }
+                const dx = b[0] - a[0];
+                const dy = b[1] - a[1];
+                const length2 = dx * dx + dy * dy;
+                if (!length2) {
+                    continue;
+                }
+                const t = Math.max(0, Math.min(1,
+                    ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length2));
+                const foot = [a[0] + dx * t, a[1] + dy * t];
+                const distance = Math.hypot(point[0] - foot[0], point[1] - foot[1]);
+                if (distance <= snap && (!best || distance < best.distance)) {
+                    best = { point: foot, distance };
+                }
+            }
+        }
+        return best ? { point: best.point, onEdge: true } : { point, onEdge: false };
+    }
+
     addPolygonPoint(point) {
+        if (this.state.tool === "seam") {
+            // Click a side, then the other side: the seam is done. Started
+            // inside the surface, it takes points until a double-click (or a
+            // click on a side).
+            const snapped = this.seamSnap(point);
+            point = snapped.point;
+            if (!this.draftPolygon) {
+                this.draftPolygon = [point];
+                this.draftCursor = null;
+                this.updateStatus();
+                this.draw();
+                return;
+            }
+            const last = this.draftPolygon[this.draftPolygon.length - 1];
+            if (Math.hypot(point[0] - last[0], point[1] - last[1]) <= CLOSE_SNAP_PX / this.view.zoom) {
+                return; // the same spot again (the second click of a double-click)
+            }
+            this.draftPolygon.push(point);
+            if (snapped.onEdge) {
+                this.closePolygon();
+                this.draw();
+                return;
+            }
+            this.updateStatus();
+            this.draw();
+            return;
+        }
         if (!this.draftPolygon) {
             this.draftPolygon = [point];
             this.draftCursor = null;
@@ -1235,12 +1431,16 @@ export class RoofCanvasField extends Component {
 
     closePolygon() {
         if (this.state.tool === "seam") {
-            // An open line: two points make a seam, and the surfaces on either
-            // side of it become separate sections.
+            // An open line: two points make a seam. The roof surface stays
+            // one section; the seam divides it into EPDM sheets (the joint
+            // between two sheets).
             if (this.draftPolygon && this.draftPolygon.length >= 2) {
                 this.addShape(this.draftPolygon, "seam");
                 const seam = this._shapes[this._shapes.length - 1];
-                this.splitSectionsBySeam(seam);
+                this.state.status = _t(
+                    "%s getekend: het dakvlak blijft één sectie, de naad deelt het in EPDM-doeken.",
+                    seam.name || KIND_NAMES.seam
+                );
             }
         } else if (this.draftPolygon && this.draftPolygon.length >= 3) {
             this.addShape(this.draftPolygon);
@@ -1275,48 +1475,6 @@ export class RoofCanvasField extends Component {
     // A seam marks separate surfaces: every section it crosses is cut in two
     // along it. The halves are new shapes that remember the section they came
     // from, so the server copies its whole-surface products onto both.
-    splitSectionsBySeam(seam) {
-        if (!seam || !isSeam(seam)) {
-            return;
-        }
-        const shapes = [...this.shapes];
-        let split = 0;
-        for (const section of this.shapes) {
-            if ((section.kind || "section") !== "section" || section.shape === "circle") {
-                continue;
-            }
-            const parts = splitPolygonByPolyline(section.points, seam.points);
-            if (!parts) {
-                continue;
-            }
-            const baseName = section.name || KIND_NAMES.section;
-            // Both halves keep the description of the surface, like its
-            // products; the sides are new, so their descriptions stay behind.
-            const surface = section.descriptions && section.descriptions.surface;
-            const make = (points, suffix) => ({
-                id: makeId(),
-                kind: "section",
-                name: `${baseName} ${suffix}`,
-                points: points.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
-                splitFrom: section.id,
-                ...(surface ? { descriptions: { surface: { ...surface } } } : {}),
-            });
-            const index = shapes.indexOf(section);
-            shapes.splice(index, 1, make(parts[0], "A"), make(parts[1], "B"));
-            split += 1;
-        }
-        if (!split) {
-            return;
-        }
-        this._shapes = shapes;
-        this.state.selectedId = seam.id;
-        this.commit();
-        this.state.status = _t(
-            "%(count)s sectie(s) gesplitst langs %(seam)s: de dakvlakken aan weerszijden zijn nu aparte secties. De producten van het oppervlak zijn overgenomen op beide delen.",
-            { count: split, seam: seam.name || KIND_NAMES.seam }
-        );
-    }
-
     hitTest(point) {
         const shapes = this.shapes;
         const seamTolerance = SEAM_HIT_SCREEN_PX / this.view.zoom;
@@ -1569,13 +1727,418 @@ export class RoofCanvasField extends Component {
             return;
         }
         ctx.save();
-        ctx.strokeStyle = "#f59e0b";
+        ctx.strokeStyle = HIGHLIGHT;
         ctx.lineWidth = 5 / this.view.zoom;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(a[0], a[1]);
         ctx.lineTo(b[0], b[1]);
         ctx.stroke();
+        ctx.restore();
+    }
+
+    // ------------------------------------------------------------ EPDM sheets
+    // A roof surface stays one section; the seams drawn on it divide it into
+    // EPDM sheets, labelled on the drawing.
+
+    get seamLines() {
+        return this.shapes.filter((shape) => isSeam(shape)).map((shape) => shape.points);
+    }
+
+    sheetPieces(shape) {
+        if ((shape.kind || "section") !== "section" || shape.shape === "circle") {
+            return [];
+        }
+        const seams = this.seamLines;
+        return seams.length ? splitBySeams(shape.points, seams) : [shape.points];
+    }
+
+    drawSheetLabels(ctx) {
+        if (!this.seamLines.length) {
+            return;
+        }
+        const zoom = this.view.zoom;
+        const scale = this.scaleMPerPx;
+        ctx.save();
+        ctx.font = `italic ${11 / zoom}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (const shape of this.shapes) {
+            const pieces = this.sheetPieces(shape);
+            if (pieces.length < 2) {
+                continue;
+            }
+            const box = boundingBox(shape.points);
+            const labelAt = [box.x + box.w / 2, box.y + box.h / 2];
+            pieces.forEach((piece, index) => {
+                let [x, y] = polygonCentroid(piece);
+                // Clear of the section's own name and area.
+                if (Math.hypot(x - labelAt[0], y - labelAt[1]) * zoom < 45) {
+                    y += 40 / zoom;
+                }
+                const area = polygonArea(piece) * scale * scale;
+                const text = _t("EPDM-doek %(index)s · %(area)s m²", {
+                    index: index + 1,
+                    area: area.toFixed(1),
+                });
+                const width = ctx.measureText(text).width + 10 / zoom;
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.fillRect(x - width / 2, y - 8 / zoom, width, 16 / zoom);
+                ctx.fillStyle = "#475569";
+                ctx.fillText(text, x, y);
+            });
+        }
+        ctx.restore();
+    }
+
+    /** Sections that were cut by a seam before seams stopped splitting
+     * them: the parts touching ``shape`` (and those touching them). */
+    splitFamily(shape) {
+        if (!shape || (shape.kind || "section") !== "section" || !shape.splitFrom) {
+            return [];
+        }
+        const candidates = this.shapes.filter(
+            (s) => (s.kind || "section") === "section" && s.splitFrom && s.shape !== "circle"
+        );
+        const family = [shape];
+        let outline = shape.points;
+        let grew = true;
+        while (grew) {
+            grew = false;
+            for (const candidate of candidates) {
+                if (family.includes(candidate)) {
+                    continue;
+                }
+                const merged = mergePolygons(outline, candidate.points);
+                if (merged) {
+                    family.push(candidate);
+                    outline = merged;
+                    grew = true;
+                }
+            }
+        }
+        return family.length > 1 ? family : [];
+    }
+
+    get mergeableFamily() {
+        return this.splitFamily(this.selectedShape);
+    }
+
+    /** One section again from the parts a seam had cut it into: the seams
+     * stay, now as the joints between the EPDM sheets. The largest part's
+     * section (with its products) carries on. */
+    mergeSplitSections() {
+        const family = this.mergeableFamily;
+        if (!family.length) {
+            return;
+        }
+        const base = [...family].sort((a, b) => polygonArea(b.points) - polygonArea(a.points))[0];
+        let outline = base.points;
+        const rest = family.filter((s) => s !== base);
+        while (rest.length) {
+            const index = rest.findIndex((s) => mergePolygons(outline, s.points));
+            if (index < 0) {
+                break;
+            }
+            outline = mergePolygons(outline, rest[index].points);
+            rest.splice(index, 1);
+        }
+        // Per-side values follow the side they lay on in one of the parts.
+        const sideValue = (key, a, b) => {
+            for (const part of family) {
+                const values = part[key];
+                if (!values) {
+                    continue;
+                }
+                const n = part.points.length;
+                for (let i = 0; i < n; i++) {
+                    const p = part.points[i];
+                    const q = part.points[(i + 1) % n];
+                    const on = (pt) => samePoint(pt, p) || samePoint(pt, q) || pointOnSegment(pt, p, q);
+                    if (on(a) && on(b) && values[i] !== undefined && values[i] !== "") {
+                        return values[i];
+                    }
+                }
+            }
+            return undefined;
+        };
+        const merged = {
+            ...base,
+            name: (base.name || KIND_NAMES.section).replace(/( [AB])+$/, ""),
+            points: outline.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]),
+        };
+        delete merged.splitFrom;
+        for (const key of ["edgeWidths", "edgeUpstands", "edgeNames"]) {
+            const values = {};
+            merged.points.forEach((a, i) => {
+                const value = sideValue(key, a, merged.points[(i + 1) % merged.points.length]);
+                if (value !== undefined) {
+                    values[i] = value;
+                }
+            });
+            if (Object.keys(values).length) {
+                merged[key] = values;
+            } else {
+                delete merged[key];
+            }
+        }
+        if (merged.descriptions) {
+            merged.descriptions = merged.descriptions.surface
+                ? { surface: merged.descriptions.surface }
+                : undefined;
+            if (!merged.descriptions) {
+                delete merged.descriptions;
+            }
+        }
+        const removed = new Set(family.filter((s) => s !== base).map((s) => s.id));
+        this._shapes = this.shapes
+            .filter((s) => !removed.has(s.id))
+            .map((s) => (s.id === base.id ? merged : s));
+        this.state.selectedId = merged.id;
+        this.state.focus = this.surfaceFocus(merged);
+        this.commit();
+        this.state.status = _t(
+            "%(count)s delen samengevoegd tot %(name)s; de naden blijven als grens tussen de EPDM-doeken.",
+            { count: family.length, name: merged.name }
+        );
+        this.refreshPanel();
+    }
+
+    // ------------------------------------------------------ quotation build-up
+    // Beside the drawing: the quotation as the drawing builds it, per chapter
+    // (Afbraak, Opbouw, ...), each line in the colour it has on the drawing.
+
+    scheduleQuote() {
+        clearTimeout(this._quoteTimer);
+        this._quoteTimer = setTimeout(() => this.loadQuote(), 150);
+    }
+
+    async loadQuote() {
+        const resId = this.props.record.resId;
+        if (!resId || this._destroyed) {
+            this.state.quote = null;
+            return;
+        }
+        const ticket = (this._quoteTicket = (this._quoteTicket || 0) + 1);
+        this.state.quoteLoading = true;
+        try {
+            const quote = await this.orm.call(
+                "tectora.roof.project", "tectora_get_quote_preview", [[resId]]
+            );
+            if (ticket !== this._quoteTicket || this._destroyed) {
+                return;
+            }
+            this.state.quote = quote;
+        } catch (error) {
+            console.warn("Roof canvas: could not load the quotation", error);
+        } finally {
+            if (ticket === this._quoteTicket) {
+                this.state.quoteLoading = false;
+            }
+        }
+        this.draw();
+    }
+
+    toggleQuoteOpen() {
+        this.state.quoteOpen = !this.state.quoteOpen;
+    }
+
+    setQuoteHover(line) {
+        const key = line && line.targets.length ? line.key : null;
+        if (this.state.quoteHover !== key) {
+            this.state.quoteHover = key;
+            this.draw();
+        }
+    }
+
+    /** Whether ``target`` (a part a quotation line comes from) is the
+     * element selected on the drawing: the side (its own products, those on
+     * every side, the corners at its ends) or the surface (or dakobject). */
+    targetOnFocus(target) {
+        const focus = this.focus;
+        if (!focus || target.canvas_ref !== String(focus.shapeId)) {
+            return false;
+        }
+        if (focus.type === "edge" && focus.edgeIndex >= 0) {
+            const side = focus.edgeIndex + 1;
+            if (target.coverage === "edges") {
+                return !target.edge_index || target.edge_index === side;
+            }
+            if (target.coverage === "corners") {
+                const shape = this.selectedShape;
+                const n = shape ? shape.points.length : 0;
+                const next = side === n ? 1 : side + 1;
+                return !target.edge_index || target.edge_index === side || target.edge_index === next;
+            }
+            return false;
+        }
+        if (focus.kind !== "section") {
+            return true; // a dakobject: everything on it
+        }
+        return !["edges", "corners"].includes(target.coverage);
+    }
+
+    /** Whether ``line`` is attached to the element selected on the drawing. */
+    quoteLineSelected(line) {
+        return line.targets.some((target) => this.targetOnFocus(target));
+    }
+
+    quoteLineParts(line) {
+        if (line.source === "order") {
+            return "Op de offerte toegevoegd";
+        }
+        if (line.project_line) {
+            return line.coverage_label ? `${line.coverage_label} · hele dak` : "Hele dak";
+        }
+        const names = [];
+        for (const target of line.targets) {
+            const shape = this.shapes.find((s) => String(s.id) === target.canvas_ref);
+            const name = (shape && shape.name) || target.name || "";
+            let part = name;
+            if (target.edge_index) {
+                part += target.coverage === "corners"
+                    ? ` hoek ${target.edge_index}`
+                    : ` zijde ${target.edge_index}`;
+            }
+            if (part && !names.includes(part)) {
+                names.push(part);
+            }
+        }
+        const shown = names.slice(0, 3).join(", ");
+        const more = names.length > 3 ? ` +${names.length - 3}` : "";
+        return `${line.coverage_label} · ${shown}${more}`;
+    }
+
+    formatQuantity(value) {
+        return (Math.round((value || 0) * 100) / 100).toLocaleString("nl-BE");
+    }
+
+    /** A click on a quotation line selects the part of the drawing it comes from. */
+    selectQuoteLine(line) {
+        const target = line.targets[0];
+        const shape = target && this.shapes.find((s) => String(s.id) === target.canvas_ref);
+        if (!shape) {
+            return;
+        }
+        if (target.coverage === "edges" && target.edge_index && !isSeam(shape)
+                && shape.shape !== "circle") {
+            this.focusTarget({
+                type: "edge",
+                shapeId: shape.id,
+                kind: shape.kind || "section",
+                edgeIndex: target.edge_index - 1,
+                name: shape.name || "",
+            });
+            return;
+        }
+        this.state.selectedId = shape.id;
+        this.state.focus = this.surfaceFocus(shape);
+        this.state.copyTargets = [];
+        this.updateStatus();
+        this.draw();
+        this.refreshPanel();
+    }
+
+    async openQuoteOrder() {
+        const quote = this.state.quote;
+        if (!quote || !quote.order_id) {
+            return;
+        }
+        await this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "sale.order",
+            res_id: quote.order_id,
+            views: [[false, "form"]],
+        });
+    }
+
+    /** The outline of a shape as segments, for the colour marks. */
+    quoteOutline(shape) {
+        let points = shape.points || [];
+        if (shape.shape === "circle") {
+            const box = boundingBox(points);
+            points = circlePoints(box.x + box.w / 2, box.y + box.h / 2, Math.max(box.w, box.h) / 2);
+        }
+        const closed = !isSeam(shape);
+        const segments = [];
+        const n = points.length;
+        for (let i = 0; i < (closed ? n : n - 1); i++) {
+            segments.push([points[i], points[(i + 1) % n]]);
+        }
+        return { points, segments, closed };
+    }
+
+    /**
+     * The parts of the drawing the hovered quotation line comes from, in the
+     * highlight colour: its sides, corners and surfaces. Nothing is drawn
+     * while no line is hovered; the selected side is drawFocus's.
+     */
+    drawQuoteMarks(ctx) {
+        const quote = this.state.quote;
+        const hover = this.state.quoteHover;
+        if (!quote || !hover) {
+            return;
+        }
+        const line = quote.chapters.flatMap((chapter) => chapter.lines).find((l) => l.key === hover);
+        if (!line) {
+            return;
+        }
+        const zoom = this.view.zoom;
+        ctx.save();
+        ctx.strokeStyle = HIGHLIGHT;
+        ctx.fillStyle = HIGHLIGHT;
+        ctx.lineCap = "round";
+        for (const target of line.targets) {
+            const shape = this.shapes.find((s) => String(s.id) === target.canvas_ref);
+            if (!shape || !shape.points || !shape.points.length) {
+                continue;
+            }
+            const { points, segments } = this.quoteOutline(shape);
+            if (target.coverage === "edges") {
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 6 / zoom;
+                segments.forEach(([a, b], i) => {
+                    if (target.edge_index && shape.shape !== "circle" && target.edge_index !== i + 1) {
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(a[0], a[1]);
+                    ctx.lineTo(b[0], b[1]);
+                    ctx.stroke();
+                });
+            } else if (target.coverage === "corners") {
+                ctx.globalAlpha = 1;
+                points.forEach(([x, y], i) => {
+                    if (target.edge_index && target.edge_index !== i + 1) {
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(x, y, 7 / zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            } else if (!isSeam(shape)) {
+                ctx.globalAlpha = 0.25;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i][0], points[i][1]);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 3 / zoom;
+                ctx.stroke();
+            } else {
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = 6 / zoom;
+                ctx.beginPath();
+                ctx.moveTo(points[0][0], points[0][1]);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i][0], points[i][1]);
+                }
+                ctx.stroke();
+            }
+        }
         ctx.restore();
     }
 
@@ -1601,6 +2164,9 @@ export class RoofCanvasField extends Component {
     }
 
     async refreshPanel() {
+        // Whatever changed the panel (products, measurements) changes the
+        // quotation too.
+        this.scheduleQuote();
         try {
             await this._refreshPanel();
         } catch (error) {
@@ -2360,12 +2926,79 @@ export class RoofCanvasField extends Component {
         const preselected = extraHits
             .map((extra) => this.hitTargetKey(extra))
             .filter((key) => key !== clickedKey && available.has(key));
+        // The categories offered here: their own usages, or (a new
+        // sub-category such as Isolatie/PIR) those of their parent.
+        let categoryIds = [];
+        try {
+            categoryIds = await this.orm.call(
+                "product.category", "tectora_category_ids_for_usages", [usages]
+            );
+        } catch (error) {
+            console.warn("Roof canvas: could not load the product categories", error);
+        }
+        // The sections a choice in the dialog goes to: the clicked surface
+        // and the other surfaces ticked.
+        const sectionIdsFor = (targetKeys) => {
+            const picked = new Set(targetKeys || []);
+            return [
+                targetIds[0],
+                ...others
+                    .filter((item) => picked.has(item.key))
+                    .map((item) => recordByShape[item.shapeId]),
+            ].filter(Boolean);
+        };
+        const buildup = isSurface && !isObject
+            ? {
+                  projectId: record.resId,
+                  preview: (targetKeys, margin) =>
+                      this.orm.call(
+                          "tectora.roof.project", "tectora_preview_epdm_sheets",
+                          [[record.resId], sectionIdsFor(targetKeys)], { margin }
+                      ),
+                  apply: (choice, targetKeys) => this.applyBuildup(sectionIdsFor(targetKeys), choice),
+              }
+            : undefined;
+        // A side of a roof surface: the Randafwerking (roof edge or
+        // connection) for it and the other sides ticked.
+        const edgeItemsFor = (targetKeys) => {
+            const picked = new Set(targetKeys || []);
+            return [
+                { section_id: targetIds[0], shape_id: hit.shapeId, side: sideNumber, quantity },
+                ...others
+                    .filter((item) => picked.has(item.key) && item.sideNumber)
+                    .map((item) => ({
+                        section_id: recordByShape[item.shapeId],
+                        shape_id: item.shapeId,
+                        side: item.sideNumber,
+                        quantity: item.quantity,
+                    })),
+            ].filter((item) => item.section_id && item.side);
+        };
+        const clickedShape = this.shapes.find((shape) => shape.id === hit.shapeId);
+        const edges = hit.type === "edge" && !isObject && sideNumber
+            ? {
+                  projectId: record.resId,
+                  // The side's roof edge as drawn: width and upstand (m).
+                  width: clickedShape ? this.edgeWidth(clickedShape, sideNumber - 1) : 0,
+                  upstand: clickedShape ? this.edgeUpstand(clickedShape, sideNumber - 1) : 0,
+                  apply: (choice, targetKeys, dryRun) =>
+                      dryRun
+                          ? this.orm.call(
+                                "tectora.roof.project", "tectora_apply_edges",
+                                [[record.resId], edgeItemsFor(targetKeys), choice.kind, choice.product_id],
+                                { corners: choice.corners, dry_run: true }
+                            )
+                          : this.applyEdges(edgeItemsFor(targetKeys), choice),
+              }
+            : undefined;
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
                 ["sale_ok", "=", true],
-                ["categ_id.tectora_usage_ids.code", "in", usages],
+                ["categ_id", "in", categoryIds],
             ],
+            buildup,
+            edges,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -2478,6 +3111,124 @@ export class RoofCanvasField extends Component {
         });
     }
 
+    /** The "Randafwerking" of the picker: a roof edge (with its corners)
+     * or a connection on the sides. */
+    async applyEdges(items, choice) {
+        const record = this.props.record;
+        if (choice.geometry) {
+            this.setSidesGeometry(items, choice.geometry);
+            // Saved before the products go on, so the two do not cross.
+            await record.save();
+        }
+        if (!choice.product_id) {
+            this.notification.add(
+                _t("Breedte en opstand gezet op %s zijde(n).", items.length),
+                { type: "success" }
+            );
+            return;
+        }
+        try {
+            const result = await this.orm.call(
+                "tectora.roof.project", "tectora_apply_edges",
+                [[record.resId], items, choice.kind, choice.product_id],
+                { corners: choice.corners }
+            );
+            await record.load();
+            let message = _t("Randafwerking toegepast op %s zijde(n).", result.lines);
+            const corners = result.corners || {};
+            if (corners.inner || corners.outer) {
+                message += " " + _t("%(inner)s binnenhoek(en) en %(outer)s buitenhoek(en) toegevoegd.", {
+                    inner: corners.inner || 0,
+                    outer: corners.outer || 0,
+                });
+            }
+            this.notification.add(message, { type: "success" });
+            if ((result.missing || []).length) {
+                this.notification.add(
+                    _t("Geen passende %s gevonden voor deze dakrand: voeg die hoek(en) apart toe.",
+                        result.missing.join(" / ")),
+                    { type: "warning" }
+                );
+            }
+        } catch (error) {
+            console.warn("Roof canvas: applying the edge finish failed", error);
+            this.notification.add(_t("Randafwerking toepassen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        }
+        this.draw();
+        this.refreshPanel();
+    }
+
+    /** Width (dakrand) and upstand (opstand) of the sides, in metres, as
+     * the side panel sets them one side at a time. */
+    setSidesGeometry(items, geometry) {
+        const set = (shape, key, index, value) => {
+            const values = { ...(shape[key] || {}) };
+            if (value > 0) {
+                values[index] = Math.round(value * 100) / 100;
+            } else {
+                delete values[index];
+            }
+            if (Object.keys(values).length) {
+                shape[key] = values;
+            } else {
+                delete shape[key];
+            }
+        };
+        for (const item of items) {
+            const shape = this.shapes.find((s) => s.id === item.shape_id);
+            if (!shape || !item.side) {
+                continue;
+            }
+            if (geometry.width !== null && geometry.width !== undefined) {
+                set(shape, "edgeWidths", item.side - 1, geometry.width);
+            }
+            if (geometry.upstand !== null && geometry.upstand !== undefined) {
+                set(shape, "edgeUpstands", item.side - 1, geometry.upstand);
+            }
+        }
+        this.commit();
+        this.refreshPanel();
+    }
+
+    /** The "Dakopbouw" of the picker: the layers on the surfaces, and their
+     * EPDM sheets. */
+    async applyBuildup(sectionIds, choice) {
+        const record = this.props.record;
+        try {
+            const result = await this.orm.call(
+                "tectora.roof.project", "tectora_apply_buildup",
+                [[record.resId], sectionIds],
+                {
+                    vapour_id: choice.vapour_id,
+                    insulation_id: choice.insulation_id,
+                    membrane_id: choice.membrane_id,
+                    sheets: choice.sheets,
+                    margin: choice.margin,
+                }
+            );
+            await record.load();
+            let message = _t("Dakopbouw toegepast op %s dakvlak(ken).", sectionIds.length);
+            if (choice.sheets) {
+                const sheets = result.sheets || [];
+                const area = sheets.reduce((sum, sheet) => sum + sheet.area, 0);
+                message += " " + _t("%(count)s EPDM-doek(en) berekend, samen %(area)s m² (tab Werf).", {
+                    count: sheets.length,
+                    area: area.toFixed(2),
+                });
+            }
+            this.notification.add(message, { type: "success" });
+        } catch (error) {
+            console.warn("Roof canvas: applying the build-up failed", error);
+            this.notification.add(_t("Dakopbouw toepassen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        }
+        this.draw();
+        this.refreshPanel();
+    }
+
     measurements(points) {
         const scale = this.scaleMPerPx;
         const box = boundingBox(points);
@@ -2536,7 +3287,7 @@ export class RoofCanvasField extends Component {
         if (this.draftPolygon) {
             this.state.status =
                 this.state.tool === "seam"
-                    ? `Naad: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om af te sluiten, Esc om te annuleren`
+                    ? `Naad: ${this.draftPolygon.length} punt(en) — klik op de andere zijde om de naad af te werken (of dubbelklik/Enter), Esc om te annuleren`
                     : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
             return;
         }
@@ -2623,6 +3374,16 @@ export class RoofCanvasField extends Component {
             } catch (error) {
                 console.warn("Roof canvas: could not label shape", shape, error);
             }
+        }
+        try {
+            this.drawQuoteMarks(ctx);
+        } catch (error) {
+            console.warn("Roof canvas: could not draw the quotation colours", error);
+        }
+        try {
+            this.drawSheetLabels(ctx);
+        } catch (error) {
+            console.warn("Roof canvas: could not label the EPDM sheets", error);
         }
         this.drawFocus(ctx);
         if (this.drag && this.drag.mode === "rect") {
@@ -3186,6 +3947,9 @@ export class RoofCanvasField extends Component {
     // pointer is close enough to close the polygon.
     draftSnap(point) {
         const points = this.draftPolygon;
+        if (this.state.tool === "seam") {
+            return this.seamSnap(point).point;
+        }
         if (this.state.tool !== "seam" && points.length >= 3) {
             const [fx, fy] = points[0];
             if (Math.hypot(point[0] - fx, point[1] - fy) <= CLOSE_SNAP_PX / this.view.zoom) {

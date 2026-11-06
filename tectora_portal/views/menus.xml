@@ -3,14 +3,14 @@
 
     <menuitem id="menu_tectora_timers"
               name="Urenregistraties"
-              parent="tectora_roof.menu_tectora_root"
+              parent="tectora_roof.menu_project_worksite"
               action="action_tectora_roof_timer"
-              sequence="17"/>
+              sequence="50"/>
 
     <menuitem id="menu_tectora_execution_reports"
               name="Uitvoeringsverslagen"
-              parent="tectora_roof.menu_tectora_root"
+              parent="tectora_roof.menu_project_worksite"
               action="action_tectora_roof_execution_report"
-              sequence="18"/>
+              sequence="60"/>
 
 </odoo>

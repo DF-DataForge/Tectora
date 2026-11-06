@@ -4,25 +4,20 @@
     <t t-name="tectora_roof.RoofProductPickerDialog">
         <Dialog title="this.props.title" size="'xl'">
             <div class="o_roof_product_picker">
-                <div class="d-flex flex-wrap gap-1 mb-2">
-                    <button type="button" class="btn btn-sm"
-                            t-att-class="this.state.activeCategory === null ? 'btn-primary' : 'btn-outline-secondary'"
-                            t-on-click="() => this.setCategory(null)">
-                        Alle (<t t-out="this.state.products.length"/>)
-                    </button>
-                    <t t-foreach="this.categories" t-as="category" t-key="category.id">
-                        <button type="button" class="btn btn-sm"
-                                t-att-class="this.state.activeCategory === category.id ? 'btn-primary' : 'btn-outline-secondary'"
-                                t-on-click="() => this.setCategory(category.id)">
-                            <t t-out="category.label"/> (<t t-out="category.count"/>)
-                        </button>
-                    </t>
-                </div>
-                <input type="text" class="form-control form-control-sm mb-2"
-                       placeholder="Zoeken op naam of interne referentie…"
-                       t-att-value="this.state.search"
-                       t-on-input="(ev) => { this.state.search = ev.target.value; }"/>
-
+                <ul t-if="this.props.buildup or this.props.edges" class="nav nav-tabs mb-2">
+                    <li t-if="this.props.buildup" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'buildup'}"
+                           t-on-click.prevent="() => this.setTab('buildup')">Dakopbouw</a>
+                    </li>
+                    <li t-if="this.props.edges" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'edges'}"
+                           t-on-click.prevent="() => this.setTab('edges')">Randafwerking</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'products'}"
+                           t-on-click.prevent="() => this.setTab('products')">Alle producten</a>
+                    </li>
+                </ul>
                 <t t-if="this.targets.length">
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox"
@@ -30,8 +25,14 @@
                                t-att-checked="this.state.multi"
                                t-on-change="(ev) => this.toggleMulti(ev.target.checked)"/>
                         <label class="form-check-label" for="o_roof_picker_multi">
-                            <strong>Producten toewijzen aan meerdere items</strong>
+                            <strong t-if="this.state.tab === 'buildup'">Dakopbouw toepassen op meerdere dakvlakken</strong>
+                            <strong t-elif="this.state.tab === 'edges'">Randafwerking toepassen op meerdere zijden</strong>
+                            <strong t-else="">Producten toewijzen aan meerdere items</strong>
                         </label>
+                        <button t-if="this.state.tab === 'buildup'" type="button"
+                                class="btn btn-link btn-sm py-0" t-on-click="() => this.allSurfaces()">
+                            Alle dakvlakken
+                        </button>
                     </div>
                     <div t-if="this.state.multi" class="o_roof_picker_targets border rounded p-2 mb-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -88,6 +89,358 @@
                         </div>
                     </div>
                 </t>
+                <div t-if="this.state.tab === 'edges'" class="o_roof_edges">
+                    <t t-set="e" t-value="this.edges"/>
+                    <div t-if="!e.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <p class="text-muted small mb-2">
+                            Een vrije zijde krijgt een dakrand, een zijde tegen een muur, het dak
+                            van de buren of een goot een aansluiting. De keuze vervangt de
+                            vorige dakrand of aansluiting van de zijde.
+                        </p>
+                        <div class="btn-group mb-2" role="group">
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="e.kind === 'edge' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setEdgeKind('edge')">Dakrand</button>
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="e.kind === 'connection' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setEdgeKind('connection')">Aansluiting</button>
+                        </div>
+
+                        <div class="border rounded p-2 mb-2">
+                            <div class="fw-bold small mb-1">Afmetingen van de zijde(n)</div>
+                            <div class="d-flex flex-wrap align-items-end gap-3">
+                                <div>
+                                    <label class="small text-muted mb-0" for="o_roof_edges_width">Breedte dakrand (m)</label>
+                                    <input id="o_roof_edges_width" type="number" min="0" step="0.01"
+                                           class="form-control form-control-sm" style="width: 7rem;"
+                                           t-att-value="e.width"
+                                           t-on-change="(ev) => this.setSideValue('width', ev)"/>
+                                </div>
+                                <div>
+                                    <label class="small text-muted mb-0" for="o_roof_edges_upstand">Opstand (m)</label>
+                                    <input id="o_roof_edges_upstand" type="number" min="0" step="0.01"
+                                           class="form-control form-control-sm" style="width: 7rem;"
+                                           t-att-value="e.upstand"
+                                           t-on-change="(ev) => this.setSideValue('upstand', ev)"/>
+                                </div>
+                                <div class="small text-muted flex-grow-1">
+                                    <t t-if="e.widthChanged or e.upstandChanged">
+                                        Wordt gezet op <t t-out="this.itemCount"/> zijde(n); telt mee in de
+                                        binnenoppervlakte, de opstand en de EPDM-doeken.
+                                    </t>
+                                    <t t-else="">
+                                        De waarden van de aangeklikte zijde. Pas aan om ze op alle gekozen
+                                        zijden te zetten.
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div t-if="e.kind === 'edge'" class="border rounded p-2 mb-2">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="small text-muted mb-0">Type dakrand</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('type', ev.target.value)">
+                                        <option value="" t-att-selected="!e.edge.type">— kies —</option>
+                                        <option t-foreach="this.edgeTypes" t-as="type" t-key="type"
+                                                t-att-value="type" t-att-selected="type === e.edge.type"
+                                                t-out="type"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-3" t-if="e.edge.type and this.edgeHasHeights">
+                                    <label class="small text-muted mb-0">Hoogte</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('height', ev.target.value)">
+                                        <option t-foreach="this.edgeHeights" t-as="height" t-key="height"
+                                                t-att-value="height" t-att-selected="height === e.edge.height"
+                                                t-out="height || '—'"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-5" t-if="e.edge.type">
+                                    <label class="small text-muted mb-0">Afwerking</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.pickEdge('product', ev.target.value)">
+                                        <option t-foreach="this.edgeFinishes" t-as="product" t-key="product.id"
+                                                t-att-value="product.id" t-att-selected="product.id === e.edge.product"
+                                                t-out="this.edgeFinishLabel(product)"/>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-check mt-2 mb-0">
+                                <input class="form-check-input" type="checkbox" id="o_roof_edges_corners"
+                                       t-att-checked="e.corners"
+                                       t-on-change="(ev) => this.toggleEdgeCorners(ev.target.checked)"/>
+                                <label class="form-check-label" for="o_roof_edges_corners">
+                                    Binnen- en buitenhoeken mee toevoegen (waar twee zijden met deze dakrand samenkomen)
+                                </label>
+                                <i t-if="e.previewLoading" class="fa fa-circle-o-notch fa-spin text-muted ms-1"/>
+                            </div>
+                            <div t-if="e.corners and e.preview and e.preview.missing.length" class="small text-warning mt-1">
+                                Geen passende <t t-out="e.preview.missing.join(' / ')"/> gevonden voor deze dakrand:
+                                voeg die hoek(en) apart toe.
+                            </div>
+                            <div t-if="!e.options.edges.length" class="small text-warning mt-1">
+                                Geen dakrandprofielen gevonden (categorie 02. Dakranden).
+                            </div>
+                        </div>
+
+                        <div t-if="e.kind === 'connection'" class="border rounded p-2 mb-2">
+                            <label class="small text-muted mb-0">Aansluiting</label>
+                            <select class="form-select form-select-sm"
+                                    t-on-change="(ev) => this.setConnection(ev.target.value)">
+                                <option value="0" t-att-selected="!e.connection">— kies —</option>
+                                <optgroup t-foreach="this.connectionGroups" t-as="group" t-key="group.label"
+                                          t-att-label="group.label">
+                                    <option t-foreach="group.products" t-as="product" t-key="product.id"
+                                            t-att-value="product.id" t-att-selected="product.id === e.connection">
+                                        <t t-out="product.name"/> — € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                    </option>
+                                </optgroup>
+                            </select>
+                            <div t-if="!e.options.connections.length" class="small text-warning mt-1">
+                                Geen aansluitingen gevonden (categorie Aansluitingen).
+                            </div>
+                        </div>
+
+                        <table t-if="this.edgeLines.length" class="table table-sm mb-0">
+                            <tbody>
+                                <tr t-foreach="this.edgeLines" t-as="line" t-key="line.key">
+                                    <td t-out="line.name"/>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="line.key === 'side' ? line.quantity.toFixed(2) : line.quantity"/>
+                                        <t t-out="line.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Randafwerking (excl. btw)</td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="this.edgeTotal.toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+                <div t-if="this.state.tab === 'buildup'" class="o_roof_buildup">
+                    <t t-set="b" t-value="this.buildup"/>
+                    <div t-if="!b.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <p class="text-muted small mb-2">
+                            De standaard opbouw van een plat dak: kies per laag het
+                            product. Het vervangt het product van die laag op het
+                            dakvlak; een laag op "niet wijzigen" blijft zoals ze is.
+                        </p>
+                        <div class="row g-2 mb-2">
+                            <!-- Dampscherm -->
+                            <div class="col-lg-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="fw-bold mb-1">1. Dampscherm</div>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.setVapour(ev.target.value)">
+                                        <option value="0" t-att-selected="!b.vapour">— niet wijzigen —</option>
+                                        <option t-foreach="b.options.vapour" t-as="product" t-key="product.id"
+                                                t-att-value="product.id" t-att-selected="product.id === b.vapour"
+                                                t-out="this.vapourLabel(product)"/>
+                                    </select>
+                                    <div t-if="!b.options.vapour.length" class="small text-warning mt-1">
+                                        Geen dampschermen in de categorie Dampscherm.
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Isolatie en dakbedekking: type, dikte, uitvoering -->
+                            <t t-foreach="[['insulation', '2. Isolatie', 'Type isolatie'], ['membrane', '3. Dakbedekking', 'Type dakbedekking']]"
+                               t-as="layer" t-key="layer[0]">
+                                <t t-set="key" t-value="layer[0]"/>
+                                <t t-set="choice" t-value="b[key]"/>
+                                <div class="col-lg-4">
+                                    <div class="border rounded p-2 h-100">
+                                        <div class="fw-bold mb-1" t-out="layer[1]"/>
+                                        <select class="form-select form-select-sm mb-1"
+                                                t-on-change="(ev) => this.pickLayer(layer[0], 'type', ev.target.value)">
+                                            <option value="" t-att-selected="!choice.type">— niet wijzigen —</option>
+                                            <option t-foreach="this.layerTypes(key)" t-as="type" t-key="type"
+                                                    t-att-value="type" t-att-selected="type === choice.type"
+                                                    t-out="type"/>
+                                        </select>
+                                        <t t-if="choice.type">
+                                            <div class="d-flex gap-1 align-items-center mb-1">
+                                                <label class="small text-muted text-nowrap mb-0">Dikte</label>
+                                                <select class="form-select form-select-sm"
+                                                        t-on-change="(ev) => this.pickLayer(layer[0], 'thickness', ev.target.value)">
+                                                    <option t-foreach="this.layerThicknesses(key)" t-as="thickness"
+                                                            t-key="thickness" t-att-value="thickness"
+                                                            t-att-selected="thickness === choice.thickness"
+                                                            t-out="thickness || '—'"/>
+                                                </select>
+                                            </div>
+                                            <select class="form-select form-select-sm"
+                                                    t-on-change="(ev) => this.pickLayer(layer[0], 'product', ev.target.value)">
+                                                <option t-foreach="this.layerProducts(key)" t-as="product"
+                                                        t-key="product.id" t-att-value="product.id"
+                                                        t-att-selected="product.id === choice.product"
+                                                        t-out="this.productLabel(product)"/>
+                                            </select>
+                                        </t>
+                                        <div t-if="!b.options[key].length" class="small text-warning mt-1">
+                                            Geen producten gevonden.
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <table t-if="this.buildupLines.length" class="table table-sm mb-2">
+                            <tbody>
+                                <tr t-foreach="this.buildupLines" t-as="line" t-key="line.label">
+                                    <td class="text-muted" style="width: 8rem;" t-out="line.label"/>
+                                    <td>
+                                        <span t-if="line.product.code" class="text-muted me-1" t-out="line.product.code"/>
+                                        <t t-out="line.product.name"/>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="this.totalQuantity.toFixed(2)"/> <t t-out="line.product.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Dakopbouw (excl. btw)</td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="this.buildupTotal.toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="border rounded p-2">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" id="o_roof_buildup_sheets"
+                                           t-att-checked="b.sheets"
+                                           t-on-change="(ev) => this.toggleSheets(ev.target.checked)"/>
+                                    <label class="form-check-label fw-bold" for="o_roof_buildup_sheets">
+                                        EPDM-doeken berekenen
+                                    </label>
+                                </div>
+                                <div t-if="b.sheets" class="d-flex align-items-center gap-1 small">
+                                    <label class="text-muted mb-0" for="o_roof_buildup_margin">Marge per zijde</label>
+                                    <input id="o_roof_buildup_margin" type="number" min="0" step="1"
+                                           class="form-control form-control-sm" style="width: 5rem;"
+                                           t-att-value="Math.round(b.margin * 100)"
+                                           t-on-change="(ev) => this.onMarginInput(ev)"/>
+                                    <span class="text-muted">cm</span>
+                                </div>
+                                <i t-if="b.previewLoading" class="fa fa-circle-o-notch fa-spin text-muted"/>
+                                <div t-if="b.sheets" class="form-check form-switch mb-0 ms-auto small">
+                                    <input class="form-check-input" type="checkbox" id="o_roof_buildup_details"
+                                           t-att-checked="b.details"
+                                           t-on-change="(ev) => this.toggleSheetDetails(ev.target.checked)"/>
+                                    <label class="form-check-label" for="o_roof_buildup_details">Berekening tonen</label>
+                                </div>
+                            </div>
+                            <t t-if="b.sheets">
+                                <div class="small text-muted mt-1">
+                                    Eén doek per deel van het dakvlak tussen de naden: een naad op
+                                    de tekening is de overlap tussen twee doeken. Elk doek dekt het vlak binnen
+                                    de dakranden, plus per zijde de opstand en de breedte van de
+                                    dakrand, plus de marge. Bestaande berekende doeken van deze vlakken
+                                    worden vervangen; met de hand ingegeven doeken blijven.
+                                </div>
+                                <table t-if="b.preview.length" class="table table-sm mb-0 mt-1">
+                                    <thead>
+                                        <tr>
+                                            <th>Doek</th>
+                                            <th class="text-end">Lengte</th>
+                                            <th class="text-end">Breedte</th>
+                                            <th class="text-end">m²</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="b.preview" t-as="sheet" t-key="sheet.key">
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-bold" t-out="sheet.name"/>
+                                                    <div t-if="sheet.width > b.maxWidth" class="small text-warning">
+                                                        Breder dan de breedste rol (<t t-out="b.maxWidth"/> m): extra naad nodig.
+                                                    </div>
+                                                </td>
+                                                <td class="text-end text-nowrap fw-bold"><t t-out="sheet.length.toFixed(2)"/> m</td>
+                                                <td class="text-end text-nowrap fw-bold"><t t-out="sheet.width.toFixed(2)"/> m</td>
+                                                <td class="text-end fw-bold" t-out="sheet.area.toFixed(2)"/>
+                                            </tr>
+                                            <!-- How the size comes about: per dimension the
+                                                 surface plus what each end adds. -->
+                                            <tr t-if="b.details and sheet.dimensions" class="o_roof_epdm_detail">
+                                                <td colspan="4" class="small pt-0 pb-2 border-top-0">
+                                                    <div t-foreach="sheet.dimensions" t-as="dim" t-key="dim.label"
+                                                         class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                                                        <span class="fw-bold" style="min-width: 4.5rem;" t-out="dim.label"/>
+                                                        <span class="badge text-bg-light border">
+                                                            vlak <t t-out="dim.base.toFixed(2)"/>
+                                                        </span>
+                                                        <t t-foreach="dim.ends" t-as="end" t-key="end_index">
+                                                            <span class="text-muted">+</span>
+                                                            <span t-if="end.seam" class="badge text-bg-warning-subtle border"
+                                                                  title="Langs de naad: enkel de marge, als overlap met het volgende doek">
+                                                                naad · overlap <t t-out="end.total.toFixed(2)"/>
+                                                            </span>
+                                                            <span t-else="" class="badge text-bg-info-subtle border"
+                                                                  t-att-title="'Zijde ' + end.label + ': opstand + dakrand + marge'">
+                                                                <t t-out="end.label"/>:
+                                                                <t t-if="end.upstand">opstand <t t-out="end.upstand.toFixed(2)"/> + </t>
+                                                                <t t-if="end.width">dakrand <t t-out="end.width.toFixed(2)"/> + </t>
+                                                                marge <t t-out="end.margin.toFixed(2)"/>
+                                                                = <t t-out="end.total.toFixed(2)"/>
+                                                            </span>
+                                                        </t>
+                                                        <span class="text-muted">=</span>
+                                                        <span t-out="dim.raw.toFixed(2)"/>
+                                                        <t t-if="dim.size !== dim.raw">
+                                                            <span class="text-muted" title="Afgerond naar boven op 5 cm">→</span>
+                                                            <span class="fw-bold" t-out="dim.size.toFixed(2)"/>
+                                                        </t>
+                                                        <span>m</span>
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        Vlak <t t-out="sheet.surface.toFixed(2)"/> m² ·
+                                                        doek <t t-out="sheet.area.toFixed(2)"/> m² ·
+                                                        snijverlies <t t-out="sheet.waste.toFixed(2)"/> m²
+                                                        (<t t-out="sheet.waste_pct"/> %)
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="b.preview.length > 1">
+                                            <td colspan="3" class="text-end fw-bold">Totaal</td>
+                                            <td class="text-end fw-bold" t-out="this.sheetsTotal.toFixed(2)"/>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div t-elif="!b.previewLoading" class="small text-warning mt-1">
+                                    Geen doek te berekenen: het dakvlak staat nog niet in de meting.
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+                <t t-if="this.state.tab === 'products'">
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <button type="button" class="btn btn-sm"
+                            t-att-class="this.state.activeCategory === null ? 'btn-primary' : 'btn-outline-secondary'"
+                            t-on-click="() => this.setCategory(null)">
+                        Alle (<t t-out="this.state.products.length"/>)
+                    </button>
+                    <t t-foreach="this.categories" t-as="category" t-key="category.id">
+                        <button type="button" class="btn btn-sm"
+                                t-att-class="this.state.activeCategory === category.id ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setCategory(category.id)">
+                            <t t-out="category.label"/> (<t t-out="category.count"/>)
+                        </button>
+                    </t>
+                </div>
+                <input type="text" class="form-control form-control-sm mb-2"
+                       placeholder="Zoeken op naam of interne referentie…"
+                       t-att-value="this.state.search"
+                       t-on-input="(ev) => { this.state.search = ev.target.value; }"/>
+
                 <div class="o_roof_product_picker_list">
                     <table class="table table-sm table-hover mb-0">
                         <thead>
@@ -145,9 +498,26 @@
                         </tbody>
                     </table>
                 </div>
+                </t>
             </div>
             <t t-set-slot="footer">
-                <button type="button" class="btn btn-primary"
+                <button t-if="this.state.tab === 'buildup'" type="button" class="btn btn-primary"
+                        t-att-disabled="!this.canApplyBuildup"
+                        t-on-click="() => this.applyBuildup()">
+                    Dakopbouw toepassen
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> dakvlakken
+                    </t>
+                </button>
+                <button t-elif="this.state.tab === 'edges'" type="button" class="btn btn-primary"
+                        t-att-disabled="!this.canApplyEdges"
+                        t-on-click="() => this.applyEdges()">
+                    Randafwerking toepassen
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> zijden
+                    </t>
+                </button>
+                <button t-else="" type="button" class="btn btn-primary"
                         t-att-disabled="!this.selectedIds.length"
                         t-on-click="this.confirm">
                     Toevoegen (<t t-out="this.selectedIds.length"/>)

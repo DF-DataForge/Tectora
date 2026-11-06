@@ -36,39 +36,34 @@
               action="action_tectora_roof_project"
               sequence="10"/>
 
-    <menuitem id="menu_tectora_project_overview"
-              name="Projectoverzicht"
-              parent="menu_tectora_root"
-              action="action_tectora_project_overview"
-              sequence="11"/>
-
-    <!-- The plannable projects behind the roof projects, opening on their
-         dashboard (omzet en kosten, leveringen, taken, planning). -->
-    <menuitem id="menu_tectora_project_dashboards"
-              name="Projecten"
-              parent="menu_tectora_root"
-              action="action_tectora_projects"
-              sequence="12"/>
-
     <menuitem id="menu_tectora_roof_objects"
               name="Dakobjecten"
               parent="menu_tectora_root"
               action="action_tectora_roof_object"
               sequence="20"/>
 
+    <!-- Dakmeting holds the data of the site (the measurement, the roof
+         objects, the products quoted). What organises the works (planning,
+         materials, purchases, the order list, hours and reports) lives in
+         Project -> Werf, next to the projects it belongs to. -->
+    <menuitem id="menu_project_worksite"
+              name="Werf"
+              parent="project.menu_main_pm"
+              sequence="3"/>
+
     <!-- The work blocks of the roof projects; the shifts themselves live in
          the standard Planning app, whose views carry the dakproject. -->
     <menuitem id="menu_tectora_planning"
               name="Werkblokken"
-              parent="menu_tectora_root"
+              parent="menu_project_worksite"
               action="action_tectora_roof_planning"
-              sequence="15"/>
+              sequence="10"/>
 
     <menuitem id="menu_tectora_materials"
               name="Materiaalbehoefte"
-              parent="menu_tectora_root"
+              parent="menu_project_worksite"
               action="action_tectora_roof_material"
-              sequence="25"/>
+              sequence="20"/>
 
     <menuitem id="menu_tectora_products"
               name="Producten"
