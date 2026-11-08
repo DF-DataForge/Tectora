@@ -227,3 +227,4 @@ Releases and the modules they need upgraded:
 | Fix planning per ploeg: klik op de schaar knipt het blok (ging het blok openen) | `tectora_roof_planning` (20.0.1.22.0) |
 | "Splits per dag" verwijderd (knippen met de schaar blijft) | `tectora_roof` (20.0.3.77.0), `tectora_roof_planning` (20.0.1.23.0) |
 | Tekening: naad kan aansluiten op een andere naad (T-aansluiting), deelt enkel het doek aan haar kant | `tectora_roof` (20.0.3.78.0) |
+| Tekening: naden en dakobjecten bewegen mee met hun dakvlak (verplaatsen, hoek slepen, zijdelengte) | `tectora_roof` (20.0.3.79.0) |

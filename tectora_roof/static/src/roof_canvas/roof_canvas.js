@@ -1148,6 +1148,8 @@ export class RoofCanvasField extends Component {
                         startPoint: point,
                         center: [box.x + box.w / 2, box.y + box.h / 2],
                         moved: false,
+                        // The seams that end on its sides follow the sides.
+                        anchors: this.seamAnchors(shape),
                     };
                     this.updateStatus();
                     this.draw();
@@ -1192,6 +1194,11 @@ export class RoofCanvasField extends Component {
                     original: hit.points.map((p) => [...p]),
                     shape: hit,
                     moved: false,
+                    // A roof section takes its seams and dakobjecten along.
+                    attached: this.attachedShapes(hit).map((shape) => ({
+                        shape,
+                        original: shape.points.map((p) => [...p]),
+                    })),
                 };
             }
             this.updateStatus();
@@ -1248,6 +1255,7 @@ export class RoofCanvasField extends Component {
                     Math.round(point[0] * 100) / 100,
                     Math.round(point[1] * 100) / 100,
                 ];
+                this.applySeamAnchors(this.drag.shape, this.drag.anchors);
             } else {
                 const [cx, cy] = this.drag.center;
                 const radius = Math.max(
@@ -1271,6 +1279,9 @@ export class RoofCanvasField extends Component {
                 x + dx,
                 y + dy,
             ]);
+            for (const item of this.drag.attached || []) {
+                item.shape.points = item.original.map(([x, y]) => [x + dx, y + dy]);
+            }
             this.draw();
         }
     }
@@ -1850,6 +1861,97 @@ export class RoofCanvasField extends Component {
         ctx.lineTo(b[0], b[1]);
         ctx.stroke();
         ctx.restore();
+    }
+
+    // ---------------------------------------------------- attached shapes
+    // The seams and dakobjecten drawn on a roof section belong to it: moving
+    // the section takes them along, reshaping it keeps the seams' ends on
+    // its sides.
+
+    /** Seams lying on ``section`` (all points inside or on its outline) and
+     * dakobjecten whose middle is inside it. */
+    attachedShapes(section) {
+        if ((section.kind || "section") !== "section" || section.shape === "circle") {
+            return [];
+        }
+        const outline = [...section.points, section.points[0]];
+        const within = (p) => pointInPolygon(p, section.points) || onPolyline(p, outline);
+        return this.shapes.filter((shape) => {
+            if (shape === section || !shape.points || !shape.points.length) {
+                return false;
+            }
+            if (isSeam(shape)) {
+                return shape.points.every(within);
+            }
+            if ((shape.kind || "section") === "section") {
+                return false;
+            }
+            const box = boundingBox(shape.points);
+            return pointInPolygon([box.x + box.w / 2, box.y + box.h / 2], section.points);
+        });
+    }
+
+    /** Where the seams of ``section`` touch its sides: per seam point on a
+     * side, the side and how far along it. */
+    seamAnchors(section) {
+        if ((section.kind || "section") !== "section" || section.shape === "circle") {
+            return [];
+        }
+        const points = section.points;
+        const anchors = [];
+        const seams = this.attachedShapes(section).filter(isSeam);
+        for (const seam of seams) {
+            seam.points.forEach((p, index) => {
+                // On another seam (a T-joint): it follows that seam.
+                const host = seams.find((other) => other !== seam && onPolyline(p, other.points));
+                if (host && (index === 0 || index === seam.points.length - 1)) {
+                    for (let seg = 0; seg < host.points.length - 1; seg++) {
+                        const a = host.points[seg];
+                        const b = host.points[seg + 1];
+                        if (distanceToSegment(p, a, b) <= SEAM_JOIN_PX) {
+                            const fromStart = Math.hypot(p[0] - a[0], p[1] - a[1]) <= Math.hypot(p[0] - b[0], p[1] - b[1]);
+                            const ref = fromStart ? a : b;
+                            const dist = Math.hypot(p[0] - ref[0], p[1] - ref[1]);
+                            anchors.push({ seam, index, host, seg, fromStart, dist });
+                            return;
+                        }
+                    }
+                }
+                for (let edge = 0; edge < points.length; edge++) {
+                    const a = points[edge];
+                    const b = points[(edge + 1) % points.length];
+                    if (distanceToSegment(p, a, b) > SEAM_JOIN_PX) {
+                        continue;
+                    }
+                    // Kept at its distance from the nearer corner of the
+                    // side: dragging the far corner leaves it in place.
+                    const fromStart = Math.hypot(p[0] - a[0], p[1] - a[1]) <= Math.hypot(p[0] - b[0], p[1] - b[1]);
+                    const dist = Math.hypot(p[0] - (fromStart ? a : b)[0], p[1] - (fromStart ? a : b)[1]);
+                    anchors.push({ seam, index, edge, fromStart, dist });
+                    break;
+                }
+            });
+        }
+        return anchors;
+    }
+
+    applySeamAnchors(section, anchors) {
+        const points = section.points;
+        // The ends on the sides first, then those on other seams.
+        const ordered = [...(anchors || [])].sort((x, y) => Boolean(x.host) - Boolean(y.host));
+        for (const { seam, index, edge, host, seg, fromStart, dist } of ordered) {
+            const a = host ? host.points[seg] : points[edge];
+            const b = host ? host.points[seg + 1] : points[(edge + 1) % points.length];
+            if (!a || !b) {
+                continue;
+            }
+            const [from, to] = fromStart ? [a, b] : [b, a];
+            const length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+            const along = Math.min(dist, length);
+            const x = from[0] + ((to[0] - from[0]) / length) * along;
+            const y = from[1] + ((to[1] - from[1]) / length) * along;
+            seam.points[index] = [Math.round(x * 100) / 100, Math.round(y * 100) / 100];
+        }
     }
 
     // ------------------------------------------------------------ EPDM sheets
@@ -2598,9 +2700,11 @@ export class RoofCanvasField extends Component {
                 box.x + box.w / 2, box.y + box.h / 2, Math.max(radius, 1e-3)
             );
         } else {
+            const anchors = this.seamAnchors(shape);
             shape.points = resizeEdgePoints(
                 shape.points, index, length / this.scaleMPerPx, anchor
             );
+            this.applySeamAnchors(shape, anchors);
         }
         this.updateStatus();
         this.commit();

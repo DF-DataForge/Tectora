@@ -154,7 +154,11 @@ install on Odoo 17 or earlier without adjustments.
    stays on for the next seam). Started inside the surface it takes points
    until a click on a side or a double-click. A seam can also start or end on
    another seam (clicks snap onto it): it then divides only the sheet on its
-   side (a T-joint). The roof surface stays one section (Sectie 1, with its products
+   side (a T-joint). Seams and dakobjecten drawn on a roof section belong
+   to it: moving the section takes them along; dragging a corner or setting
+   a side's length keeps the seams' ends on its sides, at their distance
+   from the nearer corner (and an end on another seam on that seam). The
+   roof surface stays one section (Sectie 1, with its products
    and quantities); the seams divide it into sheets, labelled on the drawing
    ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
    berekenen*. A seam ending inside a section is extended to its outline.
