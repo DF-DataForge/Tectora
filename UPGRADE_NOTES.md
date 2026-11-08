@@ -229,3 +229,4 @@ Releases and the modules they need upgraded:
 | Tekening: naad kan aansluiten op een andere naad (T-aansluiting), deelt enkel het doek aan haar kant | `tectora_roof` (20.0.3.78.0) |
 | Tekening: naden en dakobjecten bewegen mee met hun dakvlak (verplaatsen, hoek slepen, zijdelengte) | `tectora_roof` (20.0.3.79.0) |
 | Tekening: breedte dakrand en opstand van de zijden in cm (zijpaneel en Randafwerking) | `tectora_roof` (20.0.3.80.0) |
+| Producten: categorieboom links naast kanban en lijst | `tectora_products` (20.0.2.9.0) |
