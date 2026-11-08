@@ -18,6 +18,11 @@
                                t-att-value="this.state.explode"
                                t-on-input="(ev) => this.setValue('explode', ev)"/>
                     </label>
+                    <label class="form-check mb-0">
+                        <input type="checkbox" class="form-check-input" t-att-checked="this.state.sheets"
+                               t-on-change="(ev) => this.toggleSheets(ev)"/>
+                        EPDM-doeken
+                    </label>
                     <div class="btn-group btn-group-sm">
                         <button type="button" class="btn btn-outline-secondary" title="Draaien"
                                 t-on-click="() => this.turn(-Math.PI / 8)">

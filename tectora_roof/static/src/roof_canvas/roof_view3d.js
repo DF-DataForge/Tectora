@@ -18,6 +18,8 @@ const COLORS = {
     vapour: [64, 120, 196],
     insulation: [232, 204, 96],
     epdm: [42, 46, 52],
+    // The EPDM sheets, one tint each in turn.
+    sheets: [[36, 40, 48], [84, 90, 102], [38, 66, 84], [92, 72, 78]],
     edge: [176, 146, 112], // the roof edge (opstand), wood
     cap: [205, 210, 214], // its aluminium dakrand on top
     kimfix: [150, 156, 162],
@@ -71,6 +73,7 @@ export class RoofView3DDialog extends Component {
             zoom: 1,
             exaggeration: 6,
             explode: 0,
+            sheets: true, // the EPDM sheets apart, with their labels
         });
         this.legend = LEGEND.map(([key, label]) => ({ key, label, color: `rgb(${COLORS[key].join(",")})` }));
         this.onMove = (ev) => this.drag(ev);
@@ -111,6 +114,11 @@ export class RoofView3DDialog extends Component {
 
     setValue(field, ev) {
         this.state[field] = parseFloat(ev.target.value);
+        this.render3d();
+    }
+
+    toggleSheets(ev) {
+        this.state.sheets = ev.target.checked;
         this.render3d();
     }
 
@@ -157,6 +165,7 @@ export class RoofView3DDialog extends Component {
         const gap = s.explode * 0.4; // metres of visual gap between layers
         const faces = [];
         const lines = [];
+        const labels = [];
         const z = (value) => value * E;
         let seamLevel = 0;
         for (const section of this.props.model.sections) {
@@ -173,7 +182,18 @@ export class RoofView3DDialog extends Component {
             this.prism(outer, -z(DECK), 0, COLORS.deck, COLORS.deck, faces);
             this.prism(inner, vapour0 + gap * 1, vapour1, COLORS.vapour, COLORS.vapour, faces);
             this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
-            this.prism(inner, epdm0, epdm1, COLORS.epdm, COLORS.epdm, faces);
+            const sheets = section.sheets || [];
+            if (s.sheets && sheets.length) {
+                sheets.forEach((sheet, index) => {
+                    const tint = COLORS.sheets[index % COLORS.sheets.length];
+                    this.prism(sheet.points, epdm0, epdm1, tint, tint, faces);
+                    const cx = sheet.points.reduce((sum, p) => sum + p[0], 0) / sheet.points.length;
+                    const cy = sheet.points.reduce((sum, p) => sum + p[1], 0) / sheet.points.length;
+                    labels.push({ point: [cx, cy, epdm1 + 0.02], text: sheet.label });
+                });
+            } else {
+                this.prism(inner, epdm0, epdm1, COLORS.epdm, COLORS.epdm, faces);
+            }
             // The roof edge: per side between the outline and the surface,
             // up to its upstand above the EPDM, with its profile on top; the
             // EPDM runs up its inner face; the kimfixatie at its foot.
@@ -241,7 +261,7 @@ export class RoofView3DDialog extends Component {
                 this.prism(object.points, base, base + height * Math.min(E, 3), COLORS.chimney, COLORS.chimney, faces);
             }
         }
-        return { faces, lines };
+        return { faces, lines, labels };
     }
 
     // ------------------------------------------------------------- drawing
@@ -260,7 +280,7 @@ export class RoofView3DDialog extends Component {
         ctx.fillStyle = "#eef3f5";
         ctx.fillRect(0, 0, width, height);
 
-        const { faces, lines } = this.buildFaces();
+        const { faces, lines, labels } = this.buildFaces();
         if (!faces.length) {
             return;
         }
@@ -377,5 +397,17 @@ export class RoofView3DDialog extends Component {
             ctx.stroke();
         }
         ctx.setLineDash([]);
+        // The sheets' labels.
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (const label of labels) {
+            const [x, y] = screen(rotate(label.point));
+            const w = ctx.measureText(label.text).width + 10;
+            ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+            ctx.fillRect(x - w / 2, y - 9, w, 18);
+            ctx.fillStyle = "#1f2937";
+            ctx.fillText(label.text, x, y);
+        }
     }
 }

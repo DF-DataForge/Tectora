@@ -615,7 +615,16 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         sections = {}
         for section in self.section_ids.filtered("canvas_ref"):
-            sections[section.canvas_ref] = {"thickness": section._tectora_insulation_thickness()}
+            # Its EPDM sheets, in the order the seams divide it.
+            sheets = [
+                {"name": sheet["name"], "length": sheet["length"], "width": sheet["width"],
+                 "surface": sheet["surface"]}
+                for sheet in self._tectora_epdm_sheet_values(section.ids)
+            ]
+            sections[section.canvas_ref] = {
+                "thickness": section._tectora_insulation_thickness(),
+                "sheets": sheets,
+            }
         objects = {
             obj.canvas_ref: {"height": obj.height}
             for obj in self.roof_object_ids.filtered("canvas_ref")

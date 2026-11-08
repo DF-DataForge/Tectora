@@ -1923,7 +1923,36 @@ export class RoofCanvasField extends Component {
                 const thickness = info.thickness || 0.12;
                 base = Math.max(base, thickness);
                 const inner = shape.shape === "circle" ? null : this.innerPolygon(shape);
+                // The EPDM sheets: the surface inside the roof edges divided
+                // by the seams, as the sheets are calculated.
+                const surfacePx = inner && inner.length === n ? inner : points;
+                const seamLines = this.seamLines;
+                const pieces = seamLines.length ? splitBySeams(surfacePx, seamLines) : [surfacePx];
+                const sizes = [...(info.sheets || [])];
+                const sheets = pieces.map((piece, index) => {
+                    const area = polygonArea(piece) * scale * scale;
+                    // The calculated sheet of this part: the one with its area.
+                    let size = null;
+                    let best = Infinity;
+                    for (const candidate of sizes) {
+                        const diff = Math.abs((candidate.surface || 0) - area);
+                        if (diff < best && diff <= Math.max(0.5, area * 0.05)) {
+                            best = diff;
+                            size = candidate;
+                        }
+                    }
+                    if (size) {
+                        sizes.splice(sizes.indexOf(size), 1);
+                    }
+                    return {
+                        points: toM(piece),
+                        label: size
+                            ? `Doek ${index + 1} · ${size.length.toFixed(2)} × ${size.width.toFixed(2)} m`
+                            : `Doek ${index + 1} · ${area.toFixed(1)} m²`,
+                    };
+                });
                 sections.push({
+                    sheets,
                     outer: toM(points),
                     inner: inner && inner.length === n ? toM(inner) : null,
                     widths: [...Array(n).keys()].map((i) => (shape.shape === "circle" ? 0 : this.edgeWidth(shape, i))),
