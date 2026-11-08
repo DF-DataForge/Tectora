@@ -1239,6 +1239,24 @@ class TectoraRoofProject(models.Model):
             "upstand_area": round(total_area, 2),
         }
 
+    def _shape_object_measurements(self, points, object_shapes):
+        """Area and perimeter (m², m) of the roof objects (not the seams) on
+        a section: those whose middle lies inside it."""
+        area = perimeter = 0.0
+        for shape in object_shapes:
+            if shape["kind"] == "seam" or len(shape["points"]) < 3:
+                continue
+            width_px, length_px = _bounding_box_px(shape["points"])
+            xs = [p[0] for p in shape["points"]]
+            ys = [p[1] for p in shape["points"]]
+            middle = (min(xs) + width_px / 2, min(ys) + length_px / 2)
+            if not _point_in_polygon(middle, points):
+                continue
+            measures = self._shape_measurements(shape["points"])
+            area += measures["area"]
+            perimeter += measures["perimeter"]
+        return {"object_area": round(area, 2), "object_perimeter": round(perimeter, 2)}
+
     def action_sync_from_canvas(self):
         """Create/update roof sections and objects from the drawn shapes.
 
@@ -1273,6 +1291,7 @@ class TectoraRoofProject(models.Model):
                     shape["points"], shape.get("edge_upstands")
                 )
             )
+            values.update(self._shape_object_measurements(shape["points"], object_shapes))
             values["name"] = shape["name"] or _("Sectie %s") % index
             existing = sections_by_ref.pop(shape["id"], None)
             if existing:

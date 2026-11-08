@@ -609,6 +609,23 @@ class TectoraRoofProject(models.Model):
                     self.epdm_thickness = info["thickness"]
         return result
 
+    def tectora_preview_vapour(self, section_ids, insulation_id=False):
+        """The vapour barrier the surfaces take (m²), with the figures per
+        surface: inner surface less the roof objects, plus up the upstands
+        and around the objects the insulation's thickness + 5 cm. With
+        ``insulation_id`` that insulation's thickness, else the one on the
+        surface."""
+        self.ensure_one()
+        from .roof_section import insulation_thickness
+        product = self.env["product.product"].browse(insulation_id or 0).exists()
+        thickness = insulation_thickness(product) if product else None
+        rows = []
+        for section in self._tectora_buildup_sections(section_ids):
+            figures = section._tectora_vapour_quantity(thickness)
+            figures["name"] = section.name or ""
+            rows.append(figures)
+        return {"quantity": round(sum(r["quantity"] for r in rows), 2), "sections": rows}
+
     # ----------------------------------------------------------- EPDM sheets
     def _tectora_section_shape(self, section, cache):
         """The sheets of a surface, from the plan of its roof: per part

@@ -3188,6 +3188,12 @@ export class RoofCanvasField extends Component {
         const buildup = isSurface && !isObject
             ? {
                   projectId: record.resId,
+                  previewVapour: (targetKeys, insulationId) =>
+                      this.orm.call(
+                          "tectora.roof.project", "tectora_preview_vapour",
+                          [[record.resId], sectionIdsFor(targetKeys)],
+                          { insulation_id: insulationId || false }
+                      ),
                   preview: (targetKeys, amounts) =>
                       this.orm.call(
                           "tectora.roof.project", "tectora_preview_epdm_sheets",

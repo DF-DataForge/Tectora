@@ -1,9 +1,36 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools import float_compare
+
+# The vapour barrier runs up every upstand and around every roof object to
+# above the insulation: its thickness plus this much (m).
+VAPOUR_UPSTAND_EXTRA = 0.05
+
+
+def is_vapour_barrier(product):
+    """Whether ``product`` is a vapour barrier (dampscherm)."""
+    if not product:
+        return False
+    text = "%s %s" % (product.name or "", product.categ_id.complete_name or "")
+    return bool(re.search(r"dampscherm|dampopen", text.lower()))
+
+
+def insulation_thickness(product):
+    """The thickness (m) of an insulation product, from its name ("...
+    isolatie type: ... dikte: 10cm ..."), or 0."""
+    name = (product.name or "").lower() if product else ""
+    if "isolatie" not in name:
+        return 0.0
+    match = re.search(r"dikte:\s*([\d.,]+)\s*(mm|cm)", name)
+    if not match:
+        return 0.0
+    value = float(match.group(1).replace(",", "."))
+    return value / 1000.0 if match.group(2) == "mm" else value / 100.0
+
 
 COVERAGE_SELECTION = [
     ("surface", "Oppervlak"),
@@ -67,6 +94,18 @@ class TectoraRoofSection(models.Model):
         help="Verticale oppervlakte van de opstanden: per zijde de lengte "
         "maal de ingestelde opstandhoogte.",
     )
+    object_area = fields.Float(
+        string="Opp. dakobjecten (m²)",
+        digits=(16, 2),
+        help="Oppervlakte van de dakobjecten (koepels, schoorstenen, ...) op "
+        "deze sectie: niet onder het dampscherm.",
+    )
+    object_perimeter = fields.Float(
+        string="Omtrek dakobjecten (m)",
+        digits=(16, 2),
+        help="Omtrek van de dakobjecten op deze sectie: het dampscherm loopt "
+        "er rondom op tot boven de isolatie.",
+    )
     description = fields.Text(string="Omschrijving")
     product_line_ids = fields.One2many(
         "tectora.roof.section.product", "section_id", string="Producten"
@@ -76,6 +115,35 @@ class TectoraRoofSection(models.Model):
         compute="_compute_estimated_total",
         currency_field="currency_id",
     )
+
+    def _tectora_insulation_thickness(self):
+        """The thickness (m) of the insulation on this surface (the thickest
+        if there are several), 0 without."""
+        self.ensure_one()
+        lines = self.product_line_ids.filtered(lambda l: l.coverage == "surface" and not l.edge_index)
+        return max([insulation_thickness(line.product_id) for line in lines] or [0.0])
+
+    def _tectora_vapour_quantity(self, thickness=None):
+        """The vapour barrier of this surface (m²): the surface inside the
+        roof edges, less the roof objects on it, plus where it runs up -- the
+        upstands and around the objects -- the insulation's thickness + 5 cm.
+        Returns the figures behind it too."""
+        self.ensure_one()
+        if thickness is None:
+            thickness = self._tectora_insulation_thickness()
+        surface = self.inner_area or self.area
+        height = thickness + VAPOUR_UPSTAND_EXTRA
+        up_length = self.upstand_length + self.object_perimeter
+        quantity = max(surface - self.object_area, 0.0) + up_length * height
+        return {
+            "quantity": round(quantity, 2),
+            "surface": round(surface, 2),
+            "object_area": round(self.object_area, 2),
+            "upstand_length": round(self.upstand_length, 2),
+            "object_perimeter": round(self.object_perimeter, 2),
+            "thickness": round(thickness, 3),
+            "height": round(height, 3),
+        }
 
     @api.depends("product_line_ids.price_subtotal")
     def _compute_estimated_total(self):
@@ -300,7 +368,10 @@ class TectoraRoofSectionProduct(models.Model):
     @api.depends(
         "coverage", "edge_index",
         "section_id.area", "section_id.perimeter",
-        "object_id.area", "object_id.perimeter",
+        "section_id.inner_area", "section_id.upstand_length",
+        "section_id.object_area", "section_id.object_perimeter",
+        "section_id.product_line_ids.product_id",
+        "object_id.area", "object_id.perimeter", "product_id",
         "project_direct_id.total_area", "project_direct_id.total_perimeter",
         "roof_id.total_area", "roof_id.total_perimeter",
     )
@@ -326,7 +397,11 @@ class TectoraRoofSectionProduct(models.Model):
                     line.quantity = line.quantity or 1.0
                 continue
             target = line.section_id or line.object_id
-            if target and line.coverage == "surface":
+            if line.section_id and line.coverage == "surface" and is_vapour_barrier(line.product_id):
+                # The vapour barrier: inner surface less the objects, plus
+                # up the upstands and around the objects.
+                line.quantity = line.section_id._tectora_vapour_quantity()["quantity"]
+            elif target and line.coverage == "surface":
                 line.quantity = target.area
             elif target and line.coverage == "edges":
                 line.quantity = target.perimeter
