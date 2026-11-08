@@ -3170,10 +3170,11 @@ export class RoofCanvasField extends Component {
         const buildup = isSurface && !isObject
             ? {
                   projectId: record.resId,
-                  preview: (targetKeys, margin) =>
+                  preview: (targetKeys, amounts) =>
                       this.orm.call(
                           "tectora.roof.project", "tectora_preview_epdm_sheets",
-                          [[record.resId], sectionIdsFor(targetKeys)], { margin }
+                          [[record.resId], sectionIdsFor(targetKeys)],
+                          { margin: amounts.margin, seam_overlap: amounts.seam_overlap }
                       ),
                   apply: (choice, targetKeys) => this.applyBuildup(sectionIdsFor(targetKeys), choice),
               }
@@ -3478,6 +3479,7 @@ export class RoofCanvasField extends Component {
                     membrane_id: choice.membrane_id,
                     sheets: choice.sheets,
                     margin: choice.margin,
+                    seam_overlap: choice.seam_overlap,
                 }
             );
             await record.load();

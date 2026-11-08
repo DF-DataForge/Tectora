@@ -114,12 +114,12 @@ class TestBuildup(TransactionCase):
         self.assertEqual(result["lines"], 3)
         # The seam divides the surface into two sheets. Each: 4.70 x 5.40 m
         # inside the edges, +0.60 m (0.30 edge, 0.20 upstand, 0.10 margin) on
-        # the outer sides, +0.10 m (overlap) on the seam.
+        # the outer sides (a rand), +0.15 m (the overlap) on the seam.
         sheets = self.project.epdm_sheet_ids.filtered("section_id").sorted("name")
         self.assertEqual(len(sheets), 2)
         self.assertEqual(sheets.section_id, self.sections)
         for sheet in sheets:
-            self.assertEqual((sheet.length, sheet.width), (6.6, 5.4))
+            self.assertEqual((sheet.length, sheet.width), (6.6, 5.45))
         self.assertEqual(self.project.epdm_thickness, 1.5)
 
         # The calculation behind a sheet: per dimension the surface plus
@@ -129,10 +129,15 @@ class TestBuildup(TransactionCase):
         self.assertEqual((length["base"], length["size"]), (5.4, 6.6))
         self.assertEqual([(e["upstand"], e["width"], e["total"]) for e in length["ends"]],
                          [(0.2, 0.3, 0.6), (0.2, 0.3, 0.6)])
-        self.assertEqual((width["base"], width["size"]), (4.7, 5.4))
+        self.assertEqual((width["base"], width["size"]), (4.7, 5.45))
+        seam_end = next(e for e in width["ends"] if e["seam"])
+        self.assertEqual(seam_end["total"], 0.15)
         self.assertEqual(sorted(e["seam"] for e in width["ends"]), [False, True])
         self.assertEqual(preview[0]["surface"], round(4.7 * 5.4, 2))
-        self.assertIn("naad 0,10 (overlap)", sheets[0].note)
+        self.assertIn("naad 0,15 (overlap)", sheets[0].note)
+        # Another overlap on the seam, given for this calculation.
+        preview = self.project.tectora_preview_epdm_sheets(self.sections.ids, margin=0.1, seam_overlap=0.2)
+        self.assertEqual(preview[0]["dimensions"][1]["size"], 5.5)
 
         # Another insulation replaces the first; the sheets are recalculated,
         # not added.

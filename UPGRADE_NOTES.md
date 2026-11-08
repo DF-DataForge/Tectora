@@ -230,3 +230,4 @@ Releases and the modules they need upgraded:
 | Tekening: naden en dakobjecten bewegen mee met hun dakvlak (verplaatsen, hoek slepen, zijdelengte) | `tectora_roof` (20.0.3.79.0) |
 | Tekening: breedte dakrand en opstand van de zijden in cm (zijpaneel en Randafwerking) | `tectora_roof` (20.0.3.80.0) |
 | Producten: categorieboom links naast kanban en lijst | `tectora_products` (20.0.2.9.0) |
+| EPDM-doeken: vaste regel — langs een rand opstand + breedte + 10 cm, langs een naad 15 cm overlap (instelbaar) | `tectora_roof` (20.0.3.81.0) |

@@ -73,7 +73,8 @@ export class RoofProductPickerDialog extends Component {
             insulation: { type: "", thickness: "", product: 0 },
             membrane: { type: "", thickness: "", product: 0 },
             sheets: true,
-            margin: 0.1,
+            margin: 0.1, // along a rand, on top of upstand and edge width
+            seamOverlap: 0.15, // along a seam
             maxWidth: 15.25,
             preview: [],
             previewLoading: false,
@@ -145,6 +146,7 @@ export class RoofProductPickerDialog extends Component {
         const b = this.buildup;
         b.options = data.options;
         b.margin = data.margin;
+        b.seamOverlap = data.seam_overlap;
         b.maxWidth = data.max_width;
         b.vapour = data.current.vapour || 0;
         for (const layer of ["insulation", "membrane"]) {
@@ -267,9 +269,10 @@ export class RoofProductPickerDialog extends Component {
         return this.buildup.preview.reduce((sum, sheet) => sum + sheet.area, 0);
     }
 
-    onMarginInput(ev) {
+    /** ``field`` "margin" (rand) or "seamOverlap" (naad), typed in cm. */
+    onMarginInput(ev, field = "margin") {
         const value = parseFloat(String(ev.target.value).replace(",", "."));
-        this.buildup.margin = value >= 0 ? value / 100 : 0;
+        this.buildup[field] = value >= 0 ? value / 100 : 0;
         this.refreshSheets();
         this.refreshEdgeCorners();
     }
@@ -293,7 +296,10 @@ export class RoofProductPickerDialog extends Component {
         const ticket = (this._sheetTicket = (this._sheetTicket || 0) + 1);
         b.previewLoading = true;
         try {
-            const preview = await this.props.buildup.preview(this.selectedTargetKeys, b.margin);
+            const preview = await this.props.buildup.preview(this.selectedTargetKeys, {
+                margin: b.margin,
+                seam_overlap: b.seamOverlap,
+            });
             if (ticket === this._sheetTicket) {
                 b.preview = preview || [];
             }
@@ -318,6 +324,7 @@ export class RoofProductPickerDialog extends Component {
             ...this.buildupChoice,
             sheets: this.buildup.sheets,
             margin: this.buildup.margin,
+            seam_overlap: this.buildup.seamOverlap,
         };
         this.props.close();
         await this.props.buildup.apply(choice, targetKeys);

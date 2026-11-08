@@ -10,7 +10,9 @@ stays one section (its products, its quantities), and the seams (naden)
 drawn on it divide it into sheets -- the joints between them. Each sheet is
 sized on its part of the surface inside the roof edges, plus per side the
 upstand (opstand) and the width of the roof edge (dakrand) it runs over, plus
-a margin; a side along a seam gets the margin only, as the overlap.
+10 cm (the rand rule); a side along a seam gets 15 cm, the overlap with
+the next sheet. Both are settings (Instellingen) and can be changed per
+calculation.
 """
 import math
 import re
@@ -367,10 +369,17 @@ class ResConfigSettings(models.TransientModel):
         "beginnen (laatste segment van de offerte).",
     )
     tectora_epdm_margin = fields.Float(
-        string="Marge EPDM-doek per zijde (m)", digits=(16, 2),
+        string="EPDM-doek: marge langs een rand (m)", digits=(16, 2),
         config_parameter="tectora_roof.epdm_margin", default=0.10,
-        help="Komt bij elk doek op elke zijde bij, bovenop de opstand en de "
-        "breedte van de dakrand: om over de rand te plooien en vast te zetten.",
+        help="Komt op elke zijde langs een rand bij, bovenop de opstand en "
+        "de breedte van de dakrand: om over de rand te plooien en vast te "
+        "zetten. Standaard 10 cm.",
+    )
+    tectora_epdm_seam_overlap = fields.Float(
+        string="EPDM-doek: overlap langs een naad (m)", digits=(16, 2),
+        config_parameter="tectora_roof.epdm_seam_overlap", default=0.15,
+        help="Komt op elke zijde langs een naad bij: de overlap met het "
+        "volgende doek. Standaard 15 cm.",
     )
 
 
@@ -412,12 +421,17 @@ class TectoraRoofProject(models.Model):
                 return False
             return Product.browse(product_id).exists().id or False
 
-        raw_margin = param("epdm_margin")
-        try:
-            margin = float(raw_margin) if raw_margin != "" else 0.10
-        except (TypeError, ValueError):
-            margin = 0.10
+        def amount(key, default):
+            raw = param(key)
+            try:
+                return max(float(raw), 0.0) if raw != "" else default
+            except (TypeError, ValueError):
+                return default
+
+        margin = amount("epdm_margin", 0.10)
+        seam_overlap = amount("epdm_seam_overlap", 0.15)
         return {
+            "seam_overlap": seam_overlap,
             "vapour": product("buildup_vapour_id"),
             "insulation": product("buildup_insulation_id"),
             "membrane": product("buildup_membrane_id"),
@@ -517,6 +531,7 @@ class TectoraRoofProject(models.Model):
             "options": options,
             "current": current,
             "margin": defaults["margin"],
+            "seam_overlap": defaults["seam_overlap"],
             "max_width": EPDM_MAX_WIDTH,
         }
 
@@ -527,7 +542,7 @@ class TectoraRoofProject(models.Model):
         )
 
     def tectora_apply_buildup(self, section_ids, vapour_id=False, insulation_id=False,
-                              membrane_id=False, sheets=False, margin=None):
+                              membrane_id=False, sheets=False, margin=None, seam_overlap=None):
         """Put the build-up on the surfaces: per layer chosen, the surface's
         product of that layer is replaced by the chosen one (a layer left
         empty is not touched). With ``sheets`` the EPDM sheets of those
@@ -566,7 +581,9 @@ class TectoraRoofProject(models.Model):
             self.write(values)
         result = {"lines": created, "sheets": []}
         if sheets:
-            result["sheets"] = self.tectora_compute_epdm_sheets(section_ids, margin=margin)
+            result["sheets"] = self.tectora_compute_epdm_sheets(
+                section_ids, margin=margin, seam_overlap=seam_overlap
+            )
             if membrane_id:
                 info = self._tectora_layer_info("membrane", self.env["product.product"].browse(membrane_id))
                 if info["thickness"] and "epdm" in info["name"].lower():
@@ -629,11 +646,18 @@ class TectoraRoofProject(models.Model):
             sheets.append(([(x * scale, y * scale) for x, y in piece], sides))
         return sheets
 
-    def _tectora_epdm_sheet_values(self, section_ids, margin=None):
+    def _tectora_epdm_sheet_values(self, section_ids, margin=None, seam_overlap=None):
+        """The sheets of the surfaces. Per side beyond the surface: along a
+        rand the upstand + the roof edge's width + ``margin`` (10 cm), along
+        a seam ``seam_overlap`` (15 cm), the overlap with the next sheet."""
         self.ensure_one()
+        defaults = self._tectora_buildup_defaults()
         if margin is None or margin is False:
-            margin = self._tectora_buildup_defaults()["margin"]
+            margin = defaults["margin"]
+        if seam_overlap is None or seam_overlap is False:
+            seam_overlap = defaults["seam_overlap"]
         margin = max(float(margin or 0.0), 0.0)
+        seam_overlap = max(float(seam_overlap or 0.0), 0.0)
         several_roofs = len(self.roof_ids) > 1
         cache = {}
         result = []
@@ -645,7 +669,10 @@ class TectoraRoofProject(models.Model):
             if several_roofs and section.roof_id:
                 name = "%s · %s" % (section.roof_id.name, name)
             for index, (polygon, sides) in enumerate(sheets, start=1):
-                extensions = [side["upstand"] + side["width"] + margin for side in sides]
+                extensions = [
+                    seam_overlap if side["seam"] else side["upstand"] + side["width"] + margin
+                    for side in sides
+                ]
                 layout = sheet_layout(polygon, extensions)
                 if not layout:
                     continue
@@ -661,7 +688,7 @@ class TectoraRoofProject(models.Model):
                             "seam": side["seam"],
                             "upstand": round(side["upstand"], 2),
                             "width": round(side["width"], 2),
-                            "margin": round(margin, 2),
+                            "margin": round(seam_overlap if side["seam"] else margin, 2),
                             "total": round(extensions[side_index], 2),
                         })
                     dimensions.append({
@@ -686,6 +713,7 @@ class TectoraRoofProject(models.Model):
                     "waste": round(waste, 2),
                     "waste_pct": round(waste / (length * width) * 100) if length * width else 0,
                     "margin": round(margin, 2),
+                    "seam_overlap": round(seam_overlap, 2),
                     "key": "%s-%s" % (section.id, index),
                     "section_id": section.id,
                     "name": (_("EPDM-doek %(name)s · %(index)s", name=name, index=index)
@@ -721,16 +749,16 @@ class TectoraRoofProject(models.Model):
             text += " → %s" % number(dimension["size"])
         return text + " m"
 
-    def tectora_preview_epdm_sheets(self, section_ids, margin=None):
+    def tectora_preview_epdm_sheets(self, section_ids, margin=None, seam_overlap=None):
         """The sheets the surfaces take, without saving them."""
         self.ensure_one()
-        return self._tectora_epdm_sheet_values(section_ids, margin)
+        return self._tectora_epdm_sheet_values(section_ids, margin, seam_overlap)
 
-    def tectora_compute_epdm_sheets(self, section_ids, margin=None):
+    def tectora_compute_epdm_sheets(self, section_ids, margin=None, seam_overlap=None):
         """(Re)calculate the EPDM sheets of the surfaces: the sheets
         calculated for them before are replaced, sheets entered by hand stay."""
         self.ensure_one()
-        values = self._tectora_epdm_sheet_values(section_ids, margin)
+        values = self._tectora_epdm_sheet_values(section_ids, margin, seam_overlap)
         Sheet = self.env["tectora.roof.epdm.sheet"]
         Sheet.search([
             ("project_id", "=", self.id),

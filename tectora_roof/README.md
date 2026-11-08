@@ -90,9 +90,9 @@ install on Odoo 17 or earlier without adjustments.
    default build-up (Instellingen › Tectora Dakmeting) is proposed until
    then. *EPDM-doeken berekenen* sizes one sheet per part of the surface
    between the seams: the smallest rectangle around that part inside the
-   roof edges, plus per side the upstand and the roof edge's width and a
-   margin (default 10 cm); a side along a seam gets the margin only, as the
-   overlap with the next sheet. The
+   roof edges; along a rand the upstand + the roof edge's width + 10 cm,
+   along a seam 15 cm (the overlap with the next sheet). Both amounts are
+   settings and can be changed in the dialog per calculation. The
    sheets are previewed in the dialog and stored on the Werf tab (EPDM-
    doeken), replacing the sheets calculated earlier for those surfaces;
    sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)

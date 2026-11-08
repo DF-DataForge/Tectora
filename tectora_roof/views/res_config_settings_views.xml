@@ -33,9 +33,13 @@
                                  help="De tekst waarmee de Algemene nota's van een nieuw dakproject beginnen (laatste segment van de offerte).">
                             <field name="tectora_quote_notes" widget="text"/>
                         </setting>
-                        <setting string="Marge EPDM-doek"
-                                 help="Per zijde bovenop de opstand en de breedte van de dakrand (m).">
+                        <setting string="EPDM-doek langs een rand"
+                                 help="Opstand + breedte van de dakrand + deze marge (m), standaard 0,10.">
                             <field name="tectora_epdm_margin"/>
+                        </setting>
+                        <setting string="EPDM-doek langs een naad"
+                                 help="De overlap met het volgende doek (m), standaard 0,15.">
+                            <field name="tectora_epdm_seam_overlap"/>
                         </setting>
                     </block>
                 </app>
