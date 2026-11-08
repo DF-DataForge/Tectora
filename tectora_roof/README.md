@@ -141,15 +141,6 @@ install on Odoo 17 or earlier without adjustments.
    removed, to tick; what the element has is ticked. Applying puts exactly
    the ticked works on it (and on the other items ticked), which land in
    the roof's Afbouwwerken on the quotation.
-   **3D** (toolbar) shows the roof on the drawing in 3D, layer by layer:
-   the deck, the vapour barrier, the insulation on the surface inside the
-   roof edges (its thickness from the surface's insulation), the EPDM on top
-   and up the upstands, the roof edge rising its upstand above the EPDM
-   over its width with its profile on top, the kimfixatie (batten strip) at
-   the foot of the upstands, the roof objects and the seams. Drag to turn,
-   scroll to zoom; the heights are exaggerated (adjustable) so the layers
-   show, and *Lagen uit elkaar* pulls the layers apart with the roof edges
-   see-through.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

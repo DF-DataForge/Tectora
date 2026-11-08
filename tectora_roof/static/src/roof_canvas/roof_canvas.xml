@@ -64,12 +64,6 @@
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
-                            t-on-click="() => this.open3d()" title="Het dak in 3D: dampscherm, isolatie, EPDM, dakranden, kimfixatie">
-                        <i class="oi" data-icon="view_in_ar"/> 3D
-                    </button>
-                </div>
-                <div class="btn-group btn-group-sm ms-2" role="group">
-                    <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.showGrid }"
                             t-on-click="this.toggleGrid" title="Meetraster tonen/verbergen">
                         <i class="oi" data-icon="grid_view"/> Raster

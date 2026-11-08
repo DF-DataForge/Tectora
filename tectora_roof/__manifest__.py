@@ -50,7 +50,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   whose quantities follow that roof's plan. The template's type
   (renovatie / nieuwbouw) sets the pricelist and so the project type.
     """,
-    "version": "20.0.3.85.0",
+    "version": "20.0.3.84.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -97,8 +97,6 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
             "tectora_roof/static/src/roof_canvas/roof_canvas.js",
             "tectora_roof/static/src/roof_canvas/product_picker_dialog.xml",
             "tectora_roof/static/src/roof_canvas/product_picker_dialog.js",
-            "tectora_roof/static/src/roof_canvas/roof_view3d.xml",
-            "tectora_roof/static/src/roof_canvas/roof_view3d.js",
             "tectora_roof/static/src/roof_canvas/edge_length_dialog.xml",
             "tectora_roof/static/src/roof_canvas/edge_length_dialog.js",
             "tectora_roof/static/src/quote_builder/quote_builder.scss",
