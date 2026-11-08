@@ -156,6 +156,24 @@ install on Odoo 17 or earlier without adjustments.
    see-through. Every layer -- EPDM, isolatie, dampscherm, kimfixatie,
    dakrand en opstand, draagvloer, dakobjecten -- can be shown or hidden,
    or shown alone (*enkel*, or Shift-click).
+   The Dakopbouw also puts the **kimfixatie** on the surface (ticked by
+   default): along all its sides (at the foot of the upstands) and around
+   its chimneys and domes, in metres.
+   Clicking a **schoorsteen** opens its calculator: its footprint from the
+   drawing and its height above the roof, *Uitbekleden* (the sides, with
+   the connection under the coping) or *Volledig inpakken* (incl. the top),
+   the build-up (EPDM, insulation + EPDM, multiplex + EPDM); the m² is
+   perimeter x height (+ the top), and follows the chimney.
+   Clicking a **koepel** opens the Skylux calculator: *Koepelschaal +
+   opstand* or *RWA-koepel (Skymax)*, the daylight size (the one fitting the
+   drawn dome proposed), the dome (material, walls, colour), the curb (type,
+   fixed or opening), extra works (spindle, roof opening, ...). The Skylux
+   products have their options and sizes as attributes that make their
+   variants only when used; the price per option and size comes from the
+   **Skylux-prijzen** table (Dakmeting menu: *Prijstabel aanvullen* makes
+   every row, to fill in or to export, complete from the dealer price list
+   and import again). A variant gets its price from the table as its own
+   catalogue price.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

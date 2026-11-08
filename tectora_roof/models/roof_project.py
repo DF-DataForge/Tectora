@@ -1242,7 +1242,7 @@ class TectoraRoofProject(models.Model):
     def _shape_object_measurements(self, points, object_shapes):
         """Area and perimeter (m², m) of the roof objects (not the seams) on
         a section: those whose middle lies inside it."""
-        area = perimeter = 0.0
+        area = perimeter = kimfix = 0.0
         for shape in object_shapes:
             if shape["kind"] == "seam" or len(shape["points"]) < 3:
                 continue
@@ -1255,7 +1255,13 @@ class TectoraRoofProject(models.Model):
             measures = self._shape_measurements(shape["points"])
             area += measures["area"]
             perimeter += measures["perimeter"]
-        return {"object_area": round(area, 2), "object_perimeter": round(perimeter, 2)}
+            if shape["kind"] in ("chimney", "skylight"):
+                kimfix += measures["perimeter"]
+        return {
+            "object_area": round(area, 2),
+            "object_perimeter": round(perimeter, 2),
+            "kimfix_object_perimeter": round(kimfix, 2),
+        }
 
     def action_sync_from_canvas(self):
         """Create/update roof sections and objects from the drawn shapes.
