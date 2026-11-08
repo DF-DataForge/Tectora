@@ -221,6 +221,12 @@ export class RoofProductPickerDialog extends Component {
         }
     }
 
+    insulationFigures(row) {
+        const n = (v) => v.toFixed(2);
+        const objects = row.object_area ? ` − ${n(row.object_area)} m² objecten` : "";
+        return `${row.name}: ${n(row.surface)} m² binnenopp.${objects} = ${n(row.insulation)} m²`;
+    }
+
     vapourFigures(row) {
         const n = (v) => v.toFixed(2);
         let text = `${row.name}: ${n(row.surface)} m² binnenopp.`;
@@ -284,15 +290,21 @@ export class RoofProductPickerDialog extends Component {
         const add = (layer, label, id) => {
             const product = id && b.options[layer].find((p) => p.id === id);
             if (product) {
-                // The vapour barrier has its own measure.
-                const quantity = layer === "vapour" && b.vapourPreview
-                    ? b.vapourPreview.quantity
-                    : this.totalQuantity;
+                // The vapour barrier and the insulation have their own
+                // measure (inner surface, objects).
+                const preview = b.vapourPreview;
+                let quantity = this.totalQuantity;
+                if (preview && layer === "vapour") {
+                    quantity = preview.quantity;
+                } else if (preview && layer === "insulation") {
+                    quantity = preview.insulation_quantity;
+                }
                 lines.push({
                     label,
                     product,
                     quantity,
-                    figures: layer === "vapour" && b.vapourPreview ? b.vapourPreview.sections : [],
+                    layer,
+                    figures: preview && layer !== "membrane" ? preview.sections : [],
                     subtotal: product.price * quantity,
                 });
             }

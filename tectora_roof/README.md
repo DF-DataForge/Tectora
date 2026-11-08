@@ -92,8 +92,9 @@ install on Odoo 17 or earlier without adjustments.
    measure: the surface inside the roof edges, less the roof objects on it
    (koepels, schoorstenen: their m²), plus where it runs up -- every upstand
    and around every object (their perimeter) -- the insulation's thickness
-   + 5 cm. The dialog shows the figures per surface; the line's quantity on
-   the surface follows the drawing and the insulation chosen.
+   + 5 cm. The insulation is always the surface inside the roof edges less
+   the roof objects. The dialog shows the figures per surface; the lines'
+   quantities on the surface follow the drawing and the insulation chosen.
    *EPDM-doeken berekenen* sizes one sheet per part of the surface
    between the seams: the smallest rectangle around that part inside the
    roof edges; along a rand the upstand + the roof edge's width + 10 cm,

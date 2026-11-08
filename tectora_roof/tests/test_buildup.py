@@ -131,10 +131,14 @@ class TestBuildup(TransactionCase):
         self.assertEqual((section.object_area, section.object_perimeter), (1.0, 4.0))
         vapour_line = section.product_line_ids.filtered(lambda l: l.product_id == self.vapour)
         self.assertAlmostEqual(vapour_line.quantity, round(50.76 - 1 + 36 * 0.15, 2), places=2)
+        # The insulation: the inner surface less the chimney.
+        insulation_line = section.product_line_ids.filtered(lambda l: l.product_id == self.pir_10)
+        self.assertAlmostEqual(insulation_line.quantity, 49.76, places=2)
         epdm_line = section.product_line_ids.filtered(lambda l: l.product_id == self.epdm)
         self.assertEqual(epdm_line.quantity, section.area, "other layers keep the surface")
         preview = self.project.tectora_preview_vapour(section.ids, insulation_id=self.pir_12.id)
         self.assertAlmostEqual(preview["quantity"], round(50.76 - 1 + 36 * 0.17, 2), places=2)
+        self.assertAlmostEqual(preview["insulation_quantity"], 49.76, places=2)
         # The seam divides the surface into two sheets. Each: 4.70 x 5.40 m
         # inside the edges, +0.60 m (0.30 edge, 0.20 upstand, 0.10 margin) on
         # the outer sides (a rand), +0.15 m (the overlap) on the seam.
