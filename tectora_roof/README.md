@@ -146,7 +146,9 @@ install on Odoo 17 or earlier without adjustments.
    roof edges (its thickness from the surface's insulation), the EPDM on top
    and up the upstands, the roof edge rising its upstand above the EPDM
    over its width with its profile on top, the kimfixatie (batten strip) at
-   the foot of the upstands, the roof objects and the seams. Drag to turn,
+   the foot of the upstands, the roof objects and the seams; the EPDM in its
+   sheets (one tint each, labelled with their calculated size, *EPDM-doeken*
+   to switch off). Drag to turn,
    scroll to zoom; the heights are exaggerated (adjustable) so the layers
    show, and *Lagen uit elkaar* pulls the layers apart with the roof edges
    see-through.
