@@ -546,13 +546,29 @@ class TectoraRoofProject(models.Model):
             "insulation": self.buildup_insulation_id.id or defaults["insulation"],
             "membrane": self.buildup_membrane_id.id or defaults["membrane"],
         }
+        kimfix = self._tectora_kimfix_product()
         return {
+            "kimfix": {
+                "id": kimfix.id, "name": kimfix.display_name, "price": kimfix.lst_price,
+                "uom": kimfix.uom_id.name or "",
+            } if kimfix else False,
             "options": options,
             "current": current,
             "margin": defaults["margin"],
             "seam_overlap": defaults["seam_overlap"],
             "max_width": EPDM_MAX_WIDTH,
         }
+
+    @api.model
+    def _tectora_kimfix_product(self):
+        """The kimfixatie product (per m), if the catalogue has one."""
+        from .roof_section import is_kimfix
+        products = self.env["product.product"].search(
+            [("sale_ok", "=", True), ("name", "ilike", "kimfix")]
+        )
+        Line = self.env["tectora.roof.section.product"]
+        products = products.filtered(lambda p: is_kimfix(p) and Line._coverage_from_product(p) == "edges")
+        return products[:1]
 
     # ---------------------------------------------------------------- apply
     def _tectora_buildup_sections(self, section_ids):
@@ -561,7 +577,8 @@ class TectoraRoofProject(models.Model):
         )
 
     def tectora_apply_buildup(self, section_ids, vapour_id=False, insulation_id=False,
-                              membrane_id=False, sheets=False, margin=None, seam_overlap=None):
+                              membrane_id=False, sheets=False, margin=None, seam_overlap=None,
+                              kimfix=None):
         """Put the build-up on the surfaces: per layer chosen, the surface's
         product of that layer is replaced by the chosen one (a layer left
         empty is not touched). With ``sheets`` the EPDM sheets of those
@@ -592,6 +609,23 @@ class TectoraRoofProject(models.Model):
                         "edge_index": 0,
                     })
                     created += 1
+        # The kimfixatie: on (every side and around chimneys and domes) or
+        # off; None leaves it as it is.
+        if kimfix is not None:
+            product = self._tectora_kimfix_product()
+            from .roof_section import is_kimfix
+            for section in sections:
+                lines = section.product_line_ids.filtered(
+                    lambda l: l.coverage == "edges" and not l.edge_index and is_kimfix(l.product_id)
+                )
+                if kimfix and product and not lines:
+                    Line.create({
+                        "section_id": section.id, "product_id": product.id,
+                        "coverage": "edges", "edge_index": 0,
+                    })
+                    created += 1
+                elif not kimfix and lines:
+                    lines.unlink()
         values = {
             "buildup_%s_id" % layer: product_id
             for layer, product_id in chosen.items() if product_id
@@ -646,10 +680,14 @@ class TectoraRoofProject(models.Model):
             figures = section._tectora_vapour_quantity(thickness)
             figures["name"] = section.name or ""
             figures["insulation"] = section._tectora_insulation_quantity()
+            figures["kimfix"] = section._tectora_kimfix_quantity()
+            figures["sides"] = round(section.inner_perimeter or section.perimeter, 2)
+            figures["kimfix_objects"] = round(section.kimfix_object_perimeter, 2)
             rows.append(figures)
         return {
             "quantity": round(sum(r["quantity"] for r in rows), 2),
             "insulation_quantity": round(sum(r["insulation"] for r in rows), 2),
+            "kimfix_quantity": round(sum(r["kimfix"] for r in rows), 2),
             "sections": rows,
         }
 

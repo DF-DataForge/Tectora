@@ -47,6 +47,11 @@ export class RoofProductPickerDialog extends Component {
         // {projectId, scope ("surface"|"edge"), apply(productIds, optionIds,
         // targetKeys)}.
         demolition: t.object().optional(),
+        // A dakobject: the calculator of a chimney ({projectId, objectId,
+        // apply(productId, height)}) or of a dome ({projectId, objectId,
+        // apply(choice)}).
+        chimney: t.object().optional(),
+        skylight: t.object().optional(),
     });
 
     setup() {
@@ -79,6 +84,8 @@ export class RoofProductPickerDialog extends Component {
             preview: [],
             previewLoading: false,
             vapourPreview: null, // the vapour barrier's quantity and its figures
+            kimfixProduct: null, // the kimfixatie product of the catalogue
+            kimfix: true, // the kimfixatie on every side and around the objects
             details: true, // the calculation under every sheet
         });
         // The edge tab: a roof edge (type, height, finish) or a connection.
@@ -106,6 +113,16 @@ export class RoofProductPickerDialog extends Component {
             this.state.tab = "edges";
         } else if (this.props.demolition) {
             this.state.tab = "demolition";
+        }
+        this.chimney = proxy({ loaded: false, data: null, mode: "uitbekleden", product: 0, height: 0 });
+        this.skylight = proxy({
+            loaded: false, data: null, mode: "set", size: "", dome: "", curb: "", rwa: "",
+            extras: {}, // product id -> quantity, for the ticked ones
+        });
+        if (this.props.chimney) {
+            this.state.tab = "chimney";
+        } else if (this.props.skylight) {
+            this.state.tab = "skylight";
         }
         onWillStart(async () => {
             if (this.props.buildup) {
@@ -136,6 +153,12 @@ export class RoofProductPickerDialog extends Component {
             if (this.props.demolition) {
                 await this.loadDemolition();
             }
+            if (this.props.chimney) {
+                await this.loadChimney();
+            }
+            if (this.props.skylight) {
+                await this.loadSkylight();
+            }
         });
     }
 
@@ -147,6 +170,7 @@ export class RoofProductPickerDialog extends Component {
         const b = this.buildup;
         b.options = data.options;
         b.margin = data.margin;
+        b.kimfixProduct = data.kimfix || null;
         b.seamOverlap = data.seam_overlap;
         b.maxWidth = data.max_width;
         b.vapour = data.current.vapour || 0;
@@ -219,6 +243,26 @@ export class RoofProductPickerDialog extends Component {
         if (ticket === this._vapourTicket) {
             b.vapourPreview = result;
         }
+    }
+
+    kimfixFigures(row) {
+        const n = (v) => v.toFixed(2);
+        const objects = row.kimfix_objects ? ` + ${n(row.kimfix_objects)} m rond schoorstenen en koepels` : "";
+        return `${row.name}: ${n(row.sides)} m randen${objects} = ${n(row.kimfix)} m`;
+    }
+
+    figuresFor(line, row) {
+        if (line.layer === "vapour") {
+            return this.vapourFigures(row);
+        }
+        if (line.layer === "kimfix") {
+            return this.kimfixFigures(row);
+        }
+        return this.insulationFigures(row);
+    }
+
+    toggleKimfix(checked) {
+        this.buildup.kimfix = checked;
     }
 
     insulationFigures(row) {
@@ -312,6 +356,17 @@ export class RoofProductPickerDialog extends Component {
         add("vapour", "Dampscherm", choice.vapour_id);
         add("insulation", "Isolatie", choice.insulation_id);
         add("membrane", "Dakbedekking", choice.membrane_id);
+        if (b.kimfix && b.kimfixProduct && b.vapourPreview) {
+            const quantity = b.vapourPreview.kimfix_quantity;
+            lines.push({
+                label: "Kimfixatie",
+                product: b.kimfixProduct,
+                quantity,
+                layer: "kimfix",
+                figures: b.vapourPreview.sections,
+                subtotal: b.kimfixProduct.price * quantity,
+            });
+        }
         return lines;
     }
 
@@ -384,6 +439,7 @@ export class RoofProductPickerDialog extends Component {
         const choice = {
             ...this.buildupChoice,
             sheets: this.buildup.sheets,
+            kimfix: this.buildup.kimfixProduct ? this.buildup.kimfix : null,
             margin: this.buildup.margin,
             seam_overlap: this.buildup.seamOverlap,
         };
@@ -581,6 +637,144 @@ export class RoofProductPickerDialog extends Component {
         const choice = this.edgeChoice;
         this.props.close();
         await this.props.edges.apply(choice, targetKeys, false);
+    }
+
+    // ------------------------------------------------------------- chimney
+    async loadChimney() {
+        const c = this.chimney;
+        c.data = await this.orm.call(
+            "tectora.roof.project", "tectora_get_chimney_options",
+            [[this.props.chimney.projectId], this.props.chimney.objectId]
+        );
+        c.height = c.data.measures.height || 1;
+        const current = c.data.products.find((p) => p.id === c.data.current);
+        if (current) {
+            c.mode = current.mode;
+            c.product = current.id;
+        } else {
+            const first = c.data.products.find((p) => p.mode === c.mode);
+            c.product = first ? first.id : 0;
+        }
+        c.loaded = true;
+    }
+
+    get chimneyProducts() {
+        return this.chimney.data.products.filter((p) => p.mode === this.chimney.mode);
+    }
+
+    setChimneyMode(mode) {
+        const c = this.chimney;
+        c.mode = mode;
+        const current = c.data.products.find((p) => p.id === c.product);
+        const same = current && this.chimneyProducts.find((p) => p.material === current.material);
+        c.product = same ? same.id : (this.chimneyProducts[0] || {}).id || 0;
+    }
+
+    setChimneyProduct(value) {
+        this.chimney.product = parseInt(value) || 0;
+    }
+
+    setChimneyHeight(ev) {
+        const value = parseFloat(String(ev.target.value).replace(",", "."));
+        this.chimney.height = value >= 0 ? value : 0;
+    }
+
+    /** The m² of the cladding: the sides, and the top when wrapped. */
+    get chimneyFigures() {
+        const c = this.chimney;
+        const m = c.data.measures;
+        const sides = m.perimeter * c.height;
+        const top = c.mode === "inpakken" ? m.area : 0;
+        const product = c.data.products.find((p) => p.id === c.product);
+        const quantity = Math.round((sides + top) * 100) / 100;
+        return { sides, top, quantity, product, subtotal: product ? product.price * quantity : 0 };
+    }
+
+    async applyChimney() {
+        const c = this.chimney;
+        this.props.close();
+        await this.props.chimney.apply(c.product, c.height);
+    }
+
+    // ------------------------------------------------------------- skylight
+    async loadSkylight() {
+        const k = this.skylight;
+        const data = await this.orm.call(
+            "tectora.roof.project", "tectora_get_skylight_options",
+            [[this.props.skylight.projectId], this.props.skylight.objectId]
+        );
+        k.data = data;
+        const current = data.current;
+        k.mode = current.mode;
+        k.size = current.size;
+        k.dome = current.dome || data.options.dome[0];
+        k.curb = current.curb || data.options.curb[0];
+        k.rwa = current.rwa || data.options.rwa[0];
+        k.extras = Object.fromEntries(
+            data.extras.filter((e) => current.extras.includes(e.id)).map((e) => [e.id, e.quantity])
+        );
+        k.loaded = true;
+    }
+
+    skylightPrice(line, option) {
+        const k = this.skylight;
+        const row = (((k.data.prices || {})[line] || {})[option] || {})[k.size];
+        return row && row.price ? row.price : 0;
+    }
+
+    get skylightLines() {
+        const k = this.skylight;
+        const lines = [];
+        const add = (line, option) => {
+            const price = this.skylightPrice(line, option);
+            lines.push({
+                key: line, label: `${k.data.labels[line]} — ${option} — ${k.size}`, quantity: 1,
+                uom: "st", price, subtotal: price, missing: !price,
+            });
+        };
+        if (k.mode === "rwa") {
+            add("rwa", k.rwa);
+        } else {
+            add("dome", k.dome);
+            add("curb", k.curb);
+        }
+        for (const extra of k.data.extras) {
+            const quantity = k.extras[extra.id];
+            if (quantity !== undefined) {
+                lines.push({
+                    key: `x${extra.id}`, label: extra.name, quantity, uom: extra.uom,
+                    price: extra.price, subtotal: extra.price * quantity, missing: false,
+                });
+            }
+        }
+        return lines;
+    }
+
+    get skylightTotal() {
+        return this.skylightLines.reduce((sum, line) => sum + line.subtotal, 0);
+    }
+
+    toggleSkylightExtra(extra) {
+        const k = this.skylight;
+        if (k.extras[extra.id] !== undefined) {
+            delete k.extras[extra.id];
+        } else {
+            k.extras[extra.id] = extra.quantity;
+        }
+    }
+
+    setSkylight(field, value) {
+        this.skylight[field] = value;
+    }
+
+    async applySkylight() {
+        const k = this.skylight;
+        const choice = {
+            mode: k.mode, size: k.size, dome: k.dome, curb: k.curb, rwa: k.rwa,
+            extras: Object.entries(k.extras).map(([id, quantity]) => ({ id: parseInt(id), quantity })),
+        };
+        this.props.close();
+        await this.props.skylight.apply(choice);
     }
 
     // ------------------------------------------------------------ demolition

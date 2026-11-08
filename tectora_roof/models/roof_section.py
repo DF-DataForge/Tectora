@@ -19,6 +19,12 @@ def is_vapour_barrier(product):
     return bool(re.search(r"dampscherm|dampopen", text.lower()))
 
 
+def is_kimfix(product):
+    """Whether ``product`` is the kimfixatie (the mechanical fixing of the
+    EPDM at the foot of the upstands)."""
+    return bool(product) and "kimfix" in (product.name or "").lower()
+
+
 def is_insulation(product):
     """Whether ``product`` is roof insulation that is laid (not removed)."""
     if not product:
@@ -114,6 +120,12 @@ class TectoraRoofSection(models.Model):
         help="Omtrek van de dakobjecten op deze sectie: het dampscherm loopt "
         "er rondom op tot boven de isolatie.",
     )
+    kimfix_object_perimeter = fields.Float(
+        string="Omtrek schoorstenen en koepels (m)",
+        digits=(16, 2),
+        help="Omtrek van de schoorstenen en koepels op deze sectie: de "
+        "kimfixatie loopt er rondom.",
+    )
     description = fields.Text(string="Omschrijving")
     product_line_ids = fields.One2many(
         "tectora.roof.section.product", "section_id", string="Producten"
@@ -130,6 +142,13 @@ class TectoraRoofSection(models.Model):
         self.ensure_one()
         lines = self.product_line_ids.filtered(lambda l: l.coverage == "surface" and not l.edge_index)
         return max([insulation_thickness(line.product_id) for line in lines] or [0.0])
+
+    def _tectora_kimfix_quantity(self):
+        """The kimfixatie of this surface (m): all its sides (at the foot of
+        the upstands, the surface inside the roof edges) and around its
+        chimneys and domes."""
+        self.ensure_one()
+        return round((self.inner_perimeter or self.perimeter) + self.kimfix_object_perimeter, 2)
 
     def _tectora_insulation_quantity(self):
         """The insulation of this surface (m²): the surface inside the roof
@@ -384,8 +403,9 @@ class TectoraRoofSectionProduct(models.Model):
         "section_id.area", "section_id.perimeter",
         "section_id.inner_area", "section_id.upstand_length",
         "section_id.object_area", "section_id.object_perimeter",
+        "section_id.inner_perimeter", "section_id.kimfix_object_perimeter",
         "section_id.product_line_ids.product_id",
-        "object_id.area", "object_id.perimeter", "product_id",
+        "object_id.area", "object_id.perimeter", "object_id.height", "product_id",
         "project_direct_id.total_area", "project_direct_id.total_perimeter",
         "roof_id.total_area", "roof_id.total_perimeter",
     )
@@ -393,6 +413,7 @@ class TectoraRoofSectionProduct(models.Model):
         """Quantity from the measurement. Per-side lines keep the length the
         drawing gave them; corners, drainage and general lines keep what was
         entered (defaults 4 and 1)."""
+        from .roof_skylux import chimney_area, chimney_cladding  # noqa: PLC0415
         for line in self:
             if line.edge_index:
                 line.quantity = line.quantity or 1.0
@@ -418,6 +439,12 @@ class TectoraRoofSectionProduct(models.Model):
             elif line.section_id and line.coverage == "surface" and is_insulation(line.product_id):
                 # The insulation: inner surface less the objects.
                 line.quantity = line.section_id._tectora_insulation_quantity()
+            elif line.section_id and line.coverage == "edges" and is_kimfix(line.product_id):
+                # The kimfixatie: every side, and around chimneys and domes.
+                line.quantity = line.section_id._tectora_kimfix_quantity()
+            elif line.object_id and line.coverage == "surface" and chimney_cladding(line.product_id):
+                # A chimney's cladding: its sides (and its top).
+                line.quantity = chimney_area(line.object_id, line.product_id)
             elif target and line.coverage == "surface":
                 line.quantity = target.area
             elif target and line.coverage == "edges":

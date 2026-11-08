@@ -4,7 +4,15 @@
     <t t-name="tectora_roof.RoofProductPickerDialog">
         <Dialog title="this.props.title" size="'xl'">
             <div class="o_roof_product_picker">
-                <ul t-if="this.props.buildup or this.props.edges or this.props.demolition" class="nav nav-tabs mb-2">
+                <ul t-if="this.props.buildup or this.props.edges or this.props.demolition or this.props.chimney or this.props.skylight" class="nav nav-tabs mb-2">
+                    <li t-if="this.props.chimney" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'chimney'}"
+                           t-on-click.prevent="() => this.setTab('chimney')">Schoorsteen</a>
+                    </li>
+                    <li t-if="this.props.skylight" class="nav-item">
+                        <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'skylight'}"
+                           t-on-click.prevent="() => this.setTab('skylight')">Koepel</a>
+                    </li>
                     <li t-if="this.props.buildup" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'buildup'}"
                            t-on-click.prevent="() => this.setTab('buildup')">Dakopbouw</a>
@@ -94,6 +102,160 @@
                         </div>
                     </div>
                 </t>
+                <!-- Chimney: its cladding, the m² from its measures. -->
+                <div t-if="this.state.tab === 'chimney'" class="o_roof_chimney">
+                    <t t-set="c" t-value="this.chimney"/>
+                    <div t-if="!c.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+                            <div class="small">
+                                <div class="text-muted">Grondvlak (tekening)</div>
+                                <div class="fw-bold">
+                                    <t t-out="c.data.measures.length.toFixed(2)"/> × <t t-out="c.data.measures.width.toFixed(2)"/> m
+                                    · omtrek <t t-out="c.data.measures.perimeter.toFixed(2)"/> m
+                                </div>
+                            </div>
+                            <div>
+                                <label class="small text-muted mb-0" for="o_roof_chimney_height">Hoogte boven het dak (m)</label>
+                                <input id="o_roof_chimney_height" type="number" min="0" step="0.05"
+                                       class="form-control form-control-sm" style="width: 7rem;"
+                                       t-att-value="c.height" t-on-change="(ev) => this.setChimneyHeight(ev)"/>
+                            </div>
+                        </div>
+                        <div class="btn-group mb-2" role="group">
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="c.mode === 'uitbekleden' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setChimneyMode('uitbekleden')">Uitbekleden (zijkanten)</button>
+                            <button type="button" class="btn btn-sm"
+                                    t-att-class="c.mode === 'inpakken' ? 'btn-primary' : 'btn-outline-primary'"
+                                    t-on-click="() => this.setChimneyMode('inpakken')">Volledig inpakken (incl. bovenzijde)</button>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small text-muted mb-0">Opbouw</label>
+                            <select class="form-select form-select-sm"
+                                    t-on-change="(ev) => this.setChimneyProduct(ev.target.value)">
+                                <option t-foreach="this.chimneyProducts" t-as="product" t-key="product.id"
+                                        t-att-value="product.id" t-att-selected="product.id === c.product">
+                                    <t t-out="product.material"/> — € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                </option>
+                            </select>
+                            <div t-if="!c.data.products.length" class="small text-warning mt-1">
+                                Geen producten voor de schoorsteen gevonden.
+                            </div>
+                        </div>
+                        <t t-set="f" t-value="this.chimneyFigures"/>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted">Zijkanten: omtrek × hoogte</td>
+                                    <td class="text-end">
+                                        <t t-out="c.data.measures.perimeter.toFixed(2)"/> × <t t-out="c.height.toFixed(2)"/>
+                                        = <t t-out="f.sides.toFixed(2)"/> m²
+                                    </td>
+                                </tr>
+                                <tr t-if="c.mode === 'inpakken'">
+                                    <td class="text-muted">Bovenzijde</td>
+                                    <td class="text-end"><t t-out="f.top.toFixed(2)"/> m²</td>
+                                </tr>
+                                <tr>
+                                    <td t-out="f.product ? f.product.name : '—'"/>
+                                    <td class="text-end fw-bold text-nowrap">
+                                        <t t-out="f.quantity.toFixed(2)"/> m² · € <t t-out="f.subtotal.toFixed(2)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+
+                <!-- Dome: the Skylux catalogue in the drawn size. -->
+                <div t-if="this.state.tab === 'skylight'" class="o_roof_skylight">
+                    <t t-set="k" t-value="this.skylight"/>
+                    <div t-if="!k.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm"
+                                        t-att-class="k.mode === 'set' ? 'btn-primary' : 'btn-outline-primary'"
+                                        t-on-click="() => this.setSkylight('mode', 'set')">Koepelschaal + opstand</button>
+                                <button type="button" class="btn btn-sm"
+                                        t-att-class="k.mode === 'rwa' ? 'btn-primary' : 'btn-outline-primary'"
+                                        t-on-click="() => this.setSkylight('mode', 'rwa')">RWA-koepel (Skymax)</button>
+                            </div>
+                            <div>
+                                <label class="small text-muted mb-0">Maat (dagmaat)</label>
+                                <select class="form-select form-select-sm" style="width: 10rem;"
+                                        t-on-change="(ev) => this.setSkylight('size', ev.target.value)">
+                                    <option t-foreach="k.data.sizes" t-as="size" t-key="size.label"
+                                            t-att-value="size.label" t-att-selected="size.label === k.size"
+                                            t-out="size.label"/>
+                                </select>
+                            </div>
+                            <div class="small text-muted">
+                                Getekend: <t t-out="k.data.drawn.width"/> × <t t-out="k.data.drawn.length"/> cm
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <t t-if="k.mode === 'set'">
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-0">Koepelschaal</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.setSkylight('dome', ev.target.value)">
+                                        <option t-foreach="k.data.options.dome" t-as="option" t-key="option"
+                                                t-att-value="option" t-att-selected="option === k.dome" t-out="option"/>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-0">Opstand (type · bediening)</label>
+                                    <select class="form-select form-select-sm"
+                                            t-on-change="(ev) => this.setSkylight('curb', ev.target.value)">
+                                        <option t-foreach="k.data.options.curb" t-as="option" t-key="option"
+                                                t-att-value="option" t-att-selected="option === k.curb" t-out="option"/>
+                                    </select>
+                                </div>
+                            </t>
+                            <div t-else="" class="col-md-6">
+                                <label class="small text-muted mb-0">RWA-koepel (wanden · kleur)</label>
+                                <select class="form-select form-select-sm"
+                                        t-on-change="(ev) => this.setSkylight('rwa', ev.target.value)">
+                                    <option t-foreach="k.data.options.rwa" t-as="option" t-key="option"
+                                            t-att-value="option" t-att-selected="option === k.rwa" t-out="option"/>
+                                </select>
+                            </div>
+                        </div>
+                        <div t-if="k.data.extras.length" class="border rounded p-2 mb-2">
+                            <div class="small fw-bold mb-1">Bijkomende werken</div>
+                            <div t-foreach="k.data.extras" t-as="extra" t-key="extra.id" class="form-check small">
+                                <input class="form-check-input" type="checkbox" t-attf-id="o_roof_sky_x{{extra.id}}"
+                                       t-att-checked="k.extras[extra.id] !== undefined"
+                                       t-on-change="() => this.toggleSkylightExtra(extra)"/>
+                                <label class="form-check-label" t-attf-for="o_roof_sky_x{{extra.id}}">
+                                    <t t-out="extra.name"/>
+                                    <span class="text-muted"> — € <t t-out="extra.price.toFixed(2)"/>/<t t-out="extra.uom"/></span>
+                                </label>
+                            </div>
+                        </div>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr t-foreach="this.skylightLines" t-as="line" t-key="line.key">
+                                    <td>
+                                        <t t-out="line.label"/>
+                                        <div t-if="line.missing" class="small text-warning">
+                                            Geen prijs in de Skylux-prijstabel voor deze uitvoering en maat.
+                                        </div>
+                                    </td>
+                                    <td class="text-end text-nowrap"><t t-out="line.quantity"/> <t t-out="line.uom"/></td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Koepel (excl. btw)</td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="this.skylightTotal.toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+
                 <div t-if="this.state.tab === 'demolition'" class="o_roof_demolition">
                     <t t-set="d" t-value="this.demolition"/>
                     <div t-if="!d.loaded" class="text-muted p-3">Laden…</div>
@@ -347,6 +509,16 @@
                             </t>
                         </div>
 
+                        <div t-if="b.kimfixProduct" class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="o_roof_buildup_kimfix"
+                                   t-att-checked="b.kimfix"
+                                   t-on-change="(ev) => this.toggleKimfix(ev.target.checked)"/>
+                            <label class="form-check-label" for="o_roof_buildup_kimfix">
+                                <strong>Kimfixatie</strong>
+                                <span class="text-muted small">— langs alle randen van het vlak en rondom de
+                                    schoorstenen en koepels</span>
+                            </label>
+                        </div>
                         <table t-if="this.buildupLines.length" class="table table-sm mb-2">
                             <tbody>
                                 <tr t-foreach="this.buildupLines" t-as="line" t-key="line.label">
@@ -356,7 +528,7 @@
                                         <t t-out="line.product.name"/>
                                         <div t-foreach="line.figures" t-as="row" t-key="row_index"
                                              class="small text-muted"
-                                             t-out="line.layer === 'vapour' ? this.vapourFigures(row) : this.insulationFigures(row)"/>
+                                             t-out="this.figuresFor(line, row)"/>
                                     </td>
                                     <td class="text-end text-nowrap">
                                         <t t-out="line.quantity.toFixed(2)"/> <t t-out="line.product.uom"/>
@@ -585,6 +757,15 @@
                     <t t-if="this.itemCount > 1">
                         op <t t-out="this.itemCount"/> zijden
                     </t>
+                </button>
+                <button t-elif="this.state.tab === 'chimney'" type="button" class="btn btn-primary"
+                        t-att-disabled="!this.chimney.product"
+                        t-on-click="() => this.applyChimney()">
+                    Schoorsteen toepassen
+                </button>
+                <button t-elif="this.state.tab === 'skylight'" type="button" class="btn btn-primary"
+                        t-on-click="() => this.applySkylight()">
+                    Koepel toepassen
                 </button>
                 <button t-elif="this.state.tab === 'demolition'" type="button" class="btn btn-primary"
                         t-att-disabled="!this.demolition.options.length"

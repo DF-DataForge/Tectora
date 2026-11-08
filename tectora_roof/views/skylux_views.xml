@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The Skylux catalogue: products and attributes, made (or completed)
+         on every upgrade. -->
+    <function model="product.template" name="_tectora_ensure_skylux_catalog"/>
+
+    <record id="view_tectora_skylux_price_list" model="ir.ui.view">
+        <field name="name">tectora.skylux.price.list</field>
+        <field name="model">tectora.skylux.price</field>
+        <field name="arch" type="xml">
+            <list string="Skylux-prijzen" editable="bottom">
+                <header>
+                    <button name="action_tectora_fill" type="object" string="Prijstabel aanvullen"
+                            display="always" class="btn-secondary"
+                            help="Maakt een lijn voor elke uitvoering en maat die nog ontbreekt, om in te vullen of te exporteren, aan te vullen en terug te importeren."/>
+                </header>
+                <field name="line"/>
+                <field name="option"/>
+                <field name="size"/>
+                <field name="price" decoration-danger="not price"/>
+                <field name="cost" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tectora_skylux_price_search" model="ir.ui.view">
+        <field name="name">tectora.skylux.price.search</field>
+        <field name="model">tectora.skylux.price</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="option"/>
+                <field name="size"/>
+                <filter name="no_price" string="Zonder prijs" domain="[('price', '=', 0)]"/>
+                <separator/>
+                <filter name="dome" string="Koepelschaal" domain="[('line', '=', 'dome')]"/>
+                <filter name="curb" string="Koepelopstand" domain="[('line', '=', 'curb')]"/>
+                <filter name="rwa" string="RWA-koepel" domain="[('line', '=', 'rwa')]"/>
+                <group>
+                    <filter name="group_line" string="Productlijn" context="{'group_by': 'line'}"/>
+                    <filter name="group_option" string="Uitvoering" context="{'group_by': 'option'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_skylux_price" model="ir.actions.act_window">
+        <field name="name">Skylux-prijzen</field>
+        <field name="res_model">tectora.skylux.price</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_group_line': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">De prijslijst van Skylux</p>
+            <p>Per productlijn (koepelschaal, koepelopstand, RWA-koepel), uitvoering en
+                dagmaat de verkoop- en aankoopprijs. "Prijstabel aanvullen" maakt alle lijnen
+                aan; vul ze in, of exporteer ze, vul ze aan uit de prijslijst van de leverancier
+                en importeer ze terug. De calculator van een koepel op de tekening rekent ermee.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_tectora_skylux_price"
+              name="Skylux-prijzen"
+              parent="menu_tectora_root"
+              action="action_tectora_skylux_price"
+              sequence="35"/>
+
+</odoo>

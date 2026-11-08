@@ -3337,6 +3337,28 @@ export class RoofCanvasField extends Component {
                           : this.applyEdges(edgeItemsFor(targetKeys), choice),
               }
             : undefined;
+        // A chimney or a dome: its calculator.
+        const objectKind = isObject && isSurface ? hit.kind : null;
+        const chimney = objectKind === "chimney"
+            ? {
+                  projectId: record.resId,
+                  objectId: targetIds[0],
+                  apply: (productId, height) => this.applyObjectCalculator(
+                      "tectora_apply_chimney", [targetIds[0], productId], { height },
+                      _t("Schoorsteen bijgewerkt.")
+                  ),
+              }
+            : undefined;
+        const skylight = objectKind === "skylight"
+            ? {
+                  projectId: record.resId,
+                  objectId: targetIds[0],
+                  apply: (choice) => this.applyObjectCalculator(
+                      "tectora_apply_skylight", [targetIds[0], choice], {},
+                      _t("Koepel bijgewerkt.")
+                  ),
+              }
+            : undefined;
         // The demolition works of a surface or a side ("Afbouw").
         const selectionItemsFor = (targetKeys) => {
             const picked = new Set(targetKeys || []);
@@ -3370,6 +3392,8 @@ export class RoofCanvasField extends Component {
             buildup,
             edges,
             demolition,
+            chimney,
+            skylight,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -3531,6 +3555,28 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
     }
 
+    /** The calculators of a chimney and a dome. */
+    async applyObjectCalculator(method, args, kwargs, message) {
+        const record = this.props.record;
+        try {
+            const result = await this.orm.call("tectora.roof.project", method, [[record.resId], ...args], kwargs);
+            await record.load();
+            this.notification.add(message, { type: "success" });
+            if (result && (result.missing || []).length) {
+                this.notification.add(
+                    _t("Geen prijs in de Skylux-prijstabel voor: %s. Vul ze aan via Dakmeting › Skylux-prijzen.",
+                        result.missing.join(", ")),
+                    { type: "warning", sticky: true }
+                );
+            }
+        } catch (error) {
+            console.warn("Roof canvas: the object calculator failed", error);
+            this.notification.add(_t("Toepassen is mislukt, probeer opnieuw."), { type: "danger" });
+        }
+        this.draw();
+        this.refreshPanel();
+    }
+
     /** The "Afbouw" of the picker: exactly the ticked works on the items. */
     async applySelection(items, coverage, productIds, optionIds, linkField) {
         const record = this.props.record;
@@ -3603,6 +3649,7 @@ export class RoofCanvasField extends Component {
                     insulation_id: choice.insulation_id,
                     membrane_id: choice.membrane_id,
                     sheets: choice.sheets,
+                    kimfix: choice.kimfix,
                     margin: choice.margin,
                     seam_overlap: choice.seam_overlap,
                 }
