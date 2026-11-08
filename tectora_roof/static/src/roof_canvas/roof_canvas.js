@@ -1961,7 +1961,12 @@ export class RoofCanvasField extends Component {
                 });
             } else {
                 const info = data.objects[String(shape.id)] || {};
-                objects.push({ kind, points: toM(points), height: info.height || 0 });
+                objects.push({
+                    kind,
+                    name: shape.name || KIND_NAMES[kind] || "Object",
+                    points: toM(points),
+                    height: info.height || 0,
+                });
             }
         }
         for (const object of objects) {

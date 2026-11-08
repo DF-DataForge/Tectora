@@ -236,3 +236,4 @@ Releases and the modules they need upgraded:
 | Isolatie: binnenoppervlakte − dakobjecten | `tectora_roof` (20.0.3.84.0) |
 | Tekening: 3D-weergave van het dak (draagvloer, dampscherm, isolatie, EPDM, dakrand met opstand, kimfixatie, objecten, naden) | `tectora_roof` (20.0.3.85.0) |
 | 3D-weergave: EPDM-doeken als aparte banen met hun berekende afmeting | `tectora_roof` (20.0.3.86.0) |
+| 3D-weergave: dakobjecten op hun ware hoogte (koepel met opstand en koepel), met label; knop Ware verhoudingen | `tectora_roof` (20.0.3.87.0) |

@@ -149,8 +149,10 @@ install on Odoo 17 or earlier without adjustments.
    the foot of the upstands, the roof objects and the seams; the EPDM in its
    sheets (one tint each, labelled with their calculated size, *EPDM-doeken*
    to switch off). Drag to turn,
-   scroll to zoom; the heights are exaggerated (adjustable) so the layers
-   show, and *Lagen uit elkaar* pulls the layers apart with the roof edges
+   scroll to zoom; the layers and roof edges are exaggerated (adjustable,
+   *Ware verhoudingen* for none) so they show, the roof objects stand at
+   their real height (a dome as its upstand with the dome on top), labelled
+   with it, and *Lagen uit elkaar* pulls the layers apart with the roof edges
    see-through.
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,

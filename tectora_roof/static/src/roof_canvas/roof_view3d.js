@@ -71,7 +71,7 @@ export class RoofView3DDialog extends Component {
             yaw: -0.6,
             pitch: 0.75,
             zoom: 1,
-            exaggeration: 6,
+            exaggeration: 3,
             explode: 0,
             sheets: true, // the EPDM sheets apart, with their labels
         });
@@ -122,6 +122,11 @@ export class RoofView3DDialog extends Component {
         this.render3d();
     }
 
+    trueScale() {
+        this.state.exaggeration = 1;
+        this.render3d();
+    }
+
     turn(step) {
         this.state.yaw += step;
         this.render3d();
@@ -155,6 +160,36 @@ export class RoofView3DDialog extends Component {
                 normal: [nx, ny, 0],
                 color: typeof sideColor === "function" ? sideColor(i) : sideColor,
             });
+        }
+        return faces;
+    }
+
+    /** A dome-like lid over ``polygon``: from the polygon at z0 to the
+     * polygon shrunk to ``ratio`` around its middle at z1. */
+    frustum(polygon, z0, z1, ratio, color, faces) {
+        const cx = polygon.reduce((sum, p) => sum + p[0], 0) / polygon.length;
+        const cy = polygon.reduce((sum, p) => sum + p[1], 0) / polygon.length;
+        const top = polygon.map(([x, y]) => [cx + (x - cx) * ratio, cy + (y - cy) * ratio]);
+        faces.push({ points: top.map(([x, y]) => [x, y, z1]), normal: [0, 0, 1], color });
+        for (let i = 0; i < polygon.length; i++) {
+            const a = [...polygon[i], z0];
+            const b = [...polygon[(i + 1) % polygon.length], z0];
+            const c = [...top[(i + 1) % polygon.length], z1];
+            const d = [...top[i], z1];
+            // Outward normal: across the face, pointing away from the middle.
+            const ux = b[0] - a[0];
+            const uy = b[1] - a[1];
+            const vx = d[0] - a[0];
+            const vy = d[1] - a[1];
+            const vz = d[2] - a[2];
+            let n = [uy * vz, -ux * vz, ux * vy - uy * vx];
+            const mx = (a[0] + b[0]) / 2 - cx;
+            const my = (a[1] + b[1]) / 2 - cy;
+            if (n[0] * mx + n[1] * my < 0) {
+                n = n.map((v) => -v);
+            }
+            const length = Math.hypot(...n) || 1;
+            faces.push({ points: [a, b, c, d], normal: n.map((v) => v / length), color });
         }
         return faces;
     }
@@ -252,14 +287,29 @@ export class RoofView3DDialog extends Component {
         for (const seam of this.props.model.seams) {
             lines.push({ points: seam.map(([x, y]) => [x, y, seamLevel + 0.005]), color: COLORS.seam });
         }
+        // The roof objects stand on the EPDM at their real height (not
+        // exaggerated like the layers), labelled with it.
         for (const object of this.props.model.objects) {
             const base = object.base * E + gap * 4;
+            const cx = object.points.reduce((sum, p) => sum + p[0], 0) / object.points.length;
+            const cy = object.points.reduce((sum, p) => sum + p[1], 0) / object.points.length;
+            let top;
             if (object.kind === "skylight") {
-                this.prism(object.points, base, base + 0.3 * Math.min(E, 3), COLORS.dome, COLORS.edge, faces);
+                // A dome: its upstand, then the dome (a third of the height).
+                const height = object.height || 0.45;
+                const kerb = base + height * (2 / 3);
+                top = base + height;
+                this.prism(object.points, base, kerb, COLORS.cap, COLORS.edge, faces);
+                this.frustum(object.points, kerb, top, 0.55, COLORS.dome, faces);
             } else {
                 const height = object.height || 1;
-                this.prism(object.points, base, base + height * Math.min(E, 3), COLORS.chimney, COLORS.chimney, faces);
+                top = base + height;
+                this.prism(object.points, base, top, COLORS.chimney, COLORS.chimney, faces);
             }
+            labels.push({
+                point: [cx, cy, top + 0.05],
+                text: `${object.name} · ${(object.height || (object.kind === "skylight" ? 0.45 : 1)).toFixed(2)} m${object.height ? "" : " (standaard)"}`,
+            });
         }
         return { faces, lines, labels };
     }
