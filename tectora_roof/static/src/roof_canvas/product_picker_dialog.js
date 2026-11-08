@@ -78,6 +78,7 @@ export class RoofProductPickerDialog extends Component {
             maxWidth: 15.25,
             preview: [],
             previewLoading: false,
+            vapourPreview: null, // the vapour barrier's quantity and its figures
             details: true, // the calculation under every sheet
         });
         // The edge tab: a roof edge (type, height, finish) or a connection.
@@ -157,6 +158,7 @@ export class RoofProductPickerDialog extends Component {
         }
         b.loaded = true;
         this.refreshSheets();
+        this.refreshVapour();
         this.refreshEdgeCorners();
     }
 
@@ -203,6 +205,42 @@ export class RoofProductPickerDialog extends Component {
         this.buildup.vapour = parseInt(value) || 0;
     }
 
+    /** The vapour barrier's quantity: inner surface less the objects, plus
+     * up the upstands and around the objects the insulation + 5 cm. */
+    async refreshVapour() {
+        const b = this.buildup;
+        if (!this.props.buildup || !this.props.buildup.previewVapour) {
+            return;
+        }
+        const ticket = (this._vapourTicket = (this._vapourTicket || 0) + 1);
+        const result = await this.props.buildup.previewVapour(
+            this.selectedTargetKeys, b.insulation.product || false
+        );
+        if (ticket === this._vapourTicket) {
+            b.vapourPreview = result;
+        }
+    }
+
+    vapourFigures(row) {
+        const n = (v) => v.toFixed(2);
+        let text = `${row.name}: ${n(row.surface)} m² binnenopp.`;
+        if (row.object_area) {
+            text += ` − ${n(row.object_area)} m² objecten`;
+        }
+        const up = row.upstand_length + row.object_perimeter;
+        if (up) {
+            const parts = [];
+            if (row.upstand_length) {
+                parts.push(`${n(row.upstand_length)} m opstand`);
+            }
+            if (row.object_perimeter) {
+                parts.push(`${n(row.object_perimeter)} m rond objecten`);
+            }
+            text += ` + (${parts.join(" + ")}) × (${Math.round(row.thickness * 100)} cm isolatie + 5 cm)`;
+        }
+        return `${text} = ${n(row.quantity)} m²`;
+    }
+
     /** After a type or thickness change: the first product that fits. */
     pickLayer(layer, field, value) {
         const choice = this.buildup[layer];
@@ -225,6 +263,9 @@ export class RoofProductPickerDialog extends Component {
             choice.thickness = "";
             choice.product = 0;
         }
+        if (layer === "insulation") {
+            this.refreshVapour();
+        }
     }
 
     get buildupChoice() {
@@ -243,10 +284,16 @@ export class RoofProductPickerDialog extends Component {
         const add = (layer, label, id) => {
             const product = id && b.options[layer].find((p) => p.id === id);
             if (product) {
+                // The vapour barrier has its own measure.
+                const quantity = layer === "vapour" && b.vapourPreview
+                    ? b.vapourPreview.quantity
+                    : this.totalQuantity;
                 lines.push({
                     label,
                     product,
-                    subtotal: product.price * this.totalQuantity,
+                    quantity,
+                    figures: layer === "vapour" && b.vapourPreview ? b.vapourPreview.sections : [],
+                    subtotal: product.price * quantity,
                 });
             }
         };
@@ -275,6 +322,7 @@ export class RoofProductPickerDialog extends Component {
         this.buildup[field] = value >= 0 ? value / 100 : 0;
         this.refreshSheets();
         this.refreshEdgeCorners();
+        this.refreshVapour();
     }
 
     toggleSheetDetails(checked) {
@@ -285,6 +333,7 @@ export class RoofProductPickerDialog extends Component {
         this.buildup.sheets = checked;
         this.refreshSheets();
         this.refreshEdgeCorners();
+        this.refreshVapour();
     }
 
     async refreshSheets() {
@@ -685,6 +734,7 @@ export class RoofProductPickerDialog extends Component {
         }
         this.refreshSheets();
         this.refreshEdgeCorners();
+        this.refreshVapour();
     }
 
     get baseLabel() {
@@ -699,6 +749,7 @@ export class RoofProductPickerDialog extends Component {
         }
         this.refreshSheets();
         this.refreshEdgeCorners();
+        this.refreshVapour();
     }
 
     selectAllTargets(select) {
@@ -707,6 +758,7 @@ export class RoofProductPickerDialog extends Component {
             : {};
         this.refreshSheets();
         this.refreshEdgeCorners();
+        this.refreshVapour();
     }
 
     setCategory(categoryId) {

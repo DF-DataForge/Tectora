@@ -194,13 +194,32 @@ def effective_seam(seam, polygon, others):
                 best = hit
         return best[0] if best else end
 
+    outline = list(polygon) + [polygon[0]]
+
     def loose(end):
-        return _point_in_polygon(end, polygon) and not any(_on_polyline(end, o) for o in others)
+        # An end on the outline (a corner too: the inside test is unreliable
+        # there) or on another seam is not loose.
+        return (
+            _point_in_polygon(end, polygon)
+            and not _on_polyline(end, outline)
+            and not any(_on_polyline(end, o) for o in others)
+        )
 
     if len(line) >= 2 and loose(line[0]):
         line[0] = extend_end(line[1], line[0])
     if len(line) >= 2 and loose(line[-1]):
         line[-1] = extend_end(line[-2], line[-1])
+
+    # Every end runs on a little: an end on another seam or on the outline
+    # (stored rounded, a hair beside it) then surely crosses it.
+    def overshoot(start, end):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        length = math.hypot(dx, dy) or 1.0
+        return (end[0] + dx / length * SEAM_JOIN_PX * 2, end[1] + dy / length * SEAM_JOIN_PX * 2)
+
+    if len(line) >= 2:
+        line[0] = overshoot(line[1], line[0])
+        line[-1] = overshoot(line[-2], line[-1])
     return line
 
 
@@ -589,6 +608,23 @@ class TectoraRoofProject(models.Model):
                 if info["thickness"] and "epdm" in info["name"].lower():
                     self.epdm_thickness = info["thickness"]
         return result
+
+    def tectora_preview_vapour(self, section_ids, insulation_id=False):
+        """The vapour barrier the surfaces take (m²), with the figures per
+        surface: inner surface less the roof objects, plus up the upstands
+        and around the objects the insulation's thickness + 5 cm. With
+        ``insulation_id`` that insulation's thickness, else the one on the
+        surface."""
+        self.ensure_one()
+        from .roof_section import insulation_thickness
+        product = self.env["product.product"].browse(insulation_id or 0).exists()
+        thickness = insulation_thickness(product) if product else None
+        rows = []
+        for section in self._tectora_buildup_sections(section_ids):
+            figures = section._tectora_vapour_quantity(thickness)
+            figures["name"] = section.name or ""
+            rows.append(figures)
+        return {"quantity": round(sum(r["quantity"] for r in rows), 2), "sections": rows}
 
     # ----------------------------------------------------------- EPDM sheets
     def _tectora_section_shape(self, section, cache):

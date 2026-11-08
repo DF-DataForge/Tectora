@@ -56,6 +56,9 @@ class TestBuildup(TransactionCase):
              "edgeWidths": all_sides, "edgeUpstands": {str(i): 0.2 for i in range(4)}},
             {"id": "n", "kind": "seam", "name": "Naad 1",
              "points": [[250, 0], [250, 300]]},
+            # A 1 x 1 m chimney on the surface.
+            {"id": "c", "kind": "chimney", "name": "Schoorsteen",
+             "points": [[100, 100], [150, 100], [150, 150], [100, 150]]},
         ]}
         cls.project = env["tectora.roof.project"].create({
             "name": "Dakopbouw", "partner_id": env["res.partner"].create({"name": "Klant"}).id,
@@ -86,6 +89,15 @@ class TestBuildup(TransactionCase):
             )) / 2) for p in pieces)
             self.assertEqual(areas, [100500, 198000, 301500])
 
+        # An L-shaped roof, the seam down to the inner corner, the second
+        # one from it to the side -- its start stored a hair beside the
+        # first seam: still three sheets.
+        roof = [(30, 55), (793, 58), (793, 341), (267, 341), (266, 500), (28, 497)]
+        down = [(270, 55.94), (267, 341)]
+        for start in ((269.29, 122), (269.31, 122)):
+            self.assertEqual(len(split_by_seams(roof, [down, [start, (793, 123)]])), 3)
+            self.assertEqual(len(split_by_seams(roof, [[start, (793, 123)], down])), 3)
+
     def test_category_inherits_usages(self):
         ids = self.env["product.category"].tectora_category_ids_for_usages(["surface"])
         self.assertIn(self.pir_categ.id, ids, "a sub-category is offered where its parent is")
@@ -112,6 +124,17 @@ class TestBuildup(TransactionCase):
             surface = section.product_line_ids.filtered(lambda l: l.coverage == "surface")
             self.assertEqual(surface.product_id, self.vapour | self.pir_10 | self.epdm)
         self.assertEqual(result["lines"], 3)
+        # The vapour barrier: the inner surface (9.40 x 5.40) less the
+        # chimney (1 m²), plus up the upstands (all 32 m of sides) and around
+        # the chimney (4 m) the insulation (10 cm) + 5 cm.
+        section = self.sections
+        self.assertEqual((section.object_area, section.object_perimeter), (1.0, 4.0))
+        vapour_line = section.product_line_ids.filtered(lambda l: l.product_id == self.vapour)
+        self.assertAlmostEqual(vapour_line.quantity, round(50.76 - 1 + 36 * 0.15, 2), places=2)
+        epdm_line = section.product_line_ids.filtered(lambda l: l.product_id == self.epdm)
+        self.assertEqual(epdm_line.quantity, section.area, "other layers keep the surface")
+        preview = self.project.tectora_preview_vapour(section.ids, insulation_id=self.pir_12.id)
+        self.assertAlmostEqual(preview["quantity"], round(50.76 - 1 + 36 * 0.17, 2), places=2)
         # The seam divides the surface into two sheets. Each: 4.70 x 5.40 m
         # inside the edges, +0.60 m (0.30 edge, 0.20 upstand, 0.10 margin) on
         # the outer sides (a rand), +0.15 m (the overlap) on the seam.

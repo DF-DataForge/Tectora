@@ -252,13 +252,31 @@ function effectiveSeam(seam, polygon, others) {
         }
         return best ? best.point : to;
     };
-    const loose = (end) => pointInPolygon(end, polygon) && !others.some((other) => onPolyline(end, other));
+    // An end on the outline (a corner too: the inside test is unreliable
+    // there) or on another seam is not loose.
+    const outline = [...polygon, polygon[0]];
+    const loose = (end) =>
+        pointInPolygon(end, polygon) &&
+        !onPolyline(end, outline) &&
+        !others.some((other) => onPolyline(end, other));
     if (line.length >= 2 && loose(line[0])) {
         line[0] = extendEnd(line[1], line[0]);
     }
     const last = line.length - 1;
     if (line.length >= 2 && loose(line[last])) {
         line[last] = extendEnd(line[last - 1], line[last]);
+    }
+    // Every end runs on a little: an end on another seam or on the outline
+    // (stored rounded, a hair beside it) then surely crosses it.
+    const overshoot = (from, to) => {
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        return [to[0] + (dx / length) * SEAM_JOIN_PX * 2, to[1] + (dy / length) * SEAM_JOIN_PX * 2];
+    };
+    if (line.length >= 2) {
+        line[0] = overshoot(line[1], line[0]);
+        line[last] = overshoot(line[last - 1], line[last]);
     }
     return line;
 }
@@ -3170,6 +3188,12 @@ export class RoofCanvasField extends Component {
         const buildup = isSurface && !isObject
             ? {
                   projectId: record.resId,
+                  previewVapour: (targetKeys, insulationId) =>
+                      this.orm.call(
+                          "tectora.roof.project", "tectora_preview_vapour",
+                          [[record.resId], sectionIdsFor(targetKeys)],
+                          { insulation_id: insulationId || false }
+                      ),
                   preview: (targetKeys, amounts) =>
                       this.orm.call(
                           "tectora.roof.project", "tectora_preview_epdm_sheets",

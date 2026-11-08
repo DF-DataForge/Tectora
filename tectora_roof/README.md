@@ -88,7 +88,13 @@ install on Odoo 17 or earlier without adjustments.
    is left alone), on the clicked surface or on several at once (*Alle
    dakvlakken*). The choice is remembered on the project; the company's
    default build-up (Instellingen › Tectora Dakmeting) is proposed until
-   then. *EPDM-doeken berekenen* sizes one sheet per part of the surface
+   then. The vapour barrier (dampscherm) has its own
+   measure: the surface inside the roof edges, less the roof objects on it
+   (koepels, schoorstenen: their m²), plus where it runs up -- every upstand
+   and around every object (their perimeter) -- the insulation's thickness
+   + 5 cm. The dialog shows the figures per surface; the line's quantity on
+   the surface follows the drawing and the insulation chosen.
+   *EPDM-doeken berekenen* sizes one sheet per part of the surface
    between the seams: the smallest rectangle around that part inside the
    roof edges; along a rand the upstand + the roof edge's width + 10 cm,
    along a seam 15 cm (the overlap with the next sheet). Both amounts are
