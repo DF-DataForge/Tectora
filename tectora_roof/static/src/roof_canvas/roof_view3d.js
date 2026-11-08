@@ -16,8 +16,11 @@ const WALL = 0.06; // a side with an upstand but no roof edge width
 const COLORS = {
     deck: [168, 168, 160],
     vapour: [64, 120, 196],
-    insulation: [232, 204, 96],
+    insulation: [198, 203, 209], // PIR boards, aluminium-foil faced: silver
+    boardJoint: [150, 156, 164],
     epdm: [42, 46, 52],
+    // The EPDM sheets, one tint each in turn.
+    sheets: [[36, 40, 48], [84, 90, 102], [38, 66, 84], [92, 72, 78]],
     edge: [176, 146, 112], // the roof edge (opstand), wood
     cap: [205, 210, 214], // its aluminium dakrand on top
     kimfix: [150, 156, 162],
@@ -26,14 +29,15 @@ const COLORS = {
     seam: [250, 250, 250],
 };
 
-const LEGEND = [
-    ["epdm", "EPDM"],
-    ["insulation", "Isolatie"],
-    ["vapour", "Dampscherm"],
-    ["deck", "Draagvloer"],
-    ["edge", "Opstand / dakrand"],
-    ["cap", "Dakrandprofiel"],
-    ["kimfix", "Kimfixatie (batten strip)"],
+// The layers that can be shown or hidden, with their colour.
+const LAYERS = [
+    ["epdm", "EPDM", "epdm"],
+    ["insulation", "Isolatie", "insulation"],
+    ["vapour", "Dampscherm", "vapour"],
+    ["kimfix", "Kimfixatie (batten strip)", "kimfix"],
+    ["edge", "Dakrand en opstand", "edge"],
+    ["deck", "Draagvloer", "deck"],
+    ["objects", "Dakobjecten", "chimney"],
 ];
 
 function signedArea(points) {
@@ -69,10 +73,13 @@ export class RoofView3DDialog extends Component {
             yaw: -0.6,
             pitch: 0.75,
             zoom: 1,
-            exaggeration: 6,
+            exaggeration: 3,
             explode: 0,
+            sheets: true, // the EPDM sheets apart, with their labels
+            // The layers shown: each can be switched off, or shown alone.
+            layers: Object.fromEntries(LAYERS.map(([key]) => [key, true])),
         });
-        this.legend = LEGEND.map(([key, label]) => ({ key, label, color: `rgb(${COLORS[key].join(",")})` }));
+        this.legend = LAYERS.map(([key, label, color]) => ({ key, label, color: `rgb(${COLORS[color].join(",")})` }));
         this.onMove = (ev) => this.drag(ev);
         this.onUp = () => {
             this.dragging = null;
@@ -114,6 +121,45 @@ export class RoofView3DDialog extends Component {
         this.render3d();
     }
 
+    toggleSheets(ev) {
+        this.state.sheets = ev.target.checked;
+        this.render3d();
+    }
+
+    /** A click shows or hides a layer; with Shift (or Ctrl) only that one
+     * is shown. */
+    toggleLayer(key, ev) {
+        const layers = this.state.layers;
+        if (ev && (ev.shiftKey || ev.ctrlKey || ev.metaKey)) {
+            for (const name of Object.keys(layers)) {
+                layers[name] = name === key;
+            }
+        } else {
+            layers[key] = !layers[key];
+        }
+        this.render3d();
+    }
+
+    showOnly(key) {
+        const layers = this.state.layers;
+        for (const name of Object.keys(layers)) {
+            layers[name] = name === key;
+        }
+        this.render3d();
+    }
+
+    showAll() {
+        for (const name of Object.keys(this.state.layers)) {
+            this.state.layers[name] = true;
+        }
+        this.render3d();
+    }
+
+    trueScale() {
+        this.state.exaggeration = 1;
+        this.render3d();
+    }
+
     turn(step) {
         this.state.yaw += step;
         this.render3d();
@@ -151,12 +197,92 @@ export class RoofView3DDialog extends Component {
         return faces;
     }
 
+    /** A dome-like lid over ``polygon``: from the polygon at z0 to the
+     * polygon shrunk to ``ratio`` around its middle at z1. */
+    frustum(polygon, z0, z1, ratio, color, faces) {
+        const cx = polygon.reduce((sum, p) => sum + p[0], 0) / polygon.length;
+        const cy = polygon.reduce((sum, p) => sum + p[1], 0) / polygon.length;
+        const top = polygon.map(([x, y]) => [cx + (x - cx) * ratio, cy + (y - cy) * ratio]);
+        faces.push({ points: top.map(([x, y]) => [x, y, z1]), normal: [0, 0, 1], color });
+        for (let i = 0; i < polygon.length; i++) {
+            const a = [...polygon[i], z0];
+            const b = [...polygon[(i + 1) % polygon.length], z0];
+            const c = [...top[(i + 1) % polygon.length], z1];
+            const d = [...top[i], z1];
+            // Outward normal: across the face, pointing away from the middle.
+            const ux = b[0] - a[0];
+            const uy = b[1] - a[1];
+            const vx = d[0] - a[0];
+            const vy = d[1] - a[1];
+            const vz = d[2] - a[2];
+            let n = [uy * vz, -ux * vz, ux * vy - uy * vx];
+            const mx = (a[0] + b[0]) / 2 - cx;
+            const my = (a[1] + b[1]) / 2 - cy;
+            if (n[0] * mx + n[1] * my < 0) {
+                n = n.map((v) => -v);
+            }
+            const length = Math.hypot(...n) || 1;
+            faces.push({ points: [a, b, c, d], normal: n.map((v) => v / length), color });
+        }
+        return faces;
+    }
+
+    /** The joints of insulation boards (1.2 x 0.6 m, every other row half
+     * a board along) over ``polygon``: segments inside it. */
+    boardJoints(polygon, long = 1.2, short = 0.6) {
+        const xs = polygon.map((p) => p[0]);
+        const ys = polygon.map((p) => p[1]);
+        const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        if ((maxX - minX) * (maxY - minY) / (long * short) > 4000) {
+            return []; // too many to be of use
+        }
+        const inside = ([px, py]) => {
+            let result = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const [xi, yi] = polygon[i];
+                const [xj, yj] = polygon[j];
+                if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
+                    result = !result;
+                }
+            }
+            return result;
+        };
+        const joints = [];
+        // The rows: lines across, clipped to the polygon.
+        for (let y = minY + short; y < maxY; y += short) {
+            const cuts = [];
+            for (let i = 0; i < polygon.length; i++) {
+                const [ax, ay] = polygon[i];
+                const [bx, by] = polygon[(i + 1) % polygon.length];
+                if ((ay > y) !== (by > y)) {
+                    cuts.push(ax + ((y - ay) * (bx - ax)) / (by - ay));
+                }
+            }
+            cuts.sort((a, b) => a - b);
+            for (let k = 0; k + 1 < cuts.length; k += 2) {
+                joints.push([[cuts[k], y], [cuts[k + 1], y]]);
+            }
+        }
+        // The board ends, staggered per row.
+        let row = 0;
+        for (let y0 = minY; y0 < maxY; y0 += short, row++) {
+            const y1 = Math.min(y0 + short, maxY);
+            for (let x = minX + (row % 2 ? long / 2 : long); x < maxX; x += long) {
+                if (inside([x, (y0 + y1) / 2])) {
+                    joints.push([[x, y0], [x, y1]]);
+                }
+            }
+        }
+        return joints;
+    }
+
     buildFaces() {
         const s = this.state;
         const E = s.exaggeration;
         const gap = s.explode * 0.4; // metres of visual gap between layers
         const faces = [];
         const lines = [];
+        const labels = [];
         const z = (value) => value * E;
         let seamLevel = 0;
         for (const section of this.props.model.sections) {
@@ -170,10 +296,41 @@ export class RoofView3DDialog extends Component {
             const ins1 = ins0 + z(t);
             const epdm0 = ins1 + gap;
             const epdm1 = epdm0 + z(EPDM);
-            this.prism(outer, -z(DECK), 0, COLORS.deck, COLORS.deck, faces);
-            this.prism(inner, vapour0 + gap * 1, vapour1, COLORS.vapour, COLORS.vapour, faces);
-            this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
-            this.prism(inner, epdm0, epdm1, COLORS.epdm, COLORS.epdm, faces);
+            const show = s.layers;
+            if (show.deck) {
+                this.prism(outer, -z(DECK), 0, COLORS.deck, COLORS.deck, faces);
+            }
+            if (show.vapour) {
+                this.prism(inner, vapour0 + gap * 1, vapour1, COLORS.vapour, COLORS.vapour, faces);
+            }
+            if (show.insulation) {
+                this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
+                if (!show.epdm) {
+                    // Uncovered: the joints of the boards (1200 x 600,
+                    // staggered), as they are laid.
+                    for (const joint of this.boardJoints(inner)) {
+                        lines.push({
+                            points: joint.map(([x, y]) => [x, y, ins1 + 0.003]),
+                            color: COLORS.boardJoint,
+                            solid: true,
+                        });
+                    }
+                }
+            }
+            const sheets = section.sheets || [];
+            if (!show.epdm) {
+                // no EPDM
+            } else if (s.sheets && sheets.length) {
+                sheets.forEach((sheet, index) => {
+                    const tint = COLORS.sheets[index % COLORS.sheets.length];
+                    this.prism(sheet.points, epdm0, epdm1, tint, tint, faces);
+                    const cx = sheet.points.reduce((sum, p) => sum + p[0], 0) / sheet.points.length;
+                    const cy = sheet.points.reduce((sum, p) => sum + p[1], 0) / sheet.points.length;
+                    labels.push({ point: [cx, cy, epdm1 + 0.02], text: sheet.label });
+                });
+            } else {
+                this.prism(inner, epdm0, epdm1, COLORS.epdm, COLORS.epdm, faces);
+            }
             // The roof edge: per side between the outline and the surface,
             // up to its upstand above the EPDM, with its profile on top; the
             // EPDM runs up its inner face; the kimfixatie at its foot.
@@ -183,7 +340,7 @@ export class RoofView3DDialog extends Component {
                 const b = outer[(i + 1) % n];
                 const upstand = section.upstands[i] || 0;
                 const width = section.widths[i] || 0;
-                if (!upstand && !width) {
+                if ((!upstand && !width) || !(show.edge || show.kimfix)) {
                     continue;
                 }
                 let ia = inner[i];
@@ -201,14 +358,17 @@ export class RoofView3DDialog extends Component {
                 }
                 const top = epdm1 + z(upstand);
                 const ring = [a, b, ib, ia];
-                const start = faces.length;
-                this.prism(ring, 0, top, COLORS.cap, (k) => (k === 2 ? COLORS.epdm : COLORS.edge), faces);
-                // Layers apart: the roof edge goes see-through, so the
-                // layers behind it show.
-                for (let k = start; k < faces.length; k++) {
-                    faces[k].alpha = 1 - s.explode * 0.75;
+                if (show.edge) {
+                    const start = faces.length;
+                    this.prism(ring, 0, top, COLORS.cap,
+                        (k) => (k === 2 && show.epdm ? COLORS.epdm : COLORS.edge), faces);
+                    // Layers apart: the roof edge goes see-through, so the
+                    // layers behind it show.
+                    for (let k = start; k < faces.length; k++) {
+                        faces[k].alpha = 1 - s.explode * 0.75;
+                    }
                 }
-                if (upstand) {
+                if (upstand && show.kimfix) {
                     // The kimfixatie: a batten bar along the foot.
                     const dx = ib[0] - ia[0];
                     const dy = ib[1] - ia[1];
@@ -229,19 +389,34 @@ export class RoofView3DDialog extends Component {
             }
             seamLevel = Math.max(seamLevel, epdm1);
         }
-        for (const seam of this.props.model.seams) {
+        for (const seam of s.layers.epdm ? this.props.model.seams : []) {
             lines.push({ points: seam.map(([x, y]) => [x, y, seamLevel + 0.005]), color: COLORS.seam });
         }
-        for (const object of this.props.model.objects) {
+        // The roof objects stand on the EPDM at their real height (not
+        // exaggerated like the layers), labelled with it.
+        for (const object of s.layers.objects ? this.props.model.objects : []) {
             const base = object.base * E + gap * 4;
+            const cx = object.points.reduce((sum, p) => sum + p[0], 0) / object.points.length;
+            const cy = object.points.reduce((sum, p) => sum + p[1], 0) / object.points.length;
+            let top;
             if (object.kind === "skylight") {
-                this.prism(object.points, base, base + 0.3 * Math.min(E, 3), COLORS.dome, COLORS.edge, faces);
+                // A dome: its upstand, then the dome (a third of the height).
+                const height = object.height || 0.45;
+                const kerb = base + height * (2 / 3);
+                top = base + height;
+                this.prism(object.points, base, kerb, COLORS.cap, COLORS.edge, faces);
+                this.frustum(object.points, kerb, top, 0.55, COLORS.dome, faces);
             } else {
                 const height = object.height || 1;
-                this.prism(object.points, base, base + height * Math.min(E, 3), COLORS.chimney, COLORS.chimney, faces);
+                top = base + height;
+                this.prism(object.points, base, top, COLORS.chimney, COLORS.chimney, faces);
             }
+            labels.push({
+                point: [cx, cy, top + 0.05],
+                text: `${object.name} · ${(object.height || (object.kind === "skylight" ? 0.45 : 1)).toFixed(2)} m${object.height ? "" : " (standaard)"}`,
+            });
         }
-        return { faces, lines };
+        return { faces, lines, labels };
     }
 
     // ------------------------------------------------------------- drawing
@@ -260,7 +435,7 @@ export class RoofView3DDialog extends Component {
         ctx.fillStyle = "#eef3f5";
         ctx.fillRect(0, 0, width, height);
 
-        const { faces, lines } = this.buildFaces();
+        const { faces, lines, labels } = this.buildFaces();
         if (!faces.length) {
             return;
         }
@@ -361,9 +536,9 @@ export class RoofView3DDialog extends Component {
             ctx.stroke();
             ctx.globalAlpha = 1;
         }
-        ctx.setLineDash([6, 4]);
-        ctx.lineWidth = 1.5;
         for (const line of lines) {
+            ctx.setLineDash(line.solid ? [] : [6, 4]);
+            ctx.lineWidth = line.solid ? 0.7 : 1.5;
             ctx.beginPath();
             line.points.map(rotate).forEach((p, i) => {
                 const [x, y] = screen(p);
@@ -377,5 +552,17 @@ export class RoofView3DDialog extends Component {
             ctx.stroke();
         }
         ctx.setLineDash([]);
+        // The sheets' labels.
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (const label of labels) {
+            const [x, y] = screen(rotate(label.point));
+            const w = ctx.measureText(label.text).width + 10;
+            ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+            ctx.fillRect(x - w / 2, y - 9, w, 18);
+            ctx.fillStyle = "#1f2937";
+            ctx.fillText(label.text, x, y);
+        }
     }
 }
