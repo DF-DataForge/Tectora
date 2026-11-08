@@ -234,3 +234,4 @@ Releases and the modules they need upgraded:
 | Fix naad op naad: aansluiting een fractie naast de naad gaf geen apart doek | `tectora_roof` (20.0.3.82.0) |
 | Dampscherm: binnenoppervlakte − dakobjecten + (opstanden + omtrek objecten) × (isolatiedikte + 5 cm) | `tectora_roof` (20.0.3.83.0) |
 | Isolatie: binnenoppervlakte − dakobjecten | `tectora_roof` (20.0.3.84.0) |
+| Tekening: 3D-weergave van het dak (draagvloer, dampscherm, isolatie, EPDM, dakrand met opstand, kimfixatie, objecten, naden) | `tectora_roof` (20.0.3.85.0) |

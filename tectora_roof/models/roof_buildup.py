@@ -609,6 +609,19 @@ class TectoraRoofProject(models.Model):
                     self.epdm_thickness = info["thickness"]
         return result
 
+    def tectora_get_3d_data(self):
+        """For the 3D view of the drawing: per surface (canvas id) the
+        insulation's thickness (m), per roof object its height (m)."""
+        self.ensure_one()
+        sections = {}
+        for section in self.section_ids.filtered("canvas_ref"):
+            sections[section.canvas_ref] = {"thickness": section._tectora_insulation_thickness()}
+        objects = {
+            obj.canvas_ref: {"height": obj.height}
+            for obj in self.roof_object_ids.filtered("canvas_ref")
+        }
+        return {"sections": sections, "objects": objects}
+
     def tectora_preview_vapour(self, section_ids, insulation_id=False):
         """The vapour barrier the surfaces take (m²), with the figures per
         surface: inner surface less the roof objects, plus up the upstands
