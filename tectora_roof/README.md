@@ -153,7 +153,9 @@ install on Odoo 17 or earlier without adjustments.
    *Ware verhoudingen* for none) so they show, the roof objects stand at
    their real height (a dome as its upstand with the dome on top), labelled
    with it, and *Lagen uit elkaar* pulls the layers apart with the roof edges
-   see-through.
+   see-through. Every layer -- EPDM, isolatie, dampscherm, kimfixatie,
+   dakrand en opstand, draagvloer, dakobjecten -- can be shown or hidden,
+   or shown alone (*enkel*, or Shift-click).
    Under the selected element the side panel shows the **Offerte-opbouw**:
    the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
    ...), one line per product with its quantity and list price, the chapter

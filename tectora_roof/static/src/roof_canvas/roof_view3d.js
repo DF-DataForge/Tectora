@@ -28,14 +28,15 @@ const COLORS = {
     seam: [250, 250, 250],
 };
 
-const LEGEND = [
-    ["epdm", "EPDM"],
-    ["insulation", "Isolatie"],
-    ["vapour", "Dampscherm"],
-    ["deck", "Draagvloer"],
-    ["edge", "Opstand / dakrand"],
-    ["cap", "Dakrandprofiel"],
-    ["kimfix", "Kimfixatie (batten strip)"],
+// The layers that can be shown or hidden, with their colour.
+const LAYERS = [
+    ["epdm", "EPDM", "epdm"],
+    ["insulation", "Isolatie", "insulation"],
+    ["vapour", "Dampscherm", "vapour"],
+    ["kimfix", "Kimfixatie (batten strip)", "kimfix"],
+    ["edge", "Dakrand en opstand", "edge"],
+    ["deck", "Draagvloer", "deck"],
+    ["objects", "Dakobjecten", "chimney"],
 ];
 
 function signedArea(points) {
@@ -74,8 +75,10 @@ export class RoofView3DDialog extends Component {
             exaggeration: 3,
             explode: 0,
             sheets: true, // the EPDM sheets apart, with their labels
+            // The layers shown: each can be switched off, or shown alone.
+            layers: Object.fromEntries(LAYERS.map(([key]) => [key, true])),
         });
-        this.legend = LEGEND.map(([key, label]) => ({ key, label, color: `rgb(${COLORS[key].join(",")})` }));
+        this.legend = LAYERS.map(([key, label, color]) => ({ key, label, color: `rgb(${COLORS[color].join(",")})` }));
         this.onMove = (ev) => this.drag(ev);
         this.onUp = () => {
             this.dragging = null;
@@ -119,6 +122,35 @@ export class RoofView3DDialog extends Component {
 
     toggleSheets(ev) {
         this.state.sheets = ev.target.checked;
+        this.render3d();
+    }
+
+    /** A click shows or hides a layer; with Shift (or Ctrl) only that one
+     * is shown. */
+    toggleLayer(key, ev) {
+        const layers = this.state.layers;
+        if (ev && (ev.shiftKey || ev.ctrlKey || ev.metaKey)) {
+            for (const name of Object.keys(layers)) {
+                layers[name] = name === key;
+            }
+        } else {
+            layers[key] = !layers[key];
+        }
+        this.render3d();
+    }
+
+    showOnly(key) {
+        const layers = this.state.layers;
+        for (const name of Object.keys(layers)) {
+            layers[name] = name === key;
+        }
+        this.render3d();
+    }
+
+    showAll() {
+        for (const name of Object.keys(this.state.layers)) {
+            this.state.layers[name] = true;
+        }
         this.render3d();
     }
 
@@ -214,11 +246,20 @@ export class RoofView3DDialog extends Component {
             const ins1 = ins0 + z(t);
             const epdm0 = ins1 + gap;
             const epdm1 = epdm0 + z(EPDM);
-            this.prism(outer, -z(DECK), 0, COLORS.deck, COLORS.deck, faces);
-            this.prism(inner, vapour0 + gap * 1, vapour1, COLORS.vapour, COLORS.vapour, faces);
-            this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
+            const show = s.layers;
+            if (show.deck) {
+                this.prism(outer, -z(DECK), 0, COLORS.deck, COLORS.deck, faces);
+            }
+            if (show.vapour) {
+                this.prism(inner, vapour0 + gap * 1, vapour1, COLORS.vapour, COLORS.vapour, faces);
+            }
+            if (show.insulation) {
+                this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
+            }
             const sheets = section.sheets || [];
-            if (s.sheets && sheets.length) {
+            if (!show.epdm) {
+                // no EPDM
+            } else if (s.sheets && sheets.length) {
                 sheets.forEach((sheet, index) => {
                     const tint = COLORS.sheets[index % COLORS.sheets.length];
                     this.prism(sheet.points, epdm0, epdm1, tint, tint, faces);
@@ -238,7 +279,7 @@ export class RoofView3DDialog extends Component {
                 const b = outer[(i + 1) % n];
                 const upstand = section.upstands[i] || 0;
                 const width = section.widths[i] || 0;
-                if (!upstand && !width) {
+                if ((!upstand && !width) || !(show.edge || show.kimfix)) {
                     continue;
                 }
                 let ia = inner[i];
@@ -256,14 +297,17 @@ export class RoofView3DDialog extends Component {
                 }
                 const top = epdm1 + z(upstand);
                 const ring = [a, b, ib, ia];
-                const start = faces.length;
-                this.prism(ring, 0, top, COLORS.cap, (k) => (k === 2 ? COLORS.epdm : COLORS.edge), faces);
-                // Layers apart: the roof edge goes see-through, so the
-                // layers behind it show.
-                for (let k = start; k < faces.length; k++) {
-                    faces[k].alpha = 1 - s.explode * 0.75;
+                if (show.edge) {
+                    const start = faces.length;
+                    this.prism(ring, 0, top, COLORS.cap,
+                        (k) => (k === 2 && show.epdm ? COLORS.epdm : COLORS.edge), faces);
+                    // Layers apart: the roof edge goes see-through, so the
+                    // layers behind it show.
+                    for (let k = start; k < faces.length; k++) {
+                        faces[k].alpha = 1 - s.explode * 0.75;
+                    }
                 }
-                if (upstand) {
+                if (upstand && show.kimfix) {
                     // The kimfixatie: a batten bar along the foot.
                     const dx = ib[0] - ia[0];
                     const dy = ib[1] - ia[1];
@@ -284,12 +328,12 @@ export class RoofView3DDialog extends Component {
             }
             seamLevel = Math.max(seamLevel, epdm1);
         }
-        for (const seam of this.props.model.seams) {
+        for (const seam of s.layers.epdm ? this.props.model.seams : []) {
             lines.push({ points: seam.map(([x, y]) => [x, y, seamLevel + 0.005]), color: COLORS.seam });
         }
         // The roof objects stand on the EPDM at their real height (not
         // exaggerated like the layers), labelled with it.
-        for (const object of this.props.model.objects) {
+        for (const object of s.layers.objects ? this.props.model.objects : []) {
             const base = object.base * E + gap * 4;
             const cx = object.points.reduce((sum, p) => sum + p[0], 0) / object.points.length;
             const cy = object.points.reduce((sum, p) => sum + p[1], 0) / object.points.length;

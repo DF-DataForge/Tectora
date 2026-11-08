@@ -44,12 +44,23 @@
                         style="height: 560px; cursor: grab;"
                         t-on-pointerdown="(ev) => this.startDrag(ev)"
                         t-on-wheel="(ev) => this.onWheel(ev)"/>
-                <div class="d-flex flex-wrap gap-3 mt-2 small">
-                    <span t-foreach="this.legend" t-as="item" t-key="item.key" class="d-flex align-items-center gap-1">
-                        <span class="d-inline-block border rounded"
-                              t-att-style="'width: 1rem; height: 0.8rem; background:' + item.color"/>
-                        <t t-out="item.label"/>
-                    </span>
+                <!-- The layers: a click shows or hides one, "enkel" (or Shift-
+                     click) shows it alone. -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-2 small">
+                    <span class="text-muted">Lagen:</span>
+                    <div t-foreach="this.legend" t-as="item" t-key="item.key" class="btn-group btn-group-sm">
+                        <button type="button" class="btn d-flex align-items-center gap-1"
+                                t-att-class="this.state.layers[item.key] ? 'btn-light border' : 'btn-outline-secondary text-muted'"
+                                t-att-title="'Tonen of verbergen (Shift-klik: enkel ' + item.label + ')'"
+                                t-on-click="(ev) => this.toggleLayer(item.key, ev)">
+                            <span class="d-inline-block border rounded"
+                                  t-att-style="'width: 1rem; height: 0.8rem; background:' + item.color + (this.state.layers[item.key] ? '' : '; opacity: 0.3')"/>
+                            <t t-out="item.label"/>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" title="Enkel deze laag tonen"
+                                t-on-click="() => this.showOnly(item.key)">enkel</button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.showAll()">Alles tonen</button>
                 </div>
             </div>
             <t t-set-slot="footer">
