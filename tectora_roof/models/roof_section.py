@@ -19,6 +19,14 @@ def is_vapour_barrier(product):
     return bool(re.search(r"dampscherm|dampopen", text.lower()))
 
 
+def is_insulation(product):
+    """Whether ``product`` is roof insulation that is laid (not removed)."""
+    if not product:
+        return False
+    name = (product.name or "").lower()
+    return "isolatie" in name and not re.search(r"verwijder|afbraak|afvoer", name)
+
+
 def insulation_thickness(product):
     """The thickness (m) of an insulation product, from its name ("...
     isolatie type: ... dikte: 10cm ..."), or 0."""
@@ -122,6 +130,12 @@ class TectoraRoofSection(models.Model):
         self.ensure_one()
         lines = self.product_line_ids.filtered(lambda l: l.coverage == "surface" and not l.edge_index)
         return max([insulation_thickness(line.product_id) for line in lines] or [0.0])
+
+    def _tectora_insulation_quantity(self):
+        """The insulation of this surface (m²): the surface inside the roof
+        edges, less the roof objects on it."""
+        self.ensure_one()
+        return round(max((self.inner_area or self.area) - self.object_area, 0.0), 2)
 
     def _tectora_vapour_quantity(self, thickness=None):
         """The vapour barrier of this surface (m²): the surface inside the
@@ -401,6 +415,9 @@ class TectoraRoofSectionProduct(models.Model):
                 # The vapour barrier: inner surface less the objects, plus
                 # up the upstands and around the objects.
                 line.quantity = line.section_id._tectora_vapour_quantity()["quantity"]
+            elif line.section_id and line.coverage == "surface" and is_insulation(line.product_id):
+                # The insulation: inner surface less the objects.
+                line.quantity = line.section_id._tectora_insulation_quantity()
             elif target and line.coverage == "surface":
                 line.quantity = target.area
             elif target and line.coverage == "edges":

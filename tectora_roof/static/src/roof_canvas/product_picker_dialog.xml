@@ -355,7 +355,8 @@
                                         <span t-if="line.product.code" class="text-muted me-1" t-out="line.product.code"/>
                                         <t t-out="line.product.name"/>
                                         <div t-foreach="line.figures" t-as="row" t-key="row_index"
-                                             class="small text-muted" t-out="this.vapourFigures(row)"/>
+                                             class="small text-muted"
+                                             t-out="line.layer === 'vapour' ? this.vapourFigures(row) : this.insulationFigures(row)"/>
                                     </td>
                                     <td class="text-end text-nowrap">
                                         <t t-out="line.quantity.toFixed(2)"/> <t t-out="line.product.uom"/>

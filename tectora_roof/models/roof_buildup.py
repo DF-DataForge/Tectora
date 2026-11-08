@@ -623,8 +623,13 @@ class TectoraRoofProject(models.Model):
         for section in self._tectora_buildup_sections(section_ids):
             figures = section._tectora_vapour_quantity(thickness)
             figures["name"] = section.name or ""
+            figures["insulation"] = section._tectora_insulation_quantity()
             rows.append(figures)
-        return {"quantity": round(sum(r["quantity"] for r in rows), 2), "sections": rows}
+        return {
+            "quantity": round(sum(r["quantity"] for r in rows), 2),
+            "insulation_quantity": round(sum(r["insulation"] for r in rows), 2),
+            "sections": rows,
+        }
 
     # ----------------------------------------------------------- EPDM sheets
     def _tectora_section_shape(self, section, cache):
