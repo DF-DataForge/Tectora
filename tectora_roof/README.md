@@ -152,7 +152,9 @@ install on Odoo 17 or earlier without adjustments.
    *Naad* tool as an open dotted line: click a side of the surface, then the
    other side, and the seam is done (clicks snap onto the outline; the tool
    stays on for the next seam). Started inside the surface it takes points
-   until a click on a side or a double-click. The roof surface stays one section (Sectie 1, with its products
+   until a click on a side or a double-click. A seam can also start or end on
+   another seam (clicks snap onto it): it then divides only the sheet on its
+   side (a T-joint). The roof surface stays one section (Sectie 1, with its products
    and quantities); the seams divide it into sheets, labelled on the drawing
    ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
    berekenen*. A seam ending inside a section is extended to its outline.
