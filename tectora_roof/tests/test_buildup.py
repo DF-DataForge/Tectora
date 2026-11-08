@@ -86,6 +86,15 @@ class TestBuildup(TransactionCase):
             )) / 2) for p in pieces)
             self.assertEqual(areas, [100500, 198000, 301500])
 
+        # An L-shaped roof, the seam down to the inner corner, the second
+        # one from it to the side -- its start stored a hair beside the
+        # first seam: still three sheets.
+        roof = [(30, 55), (793, 58), (793, 341), (267, 341), (266, 500), (28, 497)]
+        down = [(270, 55.94), (267, 341)]
+        for start in ((269.29, 122), (269.31, 122)):
+            self.assertEqual(len(split_by_seams(roof, [down, [start, (793, 123)]])), 3)
+            self.assertEqual(len(split_by_seams(roof, [[start, (793, 123)], down])), 3)
+
     def test_category_inherits_usages(self):
         ids = self.env["product.category"].tectora_category_ids_for_usages(["surface"])
         self.assertIn(self.pir_categ.id, ids, "a sub-category is offered where its parent is")

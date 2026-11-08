@@ -231,3 +231,4 @@ Releases and the modules they need upgraded:
 | Tekening: breedte dakrand en opstand van de zijden in cm (zijpaneel en Randafwerking) | `tectora_roof` (20.0.3.80.0) |
 | Producten: categorieboom links naast kanban en lijst | `tectora_products` (20.0.2.9.0) |
 | EPDM-doeken: vaste regel — langs een rand opstand + breedte + 10 cm, langs een naad 15 cm overlap (instelbaar) | `tectora_roof` (20.0.3.81.0) |
+| Fix naad op naad: aansluiting een fractie naast de naad gaf geen apart doek | `tectora_roof` (20.0.3.82.0) |
