@@ -238,3 +238,4 @@ Releases and the modules they need upgraded:
 | 3D-weergave: EPDM-doeken als aparte banen met hun berekende afmeting | `tectora_roof` (20.0.3.86.0) |
 | 3D-weergave: dakobjecten op hun ware hoogte (koepel met opstand en koepel), met label; knop Ware verhoudingen | `tectora_roof` (20.0.3.87.0) |
 | 3D-weergave: lagen apart tonen of verbergen (EPDM, isolatie, dampscherm, kimfixatie, dakrand, draagvloer, objecten) | `tectora_roof` (20.0.3.88.0) |
+| 3D-weergave: isolatie in zilver (PIR met alu-folie), plaatnaden 1200×600 zichtbaar zonder EPDM | `tectora_roof` (20.0.3.89.0) |

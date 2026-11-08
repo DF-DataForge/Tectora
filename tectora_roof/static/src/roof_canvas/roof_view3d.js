@@ -16,7 +16,8 @@ const WALL = 0.06; // a side with an upstand but no roof edge width
 const COLORS = {
     deck: [168, 168, 160],
     vapour: [64, 120, 196],
-    insulation: [232, 204, 96],
+    insulation: [198, 203, 209], // PIR boards, aluminium-foil faced: silver
+    boardJoint: [150, 156, 164],
     epdm: [42, 46, 52],
     // The EPDM sheets, one tint each in turn.
     sheets: [[36, 40, 48], [84, 90, 102], [38, 66, 84], [92, 72, 78]],
@@ -226,6 +227,55 @@ export class RoofView3DDialog extends Component {
         return faces;
     }
 
+    /** The joints of insulation boards (1.2 x 0.6 m, every other row half
+     * a board along) over ``polygon``: segments inside it. */
+    boardJoints(polygon, long = 1.2, short = 0.6) {
+        const xs = polygon.map((p) => p[0]);
+        const ys = polygon.map((p) => p[1]);
+        const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        if ((maxX - minX) * (maxY - minY) / (long * short) > 4000) {
+            return []; // too many to be of use
+        }
+        const inside = ([px, py]) => {
+            let result = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const [xi, yi] = polygon[i];
+                const [xj, yj] = polygon[j];
+                if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
+                    result = !result;
+                }
+            }
+            return result;
+        };
+        const joints = [];
+        // The rows: lines across, clipped to the polygon.
+        for (let y = minY + short; y < maxY; y += short) {
+            const cuts = [];
+            for (let i = 0; i < polygon.length; i++) {
+                const [ax, ay] = polygon[i];
+                const [bx, by] = polygon[(i + 1) % polygon.length];
+                if ((ay > y) !== (by > y)) {
+                    cuts.push(ax + ((y - ay) * (bx - ax)) / (by - ay));
+                }
+            }
+            cuts.sort((a, b) => a - b);
+            for (let k = 0; k + 1 < cuts.length; k += 2) {
+                joints.push([[cuts[k], y], [cuts[k + 1], y]]);
+            }
+        }
+        // The board ends, staggered per row.
+        let row = 0;
+        for (let y0 = minY; y0 < maxY; y0 += short, row++) {
+            const y1 = Math.min(y0 + short, maxY);
+            for (let x = minX + (row % 2 ? long / 2 : long); x < maxX; x += long) {
+                if (inside([x, (y0 + y1) / 2])) {
+                    joints.push([[x, y0], [x, y1]]);
+                }
+            }
+        }
+        return joints;
+    }
+
     buildFaces() {
         const s = this.state;
         const E = s.exaggeration;
@@ -255,6 +305,17 @@ export class RoofView3DDialog extends Component {
             }
             if (show.insulation) {
                 this.prism(inner, ins0, ins1, COLORS.insulation, COLORS.insulation, faces);
+                if (!show.epdm) {
+                    // Uncovered: the joints of the boards (1200 x 600,
+                    // staggered), as they are laid.
+                    for (const joint of this.boardJoints(inner)) {
+                        lines.push({
+                            points: joint.map(([x, y]) => [x, y, ins1 + 0.003]),
+                            color: COLORS.boardJoint,
+                            solid: true,
+                        });
+                    }
+                }
             }
             const sheets = section.sheets || [];
             if (!show.epdm) {
@@ -475,9 +536,9 @@ export class RoofView3DDialog extends Component {
             ctx.stroke();
             ctx.globalAlpha = 1;
         }
-        ctx.setLineDash([6, 4]);
-        ctx.lineWidth = 1.5;
         for (const line of lines) {
+            ctx.setLineDash(line.solid ? [] : [6, 4]);
+            ctx.lineWidth = line.solid ? 0.7 : 1.5;
             ctx.beginPath();
             line.points.map(rotate).forEach((p, i) => {
                 const [x, y] = screen(p);
