@@ -6,6 +6,7 @@ import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { RoofProductPickerDialog } from "./product_picker_dialog";
 import { RoofEdgeLengthDialog } from "./edge_length_dialog";
+import { RoofView3DDialog } from "./roof_view3d";
 import {
     Component,
     onMounted,
@@ -1879,6 +1880,72 @@ export class RoofCanvasField extends Component {
         ctx.lineTo(b[0], b[1]);
         ctx.stroke();
         ctx.restore();
+    }
+
+    // ---------------------------------------------------------------- 3D
+    /** The roof on the drawing in 3D: per surface its outline and the
+     * surface inside the roof edges, the roof edge's width and upstand per
+     * side and its insulation's thickness; the roof objects with their
+     * height; the seams. All in metres. */
+    async open3d() {
+        const record = this.props.record;
+        let data = { sections: {}, objects: {} };
+        if (record.resId) {
+            try {
+                data = await this.orm.call("tectora.roof.project", "tectora_get_3d_data", [[record.resId]]);
+            } catch (error) {
+                console.warn("Roof canvas: no 3D data", error);
+            }
+        }
+        const scale = this.scaleMPerPx;
+        const toM = (points) => points.map(([x, y]) => [x * scale, y * scale]);
+        const sections = [];
+        const objects = [];
+        const seams = [];
+        let base = 0.12;
+        for (const shape of this.shapes) {
+            if (!shape.points || shape.points.length < 2) {
+                continue;
+            }
+            const kind = shape.kind || "section";
+            if (isSeam(shape)) {
+                seams.push(toM(shape.points));
+                continue;
+            }
+            let points = shape.points;
+            if (shape.shape === "circle") {
+                const box = boundingBox(points);
+                points = circlePoints(box.x + box.w / 2, box.y + box.h / 2, Math.max(box.w, box.h) / 2);
+            }
+            if (kind === "section") {
+                const n = points.length;
+                const info = data.sections[String(shape.id)] || {};
+                const thickness = info.thickness || 0.12;
+                base = Math.max(base, thickness);
+                const inner = shape.shape === "circle" ? null : this.innerPolygon(shape);
+                sections.push({
+                    outer: toM(points),
+                    inner: inner && inner.length === n ? toM(inner) : null,
+                    widths: [...Array(n).keys()].map((i) => (shape.shape === "circle" ? 0 : this.edgeWidth(shape, i))),
+                    upstands: [...Array(n).keys()].map((i) => (shape.shape === "circle" ? 0 : this.edgeUpstand(shape, i))),
+                    thickness,
+                });
+            } else {
+                const info = data.objects[String(shape.id)] || {};
+                objects.push({ kind, points: toM(points), height: info.height || 0 });
+            }
+        }
+        for (const object of objects) {
+            object.base = base + 0.008;
+        }
+        if (!sections.length) {
+            this.notification.add(_t("Teken eerst een dakvlak."), { type: "warning" });
+            return;
+        }
+        this.dialog.add(RoofView3DDialog, {
+            title: _t("Dak in 3D — %s", record.data.display_name || record.data.name || ""),
+            model: { sections, objects, seams },
+        });
     }
 
     // ---------------------------------------------------- attached shapes
