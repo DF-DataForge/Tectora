@@ -434,11 +434,16 @@ export class RoofProductPickerDialog extends Component {
         return { kind: e.kind, product_id: this.edgeProductId, corners: e.corners, geometry };
     }
 
+    /** Typed in cm, kept in m. */
     setSideValue(field, ev) {
-        const value = parseFloat(String(ev.target.value).replace(",", "."));
-        this.edges[field] = value > 0 ? Math.round(value * 100) / 100 : 0;
+        const value = parseFloat(String(ev.target.value).replace(",", ".")) / 100;
+        this.edges[field] = value > 0 ? Math.round(value * 1000) / 1000 : 0;
         this.edges[`${field}Changed`] = true;
-        ev.target.value = this.edges[field];
+        ev.target.value = this.toCm(this.edges[field]);
+    }
+
+    toCm(meters) {
+        return Math.round((meters || 0) * 1000) / 10;
     }
 
     get canApplyEdges() {

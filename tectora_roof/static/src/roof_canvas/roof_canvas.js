@@ -2472,10 +2472,10 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
         const parts = [];
         if (width) {
-            parts.push(_t("breedte %s m", width.toFixed(2)));
+            parts.push(_t("breedte %s cm", Math.round(width * 1000) / 10));
         }
         if (upstand) {
-            parts.push(_t("opstand %s m", upstand.toFixed(2)));
+            parts.push(_t("opstand %s cm", Math.round(upstand * 1000) / 10));
         }
         this.notification.add(
             _t("%(values)s toegepast op alle %(count)s zijden.",
@@ -2492,10 +2492,10 @@ export class RoofCanvasField extends Component {
         }
         const parts = [];
         if (edge.width) {
-            parts.push(_t("breedte %s m", edge.width.toFixed(2)));
+            parts.push(_t("breedte %s cm", Math.round(edge.width * 1000) / 10));
         }
         if (edge.upstand) {
-            parts.push(_t("opstand %s m", edge.upstand.toFixed(2)));
+            parts.push(_t("opstand %s cm", Math.round(edge.upstand * 1000) / 10));
         }
         return _t(
             "Overal toepassen: %(values)s op alle %(count)s zijden. Wat hier " +
@@ -2616,10 +2616,11 @@ export class RoofCanvasField extends Component {
         if (!shape) {
             return;
         }
-        const value = parseFloat(ev.target.value);
+        // Typed in cm, kept in m.
+        const value = parseFloat(String(ev.target.value).replace(",", ".")) / 100;
         const values = { ...(shape[key] || {}) };
         if (value > 0) {
-            values[edge.index] = Math.round(value * 100) / 100;
+            values[edge.index] = Math.round(value * 1000) / 1000;
         } else {
             delete values[edge.index];
         }
@@ -3437,7 +3438,7 @@ export class RoofCanvasField extends Component {
         const set = (shape, key, index, value) => {
             const values = { ...(shape[key] || {}) };
             if (value > 0) {
-                values[index] = Math.round(value * 100) / 100;
+                values[index] = Math.round(value * 1000) / 1000;
             } else {
                 delete values[index];
             }

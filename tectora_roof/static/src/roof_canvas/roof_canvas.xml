@@ -337,21 +337,21 @@
                                 <span class="col-8"><t t-out="edge.lengthM.toFixed(2)"/> m</span>
                             </div>
                             <div class="row g-2 align-items-center mb-2">
-                                <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (m)</label>
+                                <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="0.01" min="0"
+                                    <input type="number" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
-                                           t-att-value="edge.width || ''"
+                                           t-att-value="edge.width ? Math.round(edge.width * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
                                 </div>
                             </div>
                             <div class="row g-2 align-items-center mb-2">
                                 <label class="col-4 col-form-label py-0"
-                                       title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (m)</label>
+                                       title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="0.01" min="0"
+                                    <input type="number" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
-                                           t-att-value="edge.upstand || ''"
+                                           t-att-value="edge.upstand ? Math.round(edge.upstand * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeUpstand(edge, ev)"/>
                                 </div>
                             </div>
