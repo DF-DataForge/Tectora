@@ -4,6 +4,11 @@
     <!-- The gantt's own buttons, then "Weer vernieuwen" (team_gantt.js). -->
     <t t-name="tectora_roof_planning.TeamGanttButtons">
         <t t-call="{{ this.constructor.tectoraButtons }}"/>
+        <button type="button" class="btn btn-secondary o_tectora_availability"
+                title="Per ploeg de vrije werkdagen in de komende weken"
+                t-on-click="() => this.onTectoraAvailability()">
+            <i class="oi me-1" data-icon="event_available"/>Beschikbare momenten
+        </button>
         <button type="button" class="btn btn-secondary o_tectora_refresh_weather"
                 title="Weersvoorspelling nu ophalen (Open-Meteo); gebeurt ook elke ochtend"
                 t-on-click="() => this.onTectoraRefreshWeather()">
