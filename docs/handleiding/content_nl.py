@@ -181,7 +181,7 @@ CHAPTERS = [
         ("h2", "Plannen"),
         ("ul", [
             "Kies op het dakproject een <b>ploeg</b> en de <b>geplande start en einde</b>. Er ontstaat automatisch een <b>werkblok</b> met alle ploegleden.",
-            "<b>Splits per dag</b> maakt van een meerdaags blok één blok per dag; elk blok kan eigen medewerkers krijgen.",
+            "<b>Knippen</b>: in de planning per ploeg verschijnt een schaar op de daggrens van een blok; een klik knipt het blok in twee delen met dezelfde ploeg, medewerkers en instructies.",
             "Met de Planning-app wordt elke medewerker een echte <b>shift</b>. In de planner <b>Per ploeg</b> kiest u een dakproject en een ploeg op één shift en de hele ploeg wordt gepland.",
             "De datums van het dakproject en het project volgen elkaar; het dashboard toont de volgende werkdag en de ingeplande medewerkers.",
         ]),

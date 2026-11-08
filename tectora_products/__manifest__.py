@@ -53,7 +53,7 @@ the quotation. The data lives in ``data/quotation_templates.json``, generated
 and validated by ``tools/build_quotation_templates.py``; loading is idempotent
 and never overwrites the lines of a template the office has already tuned.
     """,
-    "version": "20.0.2.8.0",
+    "version": "20.0.2.9.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -64,6 +64,7 @@ and never overwrites the lines of a template the office has already tuned.
         "security/ir.access.csv",
         "wizard/product_catalog_import_views.xml",
         "wizard/quotation_template_import_views.xml",
+        "views/product_searchpanel_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

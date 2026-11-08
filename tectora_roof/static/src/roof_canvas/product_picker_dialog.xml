@@ -168,17 +168,17 @@
                             <div class="fw-bold small mb-1">Afmetingen van de zijde(n)</div>
                             <div class="d-flex flex-wrap align-items-end gap-3">
                                 <div>
-                                    <label class="small text-muted mb-0" for="o_roof_edges_width">Breedte dakrand (m)</label>
-                                    <input id="o_roof_edges_width" type="number" min="0" step="0.01"
+                                    <label class="small text-muted mb-0" for="o_roof_edges_width">Breedte dakrand (cm)</label>
+                                    <input id="o_roof_edges_width" type="number" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
-                                           t-att-value="e.width"
+                                           t-att-value="this.toCm(e.width)"
                                            t-on-change="(ev) => this.setSideValue('width', ev)"/>
                                 </div>
                                 <div>
-                                    <label class="small text-muted mb-0" for="o_roof_edges_upstand">Opstand (m)</label>
-                                    <input id="o_roof_edges_upstand" type="number" min="0" step="0.01"
+                                    <label class="small text-muted mb-0" for="o_roof_edges_upstand">Opstand (cm)</label>
+                                    <input id="o_roof_edges_upstand" type="number" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
-                                           t-att-value="e.upstand"
+                                           t-att-value="this.toCm(e.upstand)"
                                            t-on-change="(ev) => this.setSideValue('upstand', ev)"/>
                                 </div>
                                 <div class="small text-muted flex-grow-1">
@@ -378,11 +378,19 @@
                                     </label>
                                 </div>
                                 <div t-if="b.sheets" class="d-flex align-items-center gap-1 small">
-                                    <label class="text-muted mb-0" for="o_roof_buildup_margin">Marge per zijde</label>
+                                    <label class="text-muted mb-0" for="o_roof_buildup_margin"
+                                           title="Langs een rand: opstand + breedte dakrand + deze marge">Rand: opstand + breedte +</label>
                                     <input id="o_roof_buildup_margin" type="number" min="0" step="1"
-                                           class="form-control form-control-sm" style="width: 5rem;"
+                                           class="form-control form-control-sm" style="width: 4.5rem;"
                                            t-att-value="Math.round(b.margin * 100)"
-                                           t-on-change="(ev) => this.onMarginInput(ev)"/>
+                                           t-on-change="(ev) => this.onMarginInput(ev, 'margin')"/>
+                                    <span class="text-muted me-2">cm</span>
+                                    <label class="text-muted mb-0" for="o_roof_buildup_seam"
+                                           title="Langs een naad: de overlap met het volgende doek">Naad: overlap</label>
+                                    <input id="o_roof_buildup_seam" type="number" min="0" step="1"
+                                           class="form-control form-control-sm" style="width: 4.5rem;"
+                                           t-att-value="Math.round(b.seamOverlap * 100)"
+                                           t-on-change="(ev) => this.onMarginInput(ev, 'seamOverlap')"/>
                                     <span class="text-muted">cm</span>
                                 </div>
                                 <i t-if="b.previewLoading" class="fa fa-circle-o-notch fa-spin text-muted"/>
@@ -395,11 +403,12 @@
                             </div>
                             <t t-if="b.sheets">
                                 <div class="small text-muted mt-1">
-                                    Eén doek per deel van het dakvlak tussen de naden: een naad op
-                                    de tekening is de overlap tussen twee doeken. Elk doek dekt het vlak binnen
-                                    de dakranden, plus per zijde de opstand en de breedte van de
-                                    dakrand, plus de marge. Bestaande berekende doeken van deze vlakken
-                                    worden vervangen; met de hand ingegeven doeken blijven.
+                                    Eén doek per deel van het dakvlak tussen de naden. Elk doek dekt het
+                                    vlak binnen de dakranden; langs een rand komt er de opstand, de
+                                    breedte van de dakrand en de marge bij (standaard 10 cm), langs een
+                                    naad de overlap met het volgende doek (standaard 15 cm). Bestaande
+                                    berekende doeken van deze vlakken worden vervangen; met de hand
+                                    ingegeven doeken blijven.
                                 </div>
                                 <table t-if="b.preview.length" class="table table-sm mb-0 mt-1">
                                     <thead>

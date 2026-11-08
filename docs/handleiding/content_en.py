@@ -175,7 +175,7 @@ CHAPTERS = [
         ("h2", "Planning"),
         ("ul", [
             "On the roof project pick a <b>team</b> and the <b>planned start and end</b>. A <b>work block</b> with all team members is created automatically.",
-            "<b>Splits per dag</b> turns a multi-day block into one block per day; each block can get its own employees.",
+            "<b>Cutting</b>: in the team planner a pair of scissors appears on a day boundary of a block; a click cuts the block in two parts with the same team, employees and instructions.",
             "With the Planning app every employee becomes a real <b>shift</b>. In the <b>Per ploeg</b> planner you pick a roof project and a team on one shift and the whole team is planned.",
             "The dates of the roof project and the project follow each other; the dashboard shows the next working day and the planned employees.",
         ]),

@@ -225,3 +225,9 @@ Releases and the modules they need upgraded:
 | Tekening: geen kleuren per offertelijn meer; enkel de geselecteerde zijde/vlak en de offertelijnen eraan gemarkeerd | `tectora_roof` (20.0.3.75.0) |
 | Tekening: tab Afbouw bij oppervlak en zijde (afbraakwerken aanvinken); leeg vakje "vlak" in de EPDM-berekening hersteld | `tectora_roof` (20.0.3.76.0) |
 | Fix planning per ploeg: klik op de schaar knipt het blok (ging het blok openen) | `tectora_roof_planning` (20.0.1.22.0) |
+| "Splits per dag" verwijderd (knippen met de schaar blijft) | `tectora_roof` (20.0.3.77.0), `tectora_roof_planning` (20.0.1.23.0) |
+| Tekening: naad kan aansluiten op een andere naad (T-aansluiting), deelt enkel het doek aan haar kant | `tectora_roof` (20.0.3.78.0) |
+| Tekening: naden en dakobjecten bewegen mee met hun dakvlak (verplaatsen, hoek slepen, zijdelengte) | `tectora_roof` (20.0.3.79.0) |
+| Tekening: breedte dakrand en opstand van de zijden in cm (zijpaneel en Randafwerking) | `tectora_roof` (20.0.3.80.0) |
+| Producten: categorieboom links naast kanban en lijst | `tectora_products` (20.0.2.9.0) |
+| EPDM-doeken: vaste regel — langs een rand opstand + breedte + 10 cm, langs een naad 15 cm overlap (instelbaar) | `tectora_roof` (20.0.3.81.0) |

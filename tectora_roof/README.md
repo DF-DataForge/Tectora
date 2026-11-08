@@ -90,9 +90,9 @@ install on Odoo 17 or earlier without adjustments.
    default build-up (Instellingen › Tectora Dakmeting) is proposed until
    then. *EPDM-doeken berekenen* sizes one sheet per part of the surface
    between the seams: the smallest rectangle around that part inside the
-   roof edges, plus per side the upstand and the roof edge's width and a
-   margin (default 10 cm); a side along a seam gets the margin only, as the
-   overlap with the next sheet. The
+   roof edges; along a rand the upstand + the roof edge's width + 10 cm,
+   along a seam 15 cm (the overlap with the next sheet). Both amounts are
+   settings and can be changed in the dialog per calculation. The
    sheets are previewed in the dialog and stored on the Werf tab (EPDM-
    doeken), replacing the sheets calculated earlier for those surfaces;
    sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
@@ -152,7 +152,13 @@ install on Odoo 17 or earlier without adjustments.
    *Naad* tool as an open dotted line: click a side of the surface, then the
    other side, and the seam is done (clicks snap onto the outline; the tool
    stays on for the next seam). Started inside the surface it takes points
-   until a click on a side or a double-click. The roof surface stays one section (Sectie 1, with its products
+   until a click on a side or a double-click. A seam can also start or end on
+   another seam (clicks snap onto it): it then divides only the sheet on its
+   side (a T-joint). Seams and dakobjecten drawn on a roof section belong
+   to it: moving the section takes them along; dragging a corner or setting
+   a side's length keeps the seams' ends on its sides, at their distance
+   from the nearer corner (and an end on another seam on that seam). The
+   roof surface stays one section (Sectie 1, with its products
    and quantities); the seams divide it into sheets, labelled on the drawing
    ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
    berekenen*. A seam ending inside a section is extended to its outline.

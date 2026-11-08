@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 
 import pytz
 
@@ -190,33 +190,6 @@ class TectoraRoofPlanning(models.Model):
         return True
 
     # ---------------------------------------------------------------- split
-    def _split_ranges(self):
-        """Day-by-day ranges of this block, in the user's timezone (same
-        semantics as splitting a planning shift into daily shifts)."""
-        self.ensure_one()
-        if not (self.start_datetime and self.end_datetime):
-            return []
-        tz = pytz.timezone(self.env.user.tz or "UTC")
-        start_local = pytz.utc.localize(self.start_datetime).astimezone(tz)
-        end_local = pytz.utc.localize(self.end_datetime).astimezone(tz)
-        ranges = []
-        cursor = start_local
-        while cursor < end_local and len(ranges) < 366:
-            next_midnight = tz.localize(
-                datetime.combine(cursor.date() + timedelta(days=1), time.min)
-            )
-            segment_end = min(next_midnight, end_local)
-            if segment_end <= cursor:
-                break
-            ranges.append(
-                (
-                    cursor.astimezone(pytz.utc).replace(tzinfo=None),
-                    segment_end.astimezone(pytz.utc).replace(tzinfo=None),
-                )
-            )
-            cursor = segment_end
-        return ranges
-
     def action_tectora_split_at(self, day):
         """Cut this block in two at the start (local midnight) of ``day``
         ("2026-11-05"), the scissors of the team planner: the first part
@@ -233,24 +206,4 @@ class TectoraRoofPlanning(models.Model):
         self.write({"end_datetime": cut})
         second = self.copy({"start_datetime": cut, "end_datetime": end})
         (self | second)._sync_employee_items()
-        return True
-
-    def action_split(self):
-        """Split every selected block into one block per calendar day.
-
-        Each resulting block keeps a copy of the employee assignment and can
-        be re-assigned independently afterwards.
-        """
-        created = self.browse()
-        for item in self:
-            ranges = item._split_ranges()
-            if len(ranges) < 2:
-                continue
-            first_start, first_end = ranges[0]
-            item.write({"start_datetime": first_start, "end_datetime": first_end})
-            for start, end in ranges[1:]:
-                created |= item.copy(
-                    {"start_datetime": start, "end_datetime": end}
-                )
-        (self | created)._sync_employee_items()
         return True

@@ -19,6 +19,9 @@ Vult de Odoo-productendatabase met de **leverancierscatalogus** van Tectora
   ingedeeld (dampscherm/Alutrix/Sopraglass, Utherm/PIR, Rockwool/Rhinoxx,
   "dakbedekking type: ... EPDM"); aansluitingen, slabben en toebehoren blijven
   in Afdichting. Een upgrade deelt de bestaande producten zo in.
+- **Categorieboom**: links naast de producten (kanban en lijst) staat de
+  boom van de productcategorieën met het aantal producten per categorie; een
+  klik toont de producten van die categorie en haar subcategorieën.
 - **Twee indelingen.** De **verkoopproducten** (werkposten) volgen de
   hoofdstukken van de dakplanner, de structuur van de offerte (01. Algemene
   werken … 13. Upsale, met hun subcategorieën). De **grondstoffen** staan in de
