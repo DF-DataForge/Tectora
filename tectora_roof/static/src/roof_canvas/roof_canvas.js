@@ -102,7 +102,7 @@ function segmentIntersection(a, b, c, d) {
     const q = [c[0] - a[0], c[1] - a[1]];
     const t = (q[0] * s[1] - q[1] * s[0]) / denom;
     const u = (q[0] * r[1] - q[1] * r[0]) / denom;
-    const eps = 1e-7;
+    const eps = 1e-6;
     if (t < -eps || t > 1 + eps || u < -eps || u > 1 + eps) {
         return null;
     }
@@ -114,7 +114,7 @@ function segmentIntersection(a, b, c, d) {
 // their last segment to the outline, so a seam drawn "roughly across" splits
 // as well. Returns [polygonA, polygonB] or null when the seam does not cross
 // the polygon cleanly (fewer than two crossings, or a degenerate part).
-function splitPolygonByPolyline(polygon, polyline) {
+function splitPolygonByPolyline(polygon, polyline, extendEnds = true) {
     const n = polygon.length;
     if (n < 3 || polyline.length < 2) {
         return null;
@@ -129,10 +129,10 @@ function splitPolygonByPolyline(polygon, polyline) {
         const length = Math.hypot(dx, dy) || 1;
         return [to[0] + (dx / length) * reach, to[1] + (dy / length) * reach];
     };
-    if (pointInPolygon(line[0], polygon)) {
+    if (extendEnds && pointInPolygon(line[0], polygon)) {
         line[0] = extend(line[1], line[0]);
     }
-    if (pointInPolygon(line[line.length - 1], polygon)) {
+    if (extendEnds && pointInPolygon(line[line.length - 1], polygon)) {
         line[line.length - 1] = extend(line[line.length - 2], line[line.length - 1]);
     }
     const crossings = [];
@@ -202,15 +202,99 @@ function splitPolygonByPolyline(polygon, polyline) {
     return [a, b];
 }
 
-// A polygon cut by every seam crossing it: the EPDM sheets of a surface.
-function splitBySeams(polygon, seams) {
-    let pieces = [polygon];
-    for (const seam of seams) {
-        const next = [];
-        for (const piece of pieces) {
-            next.push(...(splitPolygonByPolyline(piece, seam) || [piece]));
+const SEAM_JOIN_PX = 1.5;
+
+// Distance from point p to segment a-b.
+function distanceToSegment(p, a, b) {
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const length2 = dx * dx + dy * dy;
+    const t = length2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length2)) : 0;
+    return Math.hypot(p[0] - (a[0] + dx * t), p[1] - (a[1] + dy * t));
+}
+
+function onPolyline(p, line) {
+    for (let i = 0; i < line.length - 1; i++) {
+        if (distanceToSegment(p, line[i], line[i + 1]) <= SEAM_JOIN_PX) {
+            return true;
         }
-        pieces = next;
+    }
+    return false;
+}
+
+// A seam as it divides ``polygon``: an end left loose inside the surface is
+// drawn on to the first outline or other seam it meets; an end on another
+// seam stays there (a T-joint: the seam only divides the sheet on its side).
+function effectiveSeam(seam, polygon, others) {
+    const line = seam.map((p) => [...p]);
+    const box = boundingBox(polygon);
+    const reach = (box.w + box.h) * 4 + 10;
+    const segments = [];
+    for (let i = 0; i < polygon.length; i++) {
+        segments.push([polygon[i], polygon[(i + 1) % polygon.length]]);
+    }
+    for (const other of others) {
+        for (let i = 0; i < other.length - 1; i++) {
+            segments.push([other[i], other[i + 1]]);
+        }
+    }
+    const extendEnd = (from, to) => {
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        const far = [to[0] + (dx / length) * reach, to[1] + (dy / length) * reach];
+        let best = null;
+        for (const [a, b] of segments) {
+            const hit = segmentIntersection(to, far, a, b);
+            if (hit && hit.t > 1e-6 && (!best || hit.t < best.t)) {
+                best = hit;
+            }
+        }
+        return best ? best.point : to;
+    };
+    const loose = (end) => pointInPolygon(end, polygon) && !others.some((other) => onPolyline(end, other));
+    if (line.length >= 2 && loose(line[0])) {
+        line[0] = extendEnd(line[1], line[0]);
+    }
+    const last = line.length - 1;
+    if (line.length >= 2 && loose(line[last])) {
+        line[last] = extendEnd(line[last - 1], line[last]);
+    }
+    return line;
+}
+
+// A polygon cut by every seam crossing it: the EPDM sheets of a surface.
+// A seam may end on another seam, dividing only the sheet on its side.
+function splitBySeams(polygon, seams) {
+    const lines = seams.map((seam, i) => effectiveSeam(seam, polygon, seams.filter((_, j) => j !== i)));
+    let pieces = [polygon];
+    // A seam ending on another one only cuts once that one has: repeat
+    // until no seam cuts anything more.
+    let pending = [...lines];
+    let progress = true;
+    while (pending.length && progress) {
+        progress = false;
+        const left = [];
+        for (const line of pending) {
+            let cut = false;
+            const next = [];
+            for (const piece of pieces) {
+                const parts = splitPolygonByPolyline(piece, line, false);
+                if (parts) {
+                    cut = true;
+                    next.push(...parts);
+                } else {
+                    next.push(piece);
+                }
+            }
+            pieces = next;
+            if (cut) {
+                progress = true;
+            } else {
+                left.push(line);
+            }
+        }
+        pending = left;
     }
     return pieces;
 }
@@ -1362,6 +1446,37 @@ export class RoofCanvasField extends Component {
                 if (corner <= snap && (!best || corner - snap < best.distance)) {
                     // A corner wins over a side at the same distance.
                     best = { point: [a[0], a[1]], distance: corner - snap };
+                }
+                const dx = b[0] - a[0];
+                const dy = b[1] - a[1];
+                const length2 = dx * dx + dy * dy;
+                if (!length2) {
+                    continue;
+                }
+                const t = Math.max(0, Math.min(1,
+                    ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length2));
+                const foot = [a[0] + dx * t, a[1] + dy * t];
+                const distance = Math.hypot(point[0] - foot[0], point[1] - foot[1]);
+                if (distance <= snap && (!best || distance < best.distance)) {
+                    best = { point: foot, distance };
+                }
+            }
+        }
+        // An existing seam: a seam can start or end on another one.
+        for (const shape of this.shapes) {
+            if (!isSeam(shape)) {
+                continue;
+            }
+            const points = shape.points;
+            for (let i = 0; i < points.length; i++) {
+                const a = points[i];
+                const corner = Math.hypot(point[0] - a[0], point[1] - a[1]);
+                if (corner <= snap && (!best || corner - snap < best.distance)) {
+                    best = { point: [a[0], a[1]], distance: corner - snap };
+                }
+                const b = points[i + 1];
+                if (!b) {
+                    continue;
                 }
                 const dx = b[0] - a[0];
                 const dy = b[1] - a[1];

@@ -80,13 +80,13 @@ def _segment_intersection(a, b, c, d):
     qx, qy = c[0] - a[0], c[1] - a[1]
     t = (qx * sy - qy * sx) / denom
     u = (qx * ry - qy * rx) / denom
-    eps = 1e-7
+    eps = 1e-6
     if t < -eps or t > 1 + eps or u < -eps or u > 1 + eps:
         return None
     return (a[0] + rx * t, a[1] + ry * t), t, u
 
 
-def split_polygon_by_polyline(polygon, polyline):
+def split_polygon_by_polyline(polygon, polyline, extend_ends=True):
     """The two parts of ``polygon`` on either side of the open ``polyline``
     (a seam), or None when it does not cross cleanly. Seam ends stopping
     inside the polygon are extended to its outline. Mirror of the drawing's
@@ -104,9 +104,9 @@ def split_polygon_by_polyline(polygon, polyline):
         length = math.hypot(dx, dy) or 1.0
         return (end[0] + dx / length * reach, end[1] + dy / length * reach)
 
-    if _point_in_polygon(line[0], polygon):
+    if extend_ends and _point_in_polygon(line[0], polygon):
         line[0] = extend(line[1], line[0])
-    if _point_in_polygon(line[-1], polygon):
+    if extend_ends and _point_in_polygon(line[-1], polygon):
         line[-1] = extend(line[-2], line[-1])
     crossings = []
     for k in range(len(line) - 1):
@@ -151,16 +151,89 @@ def split_polygon_by_polyline(polygon, polyline):
     return a, b
 
 
+SEAM_JOIN_PX = 1.5
+
+
+def _distance_to_segment(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length2 = dx * dx + dy * dy
+    t = max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length2)) if length2 else 0.0
+    return math.hypot(p[0] - (a[0] + dx * t), p[1] - (a[1] + dy * t))
+
+
+def _on_polyline(p, line):
+    return any(
+        _distance_to_segment(p, line[i], line[i + 1]) <= SEAM_JOIN_PX
+        for i in range(len(line) - 1)
+    )
+
+
+def effective_seam(seam, polygon, others):
+    """A seam as it divides ``polygon``: an end left loose inside the
+    surface is drawn on to the first outline or other seam it meets; an end
+    on another seam stays there (a T-joint: the seam only divides the sheet
+    on its side). Mirror of the drawing's effectiveSeam."""
+    line = [tuple(p) for p in seam]
+    xs = [p[0] for p in polygon]
+    ys = [p[1] for p in polygon]
+    reach = ((max(xs) - min(xs)) + (max(ys) - min(ys))) * 4 + 10
+    segments = [(polygon[i], polygon[(i + 1) % len(polygon)]) for i in range(len(polygon))]
+    for other in others:
+        segments += [(other[i], other[i + 1]) for i in range(len(other) - 1)]
+
+    def extend_end(start, end):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        length = math.hypot(dx, dy) or 1.0
+        far = (end[0] + dx / length * reach, end[1] + dy / length * reach)
+        best = None
+        for a, b in segments:
+            hit = _segment_intersection(end, far, a, b)
+            if hit and hit[1] > 1e-6 and (best is None or hit[1] < best[1]):
+                best = hit
+        return best[0] if best else end
+
+    def loose(end):
+        return _point_in_polygon(end, polygon) and not any(_on_polyline(end, o) for o in others)
+
+    if len(line) >= 2 and loose(line[0]):
+        line[0] = extend_end(line[1], line[0])
+    if len(line) >= 2 and loose(line[-1]):
+        line[-1] = extend_end(line[-2], line[-1])
+    return line
+
+
 def split_by_seams(polygon, seams):
     """``polygon`` cut by every seam (open polylines) that crosses it: the
-    EPDM sheets of one roof surface."""
+    EPDM sheets of one roof surface. A seam may end on another seam,
+    dividing only the sheet on its side."""
+    seams = [list(seam) for seam in seams]
+    lines = [
+        effective_seam(seam, polygon, seams[:i] + seams[i + 1:])
+        for i, seam in enumerate(seams)
+    ]
     pieces = [list(polygon)]
-    for seam in seams:
-        result = []
-        for piece in pieces:
-            parts = split_polygon_by_polyline(piece, seam)
-            result.extend(parts if parts else [piece])
-        pieces = result
+    # A seam ending on another one only cuts once that one has.
+    pending = lines
+    progress = True
+    while pending and progress:
+        progress = False
+        left = []
+        for line in pending:
+            cut = False
+            result = []
+            for piece in pieces:
+                parts = split_polygon_by_polyline(piece, line, extend_ends=False)
+                if parts:
+                    cut = True
+                    result.extend(parts)
+                else:
+                    result.append(piece)
+            pieces = result
+            if cut:
+                progress = True
+            else:
+                left.append(line)
+        pending = left
     return pieces
 
 

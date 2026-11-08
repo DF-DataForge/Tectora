@@ -5,7 +5,7 @@ import json
 
 from odoo.tests import TransactionCase, tagged
 
-from ..models.roof_buildup import epdm_sheet_size
+from ..models.roof_buildup import epdm_sheet_size, split_by_seams
 
 
 @tagged("post_install", "-at_install")
@@ -71,6 +71,20 @@ class TestBuildup(TransactionCase):
                 [(0, 0), (9.4, 0), (9.4, 5.4), (0, 5.4)], [0.6] * 4)),
             (10.6, 6.6),
         )
+
+    def test_seam_on_seam(self):
+        """A seam ending on another seam divides only the sheet on its side,
+        whatever order they were drawn in."""
+        rect = [(0, 0), (1000, 0), (1000, 600), (0, 600)]
+        across = [(330, 0), (330, 600)]
+        t_joint = [(330, 150), (1000, 150)]
+        for seams in ([across, t_joint], [t_joint, across]):
+            pieces = split_by_seams(rect, seams)
+            areas = sorted(round(abs(sum(
+                p[i][0] * p[(i + 1) % len(p)][1] - p[(i + 1) % len(p)][0] * p[i][1]
+                for i in range(len(p))
+            )) / 2) for p in pieces)
+            self.assertEqual(areas, [100500, 198000, 301500])
 
     def test_category_inherits_usages(self):
         ids = self.env["product.category"].tectora_category_ids_for_usages(["surface"])
