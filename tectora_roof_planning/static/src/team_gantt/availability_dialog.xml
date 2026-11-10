@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof_planning.AvailabilityDialog">
+        <Dialog title="'Beschikbare momenten'" size="'lg'">
+            <div t-if="!this.state.data" class="text-muted p-3">Laden…</div>
+            <t t-else="">
+                <t t-set="data" t-value="this.state.data"/>
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-2 small">
+                    <label class="d-flex align-items-center gap-1 mb-0">
+                        Komende
+                        <select class="form-select form-select-sm" style="width: 5rem;"
+                                t-on-change="(ev) => this.setWeeks(ev)">
+                            <option t-foreach="[4, 8, 12, 26]" t-as="weeks" t-key="weeks"
+                                    t-att-value="weeks" t-att-selected="weeks === this.state.weeks" t-out="weeks"/>
+                        </select>
+                        weken
+                    </label>
+                    <label t-if="data.project" class="form-check mb-0">
+                        <input type="checkbox" class="form-check-input" t-att-checked="this.state.onlyFitting"
+                               t-on-change="(ev) => this.toggleFitting(ev)"/>
+                        Enkel lang genoeg voor het project
+                    </label>
+                    <span class="text-muted">Werkdagen (ma–vr) zonder werkblok van de ploeg.</span>
+                </div>
+                <div t-if="data.project" class="alert alert-info py-2 small mb-2">
+                    <strong t-out="data.project.name"/>:
+                    <t t-if="data.project.hours"><t t-out="data.project.hours"/> u geschat op de offerte;
+                        per ploeg de werkdagen die dat vraagt (8 u per ploeglid per dag).</t>
+                    <t t-else="">geen uren geschat op de offerte; de periodes worden enkel getoond.</t>
+                </div>
+                <div t-foreach="data.teams" t-as="team" t-key="team.id" class="card mb-2">
+                    <div class="card-header py-1 px-2 d-flex justify-content-between">
+                        <strong t-out="team.name"/>
+                        <span class="small text-muted">
+                            <t t-out="team.members"/> ploeglid(en)
+                            <t t-if="team.needed"> · nodig: <t t-out="team.needed"/> werkdag(en)</t>
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table t-if="this.windows(team).length" class="table table-sm mb-0">
+                            <tbody>
+                                <tr t-foreach="this.windows(team)" t-as="window" t-key="window.start"
+                                    t-att-class="window.fits ? 'table-success' : ''">
+                                    <td class="ps-2">
+                                        <t t-out="this.formatDate(window.start)"/>
+                                        <t t-if="window.end !== window.start"> – <t t-out="this.formatDate(window.end)"/></t>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="window.days"/> werkdag(en) vrij
+                                    </td>
+                                    <td class="text-end pe-2" style="width: 8rem;">
+                                        <button t-if="data.project" type="button" class="btn btn-sm py-0"
+                                                t-att-class="window.fits ? 'btn-primary' : 'btn-outline-secondary'"
+                                                t-on-click="() => this.plan(team, window)">Inplannen</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-else="" class="small text-muted p-2">Geen vrije periode in deze weken.</div>
+                    </div>
+                </div>
+            </t>
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-secondary" t-on-click="this.props.close">Sluiten</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

@@ -5,6 +5,7 @@ import { ganttView } from "@web_gantt/gantt_view";
 import { GanttRenderer } from "@web_gantt/gantt_renderer";
 import { onMounted, onPatched, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { TectoraAvailabilityDialog } from "./availability_dialog";
 
 // How much taller than the standard gantt the team planner's blocks are.
 const PILL_SCALE = 3;
@@ -312,6 +313,16 @@ export class TectoraTeamGanttController extends ganttView.Controller {
         super.setup(...arguments);
         this.tectoraOrm = useService("orm");
         this.tectoraAction = useService("action");
+        this.tectoraDialog = useService("dialog");
+    }
+
+    /** The teams' free moments; opened from a project, to plan it there. */
+    onTectoraAvailability() {
+        const context = this.props.context || {};
+        this.tectoraDialog.add(TectoraAvailabilityDialog, {
+            projectId: context.tectora_project_id || undefined,
+            onPlanned: () => this.tectoraAction.doAction({ type: "ir.actions.client", tag: "soft_reload" }),
+        });
     }
 
     async onTectoraRefreshWeather() {
