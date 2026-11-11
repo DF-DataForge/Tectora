@@ -451,6 +451,10 @@ class SaleOrder(models.Model):
         roof = self.roof_project_id
         if not roof or self.state not in ("draft", "sent"):
             return
+        if self.tectora_locked:
+            # Vastgezet: the quotation and the measurement go their own way;
+            # the roof project keeps following the measurement.
+            return
         order_is_master = lines is not None
         RoofLine = self.env["tectora.roof.section.product"].with_context(
             tectora_sync=True

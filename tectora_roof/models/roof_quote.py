@@ -115,7 +115,9 @@ class TectoraRoofProject(models.Model):
 
         # Lines added on the quotation by hand (not mirrored).
         order = self.sale_order_id
-        if order:
+        # A quotation set fast goes its own way: the view follows the
+        # measurement only.
+        if order and not order.tectora_locked:
             for line in order.order_line.sorted(lambda l: (l.sequence, l.id)):
                 if (line.display_type or not line.product_id or line.roof_line_id
                         or line.roof_measurement_line):

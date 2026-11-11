@@ -123,7 +123,9 @@ install on Odoo 17 or earlier without adjustments.
    **Zet offerte vast** (on the quotation and on the roof project) locks
    the quotation against the measurement: no automatic changes, no
    *Offerte bijwerken uit meting*, no roofs added, until *Offerte vrijgeven*.
-   What is done on the quotation itself stays possible.
+   What is done on the quotation itself stays possible, and stays on the
+   quotation (it no longer changes the roof project): the roof project's
+   Offerte tab and the drawing's panel keep following the measurement.
    The quotation has a fixed structure, the same on the order, on the roof
    project's **Offerte** tab and next to the drawing: *Algemene werken*,
    *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv <dak>* and

@@ -248,5 +248,14 @@ class TestQuoteLock(TransactionCase):
         self.assertEqual(order.order_line.mapped(lambda l: (l.product_id.id, l.product_uom_qty, l.display_type)), before)
         with self.assertRaises(UserError):
             project.action_create_sale_order()
+        # The roof project's own quotation view keeps following the
+        # measurement; what is added on the locked quotation stays there.
+        extra = env["product.product"].create({"name": "Extra op offerte", "list_price": 10})
+        env["sale.order.line"].create({"order_id": order.id, "product_id": extra.id})
+        self.assertNotIn(extra, project.direct_line_ids.product_id)
+        rows = [row for segment in project.tectora_get_quote_builder()["segments"] for row in segment["lines"]]
+        epdm = next(row for row in rows if row["product_id"] == product.id)
+        self.assertEqual(epdm["quantity"], 80.0)
+        self.assertNotIn(extra.id, [row["product_id"] for row in rows])
         order.action_tectora_toggle_lock()
         self.assertFalse(order.tectora_locked)

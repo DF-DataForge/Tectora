@@ -179,7 +179,9 @@ class SaleOrderLine(models.Model):
         project too (measurement lines come back from the drawing)."""
         roof_lines = self.env["tectora.roof.section.product"]
         if not self.env.context.get("tectora_sync"):
-            roof_lines = self._tectora_mirrorable().roof_line_id.filtered(
+            roof_lines = self._tectora_mirrorable().filtered(
+                lambda line: not line.order_id.tectora_locked
+            ).roof_line_id.filtered(
                 "project_direct_id"
             )
         result = super().unlink()
