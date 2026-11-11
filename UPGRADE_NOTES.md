@@ -241,3 +241,5 @@ Releases and the modules they need upgraded:
 | 3D-weergave: isolatie in zilver (PIR met alu-folie), plaatnaden 1200×600 zichtbaar zonder EPDM | `tectora_roof` (20.0.3.89.0) |
 | Calculators dakobjecten: schoorsteen (bekleding, m² uit omtrek × hoogte) en Skylux-koepel (catalogus met kenmerken/dynamische varianten, prijstabel Skylux-prijzen); kimfixatie in de Dakopbouw (alle randen + rond schoorstenen en koepels) | `tectora_roof` (20.0.3.90.0) |
 | Planning vanuit het projectdashboard: volledige ploegenplanner; knop Beschikbare momenten (vrije werkdagen per ploeg, nodig aantal dagen, inplannen als concept) | `tectora_roof_planning` (20.0.1.24.0) |
+| Fix offerte per dak: producten van de tekening per dak in Afbouwwerken/Opbouwwerken thv <DAK> | `tectora_roof` (20.0.3.91.0) |
+| Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |

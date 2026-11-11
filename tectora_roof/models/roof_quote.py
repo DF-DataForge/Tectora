@@ -71,7 +71,7 @@ class TectoraRoofProject(models.Model):
         # The drawing's lines, per (product, coverage) within a segment.
         def add_drawn(line, target, target_kind):
             kind, chapter = self._tectora_product_segment(line.product_id)
-            data = segment(kind or "other", line.roof_id, chapter)
+            data = segment(kind or "other", line._tectora_roof(), chapter)
             group_key = (line.product_id.id, line.coverage)
             entry = data["groups"].get(group_key)
             if not entry:
@@ -115,7 +115,9 @@ class TectoraRoofProject(models.Model):
 
         # Lines added on the quotation by hand (not mirrored).
         order = self.sale_order_id
-        if order:
+        # A quotation set fast goes its own way: the view follows the
+        # measurement only.
+        if order and not order.tectora_locked:
             for line in order.order_line.sorted(lambda l: (l.sequence, l.id)):
                 if (line.display_type or not line.product_id or line.roof_line_id
                         or line.roof_measurement_line):
@@ -176,6 +178,7 @@ class TectoraRoofProject(models.Model):
             "order": order.name if order else "",
             "order_id": order.id if order else False,
             "follows": bool(order and order.tectora_follow_measurement),
+            "locked": bool(order and order.tectora_locked),
         }
 
     def tectora_get_quote_preview(self):

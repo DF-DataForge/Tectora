@@ -358,6 +358,12 @@ class TectoraRoofSectionProduct(models.Model):
         currency_field="currency_id",
     )
 
+    def _tectora_roof(self):
+        """The roof this line is on: that of its surface or roof object, or
+        the roof set on a project line."""
+        self.ensure_one()
+        return self.section_id.roof_id or self.object_id.roof_id or self.roof_id
+
     @api.depends("section_id.project_id", "object_id.project_id", "project_direct_id")
     def _compute_project_id(self):
         for line in self:
@@ -528,6 +534,7 @@ class TectoraRoofSectionProduct(models.Model):
         order_lines = self.sale_line_ids.filtered(
             lambda line: line.order_id.state in ("draft", "sent")
             and line.order_id.tectora_follow_measurement
+            and not line.order_id.tectora_locked
         )
         if order_lines:
             order_lines.with_context(tectora_sync=True).unlink()

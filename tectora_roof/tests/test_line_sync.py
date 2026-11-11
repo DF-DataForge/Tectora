@@ -3,6 +3,7 @@
 quotation, in both directions, and edited quantities are kept, when the
 quotation follows the measurement; one that does not is never changed by the
 roof project."""
+from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -213,3 +214,48 @@ class TestLineSync(TransactionCase):
         trim_line = self.line_trim
         self.order_line(trim_line).unlink()
         self.assertFalse(trim_line.exists())
+
+
+@tagged("post_install", "-at_install")
+class TestQuoteLock(TransactionCase):
+    """Zet offerte vast: the roof measurement no longer changes the lines."""
+
+    def test_locked_quotation_is_left_alone(self):
+        env = self.env(context=dict(self.env.context, tracking_disable=True))
+        m2 = env.ref("uom.product_uom_square_meter")
+        product = env["product.product"].create({
+            "name": "EPDM vast", "type": "consu", "uom_id": m2.id, "list_price": 30,
+        })
+        project = env["tectora.roof.project"].create({
+            "name": "Vast dak", "partner_id": env["res.partner"].create({"name": "Klant vast"}).id,
+        })
+        env["tectora.roof.section"].create({
+            "project_id": project.id, "name": "Dak", "area": 50.0, "perimeter": 30.0,
+        })
+        line = env["tectora.roof.section.product"].create({
+            "project_direct_id": project.id, "product_id": product.id,
+        })
+        project.action_create_sale_order()
+        order = project.sale_order_id
+        order.tectora_follow_measurement = True
+        order.action_tectora_toggle_lock()
+        self.assertTrue(order.tectora_locked)
+        self.assertFalse(order.tectora_follow_measurement)
+        before = order.order_line.mapped(lambda l: (l.product_id.id, l.product_uom_qty, l.display_type))
+        project.section_ids.area = 80.0
+        line.quantity = 80.0
+        project._tectora_mirror_to_order()
+        self.assertEqual(order.order_line.mapped(lambda l: (l.product_id.id, l.product_uom_qty, l.display_type)), before)
+        with self.assertRaises(UserError):
+            project.action_create_sale_order()
+        # The roof project's own quotation view keeps following the
+        # measurement; what is added on the locked quotation stays there.
+        extra = env["product.product"].create({"name": "Extra op offerte", "list_price": 10})
+        env["sale.order.line"].create({"order_id": order.id, "product_id": extra.id})
+        self.assertNotIn(extra, project.direct_line_ids.product_id)
+        rows = [row for segment in project.tectora_get_quote_builder()["segments"] for row in segment["lines"]]
+        epdm = next(row for row in rows if row["product_id"] == product.id)
+        self.assertEqual(epdm["quantity"], 80.0)
+        self.assertNotIn(extra.id, [row["product_id"] for row in rows])
+        order.action_tectora_toggle_lock()
+        self.assertFalse(order.tectora_locked)

@@ -158,6 +158,15 @@ class SaleOrder(models.Model):
         "dienen de dakplannen enkel als plan; 'Offerte bijwerken uit meting' "
         "op het dakproject brengt ze dan na bevestiging eenmalig in lijn.",
     )
+    tectora_locked = fields.Boolean(
+        string="Offerte vastgezet",
+        copy=False,
+        tracking=True,
+        help="Vastgezet kan de dakmeting de lijnen van deze offerte niet meer "
+        "overschrijven: geen automatische aanpassing, geen 'Offerte bijwerken "
+        "uit meting', geen daken toevoegen. Wat je op de offerte zelf doet, "
+        "blijft mogelijk. 'Offerte vrijgeven' heft dat op.",
+    )
     tectora_include_roof_plan = fields.Boolean(
         string="Dakplan toevoegen",
         default=True,
@@ -442,6 +451,10 @@ class SaleOrder(models.Model):
         roof = self.roof_project_id
         if not roof or self.state not in ("draft", "sent"):
             return
+        if self.tectora_locked:
+            # Vastgezet: the quotation and the measurement go their own way;
+            # the roof project keeps following the measurement.
+            return
         order_is_master = lines is not None
         RoofLine = self.env["tectora.roof.section.product"].with_context(
             tectora_sync=True
@@ -526,8 +539,27 @@ class SaleOrder(models.Model):
         if pricelist and pricelist != self.pricelist_id:
             self.pricelist_id = pricelist
 
+    def action_tectora_toggle_lock(self):
+        """Zet offerte vast / Offerte vrijgeven: while locked, the roof
+        measurement no longer changes the quotation's lines (and it no longer
+        follows the measurement)."""
+        for order in self:
+            locked = not order.tectora_locked
+            values = {"tectora_locked": locked}
+            if locked:
+                values["tectora_follow_measurement"] = False
+            order.with_context(tectora_sync=True).write(values)
+            order.message_post(body=_(
+                "Offerte vastgezet: de dakmeting past de lijnen niet meer aan."
+            ) if locked else _(
+                "Offerte vrijgegeven: 'Offerte bijwerken uit meting' kan de lijnen weer aanpassen."
+            ))
+        return True
+
     def _tectora_check_roofs_allowed(self):
         self.ensure_one()
+        if self.tectora_locked:
+            raise UserError(_("De offerte is vastgezet; geef ze eerst vrij om daken toe te voegen."))
         if not self.sale_order_template_id:
             raise UserError(_("Kies eerst een offertesjabloon; daarna kunnen de daken toegevoegd worden."))
         if self.state not in ("draft", "sent"):
@@ -645,7 +677,7 @@ class SaleOrder(models.Model):
         """
         for order in self:
             project = order.roof_project_id
-            if not project or order.state not in ("draft", "sent"):
+            if not project or order.state not in ("draft", "sent") or order.tectora_locked:
                 continue
             Line = self.env["sale.order.line"].with_context(tectora_sync=True)
             Roof = self.env["tectora.roof.project.roof"]

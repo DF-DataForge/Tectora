@@ -177,6 +177,7 @@ class TectoraRoofProjectRoof(models.Model):
             ("tectora_roof_id", "in", self.ids),
             ("order_id.state", "in", ("draft", "sent")),
             ("order_id.tectora_follow_measurement", "=", True),
+            ("order_id.tectora_locked", "=", False),
         ])
         if lines:
             lines.unlink()
@@ -194,7 +195,7 @@ class TectoraRoofProjectRoof(models.Model):
         for line in lines:
             roof = line.tectora_roof_id
             if line.tectora_segment:
-                # A roof's segment: "AFBOUWWERKEN THV HET PLAT DAK – Dak 2 – ...".
+                # A roof's segment: "AFBOUWWERKEN THV DAK 2 – ACHTERBOUW".
                 name = Project._tectora_segment_title(line.tectora_segment.split(":")[0], roof)
             else:
                 name = roof._subsection_name()

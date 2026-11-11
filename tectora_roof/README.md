@@ -120,10 +120,16 @@ install on Odoo 17 or earlier without adjustments.
    the *Opstand* of the chosen sides (as the side panel does per side): they
    count in the inner area, the upstand and the EPDM sheets. Several sides at once as in the other
    tabs.
+   **Zet offerte vast** (on the quotation and on the roof project) locks
+   the quotation against the measurement: no automatic changes, no
+   *Offerte bijwerken uit meting*, no roofs added, until *Offerte vrijgeven*.
+   What is done on the quotation itself stays possible, and stays on the
+   quotation (it no longer changes the roof project): the roof project's
+   Offerte tab and the drawing's panel keep following the measurement.
    The quotation has a fixed structure, the same on the order, on the roof
    project's **Offerte** tab and next to the drawing: *Algemene werken*,
-   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv het
-   plat dak – <dak>* and *Opbouwwerken thv het plat dak – <dak>* (the
+   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv <dak>* and
+   *Opbouwwerken thv <dak>* (e.g. "AFBOUWWERKEN THV DAK 1 – GARAGE") (the
    drawing's products of that roof, one line per product, and the roof's
    project lines), the other chapters (worst case, garantie, andere werken,
    upsale), headers of the user's own, and *Algemene nota's* (the project's

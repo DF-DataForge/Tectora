@@ -345,6 +345,9 @@ class TectoraRoofProject(models.Model):
         related="sale_order_id.tectora_follow_measurement",
         readonly=False,
     )
+    sale_order_locked = fields.Boolean(
+        related="sale_order_id.tectora_locked", string="Offerte vastgezet",
+    )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
     project_id = fields.Many2one(
@@ -1609,6 +1612,8 @@ class TectoraRoofProject(models.Model):
             target = order or project.sale_order_id
             if not target or target.state not in ("draft", "sent"):
                 continue
+            if target.tectora_locked:
+                continue  # Zet offerte vast: the measurement keeps off it.
             if not (
                 target.tectora_follow_measurement
                 or self.env.context.get("tectora_update_from_measurement")
@@ -1696,7 +1701,8 @@ class TectoraRoofProject(models.Model):
         for line in lines.sorted(lambda l: (l.product_id.categ_id.complete_name or "", l.product_id.display_name or "", l.id)):
             if not line.product_id:
                 continue
-            key = (line.roof_id, line.product_id)
+            # The roof of the surface or object the line is on.
+            key = (line._tectora_roof(), line.product_id)
             totals[key] = totals.get(key, 0.0) + line.quantity
         return {key: round(quantity, 2) for key, quantity in totals.items()}
 
@@ -1753,8 +1759,11 @@ class TectoraRoofProject(models.Model):
     @api.model
     def _tectora_segment_title(self, kind, roof=None, chapter=None):
         if kind in ("demolition", "buildup"):
-            base = self.SEGMENT_TITLES[kind]
-            return "%s – %s" % (base, roof._subsection_name()) if roof else base
+            # Per roof: "AFBOUWWERKEN THV DAK 1 – GARAGE".
+            if roof:
+                short = "AFBOUWWERKEN" if kind == "demolition" else "OPBOUWWERKEN"
+                return "%s THV %s" % (short, roof._subsection_name().upper())
+            return self.SEGMENT_TITLES[kind]
         if kind == "other":
             label = re.sub(r"^\d+\.\s*", "", chapter.name or "") if chapter else _("Overige")
             return label.upper()
@@ -1787,6 +1796,13 @@ class TectoraRoofProject(models.Model):
             sections = sections.filtered(lambda s: s.roof_id == roof)
             objects = objects.filtered(lambda o: o.roof_id == roof)
         return (sections.product_line_ids | objects.product_line_ids).product_id
+
+    def action_tectora_toggle_quote_lock(self):
+        """Zet offerte vast / Offerte vrijgeven, from the roof project."""
+        self.ensure_one()
+        if self.sale_order_id:
+            self.sale_order_id.action_tectora_toggle_lock()
+        return True
 
     def _find_pricelist(self):
         """Pricelist named after the project type, if the company has one."""
@@ -1835,6 +1851,12 @@ class TectoraRoofProject(models.Model):
         order = self.sale_order_id
         if order and order.state == "cancel":
             order = self.env["sale.order"]
+        if order and order.state in ("draft", "sent") and order.tectora_locked:
+            raise UserError(_(
+                "Offerte %(order)s is vastgezet: de meting past ze niet meer aan. "
+                "Geef ze eerst vrij ('Offerte vrijgeven').",
+                order=order.name,
+            ))
         if order and order.state not in ("draft", "sent"):
             raise UserError(
                 _(
