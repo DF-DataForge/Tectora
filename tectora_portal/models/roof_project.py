@@ -133,6 +133,44 @@ class TectoraRoofProject(models.Model):
         ).sorted("start_datetime")
         return upcoming[:1]
 
+    def _tectora_portal_hours_team(self, employee):
+        """The ploeg whose hours-logging settings apply to ``employee`` on
+        this site: their own ploeg (member or ploegbaas), else the ploeg of
+        today's work block, else the site's ploeg."""
+        self.ensure_one()
+        Team = self.env["tectora.roof.team"].sudo()
+        team = employee.roof_team_id if employee else Team
+        if not team and employee:
+            team = Team.search([("leader_id", "=", employee.id)], limit=1)
+        if not team:
+            team = self._tectora_portal_blocks_at(fields.Datetime.now()).team_id[:1]
+        return team or self.team_id
+
+    def _tectora_portal_hours_policy(self, employee):
+        """What ``employee`` may log on this site's portal, per their ploeg:
+
+        * ``team``: register for the whole crew (the ploegleider, or anyone
+          when the ploeg has no ploegbaas);
+        * ``individual``: register their own hours;
+        * ``timer`` / ``manual``: via start – stop and/or entered directly.
+
+        Without a ploeg: start – stop for the crew, as before.
+        """
+        self.ensure_one()
+        team = self._tectora_portal_hours_team(employee)
+        if not team:
+            return {"team": True, "individual": False, "timer": True, "manual": False,
+                    "leader": self.env["hr.employee"], "ploeg": team}
+        is_leader = not team.leader_id or team.leader_id == employee
+        return {
+            "team": bool(team.hours_by_leader and is_leader),
+            "individual": bool(team.hours_individual),
+            "timer": bool(team.hours_timer),
+            "manual": bool(team.hours_manual),
+            "leader": team.leader_id,
+            "ploeg": team,
+        }
+
     def _tectora_portal_planned_employee_ids(self):
         self.ensure_one()
         return (self.planning_ids.employee_ids | self.team_id.member_ids).filtered("active")

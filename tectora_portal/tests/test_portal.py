@@ -220,6 +220,76 @@ class TestTimer(TectoraPortalCase):
 
 
 @tagged("post_install", "-at_install")
+class TestHoursLogging(TectoraPortalCase):
+    """The ploeg decides who logs (ploegleider and/or individually) and how
+    (start – stop and/or entering the hours); the options combine."""
+
+    def test_default_policy(self):
+        policy = self.project._tectora_portal_hours_policy(self.leader)
+        self.assertTrue(policy["team"] and policy["timer"])
+        self.assertFalse(policy["individual"] or policy["manual"])
+        mate = self.project._tectora_portal_hours_policy(self.mate)
+        self.assertFalse(mate["team"], "only the ploegleider logs for the crew")
+        self.assertEqual(mate["leader"], self.leader)
+
+    def test_at_least_one_option(self):
+        with self.assertRaises(Exception):
+            self.team.write({"hours_by_leader": False, "hours_individual": False})
+        with self.assertRaises(Exception):
+            self.team.write({"hours_timer": False, "hours_manual": False})
+
+    def test_individual_timer(self):
+        self.team.write({"hours_individual": True})
+        policy = self.project._tectora_portal_hours_policy(self.mate)
+        self.assertTrue(policy["individual"])
+        Timer = self.env["tectora.roof.timer"]
+        own = Timer._start(self.project, self.mate, scope="individual")
+        self.assertEqual(own.employee_ids, self.mate)
+        self.assertEqual(own.scope, "individual")
+        with self.assertRaises(Exception, msg="one own timer per site"):
+            Timer._start(self.project, self.mate, scope="individual")
+        # the crew timer runs next to it
+        team_timer = Timer._start(self.project, self.leader)
+        self.assertEqual(team_timer.scope, "team")
+        own.start_datetime = fields.Datetime.now() - timedelta(hours=2)
+        own.action_stop(employee_ids=[self.mate.id], stopped_by=self.mate)
+        self.assertEqual(own.timesheet_ids.employee_id, self.mate)
+        # counted in the running crew timer: no own timer on top of it
+        with self.assertRaises(Exception):
+            Timer._start(self.project, self.mate, scope="individual")
+
+    def test_manual_entry(self):
+        self.team.write({"hours_manual": True, "hours_individual": True})
+        Timer = self.env["tectora.roof.timer"]
+        timer = Timer._log_manual(
+            self.project, self.leader, fields.Date.today(), 7.5,
+            employees=self.leader | self.mate, work_kind="afbraak",
+        )
+        self.assertEqual(timer.state, "done")
+        self.assertEqual(timer.entry_mode, "manual")
+        self.assertAlmostEqual(timer.duration_hours, 7.5, places=2)
+        self.assertEqual(timer.timesheet_ids.employee_id, self.leader | self.mate)
+        self.assertEqual(timer.timesheet_ids.task_id.tectora_work_kind, "afbraak")
+        own = Timer._log_manual(
+            self.project, self.mate, fields.Date.today(), 4,
+            employees=self.leader, scope="individual",
+        )
+        self.assertEqual(own.timesheet_ids.employee_id, self.mate,
+                         "individually only for oneself")
+        with self.assertRaises(Exception):
+            Timer._log_manual(self.project, self.mate, fields.Date.today(), 0)
+        with self.assertRaises(Exception):
+            Timer._log_manual(self.project, self.mate,
+                              fields.Date.today() + timedelta(days=2), 3)
+
+    def test_segments(self):
+        self.leader.tectora_portal_show_materials = False
+        segments = self.leader._tectora_portal_segments()
+        self.assertFalse(segments["materials"])
+        self.assertTrue(segments["overview"] and segments["hours"])
+
+
+@tagged("post_install", "-at_install")
 class TestPortalRoutes(HttpCase, TectoraPortalCase):
 
     def _csrf(self, html):
@@ -307,6 +377,31 @@ class TestPortalRoutes(HttpCase, TectoraPortalCase):
 
         pdf = self.url_open(url + "/pdf/meetblad")
         self.assertEqual(pdf.status_code, 200)
+
+    def test_portal_manual_hours_and_segments(self):
+        self.team.write({"hours_timer": False, "hours_manual": True})
+        self.leader.tectora_portal_show_materials = False
+        self.authenticate(self.portal_user.login, "portal-test-123")
+        url = "/my/werven/%d" % self.project.id
+        page = self.url_open(url)
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Uren ingeven", page.text)
+        self.assertNotIn("Start uitvoering", page.text, "no start – stop for this ploeg")
+        self.assertNotIn('id="tab-materials"', page.text, "the hidden segment is not rendered")
+        csrf = self._csrf(page.text)
+        response = self.url_open(url + "/uren/ingeven", data={
+            "csrf_token": csrf, "date": fields.Date.today().isoformat(), "hours": "7:30",
+            "work_kind": "uitvoering", "scope": "team",
+            "employee_ids": [str(self.leader.id), str(self.mate.id)],
+        })
+        self.assertEqual(response.status_code, 200)
+        timer = self.project.timer_ids.filtered(lambda t: t.entry_mode == "manual")
+        self.assertEqual(len(timer), 1)
+        self.assertAlmostEqual(timer.duration_hours, 7.5, places=2)
+        self.assertEqual(timer.timesheet_ids.employee_id, self.leader | self.mate)
+        # start – stop is refused for this ploeg
+        self.url_open(url + "/uren/start", data={"csrf_token": csrf, "work_kind": "uitvoering"})
+        self.assertFalse(self.project.timer_ids.filtered(lambda t: t.state == "running"))
 
     def test_no_employee(self):
         user = self.env["res.users"].create({

@@ -121,7 +121,7 @@
                 <div class="card o_tectora_site_header mb-3">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-12 col-lg-8">
+                            <div t-attf-class="col-12 #{'col-lg-8' if segments['hours'] else ''}">
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                     <h3 class="mb-0">
                                         <t t-out="site.code or ''"/>
@@ -161,7 +161,7 @@
                                     </t>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-4">
+                            <div t-if="segments['hours']" class="col-12 col-lg-4">
                                 <t t-call="tectora_portal.portal_site_timer_card"/>
                             </div>
                         </div>
@@ -170,26 +170,26 @@
 
                 <!-- tabs -->
                 <ul class="nav nav-tabs o_tectora_tabs mb-3" role="tablist">
-                    <li class="nav-item" role="presentation">
+                    <li t-if="segments['overview']" class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'overview' else ''}" data-bs-toggle="tab"
                            data-tab="overview" href="#tab-overview" role="tab">
                             <i class="oi me-1" data-icon="info"/>Overzicht
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li t-if="segments['materials']" class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'materials' else ''}" data-bs-toggle="tab"
                            data-tab="materials" href="#tab-materials" role="tab">
                             <i class="oi me-1" data-icon="deployed_code"/>Materialen
                             <span class="badge rounded-pill text-bg-light border ms-1" t-out="len(materials)"/>
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li t-if="segments['plan']" class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'plan' else ''}" data-bs-toggle="tab"
                            data-tab="plan" href="#tab-plan" role="tab">
                             <i class="oi me-1" data-icon="map"/>Plan
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li t-if="segments['report']" class="nav-item" role="presentation">
                         <a t-attf-class="nav-link #{'active' if tab == 'report' else ''}" data-bs-toggle="tab"
                            data-tab="report" href="#tab-report" role="tab">
                             <i class="oi me-1" data-icon="description"/>Uitvoeringsverslag
@@ -198,35 +198,45 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'overview' else ''}" id="tab-overview" role="tabpanel">
+                    <div t-if="segments['overview']" t-attf-class="tab-pane fade #{'show active' if tab == 'overview' else ''}" id="tab-overview" role="tabpanel">
                         <t t-call="tectora_portal.portal_site_tab_overview"/>
                     </div>
-                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'materials' else ''}" id="tab-materials" role="tabpanel">
+                    <div t-if="segments['materials']" t-attf-class="tab-pane fade #{'show active' if tab == 'materials' else ''}" id="tab-materials" role="tabpanel">
                         <t t-call="tectora_portal.portal_site_tab_materials"/>
                     </div>
-                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'plan' else ''}" id="tab-plan" role="tabpanel">
+                    <div t-if="segments['plan']" t-attf-class="tab-pane fade #{'show active' if tab == 'plan' else ''}" id="tab-plan" role="tabpanel">
                         <t t-call="tectora_portal.portal_site_tab_plan"/>
                     </div>
-                    <div t-attf-class="tab-pane fade #{'show active' if tab == 'report' else ''}" id="tab-report" role="tabpanel">
+                    <div t-if="segments['report']" t-attf-class="tab-pane fade #{'show active' if tab == 'report' else ''}" id="tab-report" role="tabpanel">
                         <t t-call="tectora_portal.portal_site_tab_report"/>
                     </div>
                 </div>
 
-                <t t-if="running_timer" t-call="tectora_portal.portal_site_stop_modal"/>
+                <div t-if="not (segments['overview'] or segments['materials'] or segments['plan'] or segments['report'])"
+                     class="alert alert-light border">Er zijn geen onderdelen van de werf zichtbaar op jouw portaal.</div>
+
+                <t t-if="segments['hours'] and running_timer and can_stop_team" t-call="tectora_portal.portal_site_stop_modal"/>
             </div>
         </t>
     </template>
 
     <!-- ========================================================== timer card -->
+    <!-- What is offered follows the ploeg's settings (hours_policy): for the
+         crew (ploegleider) and/or individually, via start – stop and/or by
+         entering the hours directly. -->
     <template id="portal_site_timer_card" name="Portaal: urenregistratie start/stop">
-        <div t-attf-class="card o_tectora_timer_card h-100 #{'o_tectora_running' if running_timer else ''}">
-            <div class="card-body d-flex flex-column">
-                <t t-if="running_timer">
+        <t t-set="policy" t-value="hours_policy"/>
+        <div t-attf-class="card o_tectora_timer_card h-100 #{'o_tectora_running' if running_timer or my_running_timer else ''}">
+            <div class="card-body d-flex flex-column gap-2">
+                <div class="small text-uppercase text-muted fw-bold">Urenregistratie</div>
+
+                <!-- running crew registration -->
+                <div t-if="running_timer" class="o_tectora_running_block">
                     <div class="small text-uppercase text-success fw-bold">
-                        <i class="oi me-1 small" data-icon="circle"/>Uren lopen
+                        <i class="oi me-1 small" data-icon="circle"/>Uren ploeg lopen
                         <span class="text-muted">· <t t-out="running_timer._work_kind_label()"/></span>
                     </div>
-                    <div class="o_tectora_elapsed my-2"
+                    <div class="o_tectora_elapsed my-1"
                          t-att-data-start="running_timer.start_datetime.isoformat() + 'Z'"
                          t-out="running_timer._elapsed_display()"/>
                     <div class="small text-muted mb-2">
@@ -236,28 +246,66 @@
                         <br/>
                         Voor: <t t-out="', '.join(running_timer.employee_ids.mapped('name')) or '—'"/>
                     </div>
-                    <button type="button" class="btn btn-danger btn-lg o_tectora_btn_timer mt-auto"
+                    <button t-if="can_stop_team" type="button" class="btn btn-danger btn-lg o_tectora_btn_timer w-100"
                             data-bs-toggle="modal" data-bs-target="#tectoraStopModal">
                         <i class="oi me-1" data-icon="stop"/>Stop
                     </button>
-                </t>
-                <t t-else="">
-                    <div class="small text-uppercase text-muted fw-bold">Urenregistratie</div>
-                    <div class="small text-muted my-2">
-                        <t t-if="today_employees">
-                            De uren worden geboekt voor de ploeg van vandaag:
+                    <div t-else="" class="small text-muted">
+                        De ploegleider stopt deze registratie.
+                    </div>
+                </div>
+
+                <!-- running own registration -->
+                <form t-if="my_running_timer" method="post" class="o_tectora_running_block"
+                      t-attf-action="/my/werven/#{site.id}/uren/#{my_running_timer.id}/stop">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
+                    <div class="small text-uppercase text-success fw-bold">
+                        <i class="oi me-1 small" data-icon="circle"/>Mijn uren lopen
+                        <span class="text-muted">· <t t-out="my_running_timer._work_kind_label()"/></span>
+                    </div>
+                    <div class="o_tectora_elapsed my-1"
+                         t-att-data-start="my_running_timer.start_datetime.isoformat() + 'Z'"
+                         t-out="my_running_timer._elapsed_display()"/>
+                    <div class="small text-muted mb-2">
+                        Gestart om <span t-field="my_running_timer.start_datetime"
+                                         t-options='{"widget": "datetime", "format": "HH:mm"}'/>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-lg o_tectora_btn_timer w-100">
+                        <i class="oi me-1" data-icon="stop"/>Stop mijn uren
+                    </button>
+                </form>
+
+                <!-- start: for the crew and/or for oneself -->
+                <t t-set="can_start_team" t-value="policy['timer'] and policy['team'] and not running_timer"/>
+                <t t-set="can_start_own" t-value="policy['timer'] and policy['individual'] and not my_running_timer and not (running_timer and employee in running_timer.employee_ids)"/>
+                <t t-if="can_start_team or can_start_own">
+                    <div class="small text-muted">
+                        <t t-if="can_start_team and today_employees">
+                            Voor de ploeg van vandaag:
                             <strong t-out="', '.join(today_employees.mapped('name'))"/>.
                             Bij het stoppen bevestig je wie aanwezig was.
                         </t>
-                        <t t-else="">
+                        <t t-elif="can_start_team">
                             Er is niemand ingepland op deze werf; de uren worden op jouw naam geboekt.
                         </t>
+                        <t t-else="">De uren worden op jouw naam geboekt.</t>
                     </div>
                     <!-- One tap per work kind: the hours land on the task
                          Afbraakwerken or Uitvoeringswerken of the project. -->
                     <form method="post" t-attf-action="/my/werven/#{site.id}/uren/start" class="mt-auto">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
+                        <div t-if="can_start_team and can_start_own" class="btn-group w-100 mb-2" role="group">
+                            <input type="radio" class="btn-check" name="scope" value="team"
+                                   id="tectora_scope_team" checked="checked"/>
+                            <label class="btn btn-outline-secondary" for="tectora_scope_team">Voor de ploeg</label>
+                            <input type="radio" class="btn-check" name="scope" value="individual"
+                                   id="tectora_scope_own"/>
+                            <label class="btn btn-outline-secondary" for="tectora_scope_own">Enkel ikzelf</label>
+                        </div>
+                        <input t-else="" type="hidden" name="scope"
+                               t-att-value="'team' if can_start_team else 'individual'"/>
                         <div class="d-grid gap-2">
                             <button type="submit" name="work_kind" value="uitvoering"
                                     class="btn btn-success btn-lg o_tectora_btn_timer w-100">
@@ -270,6 +318,98 @@
                         </div>
                     </form>
                 </t>
+
+                <!-- direct entry -->
+                <button t-if="policy['manual'] and (policy['team'] or policy['individual'])"
+                        type="button" class="btn btn-outline-primary w-100 mt-auto"
+                        data-bs-toggle="modal" data-bs-target="#tectoraManualModal">
+                    <i class="oi me-1" data-icon="edit"/>Uren ingeven
+                </button>
+
+                <div t-if="not running_timer and not my_running_timer and not can_start_team and not can_start_own and not policy['manual']"
+                     class="small text-muted">
+                    De uren van je ploeg worden geregistreerd door
+                    <strong t-out="policy['leader'].name or 'de ploegleider'"/>.
+                </div>
+                <div t-elif="not policy['team'] and not policy['individual']" class="small text-muted">
+                    De uren van je ploeg worden geregistreerd door
+                    <strong t-out="policy['leader'].name or 'de ploegleider'"/>.
+                </div>
+            </div>
+        </div>
+        <t t-if="policy['manual'] and (policy['team'] or policy['individual'])"
+           t-call="tectora_portal.portal_site_manual_modal"/>
+    </template>
+
+    <!-- ======================================================== manual modal -->
+    <template id="portal_site_manual_modal" name="Portaal: uren rechtstreeks ingeven">
+        <div class="modal fade" id="tectoraManualModal" tabindex="-1" aria-labelledby="tectoraManualModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" class="modal-content o_tectora_manual_form"
+                      t-attf-action="/my/werven/#{site.id}/uren/ingeven">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="tab" class="o_tectora_tab_input" t-att-value="tab"/>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tectoraManualModalLabel">Uren ingeven</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"/>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="tectora_manual_date">Dag</label>
+                                <input type="date" class="form-control" id="tectora_manual_date" name="date"
+                                       required="required" t-att-value="today" t-att-max="today"/>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="tectora_manual_hours">Uren</label>
+                                <input type="text" class="form-control" id="tectora_manual_hours" name="hours"
+                                       required="required" inputmode="decimal" placeholder="bv. 7:30 of 7,5"/>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="tectora_manual_kind">Werksoort</label>
+                                <select class="form-select" id="tectora_manual_kind" name="work_kind">
+                                    <option value="uitvoering">Uitvoeringswerken</option>
+                                    <option value="afbraak">Afbraakwerken</option>
+                                </select>
+                            </div>
+                        </div>
+                        <t t-if="hours_policy['team']">
+                            <t t-if="hours_policy['individual']">
+                                <div class="btn-group w-100 mb-2" role="group">
+                                    <input type="radio" class="btn-check" name="scope" value="team"
+                                           id="tectora_manual_scope_team" checked="checked"/>
+                                    <label class="btn btn-outline-secondary" for="tectora_manual_scope_team">Voor de ploeg</label>
+                                    <input type="radio" class="btn-check" name="scope" value="individual"
+                                           id="tectora_manual_scope_own"/>
+                                    <label class="btn btn-outline-secondary" for="tectora_manual_scope_own">Enkel ikzelf</label>
+                                </div>
+                            </t>
+                            <input t-else="" type="hidden" name="scope" value="team"/>
+                            <label class="form-label fw-bold">Voor wie (bij "voor de ploeg")?</label>
+                            <div t-foreach="manual_employees" t-as="present" class="form-check">
+                                <input class="form-check-input" type="checkbox" name="employee_ids"
+                                       t-att-value="present.id" t-attf-id="tectora_manual_#{present.id}"
+                                       t-att-checked="'checked' if present in today_employees or present == employee else None"/>
+                                <label class="form-check-label" t-attf-for="tectora_manual_#{present.id}">
+                                    <t t-out="present.name"/>
+                                    <span t-if="present == employee" class="text-muted small">(ik)</span>
+                                </label>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <input type="hidden" name="scope" value="individual"/>
+                            <p class="small text-muted mb-0">De uren worden op jouw naam geboekt.</p>
+                        </t>
+                        <div class="mt-3">
+                            <label class="form-label" for="tectora_manual_notes">Nota (optioneel)</label>
+                            <textarea class="form-control" id="tectora_manual_notes" name="notes" rows="2"/>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                        <button type="submit" class="btn btn-primary">Uren boeken</button>
+                    </div>
+                </form>
             </div>
         </div>
     </template>
@@ -614,7 +754,7 @@
     <!-- ============================================================== report -->
     <template id="portal_site_tab_report" name="Portaal: uitvoeringsverslag">
         <div class="row g-3">
-            <div class="col-12 col-xl-7">
+            <div t-attf-class="col-12 #{'col-xl-7' if segments['hours'] else ''}">
                 <!-- new report -->
                 <div class="card mb-3">
                     <div class="card-header fw-bold d-flex justify-content-between align-items-center">
@@ -711,7 +851,7 @@
             </div>
 
             <!-- hours -->
-            <div class="col-12 col-xl-5">
+            <div t-if="segments['hours']" class="col-12 col-xl-5">
                 <div class="card mb-3">
                     <div class="card-header fw-bold"><i class="oi me-2 text-muted" data-icon="schedule"/>Uren op deze werf</div>
                     <div class="card-body">
@@ -745,12 +885,15 @@
                                             t-attf-class="#{'table-success' if timer.state == 'running' else ''}">
                                             <td><span t-field="timer.start_datetime" t-options='{"widget": "datetime", "format": "EEE d MMM"}'/></td>
                                             <td>
+                                                <span t-if="timer.entry_mode == 'manual'" class="text-muted">ingegeven</span>
+                                                <t t-else="">
                                                 <span t-field="timer.start_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
                                                 –
                                                 <t t-if="timer.end_datetime">
                                                     <span t-field="timer.end_datetime" t-options='{"widget": "datetime", "format": "HH:mm"}'/>
                                                 </t>
                                                 <span t-else="" class="text-success">loopt</span>
+                                                </t>
                                             </td>
                                             <td class="text-end" t-out="timer._elapsed_display()"/>
                                             <td class="small">
