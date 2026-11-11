@@ -70,8 +70,14 @@
                             <field name="total_perimeter" readonly="1"/>
                         </group>
                         <group string="Planning">
-                            <field name="start_datetime"/>
-                            <field name="end_datetime"/>
+                            <!-- One calendar for the period: from - to;
+                                 a day picked runs 8:00 - 17:00. -->
+                            <label for="start_datetime" string="Van – tot"/>
+                            <div class="o_row">
+                                <field name="start_datetime" widget="daterange"
+                                       options="{'end_date_field': 'end_datetime', 'always_range': '1'}"/>
+                            </div>
+                            <field name="end_datetime" invisible="1"/>
                             <field name="duration_hours" readonly="1"/>
                             <field name="team_id"/>
                             <field name="color" widget="color_picker" readonly="1"
@@ -133,8 +139,12 @@
                             <field name="total_area" readonly="1"/>
                         </group>
                         <group string="Wanneer">
-                            <field name="start_datetime"/>
-                            <field name="end_datetime"/>
+                            <label for="start_datetime" string="Van – tot"/>
+                            <div class="o_row">
+                                <field name="start_datetime" widget="daterange"
+                                       options="{'end_date_field': 'end_datetime', 'always_range': '1'}"/>
+                            </div>
+                            <field name="end_datetime" invisible="1"/>
                             <field name="duration_hours" readonly="1"/>
                             <field name="team_id"/>
                             <field name="color" invisible="1"/>

@@ -14,8 +14,8 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 HOURS_PER_DAY = 8.0
-DAY_START = time(7, 30)
-DAY_END = time(16, 30)
+DAY_START = time(8, 0)
+DAY_END = time(17, 0)
 
 
 class TectoraRoofPlanning(models.Model):
@@ -123,7 +123,7 @@ class TectoraRoofPlanning(models.Model):
     @api.model
     def tectora_plan_window(self, project_id, team_id, start, days):
         """A concept block for the project on the team, from ``start`` (a
-        date) over ``days`` working days, 07:30 - 16:30."""
+        date) over ``days`` working days, 8:00 - 17:00."""
         project = self.env["tectora.roof.project"].browse(int(project_id or 0)).exists()
         team = self.env["tectora.roof.team"].browse(int(team_id or 0)).exists()
         if not project or not team:
