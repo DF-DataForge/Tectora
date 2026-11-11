@@ -243,3 +243,4 @@ Releases and the modules they need upgraded:
 | Planning vanuit het projectdashboard: volledige ploegenplanner; knop Beschikbare momenten (vrije werkdagen per ploeg, nodig aantal dagen, inplannen als concept) | `tectora_roof_planning` (20.0.1.24.0) |
 | Fix offerte per dak: producten van de tekening per dak in Afbouwwerken/Opbouwwerken thv <DAK> | `tectora_roof` (20.0.3.91.0) |
 | Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |
+| Planner: klik op vrije cel plant het project (vanuit het project) meteen in; ploegen met "Altijd weergeven op planner" staan altijd op de planner | `tectora_roof` (20.0.3.93.0), `tectora_roof_planning` (20.0.1.25.0) |

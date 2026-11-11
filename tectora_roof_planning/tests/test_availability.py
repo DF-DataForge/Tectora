@@ -58,3 +58,34 @@ class TestAvailability(TransactionCase):
         # Thursday, Friday, Monday: three working days over the weekend.
         self.assertEqual(end, thursday + timedelta(days=4))
         self.assertEqual(block.state, "draft")
+
+    def test_plan_at_cells(self):
+        """A click on the planner's cells: the days they cover (here
+        Thursday and Friday, as the gantt gives them in UTC)."""
+        Planning = self.env["tectora.roof.planning"]
+        tz = pytz.timezone("Europe/Brussels")
+        thursday = self.monday + timedelta(days=3)
+
+        def utc(day):
+            return fields.Datetime.to_string(
+                tz.localize(datetime.combine(day, time.min)).astimezone(pytz.utc).replace(tzinfo=None)
+            )
+
+        block = Planning.browse(Planning.tectora_plan_at(
+            self.project.id, self.team.id, utc(thursday), utc(thursday + timedelta(days=2)),
+        ))
+        local_start = pytz.utc.localize(block.start_datetime).astimezone(tz)
+        local_end = pytz.utc.localize(block.end_datetime).astimezone(tz)
+        self.assertEqual((local_start.date(), local_end.date()), (thursday, thursday + timedelta(days=1)))
+        self.assertEqual(block.team_id, self.team)
+
+    def test_teams_always_on_the_planner(self):
+        Team = self.env["tectora.roof.team"]
+        shown = Team.create({"name": "Altijd zichtbaar", "show_in_planner": True})
+        hidden = Team.create({"name": "Enkel met blokken"})
+        Planning = self.env["tectora.roof.planning"]
+        rows = Planning._read_group_team_id(Team, [])
+        self.assertIn(shown, rows)
+        self.assertNotIn(hidden, rows)
+        # Filtered on a team: only what the filter asks.
+        self.assertEqual(Planning._read_group_team_id(Team, [("team_id", "=", hidden.id)]), Team)

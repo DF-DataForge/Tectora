@@ -102,6 +102,25 @@ class TectoraRoofPlanning(models.Model):
         }
 
     @api.model
+    def tectora_plan_at(self, project_id, team_id, start, stop):
+        """A click (or drag) on the planner's cells, opened from a project:
+        a concept block for the project on that row's team over the working
+        days the cells cover. ``start`` / ``stop`` as the gantt gives them
+        (UTC)."""
+        tz = self._tectora_tz()
+        first = pytz.utc.localize(fields.Datetime.to_datetime(start)).astimezone(tz).date()
+        end = pytz.utc.localize(fields.Datetime.to_datetime(stop) - timedelta(seconds=1)).astimezone(tz).date()
+        while first.weekday() >= 5 and first < end:
+            first += timedelta(days=1)
+        days = 0
+        day = first
+        while day <= end:
+            if day.weekday() < 5:
+                days += 1
+            day += timedelta(days=1)
+        return self.tectora_plan_window(project_id, team_id, fields.Date.to_string(first), max(days, 1))
+
+    @api.model
     def tectora_plan_window(self, project_id, team_id, start, days):
         """A concept block for the project on the team, from ``start`` (a
         date) over ``days`` working days, 07:30 - 16:30."""
