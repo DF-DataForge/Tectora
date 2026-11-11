@@ -176,6 +176,7 @@ class TectoraRoofProject(models.Model):
             "order": order.name if order else "",
             "order_id": order.id if order else False,
             "follows": bool(order and order.tectora_follow_measurement),
+            "locked": bool(order and order.tectora_locked),
         }
 
     def tectora_get_quote_preview(self):

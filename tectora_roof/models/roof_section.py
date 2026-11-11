@@ -534,6 +534,7 @@ class TectoraRoofSectionProduct(models.Model):
         order_lines = self.sale_line_ids.filtered(
             lambda line: line.order_id.state in ("draft", "sent")
             and line.order_id.tectora_follow_measurement
+            and not line.order_id.tectora_locked
         )
         if order_lines:
             order_lines.with_context(tectora_sync=True).unlink()

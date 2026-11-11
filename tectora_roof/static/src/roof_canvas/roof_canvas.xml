@@ -576,7 +576,8 @@
                         Lijstprijzen. <t t-if="quote.order">
                             Offerte
                             <a href="#" t-on-click.prevent="() => this.openQuoteOrder()" t-out="quote.order"/>
-                            <t t-if="quote.follows"> volgt de meting.</t>
+                            <t t-if="quote.locked"> is vastgezet: de meting past ze niet meer aan.</t>
+                            <t t-elif="quote.follows"> volgt de meting.</t>
                             <t t-else=""> volgt de meting niet: werk ze bij met "Offerte bijwerken uit meting".</t>
                         </t>
                         <t t-else="">Nog geen offerte: "Offerte maken" neemt deze opbouw over.</t>

@@ -17,7 +17,8 @@
                         andere werken toe.
                         <t t-if="data.order">
                             Offerte <a href="#" t-on-click.prevent="() => this.openOrder()" t-out="data.order"/>
-                            <t t-if="data.follows"> volgt de meting.</t>
+                            <t t-if="data.locked"> is vastgezet: de meting past ze niet meer aan.</t>
+                            <t t-elif="data.follows"> volgt de meting.</t>
                             <t t-else=""> volgt de meting niet: "Offerte bijwerken uit meting" neemt deze opbouw over.</t>
                         </t>
                     </div>

@@ -345,6 +345,9 @@ class TectoraRoofProject(models.Model):
         related="sale_order_id.tectora_follow_measurement",
         readonly=False,
     )
+    sale_order_locked = fields.Boolean(
+        related="sale_order_id.tectora_locked", string="Offerte vastgezet",
+    )
 
     # --- Project dossier: analytic accounting, costs, deliveries, invoices ---
     project_id = fields.Many2one(
@@ -1609,6 +1612,8 @@ class TectoraRoofProject(models.Model):
             target = order or project.sale_order_id
             if not target or target.state not in ("draft", "sent"):
                 continue
+            if target.tectora_locked:
+                continue  # Zet offerte vast: the measurement keeps off it.
             if not (
                 target.tectora_follow_measurement
                 or self.env.context.get("tectora_update_from_measurement")
@@ -1792,6 +1797,13 @@ class TectoraRoofProject(models.Model):
             objects = objects.filtered(lambda o: o.roof_id == roof)
         return (sections.product_line_ids | objects.product_line_ids).product_id
 
+    def action_tectora_toggle_quote_lock(self):
+        """Zet offerte vast / Offerte vrijgeven, from the roof project."""
+        self.ensure_one()
+        if self.sale_order_id:
+            self.sale_order_id.action_tectora_toggle_lock()
+        return True
+
     def _find_pricelist(self):
         """Pricelist named after the project type, if the company has one."""
         self.ensure_one()
@@ -1839,6 +1851,12 @@ class TectoraRoofProject(models.Model):
         order = self.sale_order_id
         if order and order.state == "cancel":
             order = self.env["sale.order"]
+        if order and order.state in ("draft", "sent") and order.tectora_locked:
+            raise UserError(_(
+                "Offerte %(order)s is vastgezet: de meting past ze niet meer aan. "
+                "Geef ze eerst vrij ('Offerte vrijgeven').",
+                order=order.name,
+            ))
         if order and order.state not in ("draft", "sent"):
             raise UserError(
                 _(

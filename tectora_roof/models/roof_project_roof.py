@@ -177,6 +177,7 @@ class TectoraRoofProjectRoof(models.Model):
             ("tectora_roof_id", "in", self.ids),
             ("order_id.state", "in", ("draft", "sent")),
             ("order_id.tectora_follow_measurement", "=", True),
+            ("order_id.tectora_locked", "=", False),
         ])
         if lines:
             lines.unlink()
