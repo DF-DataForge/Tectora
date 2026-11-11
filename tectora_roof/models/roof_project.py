@@ -1696,7 +1696,8 @@ class TectoraRoofProject(models.Model):
         for line in lines.sorted(lambda l: (l.product_id.categ_id.complete_name or "", l.product_id.display_name or "", l.id)):
             if not line.product_id:
                 continue
-            key = (line.roof_id, line.product_id)
+            # The roof of the surface or object the line is on.
+            key = (line._tectora_roof(), line.product_id)
             totals[key] = totals.get(key, 0.0) + line.quantity
         return {key: round(quantity, 2) for key, quantity in totals.items()}
 
@@ -1753,8 +1754,11 @@ class TectoraRoofProject(models.Model):
     @api.model
     def _tectora_segment_title(self, kind, roof=None, chapter=None):
         if kind in ("demolition", "buildup"):
-            base = self.SEGMENT_TITLES[kind]
-            return "%s – %s" % (base, roof._subsection_name()) if roof else base
+            # Per roof: "AFBOUWWERKEN THV DAK 1 – GARAGE".
+            if roof:
+                short = "AFBOUWWERKEN" if kind == "demolition" else "OPBOUWWERKEN"
+                return "%s THV %s" % (short, roof._subsection_name().upper())
+            return self.SEGMENT_TITLES[kind]
         if kind == "other":
             label = re.sub(r"^\d+\.\s*", "", chapter.name or "") if chapter else _("Overige")
             return label.upper()

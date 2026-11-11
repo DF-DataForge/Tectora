@@ -122,8 +122,8 @@ install on Odoo 17 or earlier without adjustments.
    tabs.
    The quotation has a fixed structure, the same on the order, on the roof
    project's **Offerte** tab and next to the drawing: *Algemene werken*,
-   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv het
-   plat dak – <dak>* and *Opbouwwerken thv het plat dak – <dak>* (the
+   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv <dak>* and
+   *Opbouwwerken thv <dak>* (e.g. "AFBOUWWERKEN THV DAK 1 – GARAGE") (the
    drawing's products of that roof, one line per product, and the roof's
    project lines), the other chapters (worst case, garantie, andere werken,
    upsale), headers of the user's own, and *Algemene nota's* (the project's
