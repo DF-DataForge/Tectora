@@ -38,7 +38,7 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'seam' }"
                             t-on-click="() => this.setTool('seam')"
-                            title="Naad tekenen: stippellijn die aangeeft dat twee dakvlakken gescheiden zijn (klik punten, dubbelklik om af te sluiten). Klik nadien op het label om naadproducten toe te wijzen.">
+                            title="Naad tekenen: de grens tussen twee EPDM-doeken. Klik op een zijde van het dakvlak en dan op de andere zijde: de naad is klaar en de volgende kan beginnen. Klik nadien op het label om naadproducten toe te wijzen.">
                         <i class="oi" data-icon="more_horiz"/> Naad
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
@@ -60,6 +60,12 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-on-click="() => { this.fitView(); this.draw(); }" title="Passend maken">
                         <i class="oi" data-icon="open_with"/>
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.open3d()" title="Het dak in 3D: dampscherm, isolatie, EPDM, dakranden, kimfixatie">
+                        <i class="oi" data-icon="view_in_ar"/> 3D
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
@@ -152,6 +158,18 @@
             </div>
             <div class="o_roof_canvas_sidebar">
                 <t t-if="this.state.panel">
+                    <!-- A section a seam cut in parts before seams stopped
+                         splitting: one click makes it one section again. -->
+                    <t t-set="family" t-value="this.mergeableFamily"/>
+                    <div t-if="family.length" class="alert alert-info small m-2 p-2">
+                        Dit dakvlak werd vroeger door een naad in
+                        <t t-out="family.length"/> secties gesplitst. Een naad deelt
+                        het dakvlak nu enkel in EPDM-doeken.
+                        <button type="button" class="btn btn-sm btn-primary mt-1 d-block"
+                                t-on-click="() => this.mergeSplitSections()">
+                            Samenvoegen tot één sectie
+                        </button>
+                    </div>
                     <!-- The selected side, surface or dakobject in three
                          parts: original state, future state, products. -->
                     <t t-set="focus" t-value="this.focus"/>
@@ -325,21 +343,21 @@
                                 <span class="col-8"><t t-out="edge.lengthM.toFixed(2)"/> m</span>
                             </div>
                             <div class="row g-2 align-items-center mb-2">
-                                <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (m)</label>
+                                <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="0.01" min="0"
+                                    <input type="number" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
-                                           t-att-value="edge.width || ''"
+                                           t-att-value="edge.width ? Math.round(edge.width * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
                                 </div>
                             </div>
                             <div class="row g-2 align-items-center mb-2">
                                 <label class="col-4 col-form-label py-0"
-                                       title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (m)</label>
+                                       title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="0.01" min="0"
+                                    <input type="number" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
-                                           t-att-value="edge.upstand || ''"
+                                           t-att-value="edge.upstand ? Math.round(edge.upstand * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeUpstand(edge, ev)"/>
                                 </div>
                             </div>
@@ -442,6 +460,7 @@
                     de beschrijving van de originele en de toekomstige staat en
                     de toegewezen producten.
                 </div>
+                <t t-call="tectora_roof.RoofCanvasQuote"/>
             </div>
             </div>
             <div t-if="this.state.contextMenu"
@@ -469,4 +488,102 @@
         </div>
     </t>
 
+
+    <!-- The quotation as the drawing builds it, beside the drawing: per
+         chapter the products, each line with the colour it has on the parts
+         of the drawing it comes from (roof_canvas.js drawQuoteMarks). -->
+    <t t-name="tectora_roof.RoofCanvasQuote">
+        <div class="o_roof_canvas_quote card m-2" t-if="this.props.record.resId">
+            <div class="card-header py-1 px-2 d-flex align-items-center gap-1">
+                <button type="button" class="btn btn-link btn-sm p-0 text-reset fw-bold text-decoration-none flex-grow-1 text-start"
+                        t-on-click="() => this.toggleQuoteOpen()">
+                    <i class="oi" t-att-data-icon="this.state.quoteOpen ? 'expand_more' : 'chevron_right'"/>
+                    Offerte-opbouw
+                    <span t-if="this.state.quote and this.state.quote.roof" class="fw-normal text-muted">
+                        · <t t-out="this.state.quote.roof"/>
+                    </span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1"
+                        title="Offerte-opbouw vernieuwen" t-att-disabled="this.state.quoteLoading"
+                        t-on-click="() => this.loadQuote()">
+                    <i class="oi" data-icon="refresh"/>
+                </button>
+            </div>
+            <t t-if="this.state.quoteOpen and this.state.quote">
+                <t t-set="quote" t-value="this.state.quote"/>
+                <div t-if="!quote.chapters.length" class="card-body p-2 small text-muted">
+                    Nog geen producten toegewezen. Selecteer een vlak, zijde of
+                    dakobject en wijs producten toe: ze verschijnen hier per
+                    hoofdstuk van de offerte.
+                </div>
+                <div t-foreach="quote.chapters" t-as="chapter" t-key="chapter.key"
+                     class="o_roof_canvas_quote_chapter">
+                    <div class="d-flex justify-content-between px-2 py-1 small fw-bold text-uppercase o_roof_canvas_quote_chapter_title">
+                        <span t-out="chapter.label"/>
+                        <span class="text-nowrap" t-out="chapter.total_display"/>
+                    </div>
+                    <div t-foreach="chapter.lines" t-as="line" t-key="line.key"
+                         class="o_roof_canvas_quote_line d-flex gap-2 px-2 py-1 small"
+                         t-att-class="{
+                            'o_quote_active': this.state.quoteHover === line.key,
+                            'o_quote_selected': this.quoteLineSelected(line),
+                            'o_quote_clickable': line.targets.length,
+                         }"
+                         t-on-mouseenter="() => this.setQuoteHover(line)"
+                         t-on-mouseleave="() => this.setQuoteHover(null)"
+                         t-on-click="() => this.selectQuoteLine(line)">
+                        <span class="o_roof_canvas_quote_swatch flex-shrink-0"
+                              t-att-class="{'o_quote_swatch_none': !line.targets.length}"
+                              t-att-title="line.targets.length ? 'Op de tekening: beweeg erover om de onderdelen te zien' : 'Voor het hele dak: niet op de tekening'"/>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="text-truncate" t-att-title="line.product" t-out="line.product"/>
+                            <div class="text-muted text-truncate o_roof_canvas_quote_parts"
+                                 t-att-title="this.quoteLineParts(line)" t-out="this.quoteLineParts(line)"/>
+                        </div>
+                        <div class="text-end text-nowrap">
+                            <div t-out="line.subtotal_display"/>
+                            <div class="text-muted">
+                                <t t-out="this.formatQuantity(line.quantity)"/> <t t-out="line.uom"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div t-if="quote.manual.length" class="o_roof_canvas_quote_chapter">
+                    <div class="d-flex justify-content-between px-2 py-1 small fw-bold text-uppercase o_roof_canvas_quote_chapter_title text-muted">
+                        <span>Handmatig op de offerte</span>
+                        <span class="text-nowrap" t-out="quote.manual_total_display"/>
+                    </div>
+                    <div t-foreach="quote.manual" t-as="line" t-key="line.id"
+                         class="o_roof_canvas_quote_line d-flex gap-2 px-2 py-1 small text-muted">
+                        <span class="o_roof_canvas_quote_swatch o_quote_swatch_none flex-shrink-0"/>
+                        <div class="flex-grow-1 min-w-0 text-truncate" t-att-title="line.product" t-out="line.product"/>
+                        <div class="text-end text-nowrap">
+                            <div t-out="line.subtotal_display"/>
+                            <div><t t-out="this.formatQuantity(line.quantity)"/> <t t-out="line.uom"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div t-if="quote.chapters.length" class="card-footer py-1 px-2 small">
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Totaal uit de tekening (excl. btw)</span>
+                        <span class="text-nowrap" t-out="quote.total_display"/>
+                    </div>
+                    <div t-if="quote.manual.length" class="d-flex justify-content-between">
+                        <span>Met de handmatige lijnen</span>
+                        <span class="text-nowrap" t-out="quote.grand_total_display"/>
+                    </div>
+                    <div class="text-muted mt-1">
+                        Lijstprijzen. <t t-if="quote.order">
+                            Offerte
+                            <a href="#" t-on-click.prevent="() => this.openQuoteOrder()" t-out="quote.order"/>
+                            <t t-if="quote.locked"> is vastgezet: de meting past ze niet meer aan.</t>
+                            <t t-elif="quote.follows"> volgt de meting.</t>
+                            <t t-else=""> volgt de meting niet: werk ze bij met "Offerte bijwerken uit meting".</t>
+                        </t>
+                        <t t-else="">Nog geen offerte: "Offerte maken" neemt deze opbouw over.</t>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
 </templates>

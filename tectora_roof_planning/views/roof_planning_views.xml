@@ -121,7 +121,7 @@
         <field name="model">tectora.roof.planning</field>
         <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@name='action_split']" position="after">
+            <xpath expr="//button[@name='action_set_done']" position="after">
                 <button name="action_open_in_planner" type="object"
                         string="Open in planner" class="btn-secondary"
                         help="Toont de planning-items van dit dakproject in de standaard resourceplanner."/>

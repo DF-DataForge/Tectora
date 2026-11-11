@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="tectora_roof.QuoteBuilder">
+        <div class="o_tectora_quote_builder">
+            <div t-if="!this.record.resId" class="text-muted p-3">
+                Sla het dakproject op om de offerte op te bouwen.
+            </div>
+            <div t-elif="!this.state.data" class="text-muted p-3">Laden…</div>
+            <t t-else="">
+                <t t-set="data" t-value="this.state.data"/>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <div class="small text-muted flex-grow-1">
+                        De offerte in haar vaste structuur: algemene werken, veiligheid, per dak
+                        de afbouw- en opbouwwerken, de andere hoofdstukken en de algemene nota's.
+                        Producten van de tekening komen per dak uit de tekening; voeg hier de
+                        andere werken toe.
+                        <t t-if="data.order">
+                            Offerte <a href="#" t-on-click.prevent="() => this.openOrder()" t-out="data.order"/>
+                            <t t-if="data.locked"> is vastgezet: de meting past ze niet meer aan.</t>
+                            <t t-elif="data.follows"> volgt de meting.</t>
+                            <t t-else=""> volgt de meting niet: "Offerte bijwerken uit meting" neemt deze opbouw over.</t>
+                        </t>
+                    </div>
+                    <i t-if="this.state.loading" class="fa fa-circle-o-notch fa-spin text-muted"/>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.load()">
+                        <i class="oi" data-icon="refresh"/> Vernieuwen
+                    </button>
+                </div>
+
+                <div t-foreach="data.segments" t-as="segment" t-key="segment.key"
+                     class="o_tectora_quote_segment card mb-2"
+                     t-att-class="{'o_tectora_quote_roof': this.isRoofSegment(segment)}">
+                    <div class="card-header py-1 px-2 d-flex align-items-center gap-2"
+                         t-on-click="() => this.toggle(segment)" style="cursor: pointer;">
+                        <i class="oi" t-att-data-icon="this.state.collapsed[segment.key] ? 'chevron_right' : 'expand_more'"/>
+                        <span class="fw-bold flex-grow-1" t-out="segment.title"/>
+                        <span class="text-muted small" t-if="segment.lines.length">
+                            <t t-out="segment.lines.length"/> lijn(en)
+                        </span>
+                        <span class="fw-bold text-nowrap" t-out="segment.total_display"/>
+                    </div>
+                    <t t-if="!this.state.collapsed[segment.key]">
+                        <table t-if="segment.lines.length" class="table table-sm mb-0">
+                            <thead>
+                                <tr class="small text-muted">
+                                    <th>Omschrijving</th>
+                                    <th class="text-end" style="width: 9rem;">Aantal</th>
+                                    <th class="text-end" style="width: 7rem;">Prijs</th>
+                                    <th class="text-end" style="width: 8rem;">Prijs excl. btw</th>
+                                    <th style="width: 2rem;"/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="segment.lines" t-as="line" t-key="line.key">
+                                    <td>
+                                        <div t-out="line.product"/>
+                                        <div class="small text-muted">
+                                            <span t-if="line.source === 'drawing'"
+                                                  class="badge text-bg-info-subtle border me-1">tekening</span>
+                                            <span t-elif="line.source === 'order'"
+                                                  class="badge text-bg-warning-subtle border me-1">offerte</span>
+                                            <t t-out="this.sourceLabel(line)"/>
+                                        </div>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <t t-if="line.direct_id">
+                                            <input type="number" min="0" step="0.01"
+                                                   class="form-control form-control-sm d-inline-block text-end"
+                                                   style="width: 5.5rem;"
+                                                   t-att-value="line.quantity"
+                                                   t-on-change="(ev) => this.setQuantity(line, ev)"/>
+                                        </t>
+                                        <t t-else=""><t t-out="line.quantity"/></t>
+                                        <span class="ms-1" t-out="line.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap" t-out="line.price_display"/>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal_display"/>
+                                    <td class="text-end">
+                                        <button t-if="line.direct_id" type="button"
+                                                class="btn btn-link btn-sm p-0 text-danger"
+                                                title="Van de offerte halen"
+                                                t-on-click="() => this.removeLine(line)">
+                                            <i class="oi" data-icon="delete"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div t-if="segment.kind === 'notes'" class="p-2">
+                            <textarea class="form-control form-control-sm" rows="6"
+                                      placeholder="Prijsafspraken, uitvoering, betalingsvoorwaarden, garantie…"
+                                      t-att-value="data.notes"
+                                      t-on-change="(ev) => this.setNotes(ev)"/>
+                        </div>
+                        <div class="card-body py-1 px-2">
+                            <button type="button" class="btn btn-link btn-sm p-0"
+                                    t-on-click="() => this.addProducts(segment)">
+                                <i class="oi" data-icon="add"/> Product toevoegen
+                            </button>
+                            <span t-if="this.isRoofSegment(segment) and !segment.lines.length"
+                                  class="small text-muted ms-2">
+                                Of wijs producten toe op de tekening van dit dak.
+                            </span>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 fw-bold fs-5 mt-2">
+                    <span>Totaal excl. btw</span>
+                    <span t-out="data.total_display"/>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

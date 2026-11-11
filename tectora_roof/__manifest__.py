@@ -50,7 +50,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
   whose quantities follow that roof's plan. The template's type
   (renovatie / nieuwbouw) sets the pricelist and so the project type.
     """,
-    "version": "20.0.3.59.0",
+    "version": "20.0.3.94.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -84,6 +84,7 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
         "report/roof_project_info_report.xml",
         "report/terms_report.xml",
         "views/menus.xml",
+        "views/skylux_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -97,8 +98,13 @@ Flat-roof measurement for roofing contractors, fully integrated in Odoo:
             "tectora_roof/static/src/roof_canvas/roof_canvas.js",
             "tectora_roof/static/src/roof_canvas/product_picker_dialog.xml",
             "tectora_roof/static/src/roof_canvas/product_picker_dialog.js",
+            "tectora_roof/static/src/roof_canvas/roof_view3d.xml",
+            "tectora_roof/static/src/roof_canvas/roof_view3d.js",
             "tectora_roof/static/src/roof_canvas/edge_length_dialog.xml",
             "tectora_roof/static/src/roof_canvas/edge_length_dialog.js",
+            "tectora_roof/static/src/quote_builder/quote_builder.scss",
+            "tectora_roof/static/src/quote_builder/quote_builder.xml",
+            "tectora_roof/static/src/quote_builder/quote_builder.js",
             "tectora_roof/static/src/roof_checklist/roof_checklist.xml",
             "tectora_roof/static/src/roof_checklist/roof_checklist.js",
             "tectora_roof/static/src/project_dashboard/project_dashboard.scss",

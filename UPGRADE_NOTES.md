@@ -206,3 +206,42 @@ Releases and the modules they need upgraded:
 | Eén aankooporder per leverancier per project (bestellijst en materiaallijst) | `tectora_project_order_list` (20.0.1.8.0), `tectora_purchase` (20.0.1.5.0) |
 | Materiaallijst volgt de bestellijst (status per product); geen dubbele bestelling vanuit de materiaallijst | `tectora_project_order_list` (20.0.1.9.0), `tectora_purchase` (20.0.1.6.0) |
 | Planning per resource: medewerkers gegroepeerd per ploeg | `tectora_roof_planning` (20.0.1.20.0) |
+| Planning per ploeg: blokken knippen met de schaar | `tectora_roof` (20.0.3.60.0), `tectora_roof_planning` (20.0.1.21.0) |
+| Menu: Dakmeting enkel werfgegevens; werforganisatie in Project › Werf | `tectora_roof` (20.0.3.61.0), `tectora_portal` (20.0.1.3.0), `tectora_project_tasks` (20.0.1.3.0), `tectora_project_order_list` (20.0.1.11.0), `tectora_purchase` (20.0.1.7.0) |
+| Werfadres als contact = afleveradres van de offerte/order | `tectora_roof` (20.0.3.62.0) |
+| Tekening: offerte-opbouw per hoofdstuk naast de tekening, met kleur per offertelijn op de vlakken, zijden en dakobjecten | `tectora_roof` (20.0.3.63.0) |
+| Tekening: Dakopbouw (dampscherm, isolatie, dakbedekking) per dakvlak en EPDM-doeken berekenen; categorieën Dampscherm, Isolatie/PIR·Minerale wol·Coverboard, Dakbedekking/EPDM·Bitumen & Resitrix | `tectora_roof` (20.0.3.64.0), `tectora_products` (20.0.2.6.0) |
+| Grondstoffen per materiaaltype (Dakbanen, Dampschermen, Isolatie, Lijmen, Tapes, Dakranden, Zinkwerk, Afvoerleidingen, Bevestiging, …) i.p.v. gespiegelde offertehoofdstukken; lege gespiegelde hoofdstukken opgeruimd | `tectora_products` (20.0.2.7.0) |
+| Fix Internal Server Error: standaard dakopbouw als systeemparameter i.p.v. kolommen op het bedrijf; herindeling van producten laat een upgrade niet meer mislukken | `tectora_roof` (20.0.3.65.0), `tectora_products` (20.0.2.7.1) |
+| Fix upgrade: veld EPDM-doek "Dakvlak" stond per vergissing ook in de lijst Daksecties | `tectora_roof` (20.0.3.66.0) |
+| Fix Dakopbouw: systeemparameters lezen met get_str (Odoo 20) | `tectora_roof` (20.0.3.67.0) |
+| Fix Dakopbouw: keuze dampscherm (parseInt in template) | `tectora_roof` (20.0.3.68.0) |
+| Naad splitst het dakvlak niet meer: één sectie, de naden delen ze in EPDM-doeken (label op de tekening, berekening per doek); "Samenvoegen tot één sectie" voor vroeger gesplitste vlakken | `tectora_roof` (20.0.3.69.0) |
+| Naad tekenen: klik zijde → andere zijde maakt de naad af (klikken snappen op de omtrek) | `tectora_roof` (20.0.3.70.0) |
+| EPDM-doeken: berekening per doek zichtbaar (vlak + per zijde opstand, dakrand, marge of naadoverlap, afronding, snijverlies) | `tectora_roof` (20.0.3.71.0) |
+| Tekening: Randafwerking per zijde (dakrand met binnen-/buitenhoeken, of aansluiting); categorieën 02. Dakranden/Dakrandprofielen·Kralen·Hoeken & eindstukken en 04/Aansluitingen | `tectora_roof` (20.0.3.72.0), `tectora_products` (20.0.2.8.0) |
+| Offerte in vaste segmenten (algemene werken, veiligheid, per dak afbouw- en opbouwwerken, andere hoofdstukken, algemene nota's) op de offerte, in de nieuwe tab Offerte van het dakproject en naast de tekening; tabs Algemene werken/Veiligheid/Afbraak/Opbouw/Overige vervangen | `tectora_roof` (20.0.3.73.0) |
+| Randafwerking: breedte dakrand en opstand op de gekozen zijden zetten | `tectora_roof` (20.0.3.74.0) |
+| Tekening: geen kleuren per offertelijn meer; enkel de geselecteerde zijde/vlak en de offertelijnen eraan gemarkeerd | `tectora_roof` (20.0.3.75.0) |
+| Tekening: tab Afbouw bij oppervlak en zijde (afbraakwerken aanvinken); leeg vakje "vlak" in de EPDM-berekening hersteld | `tectora_roof` (20.0.3.76.0) |
+| Fix planning per ploeg: klik op de schaar knipt het blok (ging het blok openen) | `tectora_roof_planning` (20.0.1.22.0) |
+| "Splits per dag" verwijderd (knippen met de schaar blijft) | `tectora_roof` (20.0.3.77.0), `tectora_roof_planning` (20.0.1.23.0) |
+| Tekening: naad kan aansluiten op een andere naad (T-aansluiting), deelt enkel het doek aan haar kant | `tectora_roof` (20.0.3.78.0) |
+| Tekening: naden en dakobjecten bewegen mee met hun dakvlak (verplaatsen, hoek slepen, zijdelengte) | `tectora_roof` (20.0.3.79.0) |
+| Tekening: breedte dakrand en opstand van de zijden in cm (zijpaneel en Randafwerking) | `tectora_roof` (20.0.3.80.0) |
+| Producten: categorieboom links naast kanban en lijst | `tectora_products` (20.0.2.9.0) |
+| EPDM-doeken: vaste regel — langs een rand opstand + breedte + 10 cm, langs een naad 15 cm overlap (instelbaar) | `tectora_roof` (20.0.3.81.0) |
+| Fix naad op naad: aansluiting een fractie naast de naad gaf geen apart doek | `tectora_roof` (20.0.3.82.0) |
+| Dampscherm: binnenoppervlakte − dakobjecten + (opstanden + omtrek objecten) × (isolatiedikte + 5 cm) | `tectora_roof` (20.0.3.83.0) |
+| Isolatie: binnenoppervlakte − dakobjecten | `tectora_roof` (20.0.3.84.0) |
+| Tekening: 3D-weergave van het dak (draagvloer, dampscherm, isolatie, EPDM, dakrand met opstand, kimfixatie, objecten, naden) | `tectora_roof` (20.0.3.85.0) |
+| 3D-weergave: EPDM-doeken als aparte banen met hun berekende afmeting | `tectora_roof` (20.0.3.86.0) |
+| 3D-weergave: dakobjecten op hun ware hoogte (koepel met opstand en koepel), met label; knop Ware verhoudingen | `tectora_roof` (20.0.3.87.0) |
+| 3D-weergave: lagen apart tonen of verbergen (EPDM, isolatie, dampscherm, kimfixatie, dakrand, draagvloer, objecten) | `tectora_roof` (20.0.3.88.0) |
+| 3D-weergave: isolatie in zilver (PIR met alu-folie), plaatnaden 1200×600 zichtbaar zonder EPDM | `tectora_roof` (20.0.3.89.0) |
+| Calculators dakobjecten: schoorsteen (bekleding, m² uit omtrek × hoogte) en Skylux-koepel (catalogus met kenmerken/dynamische varianten, prijstabel Skylux-prijzen); kimfixatie in de Dakopbouw (alle randen + rond schoorstenen en koepels) | `tectora_roof` (20.0.3.90.0) |
+| Planning vanuit het projectdashboard: volledige ploegenplanner; knop Beschikbare momenten (vrije werkdagen per ploeg, nodig aantal dagen, inplannen als concept) | `tectora_roof_planning` (20.0.1.24.0) |
+| Fix offerte per dak: producten van de tekening per dak in Afbouwwerken/Opbouwwerken thv <DAK> | `tectora_roof` (20.0.3.91.0) |
+| Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |
+| Planner: klik op vrije cel plant het project (vanuit het project) meteen in; ploegen met "Altijd weergeven op planner" staan altijd op de planner | `tectora_roof` (20.0.3.93.0), `tectora_roof_planning` (20.0.1.25.0) |
+| Werkblok: van–tot-kalender; een gekozen dag loopt 8:00–17:00 (ook bij inplannen vanuit beschikbare momenten) | `tectora_roof` (20.0.3.94.0), `tectora_roof_planning` (20.0.1.26.0) |

@@ -4,6 +4,7 @@ from datetime import datetime, time, timedelta
 import pytz
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class TectoraRoofPlanning(models.Model):
@@ -20,7 +21,10 @@ class TectoraRoofPlanning(models.Model):
         ondelete="cascade",
         index=True,
     )
-    team_id = fields.Many2one("tectora.roof.team", string="Ploeg", index=True)
+    team_id = fields.Many2one(
+        "tectora.roof.team", string="Ploeg", index=True,
+        group_expand="_read_group_team_id",
+    )
     department_id = fields.Many2one(
         "hr.department",
         string="Afdeling",
@@ -127,6 +131,76 @@ class TectoraRoofPlanning(models.Model):
             else:
                 item.duration_hours = 0.0
 
+    @api.model
+    def _read_group_team_id(self, teams, domain):
+        """The planner's rows: the teams with blocks, and the teams set to
+        'Altijd weergeven op planner' -- unless the search leaves them out
+        (a filter on the team, or on the department)."""
+        if any(isinstance(leaf, (list, tuple)) and leaf and leaf[0] in ("team_id", "team_id.name")
+               for leaf in domain or []):
+            return teams
+        extra_domain = [("show_in_planner", "=", True)]
+        for leaf in domain or []:
+            if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == "department_id":
+                extra_domain.append(("department_id", leaf[1], leaf[2]))
+        return (teams | teams.search(extra_domain)).sorted(lambda t: (t.sequence, t.name or ""))
+
+    # A working day on the planner: 8:00 - 17:00.
+    WORK_START = time(8, 0)
+    WORK_END = time(17, 0)
+
+    @api.model
+    def _tectora_working_hours(self, start, end, exclusive_end=False):
+        """``start`` / ``end`` (UTC) as picked on a calendar: a day picked
+        (midnight) starts at 8:00 and ends at 17:00 -- the end day included,
+        or with ``exclusive_end`` (the planner's cells end at the next
+        midnight) the day before; an end before the start is the start's
+        day. Hours set on purpose are kept."""
+        if not start:
+            return start, end
+        tz = pytz.timezone(self.env.user.tz or "Europe/Brussels")
+        local_start = pytz.utc.localize(start).astimezone(tz)
+        if local_start.time() == time.min:
+            local_start = tz.localize(datetime.combine(local_start.date(), self.WORK_START))
+        local_end = pytz.utc.localize(end).astimezone(tz) if end else None
+        if local_end is None or local_end <= local_start:
+            local_end = tz.localize(datetime.combine(local_start.date(), self.WORK_END))
+        elif local_end.time() == time.min:
+            day = local_end.date() - timedelta(days=1) if exclusive_end else local_end.date()
+            day = max(day, local_start.date())
+            local_end = tz.localize(datetime.combine(day, self.WORK_END))
+        elif local_end.time() >= time(23, 59):
+            local_end = tz.localize(datetime.combine(local_end.date(), self.WORK_END))
+
+        def utc(value):
+            return value.astimezone(pytz.utc).replace(tzinfo=None)
+
+        return utc(local_start), utc(local_end)
+
+    @api.onchange("start_datetime", "end_datetime")
+    def _onchange_tectora_working_hours(self):
+        for item in self:
+            start, end = self._tectora_working_hours(item.start_datetime, item.end_datetime)
+            if start != item.start_datetime:
+                item.start_datetime = start
+            if end != item.end_datetime:
+                item.end_datetime = end
+
+    @api.model
+    def default_get(self, fields_list):
+        values = super().default_get(fields_list)
+        start = values.get("start_datetime")
+        if start:
+            start, end = self._tectora_working_hours(
+                fields.Datetime.to_datetime(start),
+                fields.Datetime.to_datetime(values.get("end_datetime")) if values.get("end_datetime") else None,
+                exclusive_end=True,
+            )
+            values["start_datetime"] = start
+            if "end_datetime" in fields_list or values.get("end_datetime"):
+                values["end_datetime"] = end
+        return values
+
     @api.onchange("team_id")
     def _onchange_team_id(self):
         for item in self:
@@ -189,49 +263,20 @@ class TectoraRoofPlanning(models.Model):
         return True
 
     # ---------------------------------------------------------------- split
-    def _split_ranges(self):
-        """Day-by-day ranges of this block, in the user's timezone (same
-        semantics as splitting a planning shift into daily shifts)."""
+    def action_tectora_split_at(self, day):
+        """Cut this block in two at the start (local midnight) of ``day``
+        ("2026-11-05"), the scissors of the team planner: the first part
+        keeps the block, the second is a copy with the same team and
+        employees, each with its own shifts."""
         self.ensure_one()
-        if not (self.start_datetime and self.end_datetime):
-            return []
         tz = pytz.timezone(self.env.user.tz or "UTC")
-        start_local = pytz.utc.localize(self.start_datetime).astimezone(tz)
-        end_local = pytz.utc.localize(self.end_datetime).astimezone(tz)
-        ranges = []
-        cursor = start_local
-        while cursor < end_local and len(ranges) < 366:
-            next_midnight = tz.localize(
-                datetime.combine(cursor.date() + timedelta(days=1), time.min)
-            )
-            segment_end = min(next_midnight, end_local)
-            if segment_end <= cursor:
-                break
-            ranges.append(
-                (
-                    cursor.astimezone(pytz.utc).replace(tzinfo=None),
-                    segment_end.astimezone(pytz.utc).replace(tzinfo=None),
-                )
-            )
-            cursor = segment_end
-        return ranges
-
-    def action_split(self):
-        """Split every selected block into one block per calendar day.
-
-        Each resulting block keeps a copy of the employee assignment and can
-        be re-assigned independently afterwards.
-        """
-        created = self.browse()
-        for item in self:
-            ranges = item._split_ranges()
-            if len(ranges) < 2:
-                continue
-            first_start, first_end = ranges[0]
-            item.write({"start_datetime": first_start, "end_datetime": first_end})
-            for start, end in ranges[1:]:
-                created |= item.copy(
-                    {"start_datetime": start, "end_datetime": end}
-                )
-        (self | created)._sync_employee_items()
+        cut_day = fields.Date.to_date(day)
+        cut = tz.localize(datetime.combine(cut_day, time.min)).astimezone(pytz.utc).replace(tzinfo=None)
+        if not (self.start_datetime and self.end_datetime
+                and self.start_datetime < cut < self.end_datetime):
+            raise UserError(_("Een blok kan enkel binnen zijn eigen periode geknipt worden."))
+        end = self.end_datetime
+        self.write({"end_datetime": cut})
+        second = self.copy({"start_datetime": cut, "end_datetime": end})
+        (self | second)._sync_employee_items()
         return True

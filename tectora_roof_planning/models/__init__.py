@@ -4,3 +4,4 @@ from . import roof_planning
 from . import project_project
 from . import roof_project
 from . import weather
+from . import availability

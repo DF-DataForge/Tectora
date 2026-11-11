@@ -9,7 +9,7 @@ Data Forge Dakmeting — Bestellijst
 The order list (bestellijst) of the Congristruct project dashboard, starting
 from an empty list of standard parts.
 
-* **Bestellijst-onderdelen** (Dakmeting -> Projectopvolging): the standard
+* **Bestellijst-onderdelen** (Project -> Configuratie): the standard
   parts every new project's order list starts from, in order (longest lead
   time first), with the action "Bestellen" (always order for the project) or
   "Stock eerst" (check the stock, order only the shortage), the suggested
@@ -31,14 +31,14 @@ from an empty list of standard parts.
 * A task template can follow the order list ("Bestellijst afgevinkt"): the
   task is ticked off as soon as the whole order list is, and links to it on
   the task page.
-* Dakmeting -> Bestellijst lists the order lines of all projects, per project
+* Project -> Werf -> Bestellijst lists the order lines of all projects, per project
   or per supplier.
 * The material list follows the order list, per product: what the order list
   ordered or delivers from the warehouse shows in the column "Bestellijst"
   and also in the material list's own purchase status ("Inkoopstatus") and
   purchase order, so the two never contradict each other.
     """,
-    "version": "20.0.1.10.0",
+    "version": "20.0.1.11.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",

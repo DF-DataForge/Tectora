@@ -51,6 +51,14 @@ class SaleOrderLine(models.Model):
         help="Het dak van het dakproject waartoe deze lijn behoort: de "
         "subsectie van dat dak en de lijnen eronder.",
     )
+    tectora_segment = fields.Char(
+        string="Segment",
+        copy=False,
+        help="Het segment van de offerte dat deze hoofding opent (general, "
+        "safety, demolition:<dak>, buildup:<dak>, other:<hoofdstuk>, notes), "
+        "of 'notes' voor de tekst van de algemene nota's. Zet de offerte in "
+        "haar standaardstructuur.",
+    )
     roof_measurement_line = fields.Boolean(
         string="Meetlijn",
         copy=False,
@@ -171,7 +179,9 @@ class SaleOrderLine(models.Model):
         project too (measurement lines come back from the drawing)."""
         roof_lines = self.env["tectora.roof.section.product"]
         if not self.env.context.get("tectora_sync"):
-            roof_lines = self._tectora_mirrorable().roof_line_id.filtered(
+            roof_lines = self._tectora_mirrorable().filtered(
+                lambda line: not line.order_id.tectora_locked
+            ).roof_line_id.filtered(
                 "project_direct_id"
             )
         result = super().unlink()

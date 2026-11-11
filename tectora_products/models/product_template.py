@@ -34,6 +34,22 @@ CATALOG_UOM_NAMES = {
 }
 
 
+# What a new sub-category takes over from its parent, when the field exists.
+INHERITED_CATEGORY_FIELDS = (
+    "tectora_usage_ids",
+    "property_cost_method",
+    "property_valuation",
+    "property_account_income_categ_id",
+    "property_account_expense_categ_id",
+    "property_stock_valuation_account_id",
+    "property_stock_account_input_categ_id",
+    "property_stock_account_output_categ_id",
+    "property_stock_journal",
+    "route_ids",
+    "removal_strategy_id",
+)
+
+
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
@@ -149,7 +165,7 @@ class ProductTemplate(models.Model):
 
         for entry in entries:
             path = catalog_rules.branch_path(
-                entry["category_path"], entry["is_service"]
+                entry["category_path"], entry["is_service"], entry["name"]
             )
             if path not in categories:
                 categories[path] = self._tectora_resolve_category(path, root_name)
@@ -272,13 +288,13 @@ class ProductTemplate(models.Model):
         """
         root_name = root_name or DEFAULT_ROOT_CATEGORY
         before = self.env["product.category"].search_count([])
+        # The chapters of the roof planner hold the works items that can be
+        # sold; Grondstoffen holds the raw materials, by material type.
         for path in catalog_rules.CATEGORY_PATHS.values():
-            # Both branches: the chapters themselves hold the works items that
-            # can be sold, the same chapters under Grondstoffen hold the raw
-            # materials that cannot.
             self._tectora_resolve_category(path, root_name)
+        for path in catalog_rules.GOODS_TYPE_PATHS.values():
             self._tectora_resolve_category(
-                catalog_rules.branch_path(path, False), root_name
+                "%s/%s" % (catalog_rules.GOODS_BRANCH, path), root_name
             )
         created = self.env["product.category"].search_count([]) - before
         _logger.info("tectora_products: %s categories added to the tree", created)
@@ -316,8 +332,11 @@ class ProductTemplate(models.Model):
             code = (entry.get("code") or "").strip()
             path = entry.get("category_path")
             if code and path:
+                # The file was generated before some sub-categories existed:
+                # refine on the name, as an import does.
+                path = catalog_rules.refine_path(path, entry.get("name") or "")
                 wanted[code] = catalog_rules.branch_path(
-                    path, entry.get("is_service", True)
+                    path, entry.get("is_service", True), entry.get("name") or ""
                 )
         if not wanted:
             return 0
@@ -339,8 +358,7 @@ class ProductTemplate(models.Model):
             if not product.categ_id or self._tectora_in_tree(
                 product.categ_id, root_name
             ):
-                product.categ_id = category
-                moved += 1
+                moved += self._tectora_move_product(product, category)
         _logger.info("tectora_products: %s products re-categorised", moved)
         return moved
 
@@ -406,6 +424,128 @@ class ProductTemplate(models.Model):
         _logger.info("tectora_products: %s works items back on sale", len(works))
         return len(works)
 
+    @api.model
+    def _tectora_refile_subcategories(self, root_name=None):
+        """Move the products that sit in a chapter with sub-categories (e.g.
+        04. Opbouwwerken plat dak/Afdichting) into the sub-category their name
+        belongs to (Dampscherm, Dakbedekking/EPDM, ...): the works items; the raw
+        materials are filed by material type instead (_tectora_refile_goods).
+
+        Covers every product in the database, also those not in the shipped
+        catalogue (added by hand or by a later import). A product in a
+        sub-category already, or outside the works tree, is left alone.
+        """
+        root_name = root_name or DEFAULT_ROOT_CATEGORY
+        Product = self.with_context(active_test=False)
+        cache = {}
+        moved = 0
+        for key in catalog_rules.SUBCATEGORY_RULES:
+            chapter = catalog_rules.CATEGORY_PATHS.get(key)
+            if not chapter:
+                continue
+            # The works items only: the raw materials go by material type
+            # (_tectora_refile_goods).
+            category = self._tectora_find_category(chapter, root_name)
+            if not category:
+                continue
+            for product in Product.search([("categ_id", "=", category.id)]):
+                refined = catalog_rules.refine_path(chapter, product.name)
+                if refined == chapter:
+                    continue
+                if refined not in cache:
+                    cache[refined] = self._tectora_resolve_category(refined, root_name)
+                    # Offered in the drawing where its products were.
+                    target = cache[refined]
+                    if "tectora_usage_ids" in target._fields and category.tectora_usage_ids:
+                        target.tectora_usage_ids = target.tectora_usage_ids | category.tectora_usage_ids
+                moved += self._tectora_move_product(product, cache[refined])
+        _logger.info("tectora_products: %s products moved to a sub-category", moved)
+        return moved
+
+    @api.model
+    def _tectora_refile_goods(self, root_name=None):
+        """File every raw material (the Grondstoffen branch) by its material
+        type -- Dakbanen, Isolatie, Zinkwerk, Bevestigingsmaterialen, ... --
+        instead of by the quotation chapter it used to mirror, then remove the
+        old chapter categories of the branch that are left empty."""
+        root_name = root_name or DEFAULT_ROOT_CATEGORY
+        branch = self._tectora_find_category(catalog_rules.GOODS_BRANCH, root_name)
+        if not branch:
+            return 0
+        Category = self.env["product.category"]
+        Product = self.with_context(active_test=False)
+        cache = {}
+        moved = 0
+        prefix = "%s/" % catalog_rules.GOODS_BRANCH
+        for product in Product.search([("categ_id", "child_of", branch.id)]):
+            current = self._tectora_category_path(product.categ_id, root_name)
+            wanted = catalog_rules.goods_path(product.name, current)
+            if wanted == current:
+                continue
+            if wanted not in cache:
+                cache[wanted] = self._tectora_resolve_category(wanted, root_name)
+            moved += self._tectora_move_product(product, cache[wanted])
+        # The mirrored chapters (Grondstoffen/02. Dakranden, ...) that no
+        # product uses any more.
+        keep = {prefix + path for path in catalog_rules.GOODS_TYPE_PATHS.values()}
+        keep |= {prefix + path.split("/")[0] for path in catalog_rules.GOODS_TYPE_PATHS.values()}
+        removed = 0
+        candidates = Category.search([("id", "child_of", branch.id), ("id", "!=", branch.id)])
+        for category in candidates.sorted(lambda c: -len(c.parent_path or "")):
+            if not category.exists():
+                continue
+            path = self._tectora_category_path(category, root_name)
+            if path in keep or Category.search_count([("id", "child_of", category.id), ("id", "!=", category.id)]):
+                continue
+            if Product.search_count([("categ_id", "=", category.id)]):
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    category.unlink()
+                removed += 1
+            except Exception:  # still referenced elsewhere: leave it
+                _logger.info("tectora_products: category %s kept", category.complete_name)
+        _logger.info(
+            "tectora_products: %s raw materials filed by type, %s empty categories removed",
+            moved, removed,
+        )
+        return moved
+
+    def _tectora_move_product(self, product, category):
+        """Put ``product`` in ``category``; 1 when it moved. A product that
+        cannot move (stock valuation, a constraint) stays where it is and is
+        logged: re-filing never makes an upgrade fail."""
+        try:
+            with self.env.cr.savepoint():
+                product.categ_id = category
+                product.flush_recordset(["categ_id"])
+            return 1
+        except Exception as error:  # noqa: BLE001
+            _logger.warning(
+                "tectora_products: %s not moved to %s: %s",
+                product.display_name, category.complete_name, error,
+            )
+            return 0
+
+    def _tectora_category_path(self, category, root_name):
+        """The 'A/B' path of ``category`` under the root."""
+        names = []
+        node = category
+        while node and not (not node.parent_id and node.name == root_name):
+            names.append(node.name)
+            node = node.parent_id
+        return "/".join(reversed(names))
+
+    def _tectora_find_category(self, path, root_name):
+        """The category at ``path`` under the root, without creating it."""
+        Category = self.env["product.category"]
+        node = Category.search([("name", "=", root_name), ("parent_id", "=", False)], limit=1)
+        for part in [p.strip() for p in str(path).split("/") if p.strip()]:
+            if not node:
+                break
+            node = Category.search([("name", "=", part), ("parent_id", "=", node.id)], limit=1)
+        return node
+
     def _tectora_in_tree(self, category, root_name):
         node = category
         while node:
@@ -436,7 +576,23 @@ class ProductTemplate(models.Model):
                 [("name", "=", part), ("parent_id", "=", parent.id)], limit=1
             )
             if not category:
-                category = Category.create({"name": part, "parent_id": parent.id})
+                values = {"name": part, "parent_id": parent.id}
+                # A new sub-category is offered where its parent is (the
+                # drawing's usages, when Dakmeting is installed) and keeps its
+                # parent's costing, valuation, accounts and routes: moving a
+                # product with stock into it changes nothing in accounting.
+                for field_name in INHERITED_CATEGORY_FIELDS:
+                    field = Category._fields.get(field_name)
+                    if not field or not parent[field_name]:
+                        continue
+                    value = parent[field_name]
+                    if field.type == "many2many":
+                        values[field_name] = [(6, 0, value.ids)]
+                    elif field.type == "many2one":
+                        values[field_name] = value.id
+                    else:
+                        values[field_name] = value
+                category = Category.create(values)
             parent = category
         return parent
 

@@ -6,6 +6,18 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <!-- Zet offerte vast: the roof measurement no longer touches the
+                 quotation's lines. -->
+            <xpath expr="//header" position="inside">
+                <button name="action_tectora_toggle_lock" type="object"
+                        string="Zet offerte vast" icon="lock"
+                        invisible="not roof_project_id or tectora_locked or state not in ('draft', 'sent')"
+                        help="De dakmeting kan de lijnen van deze offerte niet langer overschrijven."/>
+                <button name="action_tectora_toggle_lock" type="object"
+                        string="Offerte vrijgeven" icon="lock_open"
+                        invisible="not tectora_locked"
+                        help="De dakmeting mag de lijnen weer aanpassen ('Offerte bijwerken uit meting')."/>
+            </xpath>
             <xpath expr="//field[@name='fiscal_position_id']/.." position="after">
                 <label for="tectora_tax_id"/>
                 <div class="o_row">
@@ -39,8 +51,9 @@
                 <field name="roof_project_id"
                        context="{'default_partner_id': partner_id}"/>
                 <field name="roof_project_state" invisible="1"/>
+                <field name="tectora_locked" readonly="1" invisible="not tectora_locked"/>
                 <field name="tectora_follow_measurement"
-                       invisible="not roof_project_id"/>
+                       invisible="not roof_project_id" readonly="tectora_locked"/>
                 <field name="tectora_include_roof_plan"
                        invisible="not roof_project_id"/>
             </xpath>

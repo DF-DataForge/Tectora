@@ -79,17 +79,140 @@ install on Odoo 17 or earlier without adjustments.
    bar stay in view, the plan fills the screen and the side panel (selected
    element, products, sides) scrolls on its own, to draw, assign products and
    describe without the form scrolling away. Changes are saved as you go.
+   Clicking a roof surface opens the product picker on its **Dakopbouw**
+   tab: the standard build-up of a flat roof, one product per layer --
+   dampscherm, isolatie (type, then thickness, then format and fixing) and
+   dakbedekking (type, thickness, fixing) -- read from the categories
+   04. Opbouwwerken plat dak/Dampscherm, /Isolatie and /Dakbedekking. It
+   replaces that layer's product on the surface (a layer on "niet wijzigen"
+   is left alone), on the clicked surface or on several at once (*Alle
+   dakvlakken*). The choice is remembered on the project; the company's
+   default build-up (Instellingen › Tectora Dakmeting) is proposed until
+   then. The vapour barrier (dampscherm) has its own
+   measure: the surface inside the roof edges, less the roof objects on it
+   (koepels, schoorstenen: their m²), plus where it runs up -- every upstand
+   and around every object (their perimeter) -- the insulation's thickness
+   + 5 cm. The insulation is always the surface inside the roof edges less
+   the roof objects. The dialog shows the figures per surface; the lines'
+   quantities on the surface follow the drawing and the insulation chosen.
+   *EPDM-doeken berekenen* sizes one sheet per part of the surface
+   between the seams: the smallest rectangle around that part inside the
+   roof edges; along a rand the upstand + the roof edge's width + 10 cm,
+   along a seam 15 cm (the overlap with the next sheet). Both amounts are
+   settings and can be changed in the dialog per calculation. The
+   sheets are previewed in the dialog and stored on the Werf tab (EPDM-
+   doeken), replacing the sheets calculated earlier for those surfaces;
+   sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
+   is flagged. *Alle producten* is the full product list as before; a
+   category without usages of its own is offered where its parent is.
+   Clicking a side of a roof surface opens the picker on its
+   **Randafwerking** tab: *Dakrand* for a free side -- type (2-delige alu,
+   enkelvoudige dakrand, zinken kraal, alu kraal), height and finish, from
+   02. Dakranden/Dakrandprofielen and /Kralen -- with *Binnen- en
+   buitenhoeken mee toevoegen*: where two sides with that roof edge meet,
+   the matching corner piece (02. Dakranden/Hoeken & eindstukken, same type,
+   height and finish; inner or outer from the drawing) is put on the corner,
+   previewed in the dialog. *Aansluiting* for a side against a wall, the
+   neighbours' roof, a gutter or a pitched roof, from 04. Opbouwwerken plat
+   dak/Aansluitingen, grouped by what the side meets. The choice replaces
+   the side's earlier roof edge or connection; corner pieces go where two
+   roof-edge sides no longer meet. The tab also sets the *Breedte dakrand* and
+   the *Opstand* of the chosen sides (as the side panel does per side): they
+   count in the inner area, the upstand and the EPDM sheets. Several sides at once as in the other
+   tabs.
+   **Zet offerte vast** (on the quotation and on the roof project) locks
+   the quotation against the measurement: no automatic changes, no
+   *Offerte bijwerken uit meting*, no roofs added, until *Offerte vrijgeven*.
+   What is done on the quotation itself stays possible, and stays on the
+   quotation (it no longer changes the roof project): the roof project's
+   Offerte tab and the drawing's panel keep following the measurement.
+   The quotation has a fixed structure, the same on the order, on the roof
+   project's **Offerte** tab and next to the drawing: *Algemene werken*,
+   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv <dak>* and
+   *Opbouwwerken thv <dak>* (e.g. "AFBOUWWERKEN THV DAK 1 – GARAGE") (the
+   drawing's products of that roof, one line per product, and the roof's
+   project lines), the other chapters (worst case, garantie, andere werken,
+   upsale), headers of the user's own, and *Algemene nota's* (the project's
+   text, a default in Instellingen). A line goes to the segment of its
+   product's chapter; a line without chapter stays under the header it was
+   under. The **Offerte** tab replaces the former tabs Algemene werken,
+   Veiligheid, Afbraak, Opbouw and Overige: per segment its lines, the
+   quantity of a project line editable, *Product toevoegen* (from that
+   segment's chapters, for that roof) and removing; the drawing's lines
+   show where they come from.
+   Surfaces and sides also have an **Afbouw** tab: the demolition works of
+   chapter 03 (Afbraakwerken plat dak) that fit -- per m² for a surface
+   (dakbedekking, isolatie & hellingschape, dakvloer, ballast ...), per m for
+   a side (dakranden & muurkappen, solins ...) -- grouped by what is
+   removed, to tick; what the element has is ticked. Applying puts exactly
+   the ticked works on it (and on the other items ticked), which land in
+   the roof's Afbouwwerken on the quotation.
+   **3D** (toolbar) shows the roof on the drawing in 3D, layer by layer:
+   the deck, the vapour barrier, the insulation on the surface inside the
+   roof edges (its thickness from the surface's insulation), the EPDM on top
+   and up the upstands, the roof edge rising its upstand above the EPDM
+   over its width with its profile on top, the kimfixatie (batten strip) at
+   the foot of the upstands, the roof objects and the seams; the EPDM in its
+   sheets (one tint each, labelled with their calculated size, *EPDM-doeken*
+   to switch off). Drag to turn,
+   scroll to zoom; the layers and roof edges are exaggerated (adjustable,
+   *Ware verhoudingen* for none) so they show, the roof objects stand at
+   their real height (a dome as its upstand with the dome on top), labelled
+   with it, and *Lagen uit elkaar* pulls the layers apart with the roof edges
+   see-through. Every layer -- EPDM, isolatie, dampscherm, kimfixatie,
+   dakrand en opstand, draagvloer, dakobjecten -- can be shown or hidden,
+   or shown alone (*enkel*, or Shift-click).
+   The Dakopbouw also puts the **kimfixatie** on the surface (ticked by
+   default): along all its sides (at the foot of the upstands) and around
+   its chimneys and domes, in metres.
+   Clicking a **schoorsteen** opens its calculator: its footprint from the
+   drawing and its height above the roof, *Uitbekleden* (the sides, with
+   the connection under the coping) or *Volledig inpakken* (incl. the top),
+   the build-up (EPDM, insulation + EPDM, multiplex + EPDM); the m² is
+   perimeter x height (+ the top), and follows the chimney.
+   Clicking a **koepel** opens the Skylux calculator: *Koepelschaal +
+   opstand* or *RWA-koepel (Skymax)*, the daylight size (the one fitting the
+   drawn dome proposed), the dome (material, walls, colour), the curb (type,
+   fixed or opening), extra works (spindle, roof opening, ...). The Skylux
+   products have their options and sizes as attributes that make their
+   variants only when used; the price per option and size comes from the
+   **Skylux-prijzen** table (Dakmeting menu: *Prijstabel aanvullen* makes
+   every row, to fill in or to export, complete from the dealer price list
+   and import again). A variant gets its price from the table as its own
+   catalogue price.
+   Under the selected element the side panel shows the **Offerte-opbouw**:
+   the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
+   ...), one line per product with its quantity and list price, the chapter
+   totals and the total excl. btw; lines added to the quotation by hand are
+   listed apart. The lines attached to the side or surface selected on the
+   drawing are highlighted (orange, the colour of the selected side): for a
+   side its own products, those on every side and the corners at its ends;
+   for a surface or dakobject what covers it. Hovering a line marks the parts
+   it comes from on the drawing in the same colour, a click selects the part.
+   No other colours are drawn. It follows the roof on the drawing.
    While drawing, the dimensions show live: width, length and area of a
    rectangle; every side of a polygon (also the one following the pointer)
    with the area and perimeter it would have if closed now; the length of a
    seam.
-   A **naad** (seam) marks that two roof surfaces are separate: draw it with
-   the *Naad* tool as an open dotted line (click points, double-click to
-   finish). Every section the seam crosses is cut in two along it (the halves
-   are named "Sectie 1 A" and "Sectie 1 B" and take over the products of the
-   whole surface; per-side products are not carried over). A seam ending
-   inside a section is extended to its outline. It is stored as a roof
-   object of type *Naad* with its length;
+   A **naad** (seam) is the joint between two EPDM sheets: draw it with the
+   *Naad* tool as an open dotted line: click a side of the surface, then the
+   other side, and the seam is done (clicks snap onto the outline; the tool
+   stays on for the next seam). Started inside the surface it takes points
+   until a click on a side or a double-click. A seam can also start or end on
+   another seam (clicks snap onto it): it then divides only the sheet on its
+   side (a T-joint). Seams and dakobjecten drawn on a roof section belong
+   to it: moving the section takes them along; dragging a corner or setting
+   a side's length keeps the seams' ends on its sides, at their distance
+   from the nearer corner (and an end on another seam on that seam). The
+   roof surface stays one section (Sectie 1, with its products
+   and quantities); the seams divide it into sheets, labelled on the drawing
+   ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
+   berekenen*. A seam ending inside a section is extended to its outline.
+   Sections a seam split into parts before (Sectie 1 A, Sectie 1 B) show
+   *Samenvoegen tot één sectie* in the side panel: the parts become one
+   section again (the largest part's products carry on), the seams stay as
+   sheet joints. It is stored as a roof object of type *Naad* with its
+   length;
    clicking its label assigns products from categories whose *Kan gebruikt
    worden voor* includes **Naden**, measured by the seam length.
 4. Click **Meting bijwerken uit tekening**: sections and roof objects are
@@ -280,11 +403,31 @@ project (start- en einddatum) en omgekeerd.
 * Kerncijfers op het dakproject: **Omzet** (bevestigde orders),
   **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
 
+## Werfadres
+
+Het **werfadres** van een dakproject is een contact: standaard een
+**afleveradres** van de klant (in het veld maak je er meteen een aan onder de
+klant). Het is het **afleveradres van de offerte en de order**: wie het op het
+ene wijzigt, wijzigt het op het andere. Een nieuwe klant brengt zijn eigen
+adres mee. Het adres op één lijn (*Werfadres (tekst)*), voor het
+satellietbeeld, de planning en het weer, volgt het contact; zonder klant blijft
+het een getypt adres. Een dakproject uit een verkoopkans krijgt de klant of,
+als de verkoopkans een ander adres heeft, een nieuw afleveradres met dat adres.
+
+## Menu's: Dakmeting en Project
+
+**Dakmeting** bevat enkel de gegevens van de werf: *Dakprojecten* (de meting),
+*Dakobjecten*, *Producten* en *Instellingen*. Wat het werk organiseert, staat in
+de **Project**-app bij de projecten: *Overzicht*, *Projecten* en het menu
+**Werf** met *Werkblokken*, *Materiaalbehoefte*, *Inkoop organiseren*,
+*Bestellijst*, *Urenregistraties* en *Uitvoeringsverslagen*. De fases,
+taaksjablonen en bestellijst-onderdelen (met hun imports) staan in *Project ›
+Configuratie*, de logistieke routes in *Inkoop › Configuratie*.
+
 ## Projectoverzicht
 
-De Project-app opent op het **Projectoverzicht** (menu *Overzicht*, ook in
-Dakmeting › Projectoverzicht): de kerncijfers van alle projecten van een
-dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
+De Project-app opent op het **Projectoverzicht** (menu *Overzicht*): de
+kerncijfers van alle projecten van een dakproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
 projectdashboard), elk project in een lijst opent zijn projectdashboard.
 *Alle projecten* opent de gewone projectkaarten.
 

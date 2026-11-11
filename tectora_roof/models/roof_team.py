@@ -36,6 +36,12 @@ class TectoraRoofTeam(models.Model):
         "gekozen afdeling) samen met de ploegbaas.",
     )
     member_count = fields.Integer(compute="_compute_member_ids")
+    show_in_planner = fields.Boolean(
+        string="Altijd weergeven op planner",
+        help="Deze ploeg heeft altijd een rij in de planning per ploeg, ook "
+        "zonder ingeplande werkblokken (tenzij ze uitgefilterd wordt), zodat "
+        "er meteen in gepland kan worden.",
+    )
     note = fields.Text(string="Notities")
 
     @api.depends(

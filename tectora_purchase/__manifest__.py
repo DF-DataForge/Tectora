@@ -20,7 +20,7 @@ material goes, and both are installed ready to use:
   purchase order uses the warehouse's receipt operation type, so confirming it
   creates a receipt into stock.
 
-Routes can be added or changed under Dakmeting -> Logistieke routes; a
+Routes can be added or changed under Purchase -> Configuration -> Logistieke routes; a
 product carries its preferred route (product form, tab Inkoop) and the route
 falls back on the product's Odoo routes (a product with the Dropship route is
 dropshipped) and then on the default route.
@@ -70,7 +70,7 @@ along as a second PDF whenever the order is mailed to the vendor.
 Installs itself as soon as Dakmeting, Purchase, Inventory and Dropshipping
 are installed.
     """,
-    "version": "20.0.1.6.0",
+    "version": "20.0.1.7.0",
     "category": "Inventory/Purchase",
     "license": "Other proprietary",
     "author": "Data Forge",
