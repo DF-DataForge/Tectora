@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class TectoraRoofTeam(models.Model):
@@ -42,7 +43,39 @@ class TectoraRoofTeam(models.Model):
         "zonder ingeplande werkblokken (tenzij ze uitgefilterd wordt), zodat "
         "er meteen in gepland kan worden.",
     )
+    # Hours logging on the employee portal; both pairs are combinable.
+    hours_by_leader = fields.Boolean(
+        string="Door ploegleider",
+        default=True,
+        help="De ploegleider registreert de uren voor de volledige ploeg en "
+        "bevestigt wie aanwezig was. Zonder ploegbaas mag elk ploeglid dat.",
+    )
+    hours_individual = fields.Boolean(
+        string="Individueel",
+        help="Elke medewerker registreert zijn eigen uren.",
+    )
+    hours_timer = fields.Boolean(
+        string="Via start – stop",
+        default=True,
+        help="De uren lopen vanaf Start tot Stop op het portaal.",
+    )
+    hours_manual = fields.Boolean(
+        string="Uren rechtstreeks ingeven",
+        help="Het aantal uren van een dag wordt rechtstreeks ingegeven.",
+    )
     note = fields.Text(string="Notities")
+
+    @api.constrains("hours_by_leader", "hours_individual", "hours_timer", "hours_manual")
+    def _check_hours_logging(self):
+        for team in self:
+            if not (team.hours_by_leader or team.hours_individual):
+                raise ValidationError(_(
+                    "Ploeg %s: kies wie de uren logt (individueel en/of door de ploegleider).",
+                    team.name))
+            if not (team.hours_timer or team.hours_manual):
+                raise ValidationError(_(
+                    "Ploeg %s: kies hoe de uren gelogd worden (start – stop en/of "
+                    "rechtstreeks ingeven).", team.name))
 
     @api.depends(
         "employee_ids", "employee_ids.active", "leader_id", "department_id",

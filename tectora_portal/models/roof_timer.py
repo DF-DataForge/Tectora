@@ -55,6 +55,21 @@ class TectoraRoofTimer(models.Model):
         "Uitvoeringswerken van het project, zodat afbraak en uitvoering in "
         "de urenstaten uit elkaar te houden zijn.",
     )
+    scope = fields.Selection(
+        [("team", "Ploeg"), ("individual", "Individueel")],
+        string="Voor",
+        default="team",
+        required=True,
+        index=True,
+        help="Ploeg: de ploegleider logt voor de aanwezige ploeg. Individueel: "
+        "een medewerker logt enkel zijn eigen uren.",
+    )
+    entry_mode = fields.Selection(
+        [("timer", "Start – stop"), ("manual", "Rechtstreeks ingegeven")],
+        string="Manier",
+        default="timer",
+        required=True,
+    )
     start_datetime = fields.Datetime(
         string="Start", required=True, default=fields.Datetime.now, index=True
     )
@@ -180,23 +195,35 @@ class TectoraRoofTimer(models.Model):
         return "%d:%02d" % (minutes // 60, minutes % 60)
 
     @api.model
-    def _running_for(self, project):
-        return self.search(
-            [("project_id", "=", project.id), ("state", "=", "running")],
-            order="start_datetime asc",
-            limit=1,
-        )
+    def _running_for(self, project, scope="team", employee=None):
+        """The running registration of a site: the team one, or the
+        individual one of ``employee``."""
+        domain = [
+            ("project_id", "=", project.id), ("state", "=", "running"),
+            ("scope", "=", scope),
+        ]
+        if scope == "individual":
+            domain.append(("employee_ids", "in", employee.ids if employee else []))
+        return self.search(domain, order="start_datetime asc", limit=1)
+
+    @api.model
+    def _work_kind_value(self, work_kind):
+        return work_kind if work_kind in dict(WORK_KINDS) else "uitvoering"
 
     # ------------------------------------------------------------------- start
     @api.model
-    def _start(self, project, employee, notes=None, work_kind=None):
-        """Open the timer of a site from the portal. Refuses a second one.
+    def _start(self, project, employee, notes=None, work_kind=None, scope="team"):
+        """Open a timer of a site from the portal: the team one (one per
+        site) or ``employee``'s own one (one per employee and site).
 
         :param work_kind: ``afbraak`` or ``uitvoering``, the task the hours
             will be booked on; execution when not given.
         """
-        running = self._running_for(project)
+        scope = "individual" if scope == "individual" else "team"
+        running = self._running_for(project, scope, employee)
         if running:
+            if scope == "individual":
+                raise UserError(_("Je urenregistratie op %s loopt al.", project.display_name))
             raise UserError(
                 _("Er loopt al een urenregistratie op %s (gestart door %s).",
                   project.display_name,
@@ -204,9 +231,18 @@ class TectoraRoofTimer(models.Model):
             )
         now = fields.Datetime.now()
         block = project._tectora_portal_block_at(now)
-        employees = project._tectora_portal_planned_employees(now)
-        if employee and employee not in employees:
-            employees |= employee
+        if scope == "individual":
+            team_timer = self._running_for(project, "team")
+            if employee and employee in team_timer.employee_ids:
+                raise UserError(_(
+                    "Je telt mee in de lopende ploegregistratie (gestart door %s); "
+                    "je uren worden daar al geboekt.",
+                    team_timer.started_by_id.name or _("onbekend")))
+            employees = employee
+        else:
+            employees = project._tectora_portal_planned_employees(now)
+            if employee and employee not in employees:
+                employees |= employee
         return self.create(
             {
                 "project_id": project.id,
@@ -215,9 +251,54 @@ class TectoraRoofTimer(models.Model):
                 "started_by_id": employee.id if employee else False,
                 "employee_ids": [(6, 0, employees.ids)],
                 "notes": notes or False,
-                "work_kind": work_kind if work_kind in dict(WORK_KINDS) else "uitvoering",
+                "work_kind": self._work_kind_value(work_kind),
+                "scope": scope,
             }
         )
+
+    @api.model
+    def _log_manual(self, project, employee, date, hours, employees=None,
+                    work_kind=None, notes=None, scope="team"):
+        """Hours entered directly on the portal: a closed registration of
+        ``hours`` on ``date`` (from 8:00 local), booked at once for
+        ``employees`` (individually: only ``employee``)."""
+        try:
+            hours = float(hours)
+        except (TypeError, ValueError):
+            raise UserError(_("Geef een geldig aantal uren in."))
+        if hours <= 0 or hours > 24:
+            raise UserError(_("Het aantal uren moet tussen 0 en 24 liggen."))
+        date = fields.Date.to_date(date) or fields.Date.context_today(self)
+        if date > fields.Date.context_today(self):
+            raise UserError(_("Uren kunnen niet voor een dag in de toekomst ingegeven worden."))
+        scope = "individual" if scope == "individual" else "team"
+        if scope == "individual" or not employees:
+            employees = employee
+        if not employees:
+            raise UserError(_("Kies minstens één medewerker voor wie de uren geboekt worden."))
+        tz = self._tz()
+        start = tz.localize(datetime.combine(date, time(8, 0))).astimezone(pytz.utc)
+        start = start.replace(tzinfo=None)
+        end = start + timedelta(hours=hours)
+        block = project._tectora_portal_block_at(start)
+        timer = self.create(
+            {
+                "project_id": project.id,
+                "planning_id": block.id if block else False,
+                "start_datetime": start,
+                "end_datetime": end,
+                "state": "done",
+                "started_by_id": employee.id if employee else False,
+                "stopped_by_id": employee.id if employee else False,
+                "employee_ids": [(6, 0, employees.ids)],
+                "notes": notes or False,
+                "work_kind": self._work_kind_value(work_kind),
+                "scope": scope,
+                "entry_mode": "manual",
+            }
+        )
+        timer._create_timesheets()
+        return timer
 
     # -------------------------------------------------------------------- stop
     def action_stop(self, employee_ids=None, stopped_by=None, notes=None, end=None):
@@ -279,7 +360,9 @@ class TectoraRoofTimer(models.Model):
         parts = [
             _("Werf %s", self.project_id.display_name),
             dict(WORK_KINDS).get(self.work_kind, ""),
-            "%s–%s" % (start.strftime("%H:%M"), end.strftime("%H:%M")),
+            _("%s u ingegeven", self._elapsed_display())
+            if self.entry_mode == "manual"
+            else "%s–%s" % (start.strftime("%H:%M"), end.strftime("%H:%M")),
         ]
         if self.notes:
             parts.append(self.notes.strip())

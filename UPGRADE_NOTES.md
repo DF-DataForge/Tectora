@@ -245,3 +245,4 @@ Releases and the modules they need upgraded:
 | Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |
 | Planner: klik op vrije cel plant het project (vanuit het project) meteen in; ploegen met "Altijd weergeven op planner" staan altijd op de planner | `tectora_roof` (20.0.3.93.0), `tectora_roof_planning` (20.0.1.25.0) |
 | Werkblok: van–tot-kalender; een gekozen dag loopt 8:00–17:00 (ook bij inplannen vanuit beschikbare momenten) | `tectora_roof` (20.0.3.94.0), `tectora_roof_planning` (20.0.1.26.0) |
+| Uren loggen per ploeg: door ploegleider en/of individueel, via start – stop en/of rechtstreeks ingeven (combineerbaar); per medewerker de zichtbare portaalsegmenten | `tectora_roof` (20.0.3.95.0), `tectora_portal` (20.0.1.4.0) |

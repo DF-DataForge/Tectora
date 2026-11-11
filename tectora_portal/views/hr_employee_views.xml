@@ -30,6 +30,25 @@
             <xpath expr="//field[@name='roof_team_id']" position="after">
                 <field name="tectora_portal_planning_horizon" widget="radio"
                        options="{'horizontal': true}" groups="hr.group_hr_user"/>
+                <label for="tectora_portal_show_overview" string="Segmenten op portaal"
+                       groups="hr.group_hr_user"/>
+                <div class="d-flex flex-wrap gap-3" groups="hr.group_hr_user">
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <field name="tectora_portal_show_overview" nolabel="1" widget="boolean_toggle"/>Overzicht
+                    </span>
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <field name="tectora_portal_show_materials" nolabel="1" widget="boolean_toggle"/>Materialen
+                    </span>
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <field name="tectora_portal_show_plan" nolabel="1" widget="boolean_toggle"/>Plan
+                    </span>
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <field name="tectora_portal_show_report" nolabel="1" widget="boolean_toggle"/>Uitvoeringsverslag
+                    </span>
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <field name="tectora_portal_show_hours" nolabel="1" widget="boolean_toggle"/>Urenregistratie
+                    </span>
+                </div>
             </xpath>
         </field>
     </record>
