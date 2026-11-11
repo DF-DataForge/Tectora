@@ -21,7 +21,10 @@ class TectoraRoofPlanning(models.Model):
         ondelete="cascade",
         index=True,
     )
-    team_id = fields.Many2one("tectora.roof.team", string="Ploeg", index=True)
+    team_id = fields.Many2one(
+        "tectora.roof.team", string="Ploeg", index=True,
+        group_expand="_read_group_team_id",
+    )
     department_id = fields.Many2one(
         "hr.department",
         string="Afdeling",
@@ -127,6 +130,20 @@ class TectoraRoofPlanning(models.Model):
                 item.duration_hours = delta.total_seconds() / 3600.0
             else:
                 item.duration_hours = 0.0
+
+    @api.model
+    def _read_group_team_id(self, teams, domain):
+        """The planner's rows: the teams with blocks, and the teams set to
+        'Altijd weergeven op planner' -- unless the search leaves them out
+        (a filter on the team, or on the department)."""
+        if any(isinstance(leaf, (list, tuple)) and leaf and leaf[0] in ("team_id", "team_id.name")
+               for leaf in domain or []):
+            return teams
+        extra_domain = [("show_in_planner", "=", True)]
+        for leaf in domain or []:
+            if isinstance(leaf, (list, tuple)) and len(leaf) == 3 and leaf[0] == "department_id":
+                extra_domain.append(("department_id", leaf[1], leaf[2]))
+        return (teams | teams.search(extra_domain)).sorted(lambda t: (t.sequence, t.name or ""))
 
     @api.onchange("team_id")
     def _onchange_team_id(self):

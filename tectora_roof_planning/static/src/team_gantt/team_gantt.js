@@ -16,6 +16,10 @@ const PILL_SCALE = 3;
 // (grid-area: r3 / c1 / r4 / c25).
 const ROWS_VAR = "--Gantt__GridRows-grid-template-rows";
 
+// Set while the planner's cells ask for a new block (a click or a drag on
+// empty cells), so the controller can tell that from the "Nieuw" button.
+let cellCreate = false;
+
 // What this planner set itself, per renderer element, and the value the
 // gantt had put there before: a re-render scales from the gantt's own
 // layout again instead of scaling an already scaled one.
@@ -277,6 +281,17 @@ export class TectoraTeamGanttRenderer extends GanttRenderer {
         await this.tectoraAction.doAction({ type: "ir.actions.client", tag: "soft_reload" });
     }
 
+    /** A click on empty cells: opened from a project, that project is
+     * planned there at once (TectoraTeamGanttController.create). */
+    onCreate(...args) {
+        cellCreate = true;
+        try {
+            return super.onCreate(...args);
+        } finally {
+            cellCreate = false;
+        }
+    }
+
     onPillClicked(ev, pill) {
         const record = pill && pill.record;
         // A click on the scissors cuts the block instead of opening it.
@@ -314,6 +329,29 @@ export class TectoraTeamGanttController extends ganttView.Controller {
         this.tectoraOrm = useService("orm");
         this.tectoraAction = useService("action");
         this.tectoraDialog = useService("dialog");
+    }
+
+    /** Opened from a project, a click on the planner's cells plans that
+     * project there at once (a concept block on that row's team over the
+     * days clicked); the "Nieuw" button still opens the form. */
+    create(context, ...rest) {
+        const ownContext = this.props.context || {};
+        const values = { ...ownContext, ...(context || {}) };
+        const projectId = ownContext.tectora_project_id;
+        if (cellCreate && projectId && values.default_team_id && values.default_start_datetime) {
+            return this.tectoraQuickPlan(projectId, values);
+        }
+        return super.create(context, ...rest);
+    }
+
+    async tectoraQuickPlan(projectId, values) {
+        await this.tectoraOrm.call("tectora.roof.planning", "tectora_plan_at", [
+            projectId,
+            Array.isArray(values.default_team_id) ? values.default_team_id[0] : values.default_team_id,
+            values.default_start_datetime,
+            values.default_end_datetime || values.default_start_datetime,
+        ]);
+        await this.tectoraAction.doAction({ type: "ir.actions.client", tag: "soft_reload" });
     }
 
     /** The teams' free moments; opened from a project, to plan it there. */

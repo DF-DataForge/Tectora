@@ -12,6 +12,7 @@
                 <field name="department_id" optional="show"/>
                 <field name="member_count" string="Leden"/>
                 <field name="member_ids" widget="many2many_avatar_employee"/>
+                <field name="show_in_planner" string="Op planner" widget="boolean_toggle"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
             </list>
         </field>
@@ -37,6 +38,7 @@
                         <group>
                             <field name="color" widget="color_picker"/>
                             <field name="member_count"/>
+                            <field name="show_in_planner"/>
                             <field name="active" invisible="1"/>
                         </group>
                     </group>
