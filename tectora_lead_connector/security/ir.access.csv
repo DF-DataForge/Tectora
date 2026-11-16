@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_tectora_lead_connector_salesman,tectora.lead.connector salesman,tectora.lead.connector,sales_team.group_sale_salesman,r,
+access_tectora_lead_connector_manager,tectora.lead.connector manager,tectora.lead.connector,sales_team.group_sale_manager,crud,
+access_tectora_lead_connector_log_salesman,tectora.lead.connector.log salesman,tectora.lead.connector.log,sales_team.group_sale_salesman,r,
+access_tectora_lead_connector_log_manager,tectora.lead.connector.log manager,tectora.lead.connector.log,sales_team.group_sale_manager,crud,
+tectora_lead_connector_company_rule,Leadconnector multi-company,tectora.lead.connector,,crud,"[('company_id', 'in', company_ids)]"
+tectora_lead_connector_log_company_rule,Leadaanvraag multi-company,tectora.lead.connector.log,,crud,"[('company_id', 'in', company_ids)]"

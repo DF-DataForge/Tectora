@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Connectors -->
+    <record id="tectora_lead_connector_view_list" model="ir.ui.view">
+        <field name="name">tectora.lead.connector.list</field>
+        <field name="model">tectora.lead.connector</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="provider"/>
+                <field name="lead_type"/>
+                <field name="team_id"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="source_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="lead_count" string="Leads"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="tectora_lead_connector_view_form" model="ir.ui.view">
+        <field name="name">tectora.lead.connector.form</field>
+        <field name="model">tectora.lead.connector</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_regenerate_token" type="object"
+                            string="Nieuwe webhook-URL"
+                            confirm="De huidige webhook-URL werkt daarna niet meer. Doorgaan?"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads" type="object"
+                                class="oe_stat_button" icon="fa-star">
+                            <field name="lead_count" string="Leads" widget="statinfo"/>
+                        </button>
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-inbox">
+                            <field name="log_count" string="Aanvragen" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Gearchiveerd" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="bv. AannemerOffertes.be"/></h1>
+                    </div>
+                    <group>
+                        <group string="Webhook">
+                            <field name="active" invisible="1"/>
+                            <field name="provider"/>
+                            <field name="webhook_url" widget="CopyClipboardChar"/>
+                            <field name="secret" password="True"/>
+                            <field name="max_age_hours"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Nieuwe leads">
+                            <field name="lead_type"/>
+                            <field name="team_id"/>
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="source_id"/>
+                            <field name="medium_id"/>
+                            <field name="tag_ids" widget="many2many_tags"
+                                   options="{'color_field': 'color'}"/>
+                        </group>
+                    </group>
+                    <div class="text-muted" invisible="provider != 'aannemeroffertes'">
+                        Mail de webhook-URL en het ondertekeningsgeheim naar
+                        AannemerOffertes.be. Elke nieuwe offerteaanvraag wordt dan
+                        meteen een lead; dezelfde aanvraag een tweede keer maakt geen
+                        nieuwe lead.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="tectora_lead_connector_action" model="ir.actions.act_window">
+        <field name="name">Leadconnectoren</field>
+        <field name="res_model">tectora.lead.connector</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Koppel een leadplatform</p>
+            <p>Offerteaanvragen van platformen zoals AannemerOffertes.be komen via
+               een webhook automatisch binnen als lead in de CRM.</p>
+        </field>
+    </record>
+
+    <!-- Received requests -->
+    <record id="tectora_lead_connector_log_view_list" model="ir.ui.view">
+        <field name="name">tectora.lead.connector.log.list</field>
+        <field name="model">tectora.lead.connector.log</field>
+        <field name="arch" type="xml">
+            <list create="0" decoration-danger="state == 'error'" decoration-muted="state == 'new'">
+                <field name="create_date" string="Ontvangen"/>
+                <field name="connector_id"/>
+                <field name="external_id"/>
+                <field name="lead_id"/>
+                <field name="duplicate_count" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'" decoration-danger="state == 'error'"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="tectora_lead_connector_log_view_form" model="ir.ui.view">
+        <field name="name">tectora.lead.connector.log.form</field>
+        <field name="model">tectora.lead.connector.log</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0">
+                <header>
+                    <button name="action_retry" type="object" string="Opnieuw verwerken"
+                            class="btn-primary" invisible="state == 'done'"
+                            groups="sales_team.group_sale_manager"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_lead" type="object"
+                                class="oe_stat_button" icon="fa-star" invisible="not lead_id">
+                            <span>Lead</span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="external_id"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="connector_id"/>
+                            <field name="lead_id"/>
+                        </group>
+                        <group>
+                            <field name="create_date" string="Ontvangen"/>
+                            <field name="duplicate_count"/>
+                            <field name="token"/>
+                        </group>
+                    </group>
+                    <field name="error" invisible="not error" class="text-danger"/>
+                    <label for="payload_text"/>
+                    <field name="payload_text" widget="code" options="{'mode': 'javascript'}"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="tectora_lead_connector_log_view_search" model="ir.ui.view">
+        <field name="name">tectora.lead.connector.log.search</field>
+        <field name="model">tectora.lead.connector.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="external_id"/>
+                <field name="connector_id"/>
+                <field name="lead_id"/>
+                <filter name="error" string="Fouten" domain="[('state', '=', 'error')]"/>
+                <filter name="done" string="Verwerkt" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter name="group_connector" string="Connector" context="{'group_by': 'connector_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="tectora_lead_connector_log_action" model="ir.actions.act_window">
+        <field name="name">Ontvangen leadaanvragen</field>
+        <field name="res_model">tectora.lead.connector.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">Nog geen aanvragen ontvangen</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_tectora_lead_connectors"
+              name="Leadconnectoren"
+              parent="crm.crm_menu_config"
+              action="tectora_lead_connector_action"
+              sequence="30"/>
+    <menuitem id="menu_tectora_lead_connector_logs"
+              name="Ontvangen leadaanvragen"
+              parent="crm.crm_menu_config"
+              action="tectora_lead_connector_log_action"
+              sequence="31"/>
+</odoo>

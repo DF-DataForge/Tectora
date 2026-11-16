@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_view_form_lead_connector" model="ir.ui.view">
+        <field name="name">crm.lead.form.tectora.lead.connector</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@id='contact_name']" position="before">
+                <field name="tectora_title_id" placeholder="Aanspreektitel"
+                       options="{'no_create': True, 'no_open': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
