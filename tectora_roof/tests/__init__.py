@@ -12,3 +12,4 @@ from . import test_quote_preview
 from . import test_buildup
 from . import test_edges
 from . import test_objects
+from . import test_geopunt

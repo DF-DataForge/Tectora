@@ -14,6 +14,7 @@ from odoo.tools.misc import format_amount
 from odoo.tools.binary import BinaryBytes
 from odoo.tools.image import image_data_uri
 
+from . import geopunt
 from .roof_project_roof import DRAWING_FIELDS
 
 _logger = logging.getLogger(__name__)
@@ -172,6 +173,17 @@ class TectoraRoofProject(models.Model):
         help="Het werfadres op één lijn, voor het satellietbeeld, de planning "
         "en het weer: dat van het werfadres-contact, anders het adres van de "
         "klant of wat hier getypt is.",
+    )
+    capakey = fields.Char(
+        string="Perceel (CaPaKey)", compute="_compute_capakey", store=True,
+        readonly=False, copy=False, tracking=True,
+        help="Het kadastraal perceelnummer van de werf, opgezocht bij Geopunt "
+        "(Digitaal Vlaanderen) uit het werfadres. Enkel voor werven in "
+        "Vlaanderen; een ander werfadres maakt het weer leeg.",
+    )
+    cadastral_department = fields.Char(
+        string="Kadastrale afdeling", compute="_compute_capakey", store=True,
+        readonly=False, copy=False,
     )
     description = fields.Text(string="Notities")
     state = fields.Selection(
@@ -959,6 +971,44 @@ class TectoraRoofProject(models.Model):
             },
         }
 
+    # ------------------------------------------------------------------ parcel
+    @api.depends("address")
+    def _compute_capakey(self):
+        """The parcel belongs to the address: another address empties it,
+        until it is looked up again."""
+        for project in self:
+            project.capakey = False
+            project.cadastral_department = False
+
+    def _tectora_parcel_vals(self, location):
+        """The parcel fields from a Geopunt location (geopunt.locate), or {}
+        when there is no parcel at that point."""
+        found = location and geopunt.parcel(location["x"], location["y"])
+        if not found:
+            return {}
+        return {
+            "capakey": found["capakey"],
+            "cadastral_department": found["department"],
+        }
+
+    def action_lookup_parcel(self):
+        self.ensure_one()
+        if not self.address:
+            raise UserError(_("Vul eerst het werfadres in."))
+        location = geopunt.locate(self.address)
+        if not location:
+            raise UserError(_(
+                "Het adres '%s' is niet gevonden bij Geopunt. Het perceel kan "
+                "enkel opgezocht worden voor adressen in Vlaanderen.", self.address
+            ))
+        vals = self._tectora_parcel_vals(location)
+        if not vals:
+            raise UserError(_(
+                "Geen kadastraal perceel gevonden op '%s'.", location["formatted"]
+            ))
+        self.write(vals)
+        return True
+
     # -------------------------------------------------------------- map service
     def _get_map_credentials(self):
         icp = self.env["ir.config_parameter"].sudo()
@@ -968,7 +1018,9 @@ class TectoraRoofProject(models.Model):
         )
 
     def _geocode(self, address):
-        """Return (lat, lng, formatted_address) for an address string."""
+        """Return (lat, lng, formatted_address) for an address string, from
+        the configured map service: for what Geopunt does not know (outside
+        Flanders)."""
         google_key, mapbox_token = self._get_map_credentials()
         if google_key:
             response = requests.get(
@@ -1060,7 +1112,14 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         if not self.address:
             raise UserError(_("Set the site address first."))
-        lat, lng, formatted = self._geocode(self.address)
+        # Geopunt first: the official addresses of Flanders, without a key.
+        # The address stays as it was typed (Geopunt names the merged
+        # municipality, not the village the customer knows).
+        location = geopunt.locate(self.address)
+        if location:
+            lat, lng, formatted = location["lat"], location["lng"], self.address
+        else:
+            lat, lng, formatted = self._geocode(self.address)
         image_bytes, coverage_w, coverage_h = self._fetch_static_image(lat, lng)
 
         # Ground resolution of the *coverage* pixels at this latitude/zoom.
@@ -1088,6 +1147,7 @@ class TectoraRoofProject(models.Model):
                 "bg_east": lng + lng_radius,
                 "bg_west": lng - lng_radius,
                 "scale_m_per_px": real_width_m / actual_width_px,
+                **self._tectora_parcel_vals(location),
             }
         )
         self.message_post(

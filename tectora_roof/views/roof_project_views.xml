@@ -153,6 +153,15 @@
                             <field name="address" string="Werfadres (tekst)"
                                    invisible="site_partner_id"
                                    placeholder="Straat nr, postcode gemeente"/>
+                            <label for="capakey"/>
+                            <div class="o_row">
+                                <field name="capakey" placeholder="Enkel in Vlaanderen"/>
+                                <button name="action_lookup_parcel" type="object"
+                                        string="Opzoeken" icon="fa-search"
+                                        class="btn-link" invisible="not address"
+                                        title="Perceel opzoeken bij Geopunt"/>
+                            </div>
+                            <field name="cadastral_department" invisible="not cadastral_department"/>
                             <field name="opportunity_id"/>
                             <field name="sale_order_id"
                                    context="{'default_partner_id': partner_id, 'default_roof_project_id': id}"/>
@@ -449,6 +458,7 @@
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="address" optional="hide"/>
+                <field name="capakey" optional="hide"/>
                 <field name="total_area"/>
                 <field name="total_perimeter" optional="hide"/>
                 <field name="estimated_total"/>
@@ -472,6 +482,7 @@
                 <field name="code"/>
                 <field name="partner_id"/>
                 <field name="address"/>
+                <field name="capakey"/>
                 <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
                 <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>

@@ -10,8 +10,9 @@ on the planner fetches the forecasts at once; moving a block takes its
 weather from the kept forecasts.
 
 The location of a site is the centre of the roof project's satellite image;
-without one, the municipality of the site, looked up once with Open-Meteo's
-geocoding and kept on the roof project.
+without one, the site address looked up at Geopunt (Flanders), else the
+municipality of the site with Open-Meteo's geocoding; looked up once and kept
+on the roof project.
 """
 import logging
 from datetime import datetime, time, timedelta
@@ -21,6 +22,8 @@ import requests
 
 from odoo import _, api, fields, models
 from odoo.tools.misc import format_date
+
+from odoo.addons.tectora_roof.models import geopunt
 
 _logger = logging.getLogger(__name__)
 
@@ -208,14 +211,16 @@ class TectoraRoofProject(models.Model):
 
     weather_latitude = fields.Float(
         string="Breedtegraad (weer)", digits=(10, 4), copy=False,
-        help="Opgezocht uit de gemeente van de werf wanneer er geen satellietbeeld is.",
+        help="Opgezocht uit het werfadres (Geopunt) of de gemeente van de werf "
+        "wanneer er geen satellietbeeld is.",
     )
     weather_longitude = fields.Float(string="Lengtegraad (weer)", digits=(10, 4), copy=False)
 
     def _tectora_weather_location(self, geocode=True):
         """(latitude, longitude) of the site for the forecast, rounded, or
-        None: the centre of the satellite image, else the municipality of the
-        site (looked up once and kept; only when `geocode`)."""
+        None: the centre of the satellite image, else the site address at
+        Geopunt, else the municipality of the site (looked up once and kept;
+        only when `geocode`)."""
         self.ensure_one()
         if self.bg_lat or self.bg_lng:
             return round_location(self.bg_lat, self.bg_lng)
@@ -223,6 +228,9 @@ class TectoraRoofProject(models.Model):
             return round_location(self.weather_latitude, self.weather_longitude)
         if not geocode:
             return None
+        location = geopunt.locate(self.address)
+        if location:
+            return self._tectora_keep_weather_location(location["lat"], location["lng"])
         city = self._site_city()
         if not city:
             return None
@@ -237,12 +245,17 @@ class TectoraRoofProject(models.Model):
             return None
         if not results:
             return None
+        return self._tectora_keep_weather_location(
+            results[0]["latitude"], results[0]["longitude"]
+        )
+
+    def _tectora_keep_weather_location(self, latitude, longitude):
         # Not a change of the site: nothing to push to the order.
         self.sudo().with_context(tectora_sync=True).write({
-            "weather_latitude": results[0]["latitude"],
-            "weather_longitude": results[0]["longitude"],
+            "weather_latitude": latitude,
+            "weather_longitude": longitude,
         })
-        return round_location(results[0]["latitude"], results[0]["longitude"])
+        return round_location(latitude, longitude)
 
 
 class TectoraRoofPlanning(models.Model):

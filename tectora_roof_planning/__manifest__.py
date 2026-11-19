@@ -41,7 +41,8 @@ label in the team planner and in its summary, day by day, with a warning when
 the weather is no good for roofing work (rain, snow, thunder, gusts from
 50 km/h, below 5 °C). "Weer vernieuwen" on the planner, and on the blocks'
 list and form, fetches it at once. The site is located by the roof project's
-satellite image, else its municipality (Open-Meteo geocoding, kept).
+satellite image, else its address (Geopunt, Flanders), else its municipality
+(Open-Meteo geocoding); looked up once and kept.
 
 The project dashboard of Dakmeting lists the employees' shifts on its
 Planning tab and its planning card opens the resource planner on them.
@@ -49,7 +50,7 @@ Planning tab and its planning card opens the resource planner on them.
 Installs itself automatically as soon as both Dakmeting and Planning are
 installed.
     """,
-    "version": "20.0.1.26.0",
+    "version": "20.0.1.27.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

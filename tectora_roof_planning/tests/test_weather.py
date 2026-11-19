@@ -6,6 +6,7 @@ from unittest.mock import patch
 from odoo import fields
 from odoo.tests import TransactionCase, tagged
 
+from odoo.addons.tectora_roof.models import geopunt
 from odoo.addons.tectora_roof_planning.models import weather
 
 
@@ -113,4 +114,28 @@ class TestWeather(TransactionCase):
         with patch.object(weather.requests, "get", fake_get):
             self.assertEqual(roof._tectora_weather_location(), (50.83, 4.2))
             self.assertEqual(roof._tectora_weather_location(), (50.83, 4.2))
-        self.assertEqual(calls, [weather.GEOCODE_URL], "looked up once, then kept")
+        self.assertEqual(
+            calls, [geopunt.LOCATION_URL, weather.GEOCODE_URL],
+            "Geopunt does not know it: the municipality, looked up once, then kept",
+        )
+
+    def test_site_without_image_is_located_by_geopunt(self):
+        roof = self.env["tectora.roof.project"].create({
+            "name": "Werf zonder foto", "address": "Veldstraat 10, 9000 Gent",
+        })
+        calls = []
+
+        def fake_get(url, params=None, timeout=None):
+            calls.append(url)
+            return FakeResponse({"LocationResult": [{
+                "FormattedAddress": "Veldstraat 10, 9000 Gent",
+                "Location": {
+                    "Lat_WGS84": 51.0533, "Lon_WGS84": 3.7221,
+                    "X_Lambert72": 104659.2, "Y_Lambert72": 193880.89,
+                },
+            }]})
+
+        with patch.object(weather.requests, "get", fake_get):
+            self.assertEqual(roof._tectora_weather_location(), (51.05, 3.72))
+            self.assertEqual(roof._tectora_weather_location(), (51.05, 3.72))
+        self.assertEqual(calls, [geopunt.LOCATION_URL], "the address itself, once")

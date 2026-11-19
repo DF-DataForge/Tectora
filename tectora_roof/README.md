@@ -31,7 +31,9 @@ turning the measurement into a quotation.
    ("renovatie woning ouder dan 10 jaar").
 4. Optional: in *Settings → Tectora Dakmeting*, set a **Google Maps API key**
    (Geocoding + Static Maps APIs) or a **Mapbox access token** to enable
-   satellite backgrounds. Without a key you can still draw — upload a plan
+   satellite backgrounds. Addresses in Flanders are geocoded without a key
+   by Geopunt (Digitaal Vlaanderen); the key serves the satellite image and
+   addresses elsewhere. Without a key you can still draw — upload a plan
    image through the globe icon on the drawing and calibrate the scale by
    right-clicking a side's length label.
 
@@ -46,7 +48,9 @@ install on Odoo 17 or earlier without adjustments.
 1. **Dakmeting → Dakprojecten → New**: name the project, pick the customer
    (address auto-fills) and optionally link a CRM opportunity.
 2. On the **Tekening** tab, open the globe icon and choose **Satellietbeeld
-   ophalen**: the project is saved, the address is geocoded, a satellite
+   ophalen**: the project is saved, the address is geocoded (Geopunt for
+   Flanders, else the configured map service), the cadastral parcel
+   (CaPaKey) of a Flemish site is filled in, a satellite
    photo is stored as drawing background and the geographic scale (m/pixel)
    is computed from the map projection. The same menu uploads your own plan,
    shows/hides the background, sets its transparency and removes it.

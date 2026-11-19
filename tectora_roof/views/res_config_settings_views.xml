@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app string="Tectora Dakmeting" name="tectora_roof">
-                    <block title="Kaartdiensten" help="Providers voor geocoding en satellietbeelden.">
+                    <block title="Kaartdiensten" help="Providers voor satellietbeelden. Adressen in Vlaanderen worden zonder sleutel opgezocht bij Geopunt (Digitaal Vlaanderen); de sleutels hieronder dienen voor het satellietbeeld en voor adressen buiten Vlaanderen.">
                         <setting string="Google Maps API key"
                                  help="Geocoding API + Static Maps API. Heeft voorrang op Mapbox.">
                             <field name="tectora_google_maps_api_key"/>
