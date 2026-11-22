@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The portal on the planner: the hours the crew registered for a work
+         block and their execution reports, on the block's summary (the dialog
+         the planner opens) and in the blocks' list. -->
+    <record id="view_tectora_roof_planning_form_summary_portal" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.summary.portal</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_portal_timers" type="object"
+                        class="oe_stat_button" icon="schedule">
+                    <field name="portal_hours" widget="statinfo" string="Uren (portaal)"/>
+                </button>
+                <button name="action_view_portal_reports" type="object"
+                        class="oe_stat_button" icon="description"
+                        invisible="execution_report_count == 0">
+                    <field name="execution_report_count" widget="statinfo" string="Verslagen"/>
+                </button>
+            </xpath>
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <field name="portal_running" invisible="1"/>
+                <span class="badge text-bg-success mt-1" invisible="not portal_running">
+                    Urenregistratie loopt op het portaal
+                </span>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_list_portal" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.list.portal</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="portal_hours" widget="float_time" sum="Geregistreerd" optional="hide"/>
+                <field name="execution_report_count" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

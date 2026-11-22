@@ -18,7 +18,7 @@ CHAPTERS = [
         ("p", "De app bestaat uit vier modules die samenwerken:"),
         ("ul", [
             "<b>Dakmeting</b> (tectora_roof): tekening, meting, dakprojecten, offertes, werfvoorbereiding en het projectdashboard.",
-            "<b>Dakmeting — Planning</b> (tectora_roof_planning): koppelt de werkblokken van een dakproject aan de Planning-app, zodat elke ploegmedewerker een eigen shift krijgt.",
+            "<b>Dakmeting — Projectplanning</b> (tectora_roof_planning): de planner in de Project-app (Project → Planning), per ploeg, per medewerker en per project; de werkblokken zijn de planning zelf, zonder de Planning-app.",
             "<b>Productcatalogus</b> (tectora_products): de leverancierscatalogus, prijslijsten (Renovatie, Nieuwbouw, Industrie) en twintig offertesjablonen.",
             "<b>Stuklijsten</b> (tectora_boms): de stuklijsten van de werkitems, waaruit bij bevestiging de materiaallijst wordt opgebouwd.",
         ]),
@@ -182,7 +182,7 @@ CHAPTERS = [
         ("ul", [
             "Kies op het dakproject een <b>ploeg</b> en de <b>geplande start en einde</b>. Er ontstaat automatisch een <b>werkblok</b> met alle ploegleden.",
             "<b>Knippen</b>: in de planning per ploeg verschijnt een schaar op de daggrens van een blok; een klik knipt het blok in twee delen met dezelfde ploeg, medewerkers en instructies.",
-            "Met de Planning-app wordt elke medewerker een echte <b>shift</b>. In de planner <b>Per ploeg</b> kiest u een dakproject en een ploeg op één shift en de hele ploeg wordt gepland.",
+            "De planner staat in de Project-app onder <b>Project → Planning</b>: <b>Per ploeg</b>, <b>Per medewerker</b> en <b>Per project</b>. Kies op een blok een project en een ploeg en de hele ploeg is gepland; wie dubbel ingepland staat krijgt een rode rand.",
             "De datums van het dakproject en het project volgen elkaar; het dashboard toont de volgende werkdag en de ingeplande medewerkers.",
         ]),
     ]),
@@ -202,6 +202,6 @@ CHAPTERS = [
         ("h2", "Er verschijnt geen project na bevestiging"),
         ("p", "Klik op <b>Projectdashboard</b> op de order: een bevestigde order zonder project krijgt er dan een. Kijk bij een foutmelding in de serverlog."),
         ("h2", "Een medewerker staat niet in de planning"),
-        ("p", "Controleer of de medewerker een ploeg heeft (werknemersfiche, tab Werk) en een resource (Planning-app). De ploegbaas wordt altijd meegerekend."),
+        ("p", "Controleer of de medewerker een ploeg heeft (werknemersfiche, tab Werk) en op het werkblok staat. De ploegbaas wordt altijd meegerekend."),
     ]),
 ]

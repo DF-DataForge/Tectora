@@ -689,8 +689,8 @@ class ProjectProject(models.Model):
         }
 
     def action_view_tectora_planning(self):
-        """The work blocks of the project's roof project (the Planning bridge
-        opens the employees' shifts in the planner instead)."""
+        """The work blocks of the project (with the project planner,
+        tectora_roof_planning, the planner per ploeg to plan it in)."""
         self.ensure_one()
         roof = self._tectora_ensure_roof_project()
         return roof.action_view_planning()

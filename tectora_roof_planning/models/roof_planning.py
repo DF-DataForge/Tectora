@@ -1,128 +1,134 @@
 # -*- coding: utf-8 -*-
+"""The project planner: the work blocks as the planning itself.
+
+A work block (``tectora.roof.planning``) is planned on a project, for a team
+and its employees. The planner of the Project app shows the blocks per
+ploeg, per medewerker and per project; no shifts of the Planning app are
+made for them any more. What that app gave on top is done on the blocks
+themselves: the planning per employee (a block is on the row of each of its
+employees), who is planned twice at the same time, and the hours planned.
+"""
 import logging
+
+from datetime import timedelta
+
+import pytz
 
 from odoo import _, api, fields, models
 
 _logger = logging.getLogger(__name__)
 
+TEAM_PLANNER_XMLID = "tectora_roof_planning.action_tectora_roof_planning_by_team"
+EMPLOYEE_PLANNER_XMLID = "tectora_roof_planning.action_tectora_roof_planning_by_employee"
+# A working day on the planner counts 8 hours per person.
+HOURS_PER_DAY = 8.0
+
 
 class TectoraRoofPlanning(models.Model):
     _inherit = "tectora.roof.planning"
 
-    slot_ids = fields.One2many(
-        "planning.slot",
-        "roof_planning_id",
-        string="Planning-items",
-        copy=False,
+    planned_hours = fields.Float(
+        string="Geplande uren",
+        compute="_compute_planned_hours",
+        store=True,
+        help="De werkuren van het blok (8 uur per werkdag, maandag tot "
+        "vrijdag; een blok binnen één dag zijn eigen duur) maal het aantal "
+        "medewerkers erop.",
     )
-    slot_count = fields.Integer(compute="_compute_slot_count")
+    conflict_employee_ids = fields.Many2many(
+        "hr.employee",
+        string="Dubbel ingepland",
+        compute="_compute_conflicts",
+        help="Medewerkers van dit blok die in dezelfde periode ook op een "
+        "ander werkblok staan.",
+    )
+    conflict_planning_ids = fields.Many2many(
+        "tectora.roof.planning",
+        string="Overlappende werkblokken",
+        compute="_compute_conflicts",
+    )
+    has_conflict = fields.Boolean(
+        string="Dubbel ingepland?",
+        compute="_compute_conflicts",
+        search="_search_has_conflict",
+    )
 
-    @api.depends("slot_ids")
-    def _compute_slot_count(self):
+    # ------------------------------------------------------------ hours
+    @api.depends("start_datetime", "end_datetime", "employee_ids")
+    def _compute_planned_hours(self):
         for item in self:
-            item.slot_count = len(item.slot_ids)
+            item.planned_hours = item._tectora_working_day_hours() * max(
+                len(item.employee_ids), 1
+            )
 
-    def _planning_slot_values(self, employee):
-        """Values for one employee's shift.
-
-        Only keys the installed Planning version actually has are kept, so the
-        bridge survives differences between Planning releases.
-        """
+    def _tectora_working_day_hours(self):
+        """The working hours the block covers for one person."""
         self.ensure_one()
-        Slot = self.env["planning.slot"]
-        values = {
-            "roof_planning_id": self.id,
-            "roof_project_id": self.project_id.id,
-            "roof_team_id": self.team_id.id,
-            # One shift per employee (Odoo 20 Planning: resource_ids).
-            "resource_ids": [(6, 0, employee.resource_id.ids)],
-            "start_datetime": self.start_datetime,
-            "end_datetime": self.end_datetime,
-            "company_id": (self.company_id or self.env.company).id,
-            "name": self.notes or self.name,
-        }
-        # Planning ↔ Project bridge (project_forecast): point the shift at the
-        # roof project's project dossier.
-        dossier = self.project_id.project_id
-        if dossier:
-            values["project_id"] = dossier.id
-        values = {key: value for key, value in values.items() if key in Slot._fields}
-        # The published/draft flag is named and valued differently across
-        # versions: only set it when the exact value exists.
-        state_field = Slot._fields.get("state")
-        selection = getattr(state_field, "selection", None) if state_field else None
-        if isinstance(selection, (list, tuple)):
-            target = "draft" if self.state == "draft" else "published"
-            if target in dict(selection):
-                values["state"] = target
-        return values
+        if not (self.start_datetime and self.end_datetime):
+            return 0.0
+        tz = self._tectora_tz()
+        start = pytz.utc.localize(self.start_datetime).astimezone(tz)
+        end = pytz.utc.localize(self.end_datetime).astimezone(tz)
+        if end <= start:
+            return 0.0
+        if start.date() == end.date():
+            return min((end - start).total_seconds() / 3600.0, HOURS_PER_DAY)
+        days = 0
+        day = start.date()
+        while day <= end.date():
+            if day.weekday() < 5:
+                days += 1
+            day += timedelta(days=1)
+        return days * HOURS_PER_DAY
 
-    def _sync_employee_items(self):
-        """Create, update and remove the employees' planning shifts so they
-        mirror the work block."""
-        super()._sync_employee_items()
-        if self.env.context.get("tectora_planning_sync"):
-            # The caller is a shift that is turning itself into this block; it
-            # attaches itself first and then drives the sync, so that its own
-            # record is reused instead of a duplicate being created.
-            return True
-        for item in self:
-            if not (item.start_datetime and item.end_datetime):
-                continue
-            try:
-                item._sync_slots()
-            except Exception:
-                _logger.exception(
-                    "Could not synchronise planning shifts for work block %s",
-                    item.display_name,
-                )
-        return True
-
-    def _sync_slots(self):
+    # -------------------------------------------------------- conflicts
+    def _tectora_overlapping(self):
+        """The other blocks in this block's period that share an employee
+        with it (blocks already carried out leave the planner alone)."""
         self.ensure_one()
-        # The shifts written here belong to this block, so they must not be
-        # taken for a user planning a team by hand.
-        Slot = self.env["planning.slot"].with_context(tectora_planning_sync=True)
-        wanted_resources = self.employee_ids.resource_id
-        slots = self.slot_ids
-        stale = slots.filtered(lambda slot: slot._tectora_resource() not in wanted_resources)
-        if stale:
-            stale.unlink()
-        by_resource = {slot._tectora_resource(): slot for slot in self.slot_ids}
-        to_create = []
-        for employee in self.employee_ids:
-            values = self._planning_slot_values(employee)
-            slot = by_resource.get(employee.resource_id) or self._adopt_slot(employee)
-            if slot:
-                slot.with_context(tectora_planning_sync=True).write(values)
-            else:
-                to_create.append(values)
-        if to_create:
-            Slot.create(to_create)
-        return True
-
-    def _adopt_slot(self, employee):
-        """Reuse a shift the Planning app already created for this employee on
-        this project instead of adding a second one next to it."""
-        self.ensure_one()
-        Slot = self.env["planning.slot"]
-        if not employee.resource_id:
-            return Slot
-        domain = [
-            ("roof_planning_id", "=", False),
-            ("resource_ids", "in", employee.resource_id.ids),
+        if not (self.employee_ids and self.start_datetime and self.end_datetime):
+            return self.browse()
+        if self.state == "done":
+            return self.browse()
+        # .ids / _origin: also right while the block is being edited.
+        return self.search([
+            ("id", "not in", self._origin.ids),
+            ("state", "!=", "done"),
+            ("employee_ids", "in", self.employee_ids.ids),
             ("start_datetime", "<", self.end_datetime),
             ("end_datetime", ">", self.start_datetime),
-        ]
-        dossier = self.project_id.project_id
-        if dossier and "project_id" in Slot._fields:
-            domain.append(("project_id", "=", dossier.id))
-        else:
-            # Without the project bridge there is nothing tying a loose shift
-            # to this project, so never adopt one.
-            return Slot
-        return Slot.search(domain, limit=1)
+        ])
 
+    @api.depends("employee_ids", "start_datetime", "end_datetime", "state")
+    def _compute_conflicts(self):
+        for item in self:
+            others = item._tectora_overlapping()
+            item.conflict_planning_ids = others
+            item.conflict_employee_ids = others.employee_ids & item.employee_ids
+            item.has_conflict = bool(others)
+
+    def _search_has_conflict(self, operator, value):
+        values = list(value) if isinstance(value, (list, tuple, set)) else [value]
+        wanted = any(values)
+        positive = wanted if operator in ("=", "in") else not wanted
+        self.flush_model(["start_datetime", "end_datetime", "state", "employee_ids"])
+        self.env.cr.execute(
+            """
+            SELECT DISTINCT a.id
+              FROM tectora_roof_planning a
+              JOIN tectora_roof_planning_employee_rel ra ON ra.planning_id = a.id
+              JOIN tectora_roof_planning_employee_rel rb
+                ON rb.employee_id = ra.employee_id AND rb.planning_id != a.id
+              JOIN tectora_roof_planning b ON b.id = rb.planning_id
+             WHERE a.state != 'done' AND b.state != 'done'
+               AND a.start_datetime < b.end_datetime
+               AND a.end_datetime > b.start_datetime
+            """
+        )
+        ids = [row[0] for row in self.env.cr.fetchall()]
+        return [("id", "in" if positive else "not in", ids)]
+
+    # ---------------------------------------------------------- planner
     @api.model
     def _drop_unavailable_views(self, action):
         """Strip view types the web client cannot render.
@@ -130,8 +136,8 @@ class TectoraRoofPlanning(models.Model):
         The gantt view comes from web_gantt. When it is missing the client
         refuses the whole action with "View types not defined gantt" instead of
         falling back, and it reads that list from the session it was loaded
-        with -- so a browser tab opened before Planning was installed hits the
-        same error. Dropping the view type here degrades to list/form.
+        with -- so a browser tab opened before the planner was installed hits
+        the same error. Dropping the view type here degrades to list/form.
         """
         try:
             available = set(self.env["ir.ui.view"].get_view_info())
@@ -149,23 +155,36 @@ class TectoraRoofPlanning(models.Model):
         action["view_mode"] = ",".join(kept)
         return action
 
-    def action_open_in_planner(self):
-        """Open the standard resource planner on this project's shifts."""
-        self.ensure_one()
-        action = self.env["ir.actions.act_window"]._for_xml_id(
-            "tectora_roof_planning.action_planning_slot_by_resource"
-        )
-        action["domain"] = [("roof_project_id", "=", self.project_id.id)]
-        action["context"] = {"search_default_group_resource": 1}
+    @api.model
+    def _tectora_planner_action(self, xmlid=TEAM_PLANNER_XMLID):
+        action = self.env["ir.actions.act_window"]._for_xml_id(xmlid)
         return self._drop_unavailable_views(action)
 
-    def action_view_slots(self):
+    def action_open_in_planner(self):
+        """This block's project in the planner per employee: who works on it
+        when, one row per employee."""
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Planning-items"),
-            "res_model": "planning.slot",
-            "view_mode": "list,form",
-            "domain": [("roof_planning_id", "=", self.id)],
-            "context": {"default_roof_planning_id": self.id},
+        action = self._tectora_planner_action(EMPLOYEE_PLANNER_XMLID)
+        action["domain"] = [("project_id", "=", self.project_id.id)]
+        action["context"] = {
+            "default_project_id": self.project_id.id,
+            "default_team_id": self.team_id.id,
+            "initial_date": fields.Date.to_string(
+                (self.start_datetime or fields.Datetime.now()).date()
+            ),
         }
+        return action
+
+    def action_view_conflicts(self):
+        """The blocks this one overlaps with, and itself, per employee."""
+        self.ensure_one()
+        blocks = self | self.conflict_planning_ids
+        action = self._tectora_planner_action(EMPLOYEE_PLANNER_XMLID)
+        action["name"] = _("Dubbel ingepland")
+        action["domain"] = [("id", "in", blocks.ids)]
+        action["context"] = {
+            "initial_date": fields.Date.to_string(
+                (self.start_datetime or fields.Datetime.now()).date()
+            ),
+        }
+        return action
