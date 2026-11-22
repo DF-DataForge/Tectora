@@ -42,6 +42,20 @@
                             <field name="active" invisible="1"/>
                         </group>
                     </group>
+                    <group string="Uren loggen (portaal)" name="hours_logging">
+                        <group string="Wie logt" name="hours_who">
+                            <field name="hours_individual" string="Individueel (per medewerker)"/>
+                            <field name="hours_by_leader" string="Door ploegleider (voor de ploeg)"/>
+                        </group>
+                        <group string="Manier van loggen" name="hours_how">
+                            <field name="hours_timer" string="Loggen via start – stop"/>
+                            <field name="hours_manual" string="Uren rechtstreeks ingeven"/>
+                        </group>
+                        <div colspan="2" class="text-muted small">
+                            De opties zijn combineerbaar: bv. de ploegleider logt via start – stop
+                            voor de ploeg en wie apart werkt, geeft zijn uren individueel in.
+                        </div>
+                    </group>
                     <notebook>
                         <page string="Ploegleden" name="members">
                             <field name="employee_ids" widget="many2many_tags_avatar"

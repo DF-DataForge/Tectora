@@ -50,10 +50,39 @@ Bovenaan elke werf staat de urenregistratie:
 * Een registratie die niemand stopt, wordt door een cron na 16 uur gesloten
   (met nota), zodat een vergeten Stop nooit dagen uren boekt.
 
+### Wie logt en hoe: per ploeg
+
+Op de ploeg (*Configuratie → Ploegen*, blok **Uren loggen (portaal)**) staan
+twee paren vinkjes; ze zijn **combineerbaar** (van elk paar minstens één):
+
+| Wie logt | |
+|---|---|
+| **Door ploegleider** (standaard) | de ploegbaas registreert voor de hele ploeg en bevestigt wie aanwezig was; zonder ploegbaas mag elk ploeglid dat |
+| **Individueel** | elke medewerker registreert enkel zijn eigen uren (een eigen start/stop per werf, niet terwijl hij al meetelt in een lopende ploegregistratie) |
+
+| Manier van loggen | |
+|---|---|
+| **Via start – stop** (standaard) | de knoppen Start uitvoering / Start afbraak en Stop |
+| **Uren rechtstreeks ingeven** | knop **Uren ingeven**: dag, aantal uren (`7:30` of `7,5`), werksoort en — voor de ploegleider — voor wie; boekt meteen de urenstaatlijnen |
+
+Mag iemand beide (ploeg én individueel), dan kiest hij bij het starten of
+ingeven *Voor de ploeg* of *Enkel ikzelf*. Wie niets mag loggen, ziet wie de
+uren registreert. Een medewerker zonder ploeg logt zoals voorheen (start –
+stop voor de ploeg).
+
 De registraties staan in de backend onder *Dakmeting → Urenregistraties* en
 op de tab **Uitvoering** van het projectdashboard, samen met de
 uitvoeringsverslagen (*Dakmeting → Uitvoeringsverslagen*). Annuleren van een
 registratie verwijdert haar urenstaatlijnen.
+
+## Welke segmenten zichtbaar zijn
+
+Per medewerker, op het werknemersformulier (onder de ploeg), bepalen de
+schakelaars **Segmenten op portaal** wat de medewerker van een werf ziet:
+*Overzicht*, *Materialen*, *Plan*, *Uitvoeringsverslag* en
+*Urenregistratie* (de start/stop- en ingeefknoppen en de uren op de werf).
+Standaard staan ze allemaal aan; een verborgen segment wordt niet getoond en
+ook de bijhorende acties (verslag indienen, uren loggen) worden geweigerd.
 
 ## Hoe ver vooruit de planning zichtbaar is
 
