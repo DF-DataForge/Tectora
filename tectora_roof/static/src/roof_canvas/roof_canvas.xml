@@ -175,7 +175,20 @@
                     <t t-set="focus" t-value="this.focus"/>
                     <div t-if="focus" class="o_roof_canvas_panel o_roof_canvas_focus card">
                         <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
-                            <strong class="text-truncate" t-out="this.focusLabel"/>
+                            <!-- The name is always free to type: of the section
+                                 (or dakobject), also when one of its sides is
+                                 selected. -->
+                            <div class="d-flex align-items-center gap-1 flex-grow-1 me-2" style="min-width: 0;">
+                                <input type="text"
+                                       class="o_roof_canvas_name form-control form-control-sm fw-bold"
+                                       title="Naam: typ om zelf een naam te geven"
+                                       t-att-value="this.selectedShape.name || ''"
+                                       t-att-placeholder="this.focusNamePlaceholder"
+                                       t-on-change="(ev) => this.setSelectedName(ev.target.value)"
+                                       t-on-keydown="(ev) => ev.stopPropagation()"/>
+                                <strong t-if="this.focusSuffix" class="text-nowrap"
+                                        t-out="this.focusSuffix"/>
+                            </div>
                             <button type="button" class="btn-close" title="Sluiten"
                                     t-on-click="this.closePanel"/>
                         </div>

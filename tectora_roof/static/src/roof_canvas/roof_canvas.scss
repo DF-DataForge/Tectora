@@ -78,6 +78,21 @@
     }
 
     // The three parts of a selected side, surface or dakobject.
+    // The element's name in the panel header: reads as a title, shows it
+    // can be typed in on hover and focus.
+    .o_roof_canvas_name {
+        min-width: 0;
+        background: transparent;
+        border-color: transparent;
+        padding-left: 0.25rem;
+
+        &:hover,
+        &:focus {
+            background: #fff;
+            border-color: var(--border-color, #d8dadd);
+        }
+    }
+
     .o_roof_canvas_focus textarea {
         resize: vertical;
         font-size: 0.85rem;

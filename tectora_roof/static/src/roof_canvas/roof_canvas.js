@@ -1117,6 +1117,35 @@ export class RoofCanvasField extends Component {
         }
     }
 
+    /** The name typed in the side panel's header. */
+    setSelectedName(value) {
+        const shape = this.selectedShape;
+        if (!shape) {
+            return;
+        }
+        const name = String(value || "").trim();
+        if (name !== (shape.name || "")) {
+            shape.name = name;
+            this.commit();
+        }
+    }
+
+    /** What the name field shows while the element has no name. */
+    get focusNamePlaceholder() {
+        const shape = this.selectedShape;
+        return (shape && KIND_NAMES[shape.kind || "section"]) || "Naam";
+    }
+
+    /** What follows the name in the panel's header: the selected side. */
+    get focusSuffix() {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        if (focus && shape && focus.type === "edge" && focus.edgeIndex >= 0) {
+            return `— ${this.edgeName(shape, focus.edgeIndex)}`;
+        }
+        return "";
+    }
+
     // --------------------------------------------------------------- events
     onPointerDown(ev) {
         if (this.state.contextMenu) {
@@ -3413,7 +3442,11 @@ export class RoofCanvasField extends Component {
             preselectedTargets: preselected,
             baseLabel: this.multiSelectLabel(hit),
             quantityUnit: isSurface ? " m²" : isCorner ? "" : " m",
-            onConfirm: async (productIds, targetKeys) => {
+            // ``quantities`` ({product id: quantity}): the free products of a
+            // calculator tab with a quantity typed in, per item; the others
+            // take the item's own measure.
+            onConfirm: async (productIds, targetKeys, quantities) => {
+                const typed = quantities || {};
                 const picked = new Set(targetKeys || []);
                 const items = [
                     {
@@ -3463,7 +3496,10 @@ export class RoofCanvasField extends Component {
                                 product_id: productId,
                                 coverage,
                                 edge_index: item.sideNumber,
-                                quantity: item.quantity,
+                                quantity:
+                                    typed[productId] !== undefined
+                                        ? typed[productId]
+                                        : item.quantity,
                             });
                         }
                     }
