@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="schldr_paint.PlanEditorField">
+        <div class="o_schldr_plan" t-ref="this.wrapperRef"
+             t-att-class="{ o_schldr_plan_fullscreen: this.state.fullscreen }"
+             t-on-keydown="this.onKeyDown">
+
+            <!-- TOOLBAR -->
+            <div class="o_schldr_plan_toolbar d-flex align-items-center flex-wrap gap-1 p-1">
+                <button type="button" class="btn btn-sm me-1"
+                        t-att-class="this.state.fullscreen ? 'btn-primary' : 'btn-outline-primary'"
+                        t-on-click="this.toggleFullscreen"
+                        title="Het plan, de werkbalk en het paneel vast op het scherm (F)">
+                    <i class="oi" t-att-data-icon="this.state.fullscreen ? 'fullscreen_exit' : 'fullscreen'"/>
+                    <t t-if="this.state.fullscreen"> Tekenmodus verlaten</t>
+                    <t t-else=""> Tekenmodus</t>
+                </button>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" title="Selecteren en verplaatsen (V)"
+                            t-att-class="{ active: this.state.tool === 'select' }"
+                            t-on-click="() => this.setTool('select')">Selecteer</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Rechthoekige ruimte (R)"
+                            t-att-class="{ active: this.state.tool === 'rect' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('rect')">Rechthoek</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Ruimte met vrije vorm (P)"
+                            t-att-class="{ active: this.state.tool === 'polygon' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('polygon')">Vorm</button>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" title="Deur op een muur (D)"
+                            t-att-class="{ active: this.state.tool === 'door' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('door')">Deur</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Raam op een muur (W)"
+                            t-att-class="{ active: this.state.tool === 'window' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('window')">Raam</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Radiator op een muur (I)"
+                            t-att-class="{ active: this.state.tool === 'item' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('item')">Radiator</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Schuin plafond vanaf een muur (S)"
+                            t-att-class="{ active: this.state.tool === 'slope' }" t-att-disabled="this.readonly"
+                            t-on-click="() => this.setTool('slope')">Schuin plafond</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" title="Verfsysteem en kleur op oppervlakken zetten (B)"
+                        t-att-class="{ active: this.state.tool === 'brush' }" t-att-disabled="this.readonly"
+                        t-on-click="() => this.setTool('brush')">Kwast</button>
+                <div class="btn-group btn-group-sm ms-1" role="group">
+                    <button type="button" class="btn btn-outline-secondary" title="Ongedaan maken (Ctrl+Z)"
+                            t-att-disabled="this.readonly" t-on-click="this.undo">↶</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Opnieuw (Ctrl+Y)"
+                            t-att-disabled="this.readonly" t-on-click="this.redo">↷</button>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" title="Inzoomen"
+                            t-on-click="() => this.zoomBy(1.25)">+</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Uitzoomen"
+                            t-on-click="() => this.zoomBy(0.8)">−</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Alles in beeld"
+                            t-on-click="this.fit">Passend</button>
+                    <button type="button" class="btn btn-outline-secondary" title="Verschuiven"
+                            t-att-class="{ active: this.state.tool === 'pan' }"
+                            t-on-click="() => this.setTool('pan')">Hand</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" title="De ruimtes in 3D, met hun kleuren"
+                        t-on-click="this.open3d">3D</button>
+
+                <!-- what the active tool places -->
+                <div class="o_schldr_plan_tooloptions d-flex align-items-center gap-1 ms-2">
+                    <t t-if="this.state.tool === 'rect'">
+                        <input type="text" class="form-control form-control-sm" style="width: 78px;"
+                               placeholder="breedte m" t-att-value="this.state.rectWidth"
+                               t-on-input="(ev) => this.state.rectWidth = ev.target.value"/>
+                        <span>×</span>
+                        <input type="text" class="form-control form-control-sm" style="width: 78px;"
+                               placeholder="diepte m" t-att-value="this.state.rectDepth"
+                               t-on-input="(ev) => this.state.rectDepth = ev.target.value"/>
+                    </t>
+                    <select t-if="this.state.tool === 'door'" class="form-select form-select-sm" style="width: auto;"
+                            t-on-change="(ev) => this.pickNumber('doorType', ev.target.value)">
+                        <t t-foreach="this.presets('door').concat(this.presets('passage'))" t-as="preset" t-key="preset.id">
+                            <option t-att-value="preset.id" t-att-selected="preset.id === this.state.doorType" t-out="preset.name"/>
+                        </t>
+                    </select>
+                    <select t-if="this.state.tool === 'window'" class="form-select form-select-sm" style="width: auto;"
+                            t-on-change="(ev) => this.pickNumber('windowType', ev.target.value)">
+                        <t t-foreach="this.presets('window').concat(this.presets('exclusion'))" t-as="preset" t-key="preset.id">
+                            <option t-att-value="preset.id" t-att-selected="preset.id === this.state.windowType" t-out="preset.name"/>
+                        </t>
+                    </select>
+                    <select t-if="this.state.tool === 'item'" class="form-select form-select-sm" style="width: auto;"
+                            t-on-change="(ev) => this.pickNumber('itemType', ev.target.value)">
+                        <t t-foreach="this.presets('radiator')" t-as="preset" t-key="preset.id">
+                            <option t-att-value="preset.id" t-att-selected="preset.id === this.state.itemType" t-out="preset.name"/>
+                        </t>
+                    </select>
+                    <t t-if="this.state.tool === 'brush'">
+                        <select class="form-select form-select-sm" style="width: auto; max-width: 260px;"
+                                t-on-change="(ev) => this.pickNumber('brushSystem', ev.target.value)">
+                            <option value="0" t-att-selected="this.state.brushSystem === 0">Kies een verfsysteem…</option>
+                            <t t-foreach="this.systems" t-as="system" t-key="system.id">
+                                <option t-att-value="system.id" t-att-selected="system.id === this.state.brushSystem" t-out="system.name"/>
+                            </t>
+                            <option value="-1" t-att-selected="this.state.brushSystem === -1">Zoals de standaard</option>
+                            <option value="-2" t-att-selected="this.state.brushSystem === -2">Niet schilderen</option>
+                        </select>
+                        <select class="form-select form-select-sm" style="width: auto; max-width: 200px;"
+                                t-att-disabled="this.state.brushSystem &lt;= 0"
+                                t-on-change="(ev) => this.pickNumber('brushColour', ev.target.value)">
+                            <option value="0" t-att-selected="!this.state.brushColour">Geen kleur</option>
+                            <t t-foreach="this.state.options.colours" t-as="colour" t-key="colour.id">
+                                <option t-att-value="colour.id" t-att-selected="colour.id === this.state.brushColour" t-out="colour.name"/>
+                            </t>
+                        </select>
+                    </t>
+                </div>
+            </div>
+
+            <!-- LEVELS -->
+            <div class="o_schldr_plan_levels d-flex align-items-center gap-1 px-1 pb-1">
+                <t t-foreach="this.doc.levels" t-as="level" t-key="level.id">
+                    <button type="button" class="btn btn-sm"
+                            t-att-class="level.id === this.level.id ? 'btn-secondary' : 'btn-light'"
+                            t-on-click="() => this.openLevel(level)" t-out="level.name || 'Verdieping'"/>
+                </t>
+                <t t-if="!this.readonly">
+                    <button type="button" class="btn btn-sm btn-link px-1" title="Lege verdieping toevoegen"
+                            t-on-click="() => this.addLevel(false)">+ verdieping</button>
+                    <button type="button" class="btn btn-sm btn-link px-1"
+                            title="Verdieping toevoegen met dezelfde ruimtes als deze"
+                            t-on-click="() => this.addLevel(true)">+ kopie</button>
+                </t>
+                <span class="ms-auto small text-muted" t-out="this.state.status"/>
+                <span t-if="this.state.typed" class="badge text-bg-primary" t-out="this.state.typed + ' m'"/>
+            </div>
+
+            <div class="o_schldr_plan_body d-flex align-items-stretch">
+                <div class="o_schldr_plan_main flex-grow-1" t-ref="this.mainRef" style="min-width: 0;">
+                    <canvas t-ref="this.canvasRef" tabindex="0" class="o_schldr_plan_canvas"
+                            t-att-class="'o_schldr_tool_' + this.state.tool"
+                            t-on-pointerdown="this.onPointerDown"
+                            t-on-pointermove="this.onPointerMove"
+                            t-on-pointerup="this.onPointerUp"
+                            t-on-dblclick="this.onDoubleClick"
+                            t-on-wheel="this.onWheel"
+                            t-on-contextmenu.prevent=""/>
+                </div>
+
+                <!-- SIDE PANEL -->
+                <div class="o_schldr_plan_panel">
+                    <ul class="nav nav-tabs nav-fill small">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" t-att-class="{ active: this.state.panel === 'room' }"
+                               t-on-click.prevent="() => this.state.panel = 'room'">Ruimte</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" t-att-class="{ active: this.state.panel === 'defaults' }"
+                               t-on-click.prevent="() => this.state.panel = 'defaults'">Standaard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" t-att-class="{ active: this.state.panel === 'quote' }"
+                               t-on-click.prevent="() => this.state.panel = 'quote'">Offerte</a>
+                        </li>
+                    </ul>
+
+                    <!-- ROOM -->
+                    <div t-if="this.state.panel === 'room'" class="o_schldr_plan_panel_body">
+                        <t t-set="room" t-value="this.selectedRoom"/>
+                        <div t-if="!room" class="text-muted small p-2">
+                            <p>Teken een ruimte met <b>Rechthoek</b> of <b>Vorm</b>, of klik een ruimte aan.</p>
+                            <p>Zet onder <b>Standaard</b> één keer het verfsysteem en de kleur van muren,
+                               plafonds en houtwerk: elke nieuwe ruimte volgt dat. Met de <b>Kwast</b> wijk je af.</p>
+                            <div class="mt-2">
+                                <label class="form-label small mb-0">Naam van deze verdieping</label>
+                                <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                       t-att-value="this.level.name"
+                                       t-on-change="(ev) => this.renameLevel(ev.target.value)"/>
+                                <button t-if="!this.readonly and this.doc.levels.length &gt; 1" type="button"
+                                        class="btn btn-sm btn-link text-danger px-0 mt-1"
+                                        t-on-click="this.removeLevel">Deze verdieping verwijderen</button>
+                            </div>
+                        </div>
+                        <t t-if="room">
+                            <div class="p-2">
+                                <div class="row g-1">
+                                    <div class="col-8">
+                                        <label class="form-label small mb-0">Ruimte</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="room.name"
+                                               t-on-change="(ev) => this.setRoomName(room, ev.target.value)"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small mb-0">Hoogte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(room.height)"
+                                               t-on-change="(ev) => this.setRoomHeight(room, ev.target.value)"/>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-2 small">
+                                    <t t-foreach="[['ceiling', 'Plafond'], ['floor', 'Vloer'], ['skirting', 'Plinten'], ['moulding', 'Kroonlijst']]" t-as="has" t-key="has[0]">
+                                        <label class="form-check-label">
+                                            <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                                   t-att-checked="room.has[has[0]]"
+                                                   t-on-change="() => this.toggleHas(room, has[0])"/>
+                                            <t t-out="has[1]"/>
+                                        </label>
+                                    </t>
+                                </div>
+                                <div t-if="!this.readonly" class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-light me-1" t-on-click="this.duplicateSelected">Kopieer ruimte</button>
+                                    <button type="button" class="btn btn-sm btn-light me-1" t-on-click="this.addCustomItem">+ vrij element</button>
+                                </div>
+                            </div>
+
+                            <!-- the selected wall -->
+                            <t t-set="picked" t-value="this.selectedWall"/>
+                            <div t-if="picked" class="o_schldr_plan_card p-2">
+                                <div class="fw-bold small mb-1">Muur <t t-out="picked.index + 1"/></div>
+                                <div class="row g-1 align-items-end">
+                                    <div class="col-4">
+                                        <label class="form-label small mb-0">Lengte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="picked.length"
+                                               t-on-change="(ev) => this.setWallLength(room, picked.index, ev.target.value)"/>
+                                    </div>
+                                    <div class="col-8 small">
+                                        <label class="form-check-label d-block">
+                                            <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                                   t-att-checked="picked.wall.virtual"
+                                                   t-on-change="() => this.toggleVirtual(picked.wall)"/>
+                                            Geen muur (open naar de ruimte ernaast)
+                                        </label>
+                                        <label class="form-check-label d-block">
+                                            <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                                   t-att-checked="!!picked.wall.h"
+                                                   t-on-change="() => this.toggleOwnHeight(room, picked.wall)"/>
+                                            Eigen hoogte (trapgat, halve muur)
+                                        </label>
+                                        <label class="form-check-label d-block">
+                                            <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                                   t-att-checked="!!picked.slope"
+                                                   t-on-change="() => this.toggleSlope(room, picked.wall)"/>
+                                            Schuin plafond vanaf deze muur
+                                        </label>
+                                    </div>
+                                </div>
+                                <div t-if="picked.wall.h" class="row g-1 mt-1">
+                                    <div class="col-6">
+                                        <label class="form-label small mb-0">Hoogte begin (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(picked.wall.h[0])"
+                                               t-on-change="(ev) => this.setWallHeight(picked.wall, 0, ev.target.value)"/>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small mb-0">Hoogte einde (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(picked.wall.h[1])"
+                                               t-on-change="(ev) => this.setWallHeight(picked.wall, 1, ev.target.value)"/>
+                                    </div>
+                                </div>
+                                <div t-if="picked.slope" class="row g-1 mt-1">
+                                    <div class="col-6">
+                                        <label class="form-label small mb-0">Kniehoogte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(picked.slope.knee)"
+                                               t-on-change="(ev) => this.setNumber(picked.slope, 'knee', ev.target.value)"/>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small mb-0">Helling (°)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="picked.slope.pitch"
+                                               t-on-change="(ev) => this.setNumber(picked.slope, 'pitch', ev.target.value, false)"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- the selected opening -->
+                            <t t-set="opening" t-value="this.selectedOpening"/>
+                            <div t-if="opening" class="o_schldr_plan_card p-2">
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="fw-bold small">Opening</span>
+                                    <button t-if="!this.readonly" type="button" class="btn btn-sm btn-link text-danger ms-auto p-0"
+                                            t-on-click="this.deleteSelected">Verwijderen</button>
+                                </div>
+                                <div class="row g-1">
+                                    <t t-foreach="[['offset', 'Vanaf hoek'], ['width', 'Breedte'], ['height', 'Hoogte'], ['sill', 'Borstwering'], ['reveal', 'Dagkant']]" t-as="size" t-key="size[0]">
+                                        <div class="col-4">
+                                            <label class="form-label small mb-0"><t t-out="size[1]"/> (m)</label>
+                                            <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                                   t-att-value="this.metres(opening[size[0]])"
+                                                   t-on-change="(ev) => this.setNumber(opening, size[0], ev.target.value)"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-1 small">
+                                    <label t-if="opening.kind === 'door'" class="form-check-label">
+                                        <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                               t-att-checked="opening.leaf" t-on-change="() => this.setFlag(opening, 'leaf')"/>
+                                        Deurblad schilderen
+                                    </label>
+                                    <label t-if="opening.kind === 'door' or opening.kind === 'window'" class="form-check-label">
+                                        <input type="checkbox" class="form-check-input me-1" t-att-disabled="this.readonly"
+                                               t-att-checked="opening.frame" t-on-change="() => this.setFlag(opening, 'frame')"/>
+                                        Omlijsting schilderen
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- the selected radiator or free element -->
+                            <t t-set="item" t-value="this.selectedItem"/>
+                            <div t-if="item" class="o_schldr_plan_card p-2">
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="fw-bold small" t-out="item.kind === 'radiator' ? 'Radiator' : 'Vrij element'"/>
+                                    <button t-if="!this.readonly" type="button" class="btn btn-sm btn-link text-danger ms-auto p-0"
+                                            t-on-click="this.deleteSelected">Verwijderen</button>
+                                </div>
+                                <div class="row g-1">
+                                    <div t-if="item.kind === 'custom'" class="col-8">
+                                        <label class="form-label small mb-0">Naam</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="item.name" t-on-change="(ev) => this.setText(item, 'name', ev.target.value)"/>
+                                    </div>
+                                    <div t-if="item.kind === 'custom'" class="col-4">
+                                        <label class="form-label small mb-0">Groep</label>
+                                        <select class="form-select form-select-sm" t-att-disabled="this.readonly"
+                                                t-on-change="(ev) => this.setText(item, 'group', ev.target.value)">
+                                            <t t-foreach="this.groups" t-as="group" t-key="group">
+                                                <option t-att-value="group" t-att-selected="group === item.group" t-out="this.groupLabel(group)"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small mb-0">Breedte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(item.width)" t-on-change="(ev) => this.setNumber(item, 'width', ev.target.value)"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small mb-0">Hoogte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(item.height)" t-on-change="(ev) => this.setNumber(item, 'height', ev.target.value)"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small mb-0">Aantal</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="item.count" t-on-change="(ev) => this.setNumber(item, 'count', ev.target.value, false)"/>
+                                    </div>
+                                    <div t-if="item.kind === 'custom'" class="col-6">
+                                        <label class="form-label small mb-0">Lengte (m)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="this.metres(item.length)" t-on-change="(ev) => this.setNumber(item, 'length', ev.target.value)"/>
+                                    </div>
+                                    <div t-if="item.kind === 'custom'" class="col-6">
+                                        <label class="form-label small mb-0">Of oppervlakte (m²)</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="item.area" t-on-change="(ev) => this.setNumber(item, 'area', ev.target.value, false)"/>
+                                    </div>
+                                    <div t-if="item.kind === 'radiator'" class="col-6">
+                                        <label class="form-label small mb-0">Oppervlaktefactor</label>
+                                        <input type="text" class="form-control form-control-sm" t-att-readonly="this.readonly"
+                                               t-att-value="item.factor" t-on-change="(ev) => this.setNumber(item, 'factor', ev.target.value, false)"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- what is painted in this room -->
+                            <table class="table table-sm small mb-0 o_schldr_plan_surfaces">
+                                <tbody>
+                                    <t t-foreach="this.surfaceRows(room)" t-as="row" t-key="row.surface.ref">
+                                        <tr>
+                                            <td class="text-nowrap">
+                                                <span t-if="row.swatch" class="o_schldr_swatch" t-attf-style="background-color: #{row.swatch};"/>
+                                                <t t-out="row.surface.name"/>
+                                                <div class="text-muted" t-out="row.size"/>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" t-att-disabled="this.readonly"
+                                                        t-on-change="(ev) => this.setSurfaceSystem(room, row, ev.target.value)">
+                                                    <option value="default" t-att-selected="row.mode === 'default'">
+                                                        Standaard<t t-if="row.mode === 'default' and row.system">: <t t-out="this.system(row.system).name"/></t>
+                                                    </option>
+                                                    <t t-foreach="row.options" t-as="system" t-key="system.id">
+                                                        <option t-att-value="system.id" t-att-selected="row.mode === 'own' and row.system === system.id" t-out="system.name"/>
+                                                    </t>
+                                                    <option value="none" t-att-selected="row.mode === 'none'">Niet schilderen</option>
+                                                </select>
+                                                <select t-if="row.mode === 'own'" class="form-select form-select-sm mt-1" t-att-disabled="this.readonly"
+                                                        t-on-change="(ev) => this.setSurfaceColour(room, row, ev.target.value)">
+                                                    <option value="0" t-att-selected="!row.colour">Geen kleur</option>
+                                                    <t t-foreach="this.state.options.colours" t-as="colour" t-key="colour.id">
+                                                        <option t-att-value="colour.id" t-att-selected="colour.id === row.colour" t-out="colour.name"/>
+                                                    </t>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+
+                    <!-- DEFAULTS -->
+                    <div t-if="this.state.panel === 'defaults'" class="o_schldr_plan_panel_body p-2">
+                        <p class="small text-muted">
+                            Wat hier staat, geldt voor elk oppervlak van die soort waar niets anders op gezet is.
+                        </p>
+                        <label class="form-label small mb-0">Plafondhoogte van een nieuwe ruimte (m)</label>
+                        <input type="text" class="form-control form-control-sm mb-2" style="max-width: 110px;" t-att-readonly="this.readonly"
+                               t-att-value="this.metres(this.doc.defaults.height)"
+                               t-on-change="(ev) => this.setDefaultHeight(ev.target.value)"/>
+                        <t t-foreach="this.groups" t-as="group" t-key="group">
+                            <t t-set="entry" t-value="this.defaultEntry(group)"/>
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold mb-0" t-out="this.groupLabel(group)"/>
+                                <select class="form-select form-select-sm" t-att-disabled="this.readonly"
+                                        t-on-change="(ev) => this.setDefault(group, 'system', ev.target.value)">
+                                    <option value="0" t-att-selected="!entry.system">Niet schilderen</option>
+                                    <t t-foreach="this.systemsFor(group)" t-as="system" t-key="system.id">
+                                        <option t-att-value="system.id" t-att-selected="system.id === entry.system" t-out="system.name"/>
+                                    </t>
+                                </select>
+                                <select t-if="entry.system" class="form-select form-select-sm mt-1" t-att-disabled="this.readonly"
+                                        t-on-change="(ev) => this.setDefault(group, 'colour', ev.target.value)">
+                                    <option value="0" t-att-selected="!entry.colour">Geen kleur</option>
+                                    <t t-foreach="this.state.options.colours" t-as="colour" t-key="colour.id">
+                                        <option t-att-value="colour.id" t-att-selected="colour.id === entry.colour" t-out="colour.name"/>
+                                    </t>
+                                </select>
+                            </div>
+                        </t>
+                        <p t-if="!this.systems.length" class="small text-warning">
+                            Er zijn nog geen verfsystemen. Maak ze aan onder Schldr → Verfsystemen.
+                        </p>
+                    </div>
+
+                    <!-- QUOTE -->
+                    <div t-if="this.state.panel === 'quote'" class="o_schldr_plan_panel_body">
+                        <t t-set="quote" t-value="this.quote"/>
+                        <div t-if="!quote.sections.length" class="text-muted small p-2">
+                            Nog niets te schilderen: teken ruimtes en kies verfsystemen.
+                        </div>
+                        <t t-foreach="quote.sections" t-as="section" t-key="section.id">
+                            <div class="o_schldr_plan_quote_title" t-out="section.title"/>
+                            <table class="table table-sm small mb-0">
+                                <tbody>
+                                    <tr t-foreach="section.rows" t-as="row" t-key="row.key">
+                                        <td>
+                                            <t t-out="row.label"/>
+                                            <div t-if="row.colour" class="text-muted">
+                                                <span class="o_schldr_swatch" t-attf-style="background-color: #{row.swatch};"/>
+                                                <t t-out="row.colour"/>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-nowrap" t-out="row.quantity"/>
+                                        <td class="text-end text-nowrap" t-out="row.amount"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                        <div t-if="quote.sections.length" class="p-2 text-end">
+                            <div class="fw-bold">Totaal excl. btw: <t t-out="quote.total"/></div>
+                            <div class="small text-muted">Geschat werk: <t t-out="quote.hours"/> u · catalogusprijzen</div>
+                        </div>
+                        <t t-set="paint" t-value="this.paint"/>
+                        <t t-if="paint.length">
+                            <div class="o_schldr_plan_quote_title">Verf</div>
+                            <table class="table table-sm small mb-0">
+                                <tbody>
+                                    <tr t-foreach="paint" t-as="line" t-key="line.key">
+                                        <td>
+                                            <t t-out="line.name"/>
+                                            <div t-if="line.colour" class="text-muted">
+                                                <span class="o_schldr_swatch" t-attf-style="background-color: #{line.swatch};"/>
+                                                <t t-out="line.colour"/>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-out="line.need"/>
+                                            <div t-if="line.packs" class="text-muted" t-out="line.packs"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

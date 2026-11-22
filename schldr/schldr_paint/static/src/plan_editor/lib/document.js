@@ -277,10 +277,14 @@ export function dump(document) {
     return JSON.stringify(document);
 }
 
-export function* iterRooms(document) {
+/** [[level, room], ...] for every room of the document. (A plain list, not
+ *  a generator: Odoo's module loader does not know `export function*`.) */
+export function iterRooms(document) {
+    const rooms = [];
     for (const level of document.levels) {
         for (const room of level.rooms) {
-            yield [level, room];
+            rooms.push([level, room]);
         }
     }
+    return rooms;
 }

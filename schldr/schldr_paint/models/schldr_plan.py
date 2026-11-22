@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
+from odoo.tools.binary import BinaryBytes
 from odoo.tools.image import image_data_uri
 
 from ..lib import document as plan_document
@@ -143,7 +144,19 @@ class SchldrProject(models.Model):
         colours = self.env["schldr.colour"].search([])
         types = self.env["schldr.element.type"].search([])
         currency = company.currency_id
+        products = systems.layer_ids.product_id
         return {
+            "products": {
+                product.id: {
+                    "name": product.display_name,
+                    "uom": product.uom_id.name or "",
+                    "packs": [
+                        [size.volume, size.price]
+                        for size in product.product_tmpl_id.schldr_pack_size_ids
+                    ],
+                }
+                for product in products
+            },
             "systems": [
                 {
                     "id": system.id,
@@ -183,6 +196,7 @@ class SchldrProject(models.Model):
             )
             assigned = measure.assignments(doc, result["surfaces"])
             project._schldr_write_plan(doc, result, assigned)
+            project._schldr_store_snapshot()
             if project.state == "draft" and result["surfaces"]:
                 project.with_context(schldr_sync=True).state = "measured"
         self._schldr_mirror_to_order()
@@ -502,6 +516,15 @@ class SchldrProject(models.Model):
         self.ensure_one()
         png = self._get_drawing_png(level_ref)
         return image_data_uri(png) if png else False
+
+    def _schldr_store_snapshot(self):
+        """Keep an image of the plan (its first level with rooms) on the
+        record, for the project dashboard."""
+        self.ensure_one()
+        png = self._get_drawing_png()
+        snapshot = BinaryBytes(png) if png else False
+        if snapshot or self.canvas_snapshot:
+            self.with_context(schldr_sync=True).canvas_snapshot = snapshot
 
     def _schldr_plans(self):
         """The plan per level that has rooms, for the measurement sheet and

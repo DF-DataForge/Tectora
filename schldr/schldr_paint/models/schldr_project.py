@@ -257,18 +257,21 @@ class SchldrProject(models.Model):
     def _compute_logistics_counts(self):
         for project in self:
             orders = project.sale_order_ids
-            project.picking_count = len(project._get_pickings())
+            pickings = project._get_pickings()
+            project.picking_count = len(pickings) if pickings is not None else 0
             project.invoice_count = len(orders.mapped("invoice_ids"))
             purchases = project._get_purchase_orders()
             project.purchase_count = len(purchases) if purchases is not None else 0
 
     # --------------------------------------------------------- project dossier
     def _get_pickings(self):
-        """Deliveries of the project's sale orders (sale_stock)."""
+        """Deliveries of the project's sale orders (sale_stock). Returns None
+        when Inventory is not installed (an optional dependency)."""
         self.ensure_one()
+        Picking = self.env.get("stock.picking")
         orders = self.sale_order_ids
-        if not orders or "picking_ids" not in orders._fields:
-            return self.env["stock.picking"]
+        if Picking is None or "picking_ids" not in orders._fields:
+            return None
         return orders.mapped("picking_ids")
 
     def _get_purchase_orders(self):
@@ -419,6 +422,8 @@ class SchldrProject(models.Model):
     def action_view_pickings(self):
         self.ensure_one()
         pickings = self._get_pickings()
+        if pickings is None:
+            raise UserError(_("De module Voorraad is niet geïnstalleerd."))
         return {
             "type": "ir.actions.act_window",
             "name": _("Leveringen"),
