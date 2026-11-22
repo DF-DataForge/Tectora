@@ -255,3 +255,4 @@ Releases and the modules they need upgraded:
 | Fix Beschikbare momenten: "Inplannen" plant de gekozen periode in (gaf een serverfout) | `tectora_roof_planning` (20.0.2.0.1) |
 | Productkiezer: extra vrije producten (met eigen hoeveelheid) op elk rekentabblad (Dakopbouw, Randafwerking, Afbouw, Schoorsteen, Koepel); naam van sectie of dakobject vrij in te typen in het zijpaneel | `tectora_roof` (20.0.3.97.0) |
 | Tekening: dakdoorvoer als dakobject (cirkel of rechthoek), ook in de 3D-weergave en op de afdruk | `tectora_roof` (20.0.3.98.0) |
+| Dakmeting: Skylux-prijzen onder het menu Instellingen (naast Algemene instellingen) | `tectora_roof` (20.0.3.99.0) |
