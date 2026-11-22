@@ -144,6 +144,7 @@ class TestTimer(TectoraPortalCase):
         timer = Timer._start(self.project, self.leader)
         self.assertEqual(timer.state, "running")
         self.assertEqual(timer.planning_id, self.block)
+        self.assertTrue(self.block.portal_running, "the planner shows the running timer")
         self.assertEqual(timer.employee_ids, self.leader | self.mate)
         self.assertEqual(self.project.running_timer_id, timer)
         with self.assertRaises(Exception, msg="one running timer per site"):

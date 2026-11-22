@@ -111,3 +111,15 @@
     }
 }
 
+
+// Dubbel ingepland (decoration-danger): an employee of the block is on
+// another block in the same period -- a red outline, whatever its state.
+.o_tectora_team_gantt {
+    .o_gantt_pill[class*="decoration-danger"],
+    .o_gantt_pill[class*="decoration_danger"],
+    [class*="decoration-danger"] > .o_gantt_pill,
+    [class*="decoration_danger"] > .o_gantt_pill {
+        outline: 2px solid #d9534f;
+        outline-offset: -2px;
+    }
+}

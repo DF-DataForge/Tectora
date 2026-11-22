@@ -112,15 +112,19 @@ On a fresh Odoo 20.0 community database (all modules except
 
 ## Not verified
 
-* **`tectora_roof_planning`** (needs the Enterprise `planning` app) is ported
-  to Odoo 20's Planning, where a shift holds its resources in `resource_ids`
-  instead of one `resource_id`: the roof planning keeps one shift per
-  employee, with that employee's resource in `resource_ids`, and the views
-  group and show `resource_ids`. It is ported from the Odoo 20 field list of
-  `planning.slot` but could not be run here (no Enterprise), so it no longer
-  installs itself: install it by hand, after the other modules. Its gantt
-  views and the `web_gantt` renderer it extends (`static/src/team_gantt/`)
-  are the parts that remain untested.
+* **`tectora_roof_planning`** (needs the Enterprise gantt view, `web_gantt`)
+  is, from 20.0.2.0.0, the planner of the Project app and no longer a bridge
+  to the Planning app: it does not depend on `planning` and makes no shifts
+  (`planning.slot`) any more. It could not be run here (no Enterprise), so it
+  does not install itself: install it by hand, after the other modules. Its
+  gantt views, the `web_gantt` renderer it extends
+  (`static/src/team_gantt/`) and its migration from the bridge
+  (`migrations/20.0.2.0.0`) are the parts that remain untested. Upgrading a
+  database with the bridge: upgrade `tectora_roof` and `tectora_roof_planning`
+  together; the migration removes what the bridge put in the Planning app
+  (its views on the shifts, its "Per ploeg" menu and default planner) and
+  **deletes the shifts the work blocks made** -- the work blocks stay. The
+  Planning app itself can be uninstalled afterwards if nothing else uses it.
 * **PDF output** through wkhtmltopdf: the reports were rendered as HTML only.
 * **Upgrading an existing Odoo 19 database** (through Odoo's upgrade
   service). The module migrations are in place, but no real database was
@@ -245,3 +249,5 @@ Releases and the modules they need upgraded:
 | Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |
 | Planner: klik op vrije cel plant het project (vanuit het project) meteen in; ploegen met "Altijd weergeven op planner" staan altijd op de planner | `tectora_roof` (20.0.3.93.0), `tectora_roof_planning` (20.0.1.25.0) |
 | Werkblok: van–tot-kalender; een gekozen dag loopt 8:00–17:00 (ook bij inplannen vanuit beschikbare momenten) | `tectora_roof` (20.0.3.94.0), `tectora_roof_planning` (20.0.1.26.0) |
+| Projectplanning in de Project-app (Project → Planning: per ploeg, per medewerker, per project), zonder de Planning-app; werkblok rechtstreeks op een project; geplande uren, dubbel ingepland; Ploegen onder Project → Configuratie | `tectora_roof` (20.0.3.95.0), `tectora_roof_planning` (20.0.2.0.0) |
+| Portaal op de planner: geregistreerde uren en uitvoeringsverslagen per werkblok | `tectora_portal` (20.0.1.4.0) |

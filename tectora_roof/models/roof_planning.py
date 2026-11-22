@@ -21,6 +21,18 @@ class TectoraRoofPlanning(models.Model):
         ondelete="cascade",
         index=True,
     )
+    dossier_id = fields.Many2one(
+        "project.project",
+        string="Project",
+        compute="_compute_dossier_id",
+        inverse="_inverse_dossier_id",
+        store=True,
+        readonly=False,
+        index=True,
+        help="Het project (Project-app) waarop dit werkblok gepland is. Een "
+        "blok plannen op een project plant het dakproject van dat project in; "
+        "heeft het project er nog geen, dan wordt het aangemaakt.",
+    )
     team_id = fields.Many2one(
         "tectora.roof.team", string="Ploeg", index=True,
         group_expand="_read_group_team_id",
@@ -71,6 +83,35 @@ class TectoraRoofPlanning(models.Model):
     project_type = fields.Selection(related="project_id.project_type")
     total_area = fields.Float(related="project_id.total_area")
     total_perimeter = fields.Float(related="project_id.total_perimeter")
+
+    # ------------------------------------------------- project (Project app)
+    @api.depends("project_id.project_id")
+    def _compute_dossier_id(self):
+        for item in self:
+            item.dossier_id = item.project_id.project_id
+
+    @api.model
+    def _tectora_roof_of_dossier(self, dossier):
+        """The roof project a project is planned through; a project made
+        outside the roofing flow gets its roof project on first planning."""
+        if not dossier:
+            return self.env["tectora.roof.project"]
+        return dossier.roof_project_id or dossier.sudo()._tectora_ensure_roof_project()
+
+    def _inverse_dossier_id(self):
+        for item in self:
+            dossier = item.dossier_id
+            if dossier and item.project_id.project_id != dossier:
+                item.project_id = self._tectora_roof_of_dossier(dossier)
+
+    @api.onchange("dossier_id")
+    def _onchange_dossier_id(self):
+        for item in self:
+            dossier = item.dossier_id
+            if dossier and item.project_id.project_id != dossier:
+                item.project_id = self._tectora_roof_of_dossier(dossier)
+                if not item.team_id:
+                    item.team_id = item.project_id.team_id
 
     @api.depends("project_id.code", "project_id.name")
     def _compute_name(self):
@@ -209,13 +250,18 @@ class TectoraRoofPlanning(models.Model):
 
     # ------------------------------------------------------ employee items
     def _sync_employee_items(self):
-        """Create/update the individual planning items of the assigned
-        employees. Implemented by the Planning bridge module
-        (tectora_roof_planning); a no-op when the Planning app is absent."""
+        """Hook for whatever mirrors a block per assigned employee; the
+        blocks themselves are the planning (the project planner and the
+        employee portal read them), so nothing to do here."""
         return True
 
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            # Planned on a project of the Project app: its roof project.
+            if vals.get("dossier_id") and not vals.get("project_id"):
+                dossier = self.env["project.project"].browse(vals["dossier_id"])
+                vals["project_id"] = self._tectora_roof_of_dossier(dossier).id
         items = super().create(vals_list)
         items._sync_employee_items()
         return items

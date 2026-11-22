@@ -17,7 +17,7 @@ CHAPTERS = [
         ("p", "The app consists of four modules that work together:"),
         ("ul", [
             "<b>Dakmeting</b> (tectora_roof): drawing, measurement, roof projects, quotations, site preparation and the project dashboard.",
-            "<b>Dakmeting — Planning</b> (tectora_roof_planning): bridges the work blocks of a roof project to the Planning app, so every team member gets a shift.",
+            "<b>Dakmeting — Projectplanning</b> (tectora_roof_planning): the planner in the Project app (Project → Planning), per team, per employee and per project; the work blocks are the planning itself, without the Planning app.",
             "<b>Product catalogue</b> (tectora_products): the supplier catalogue, pricelists (Renovatie, Nieuwbouw, Industrie) and twenty quotation templates.",
             "<b>Bills of materials</b> (tectora_boms): the bills of materials of the works items, from which the material list is built on confirmation.",
         ]),
@@ -176,7 +176,7 @@ CHAPTERS = [
         ("ul", [
             "On the roof project pick a <b>team</b> and the <b>planned start and end</b>. A <b>work block</b> with all team members is created automatically.",
             "<b>Cutting</b>: in the team planner a pair of scissors appears on a day boundary of a block; a click cuts the block in two parts with the same team, employees and instructions.",
-            "With the Planning app every employee becomes a real <b>shift</b>. In the <b>Per ploeg</b> planner you pick a roof project and a team on one shift and the whole team is planned.",
+            "The planner is in the Project app under <b>Project → Planning</b>: <b>Per ploeg</b>, <b>Per medewerker</b> and <b>Per project</b>. Pick a project and a team on a block and the whole team is planned; whoever is planned twice gets a red outline.",
             "The dates of the roof project and the project follow each other; the dashboard shows the next working day and the planned employees.",
         ]),
     ]),
@@ -196,6 +196,6 @@ CHAPTERS = [
         ("h2", "No project appears after confirmation"),
         ("p", "Click <b>Projectdashboard</b> on the order: a confirmed order without a project gets one. On an error message, check the server log."),
         ("h2", "An employee is missing from the planning"),
-        ("p", "Check that the employee has a team (employee form, Work tab) and a resource (Planning app). The team leader is always included."),
+        ("p", "Check that the employee has a team (employee form, Work tab) and is on the work block. The team leader is always included."),
     ]),
 ]

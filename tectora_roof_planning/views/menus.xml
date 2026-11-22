@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The planner lives in the Project app: Project -> Planning. (Ploegen
+         is moved to Project -> Configuratie by hooks.py, as it is a noupdate
+         menu of tectora_roof.) -->
+    <menuitem id="menu_project_planner"
+              name="Planning"
+              parent="project.menu_main_pm"
+              sequence="2"/>
+
+    <menuitem id="menu_project_planner_team"
+              name="Per ploeg"
+              parent="menu_project_planner"
+              action="action_tectora_roof_planning_by_team"
+              sequence="10"/>
+
+    <menuitem id="menu_project_planner_employee"
+              name="Per medewerker"
+              parent="menu_project_planner"
+              action="action_tectora_roof_planning_by_employee"
+              sequence="20"/>
+
+    <menuitem id="menu_project_planner_project"
+              name="Per project"
+              parent="menu_project_planner"
+              action="action_tectora_roof_planning_by_project"
+              sequence="30"/>
+
+</odoo>
