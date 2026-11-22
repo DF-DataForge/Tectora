@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The accent-edge header as a vector: a soft tint above, a slanted line
+         in the primary colour running to its peak at three quarters of the width, the
+         accent edge as two light bands beneath it. Drawn in the company's primary
+         colour so the configurator's colours apply to it. -->
+    <template id="schldr_header_shape">
+        <svg t-att-class="shape_class" preserveAspectRatio="none" t-att-height="header_shape_height"
+             viewBox="0 0 1000 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient t-attf-id="schldr_sky_#{company.id}" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0" t-att-stop-color="schldr_color" stop-opacity=".16"/>
+                    <stop offset="1" t-att-stop-color="schldr_color" stop-opacity=".03"/>
+                </linearGradient>
+            </defs>
+            <!-- sky -->
+            <path d="M0 0H1000V118L777 24L0 192Z" t-attf-fill="url(#schldr_sky_#{company.id})"/>
+            <!-- accent edge: fascia -->
+            <path d="M0 192L777 24L1000 118V142L777 48L0 216Z" fill="#ffffff" fill-opacity=".85"/>
+            <path d="M0 216L777 48L1000 142V168L777 74L0 242Z" t-att-fill="schldr_color" fill-opacity=".12"/>
+            <!-- ridge line -->
+            <path d="M0 192L777 24L1000 118" t-att-stroke="schldr_color" stroke-width="3"
+                  stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+    </template>
+
+    <!-- Odoo 20 builds every layout from shared parts: the company address
+         list, the body (address block, title, and the table design picked in
+         the configurator) and the footer content. Only the header shape and
+         the footer line are Schldr's own. -->
+    <template id="external_layout_schldr">
+        <t t-set="schldr_color" t-value="company.primary_color or '#2F5D8A'"/>
+        <!-- the shape is 200px high; the header content sits under the accent
+             edge (lower on the left, where the edge is low, higher on the
+             right, under the peak), so the whole header is about 240px -->
+        <t t-set="header_shape_height" t-value="'200'"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout o_schldr_header {{report_type != 'pdf' and 'h-0'}}">
+            <t t-call="schldr_report_layout.schldr_header_shape"
+               shape_class="'o_schldr_header_shape start-0 top-0 w-100 z-n1 ' + (report_type == 'pdf' and 'position-fixed' or 'position-absolute')"/>
+            <div class="d-flex justify-content-between o_schldr_header_content" style="padding-top: 100px;">
+                <div class="w-50 o_schldr_header_brand" style="margin-top: 42px;">
+                    <img t-if="company.logo" class="o_company_logo mb-1" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    <div t-if="company.report_header" t-field="company.report_header" class="o_company_tagline fw-bold">Company tagline</div>
+                </div>
+                <div name="company_address" class="w-50 text-end small">
+                    <t t-call="web.company_address_list"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" custom_layout_address="True" hide_title="True">
+            <div class="o_report_layout_schldr"
+                 t-attf-style="{{report_type != 'pdf' and 'margin-top: 240px;' or ''}}">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="web.external_layout_footer_content"
+               footer_content_classes="'o_schldr_footer'"/>
+        </div>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- Briefpapier: the Schldr letterhead (schldr-briefpapier-A4) -->
+    <!-- ============================================================ -->
+
+    <!-- The letterhead's brand: the Schldr logo with its slogan on the left,
+         the services and the website on the right. White on the band of the
+         primary colour; on the light band (letterhead_light) the logo in its
+         own colours and the website in the primary colour. -->
+    <template id="schldr_letterhead_brand">
+        <img t-if="letterhead_light" class="o_schldr_lh_logo" src="/schldr_report_layout/static/src/img/schldr_logo.svg" alt="Schldr"/>
+        <img t-else="" class="o_schldr_lh_logo" src="/schldr_report_layout/static/src/img/schldr_logo_white.svg" alt="Schldr"/>
+        <div class="o_schldr_lh_services">
+            <div t-if="not is_html_empty(company.report_header)" t-field="company.report_header"/>
+            <div t-else="" t-out="services_fallback"/>
+            <div t-if="company.website" class="o_schldr_lh_website"
+                 t-att-style="letterhead_light and 'color: %s;' % schldr_color">— <t t-out="schldr_company._schldr_letterhead_website()"/></div>
+        </div>
+    </template>
+
+    <!-- The letterhead's footer: a light band at the bottom of the page with
+         the company data on three centred lines and a short line in the
+         primary colour running off the right edge. With letterhead_light the
+         colours swap: a band in the primary colour, text and line in white. -->
+    <template id="schldr_letterhead_footer">
+        <t t-set="footer_lines" t-value="schldr_company._schldr_letterhead_footer_lines()"/>
+        <div t-attf-class="o_schldr_lh_footer {{report_type == 'pdf' and 'o_schldr_lh_footer_pdf' or ''}} {{letterhead_light and 'o_schldr_lh_footer_inverse' or ''}}"
+             t-att-style="letterhead_light and 'background-color: %s;' % schldr_color">
+            <div class="o_schldr_lh_footer_lines">
+                <div t-if="footer_lines['identity']" t-out="footer_lines['identity']"/>
+                <div t-if="not is_html_empty(company.report_footer)" t-field="company.report_footer" class="o_schldr_lh_footer_text"/>
+                <div t-elif="footer_lines['contact']" t-out="footer_lines['contact']"/>
+                <div t-if="footer_lines['banks']" t-out="footer_lines['banks']"/>
+            </div>
+            <div class="o_schldr_lh_accent" t-att-style="not letterhead_light and 'background-color: %s;' % schldr_color"/>
+        </div>
+    </template>
+
+    <!-- The letterhead as a layout: the band in the primary colour over the
+         full width at the top, the light footer band at the bottom. The body
+         is the one of the Schldr layout. -->
+    <template id="external_layout_schldr_letterhead">
+        <t t-set="schldr_color" t-value="company.primary_color or '#3A6A99'"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="schldr_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="schldr_company._schldr_letterhead_services()"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout">
+            <div class="o_schldr_lh_header" t-attf-style="background-color: {{schldr_color}};">
+                <t t-call="schldr_report_layout.schldr_letterhead_brand"/>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" hide_title="True">
+            <div class="o_report_layout_schldr">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="schldr_report_layout.schldr_letterhead_footer"/>
+        </div>
+    </template>
+
+    <!-- The letterhead's second colour scheme (page 2 of the artwork): a light
+         band at the top with the logo in its own colours, the footer band in
+         the primary colour. -->
+    <template id="external_layout_schldr_letterhead_light">
+        <t t-set="schldr_color" t-value="company.primary_color or '#3A6A99'"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="schldr_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="schldr_company._schldr_letterhead_services()"/>
+        <t t-set="letterhead_light" t-value="True"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout">
+            <div class="o_schldr_lh_header o_schldr_lh_light">
+                <t t-call="schldr_report_layout.schldr_letterhead_brand"/>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" hide_title="True">
+            <div class="o_report_layout_schldr">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="schldr_report_layout.schldr_letterhead_footer"/>
+        </div>
+    </template>
+
+    <!-- The letterhead's band with the accent edge as its lower side: the band
+         in the primary colour comes down lowest on the left and rises to the
+         peak at three quarters of the width; under it the accent edge
+         as a light band and the ridge line, as in the Schldr layout. -->
+    <template id="schldr_accent_letterhead_shape">
+        <svg class="o_schldr_rlh_shape" preserveAspectRatio="none"
+             viewBox="0 0 1000 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- band, its lower side the accent line -->
+            <path d="M0 0H1000V120L777 104L0 136Z" t-att-fill="schldr_color"/>
+            <!-- accent edge -->
+            <path d="M0 142L777 110L1000 126V134L777 118L0 150Z" t-att-fill="schldr_color" fill-opacity=".16"/>
+            <!-- ridge line -->
+            <path d="M0 142L777 110L1000 126" t-att-stroke="schldr_color" stroke-width="1.5"
+                  stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+    </template>
+
+    <!-- The letterhead and the accent edge combined: the letterhead's band and
+         brand with the accent edge as its lower side, the letterhead's footer. -->
+    <template id="external_layout_schldr_accent_letterhead">
+        <t t-set="schldr_color" t-value="company.primary_color or '#3A6A99'"/>
+        <!-- In the configurator's preview `company` is the configurator itself
+             (base.document.layout), which has no address or bank accounts:
+             those come from the company it configures. -->
+        <t t-set="schldr_company" t-value="company.company_id if company._name == 'base.document.layout' else company"/>
+        <t t-set="services_fallback" t-value="schldr_company._schldr_letterhead_services()"/>
+
+        <!-- HEADER -->
+        <div t-attf-class="header o_company_#{company.id}_layout">
+            <div class="o_schldr_rlh_header">
+                <t t-call="schldr_report_layout.schldr_accent_letterhead_shape"/>
+                <t t-call="schldr_report_layout.schldr_letterhead_brand"/>
+            </div>
+        </div>
+
+        <!-- PARTIES: the company with the salesperson's contact details on the
+             left, the recipient and the site address on the right. -->
+        <t t-set="schldr_document"
+           t-value="o if o and o._name in ('sale.order', 'account.move', 'purchase.order') else None"/>
+        <t t-set="schldr_parties">
+            <t t-set="sender" t-value="schldr_company._schldr_letterhead_sender(schldr_document)"/>
+            <t t-set="site" t-value="schldr_company._schldr_letterhead_site(schldr_document)"/>
+            <div class="row mb-4 o_schldr_parties">
+                <div class="col-6" name="schldr_sender">
+                    <strong t-out="sender['name']"/>
+                    <div t-foreach="sender['address']" t-as="line" t-out="line"/>
+                    <div t-if="sender['contacts']" class="mt-3">
+                        <div t-foreach="sender['contacts']" t-as="contact"><t t-out="contact[0]"/>: <t t-out="contact[1]"/></div>
+                    </div>
+                </div>
+                <div class="col-5 offset-1" name="address">
+                    <div class="o_schldr_recipient"><t t-out="address"/></div>
+                    <t t-if="site">
+                        <strong class="d-block mt-3">Werfadres</strong>
+                        <div t-foreach="site" t-as="line" t-out="line"/>
+                    </t>
+                </div>
+            </div>
+        </t>
+
+        <!-- BODY -->
+        <t t-call="web.external_layout_body" hide_title="True"
+           customized_address_layout="address and schldr_parties">
+            <div class="o_report_layout_schldr">
+                <h2 t-out="layout_document_title"/>
+                <t t-out="0"/>
+            </div>
+        </t>
+
+        <!-- FOOTER -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            <t t-call="schldr_report_layout.schldr_letterhead_footer"/>
+        </div>
+    </template>
+
+    <!-- The "Schldr" table design (Configure Document Layout -> Tables): a
+         choice of its own next to Light, Boxed, Striped, ..., for every
+         layout. Added after Odoo's chain of designs, which ends in ''. -->
+    <template id="external_layout_body_schldr_table" inherit_id="web.external_layout_body">
+        <xpath expr="//t[@t-set='external_layout_body_style_classes']" position="attributes">
+            <attribute name="t-value"
+                       add="(company.report_tables_id == 'schldr' and 'o_report_layout_schldr_table o_table_schldr' or '')"
+                       separator=" or "/>
+        </xpath>
+    </template>
+
+    <!-- The company colours in the layout's own part (the footer line) and
+         in the Schldr table design: information band, table heads and the
+         total. -->
+    <template id="styles_company_report_schldr" inherit_id="web.styles_company_report">
+        <xpath expr="//t[@t-elif=&quot;company.report_tables_id == 'column'&quot;]" position="after">
+            <t t-elif="company.report_tables_id == 'schldr'">
+                &amp;.o_table_schldr {
+                    #informations {
+                        border-color: mix(white, <t t-out='primary'/>, 60%);
+                    }
+
+                    table:not(.o_ignore_layout_styling) thead th {
+                        border-bottom: 2px solid <t t-out='primary'/>;
+                        color: <t t-out='primary'/>;
+                    }
+
+                    #total .o_total_table .o_total td {
+                        background-color: mix(white, <t t-out='primary'/>, 90%);
+                    }
+                }
+            </t>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;layout == 'web.external_layout_lines'&quot;]" position="after">
+            <t t-elif="layout in (
+                'schldr_report_layout.external_layout_schldr',
+                'schldr_report_layout.external_layout_schldr_letterhead',
+                'schldr_report_layout.external_layout_schldr_letterhead_light',
+                'schldr_report_layout.external_layout_schldr_accent_letterhead',
+            )">
+                &amp; .o_schldr_footer {
+                    border-color: <t t-out='primary'/>;
+                }
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 137.562 38.008" width="137.562pt" height="38.008pt">
+  <!-- Placeholder wordmark until the Schldr brand is drawn: replace this file
+       (and schldr_logo_white.svg) with the real logo, same view box. -->
+  <rect x="0" y="3.6" width="23.5" height="2.5" fill="#3A6A99"/>
+  <text x="27" y="20.3" font-family="Montserrat, Arial, Helvetica, sans-serif" font-size="23" font-weight="500" letter-spacing=".6" fill="#231F20">schldr</text>
+  <text x="14.5" y="36.5" font-family="Montserrat, Arial, Helvetica, sans-serif" font-size="6.4" fill="#231F20">vakwerk in <tspan fill="#3A6A99">elke kleur</tspan></text>
+</svg>
