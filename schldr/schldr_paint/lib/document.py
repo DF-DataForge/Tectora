@@ -245,26 +245,41 @@ def load(text):
 
 
 def _complete_ids(document):
-    """Give every part without an id (or with one used before) a new one."""
+    """Give every part without an id (or with one used before) a new one.
+    What points at a part of the same room that got a new id -- a slope or an
+    opening at its wall, an assignment at its surface -- follows it."""
     seen = set()
 
-    def claim(part, prefix):
-        if not part["id"] or part["id"] in seen:
+    def claim(part, prefix, renamed):
+        previous = part["id"]
+        if not previous or previous in seen:
             part["id"] = new_id(document, prefix, seen)
+            if previous and previous not in renamed:
+                renamed[previous] = part["id"]
         seen.add(part["id"])
 
     for level in document["levels"]:
-        claim(level, "L")
+        claim(level, "L", {})
         for room in level["rooms"]:
-            claim(room, "R")
+            renamed = {}
+            claim(room, "R", renamed)
             for wall in room["walls"]:
-                claim(wall, "W")
+                claim(wall, "W", renamed)
             for slope in room["slopes"]:
-                claim(slope, "S")
+                claim(slope, "S", renamed)
             for opening in room["openings"]:
-                claim(opening, "O")
+                claim(opening, "O", renamed)
             for item in room["items"]:
-                claim(item, "I")
+                claim(item, "I", renamed)
+            if not renamed:
+                continue
+            for part in room["slopes"] + room["openings"] + room["items"]:
+                if part.get("wall") in renamed:
+                    part["wall"] = renamed[part["wall"]]
+            room["assign"] = {
+                ":".join(renamed.get(token, token) for token in key.split(":")): entries
+                for key, entries in room["assign"].items()
+            }
 
 
 def new_id(document, prefix, taken=()):
