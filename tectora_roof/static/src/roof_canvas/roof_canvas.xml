@@ -497,6 +497,15 @@
                         t-on-click="() => this.addRoofObject('skylight', 'circle')">
                     <i class="oi me-1" data-icon="radio_button_unchecked"/> Koepel — cirkel
                 </button>
+                <div class="dropdown-divider"/>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('penetration', 'circle')">
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Dakdoorvoer — cirkel
+                </button>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('penetration', 'rect')">
+                    <i class="oi me-1" data-icon="square"/> Dakdoorvoer — rechthoek
+                </button>
             </div>
         </div>
     </t>

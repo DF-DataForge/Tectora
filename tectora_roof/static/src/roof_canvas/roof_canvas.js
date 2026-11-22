@@ -34,7 +34,7 @@ const EDGE_LABEL_MIN_SCREEN_PX = 34;
 const DEFAULT_CANVAS_HEIGHT = 620;
 const WHEEL_ZOOM_STEP = 1.12;
 // Default real-world size (meters) of roof objects added via right-click.
-const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2 };
+const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2, penetration: 0.2 };
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
@@ -59,12 +59,17 @@ function circlePoints(cx, cy, radius) {
 // the parts a hovered quotation line comes from.
 const HIGHLIGHT = "#f59e0b";
 
-const KIND_NAMES = { section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", seam: "Naad" };
+const KIND_NAMES = {
+    section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", penetration: "Dakdoorvoer",
+    seam: "Naad",
+};
 
 const KIND_STYLES = {
     section: { fill: "rgba(10, 116, 131, 0.28)", stroke: "#0a7483", label: "" },
     chimney: { fill: "rgba(217, 119, 6, 0.35)", stroke: "#b45309", label: "Schoorsteen" },
     skylight: { fill: "rgba(37, 99, 235, 0.30)", stroke: "#1d4ed8", label: "Koepel" },
+    // A dakdoorvoer: a pipe, duct or cable through the roof.
+    penetration: { fill: "rgba(124, 58, 237, 0.35)", stroke: "#6d28d9", label: "Dakdoorvoer" },
     // A seam (naad) is an open dotted line between two roof surfaces.
     seam: { fill: "rgba(0, 0, 0, 0)", stroke: "#374151", label: "Naad", dashed: true },
 };

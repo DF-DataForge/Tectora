@@ -1453,7 +1453,8 @@ class TectoraRoofProject(models.Model):
         except (ValueError, TypeError):
             return []
         kind_names = {"section": _("Sectie"), "chimney": _("Schoorsteen"),
-                      "skylight": _("Koepel"), "seam": _("Naad")}
+                      "skylight": _("Koepel"), "penetration": _("Dakdoorvoer"),
+                      "seam": _("Naad")}
         rows = []
 
         def add(element, entry):
@@ -1520,11 +1521,13 @@ class TectoraRoofProject(models.Model):
             "section": (10, 116, 131, 80),
             "chimney": (217, 119, 6, 90),
             "skylight": (37, 99, 235, 80),
+            "penetration": (124, 58, 237, 90),
         }
         strokes = {
             "section": (10, 116, 131, 255),
             "chimney": (180, 83, 9, 255),
             "skylight": (29, 78, 216, 255),
+            "penetration": (109, 40, 217, 255),
         }
         try:
             font = ImageFont.load_default(size=max(14, base.size[0] // 80))
