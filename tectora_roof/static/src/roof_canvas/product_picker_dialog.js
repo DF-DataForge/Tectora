@@ -63,6 +63,11 @@ export class RoofProductPickerDialog extends Component {
             activeCategory: null, // false = zonder categorie, null = alle
             search: "",
             selected: {},
+            // Free products on top of a calculator tab (Dakopbouw,
+            // Randafwerking, Afbouw, Schoorsteen, Koepel): [{id, quantity}],
+            // a quantity of null follows the item's own measure.
+            extras: [],
+            extraSearch: "",
             // A Ctrl-selection arrives with its extra targets already picked,
             // so the list of what gets the products is open and complete.
             multi: (this.props.preselectedTargets || []).length > 0,
@@ -160,6 +165,105 @@ export class RoofProductPickerDialog extends Component {
                 await this.loadSkylight();
             }
         });
+    }
+
+    // ------------------------------------------------------ free products
+    // Every calculator tab takes extra products of free choice along: they
+    // are assigned to the same item(s) when the tab is applied, next to what
+    // the calculator itself puts there.
+
+    get hasExtras() {
+        return this.state.extras.length > 0;
+    }
+
+    get extraLines() {
+        const lines = [];
+        for (const extra of this.state.extras) {
+            const product = this.state.products.find((p) => p.id === extra.id);
+            if (!product) {
+                continue;
+            }
+            const total = extra.quantity === null
+                ? this.totalQuantity
+                : extra.quantity * this.itemCount;
+            lines.push({
+                id: extra.id,
+                product,
+                quantity: extra.quantity,
+                uom: product.uom_id ? product.uom_id[1] : "",
+                total,
+                subtotal: product.list_price * total,
+            });
+        }
+        return lines;
+    }
+
+    get extrasTotal() {
+        return this.extraLines.reduce((sum, line) => sum + line.subtotal, 0);
+    }
+
+    /** The products the search finds, without those already added. */
+    get extraMatches() {
+        const query = this.state.extraSearch.trim().toLowerCase();
+        if (!query) {
+            return [];
+        }
+        const taken = new Set(this.state.extras.map((extra) => extra.id));
+        const matches = [];
+        for (const product of this.state.products) {
+            if (taken.has(product.id)) {
+                continue;
+            }
+            if (
+                product.name.toLowerCase().includes(query) ||
+                (product.default_code || "").toLowerCase().includes(query)
+            ) {
+                matches.push(product);
+                if (matches.length >= 12) {
+                    break;
+                }
+            }
+        }
+        return matches;
+    }
+
+    addExtra(product) {
+        if (!this.state.extras.some((extra) => extra.id === product.id)) {
+            this.state.extras.push({ id: product.id, quantity: null });
+        }
+        this.state.extraSearch = "";
+    }
+
+    removeExtra(productId) {
+        this.state.extras = this.state.extras.filter((extra) => extra.id !== productId);
+    }
+
+    /** An empty quantity follows the item's measure again. */
+    setExtraQuantity(productId, ev) {
+        const extra = this.state.extras.find((e) => e.id === productId);
+        if (!extra) {
+            return;
+        }
+        const value = parseFloat(String(ev.target.value).replace(",", "."));
+        extra.quantity = value >= 0 ? value : null;
+    }
+
+    /** What applyExtras needs, taken before the dialog closes. */
+    takeExtras() {
+        const ids = this.state.extras.map((extra) => extra.id);
+        const quantities = {};
+        for (const extra of this.state.extras) {
+            if (extra.quantity !== null) {
+                quantities[extra.id] = extra.quantity;
+            }
+        }
+        return { ids, quantities };
+    }
+
+    async applyExtras(extras, targetKeys) {
+        if (extras.ids.length) {
+            await this.props.onConfirm(extras.ids, targetKeys || [], extras.quantities);
+        }
     }
 
     // ------------------------------------------------------------ build-up
@@ -376,7 +480,10 @@ export class RoofProductPickerDialog extends Component {
 
     get canApplyBuildup() {
         const choice = this.buildupChoice;
-        return Boolean(choice.vapour_id || choice.insulation_id || choice.membrane_id || this.buildup.sheets);
+        return Boolean(
+            choice.vapour_id || choice.insulation_id || choice.membrane_id || this.buildup.sheets
+            || this.hasExtras
+        );
     }
 
     get sheetsTotal() {
@@ -443,8 +550,10 @@ export class RoofProductPickerDialog extends Component {
             margin: this.buildup.margin,
             seam_overlap: this.buildup.seamOverlap,
         };
+        const extras = this.takeExtras();
         this.props.close();
         await this.props.buildup.apply(choice, targetKeys);
+        await this.applyExtras(extras, targetKeys);
     }
 
     // ------------------------------------------------------- edge finish
@@ -570,8 +679,12 @@ export class RoofProductPickerDialog extends Component {
         return Math.round((meters || 0) * 1000) / 10;
     }
 
-    get canApplyEdges() {
+    get hasEdgeChoice() {
         return Boolean(this.edgeProductId || this.edges.widthChanged || this.edges.upstandChanged);
+    }
+
+    get canApplyEdges() {
+        return this.hasEdgeChoice || this.hasExtras;
     }
 
     /** The corner pieces the roof edge brings (dry run on the server). */
@@ -635,8 +748,13 @@ export class RoofProductPickerDialog extends Component {
         }
         const targetKeys = this.selectedTargetKeys;
         const choice = this.edgeChoice;
+        const withEdge = this.hasEdgeChoice;
+        const extras = this.takeExtras();
         this.props.close();
-        await this.props.edges.apply(choice, targetKeys, false);
+        if (withEdge) {
+            await this.props.edges.apply(choice, targetKeys, false);
+        }
+        await this.applyExtras(extras, targetKeys);
     }
 
     // ------------------------------------------------------------- chimney
@@ -692,8 +810,12 @@ export class RoofProductPickerDialog extends Component {
 
     async applyChimney() {
         const c = this.chimney;
+        const extras = this.takeExtras();
         this.props.close();
-        await this.props.chimney.apply(c.product, c.height);
+        if (c.product) {
+            await this.props.chimney.apply(c.product, c.height);
+        }
+        await this.applyExtras(extras, []);
     }
 
     // ------------------------------------------------------------- skylight
@@ -773,8 +895,10 @@ export class RoofProductPickerDialog extends Component {
             mode: k.mode, size: k.size, dome: k.dome, curb: k.curb, rwa: k.rwa,
             extras: Object.entries(k.extras).map(([id, quantity]) => ({ id: parseInt(id), quantity })),
         };
+        const extras = this.takeExtras();
         this.props.close();
         await this.props.skylight.apply(choice);
+        await this.applyExtras(extras, []);
     }
 
     // ------------------------------------------------------------ demolition
@@ -824,8 +948,12 @@ export class RoofProductPickerDialog extends Component {
         const productIds = this.demolitionSelected.map((p) => p.id);
         const optionIds = this.demolition.options.map((p) => p.id);
         const targetKeys = this.selectedTargetKeys;
+        const extras = this.takeExtras();
         this.props.close();
-        await this.props.demolition.apply(productIds, optionIds, targetKeys);
+        if (optionIds.length) {
+            await this.props.demolition.apply(productIds, optionIds, targetKeys);
+        }
+        await this.applyExtras(extras, targetKeys);
     }
 
     lineSummary(line) {

@@ -83,11 +83,19 @@
                   sequence="80"/>
     </data>
 
-    <menuitem id="menu_tectora_config"
+    <!-- Instellingen: what configures the app. The settings themselves are
+         for administrators; the lists under it (Skylux-prijzen, in
+         skylux_views.xml) for whoever maintains them. -->
+    <menuitem id="menu_tectora_configuration"
               name="Instellingen"
               parent="menu_tectora_root"
+              sequence="90"/>
+
+    <menuitem id="menu_tectora_config"
+              name="Algemene instellingen"
+              parent="menu_tectora_configuration"
               action="action_tectora_roof_config"
               groups="base.group_system"
-              sequence="90"/>
+              sequence="10"/>
 
 </odoo>

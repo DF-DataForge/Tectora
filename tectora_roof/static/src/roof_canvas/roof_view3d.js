@@ -407,13 +407,13 @@ export class RoofView3DDialog extends Component {
                 this.prism(object.points, base, kerb, COLORS.cap, COLORS.edge, faces);
                 this.frustum(object.points, kerb, top, 0.55, COLORS.dome, faces);
             } else {
-                const height = object.height || 1;
+                const height = object.height || (object.kind === "penetration" ? 0.3 : 1);
                 top = base + height;
                 this.prism(object.points, base, top, COLORS.chimney, COLORS.chimney, faces);
             }
             labels.push({
                 point: [cx, cy, top + 0.05],
-                text: `${object.name} · ${(object.height || (object.kind === "skylight" ? 0.45 : 1)).toFixed(2)} m${object.height ? "" : " (standaard)"}`,
+                text: `${object.name} · ${(object.height || (object.kind === "skylight" ? 0.45 : object.kind === "penetration" ? 0.3 : 1)).toFixed(2)} m${object.height ? "" : " (standaard)"}`,
             });
         }
         return { faces, lines, labels };

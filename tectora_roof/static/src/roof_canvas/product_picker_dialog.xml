@@ -541,6 +541,7 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <t t-call="tectora_roof.RoofPickerExtras"/>
 
                         <div class="border rounded p-2">
                             <div class="d-flex flex-wrap align-items-center gap-3">
@@ -662,6 +663,10 @@
                         </div>
                     </t>
                 </div>
+                <!-- The other calculators: free products under whatever they show
+                     (the Dakopbouw has them above its EPDM sheets). -->
+                <t t-if="['edges', 'demolition', 'chimney', 'skylight'].includes(this.state.tab)"
+                   t-call="tectora_roof.RoofPickerExtras"/>
                 <t t-if="this.state.tab === 'products'">
                 <div class="d-flex flex-wrap gap-1 mb-2">
                     <button type="button" class="btn btn-sm"
@@ -759,7 +764,7 @@
                     </t>
                 </button>
                 <button t-elif="this.state.tab === 'chimney'" type="button" class="btn btn-primary"
-                        t-att-disabled="!this.chimney.product"
+                        t-att-disabled="!this.chimney.product and !this.hasExtras"
                         t-on-click="() => this.applyChimney()">
                     Schoorsteen toepassen
                 </button>
@@ -768,7 +773,7 @@
                     Koepel toepassen
                 </button>
                 <button t-elif="this.state.tab === 'demolition'" type="button" class="btn btn-primary"
-                        t-att-disabled="!this.demolition.options.length"
+                        t-att-disabled="!this.demolition.options.length and !this.hasExtras"
                         t-on-click="() => this.applyDemolition()">
                     Afbouw toepassen
                     <t t-if="this.itemCount > 1">
@@ -789,6 +794,77 @@
                 </button>
             </t>
         </Dialog>
+    </t>
+
+    <!-- Free products on a calculator tab: searched in the same products as
+         "Alle producten", assigned to the same item(s) when the tab is
+         applied. A quantity left empty follows the item's own measure. -->
+    <t t-name="tectora_roof.RoofPickerExtras">
+        <div class="o_roof_picker_extras border rounded p-2 mb-2">
+            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-1">
+                <strong>Extra producten</strong>
+                <span class="text-muted small">— vrij te kiezen, bovenop wat hierboven staat. Laat de
+                    hoeveelheid leeg om de maat van het item te volgen<t t-if="this.itemCount > 1">
+                    (een ingevulde hoeveelheid geldt per item)</t>.</span>
+            </div>
+            <table t-if="this.extraLines.length" class="table table-sm mb-2">
+                <tbody>
+                    <tr t-foreach="this.extraLines" t-as="line" t-key="line.id">
+                        <td>
+                            <span t-if="line.product.default_code" class="text-muted me-1"
+                                  t-out="line.product.default_code"/>
+                            <t t-out="line.product.name"/>
+                        </td>
+                        <td class="text-end text-nowrap" style="width: 11rem;">
+                            <input type="number" min="0" step="0.01"
+                                   class="form-control form-control-sm d-inline-block text-end"
+                                   style="width: 6.5rem;"
+                                   t-att-value="line.quantity === null ? '' : line.quantity"
+                                   t-att-placeholder="(this.props.quantity || 0).toFixed(2)"
+                                   t-on-change="(ev) => this.setExtraQuantity(line.id, ev)"/>
+                            <span class="ms-1" t-out="line.uom"/>
+                        </td>
+                        <td class="text-end text-nowrap fw-bold" style="width: 7rem;"
+                            t-out="line.subtotal.toFixed(2)"/>
+                        <td class="text-end" style="width: 2rem;">
+                            <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                    title="Verwijderen"
+                                    t-on-click="() => this.removeExtra(line.id)">
+                                <i class="oi" data-icon="close"/>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-end fw-bold">Extra producten (excl. btw)</td>
+                        <td class="text-end text-nowrap fw-bold" t-out="this.extrasTotal.toFixed(2)"/>
+                        <td/>
+                    </tr>
+                </tbody>
+            </table>
+            <input type="text" class="form-control form-control-sm"
+                   placeholder="Zoek een product op naam of referentie om het toe te voegen…"
+                   t-att-value="this.state.extraSearch"
+                   t-on-input="(ev) => { this.state.extraSearch = ev.target.value; }"/>
+            <div t-if="this.extraMatches.length" class="list-group mt-1">
+                <button t-foreach="this.extraMatches" t-as="product" t-key="product.id"
+                        type="button"
+                        class="list-group-item list-group-item-action py-1 d-flex justify-content-between gap-2"
+                        t-on-click="() => this.addExtra(product)">
+                    <span>
+                        <span t-if="product.default_code" class="text-muted me-1"
+                              t-out="product.default_code"/>
+                        <t t-out="product.name"/>
+                    </span>
+                    <span class="text-muted text-nowrap">
+                        € <t t-out="product.list_price.toFixed(2)"/>
+                        <t t-if="product.uom_id">/<t t-out="product.uom_id[1]"/></t>
+                    </span>
+                </button>
+            </div>
+            <div t-elif="this.state.extraSearch.trim()" class="small text-muted mt-1">
+                Geen producten gevonden.
+            </div>
+        </div>
     </t>
 
 </templates>

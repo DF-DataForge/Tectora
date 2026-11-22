@@ -60,8 +60,8 @@
 
     <menuitem id="menu_tectora_skylux_price"
               name="Skylux-prijzen"
-              parent="menu_tectora_root"
+              parent="menu_tectora_configuration"
               action="action_tectora_skylux_price"
-              sequence="35"/>
+              sequence="20"/>
 
 </odoo>
