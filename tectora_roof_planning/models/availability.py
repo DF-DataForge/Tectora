@@ -129,7 +129,9 @@ class TectoraRoofPlanning(models.Model):
         if not project or not team:
             raise UserError(_("Kies een project en een ploeg."))
         tz = self._tectora_tz()
-        day = fields.Date.to_date(start)
+        day = fields.Date.to_date(start) if start else None
+        if not day:
+            raise UserError(_("Kies de dag waarop het project start."))
         remaining = max(int(days or 1), 1)
         last = day
         while remaining:
