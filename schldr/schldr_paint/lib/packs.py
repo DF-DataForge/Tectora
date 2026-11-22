@@ -8,7 +8,7 @@ choice is worked out: every combination that covers the need is weighed and
 the cheapest wins.
 
 With a price on every size that is the real price. Without, a larger pot is
-taken to be cheaper per litre (price ~ volume ^ 0.8), which is how paint is
+taken to be cheaper per litre (price ~ volume ^ 0.7), which is how paint is
 priced and gives the choice a painter makes: 5 L for a need of 4, 5 + 1 for a
 need of 6, 10 L for a need of 9.
 """
@@ -20,7 +20,7 @@ MAX_CELLS = 20000
 
 
 def _weight(volume, price):
-    return price if price else volume ** 0.8
+    return price if price else volume ** 0.7
 
 
 def choose_packs(need, sizes):

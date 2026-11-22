@@ -5,3 +5,4 @@ from . import test_report_label
 from . import test_site_address
 from . import test_task_stages
 from . import test_terms_pdf
+from . import test_plan

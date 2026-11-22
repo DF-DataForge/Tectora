@@ -14,7 +14,7 @@ SIZES = [1, 2.5, 5, 10]
     (6, [(5, 1), (1, 1)]),
     (9, [(10, 1)]),
     (12.4, [(10, 1), (2.5, 1)]),
-    (23, [(10, 2), (1, 3)]),           # exactly 3 L beats 2.5 + 1
+    (23, [(10, 2), (2.5, 1), (1, 1)]),
 ])
 def test_unpriced(need, expected):
     assert packs.choose_packs(need, SIZES) == expected
@@ -34,7 +34,7 @@ def test_always_covers_the_need():
 
 def test_large_need():
     chosen = packs.choose_packs(1234.5, [0.25, 1, 2.5, 10])
-    assert packs.packed_volume(chosen) == pytest.approx(1234.5)
+    assert 1234.5 <= packs.packed_volume(chosen) <= 1235.0
     assert chosen[0] == (10, 123)
 
 
