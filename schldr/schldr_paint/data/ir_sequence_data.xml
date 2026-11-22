@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_schldr_paint_project" model="ir.sequence">
+        <field name="name">Schilderproject</field>
+        <field name="code">schldr.project</field>
+        <field name="prefix">SCH/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

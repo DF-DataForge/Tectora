@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The standard elements a plan is drawn with. noupdate: a company
+         changes them to its own sizes. -->
+    <data noupdate="1">
+        <record id="element_door" model="schldr.element.type">
+            <field name="name">Binnendeur 83</field>
+            <field name="kind">door</field>
+            <field name="sequence">10</field>
+            <field name="width">930</field>
+            <field name="height">2115</field>
+            <field name="has_leaf" eval="True"/>
+            <field name="has_frame" eval="True"/>
+        </record>
+        <record id="element_door_double" model="schldr.element.type">
+            <field name="name">Dubbele deur</field>
+            <field name="kind">door</field>
+            <field name="sequence">20</field>
+            <field name="width">1700</field>
+            <field name="height">2115</field>
+            <field name="has_leaf" eval="True"/>
+            <field name="has_frame" eval="True"/>
+        </record>
+        <record id="element_door_outside" model="schldr.element.type">
+            <field name="name">Buitendeur (niet schilderen)</field>
+            <field name="kind">door</field>
+            <field name="sequence">30</field>
+            <field name="width">1000</field>
+            <field name="height">2150</field>
+            <field name="reveal">150</field>
+        </record>
+        <record id="element_window" model="schldr.element.type">
+            <field name="name">Raam</field>
+            <field name="kind">window</field>
+            <field name="sequence">10</field>
+            <field name="width">1200</field>
+            <field name="height">1400</field>
+            <field name="sill">900</field>
+            <field name="reveal">150</field>
+        </record>
+        <record id="element_window_sliding" model="schldr.element.type">
+            <field name="name">Schuifraam</field>
+            <field name="kind">window</field>
+            <field name="sequence">20</field>
+            <field name="width">3000</field>
+            <field name="height">2200</field>
+            <field name="sill">0</field>
+            <field name="reveal">150</field>
+        </record>
+        <record id="element_passage" model="schldr.element.type">
+            <field name="name">Open doorgang</field>
+            <field name="kind">passage</field>
+            <field name="width">1000</field>
+            <field name="height">2115</field>
+            <field name="reveal">150</field>
+        </record>
+        <record id="element_exclusion" model="schldr.element.type">
+            <field name="name">Tegels of kast (niet schilderen)</field>
+            <field name="kind">exclusion</field>
+            <field name="width">2000</field>
+            <field name="height">2000</field>
+        </record>
+        <record id="element_radiator" model="schldr.element.type">
+            <field name="name">Paneelradiator</field>
+            <field name="kind">radiator</field>
+            <field name="width">1000</field>
+            <field name="height">600</field>
+            <field name="factor">2.5</field>
+        </record>
+    </data>
+</odoo>

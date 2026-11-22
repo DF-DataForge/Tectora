@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_schldr_paint_project_form" model="ir.ui.view">
+        <field name="name">schldr.project.form</field>
+        <field name="model">schldr.project</field>
+        <field name="arch" type="xml">
+            <form string="Schilderproject" class="o_schldr_chatter_bottom">
+                <header>
+                    <button name="action_sync_from_canvas" type="object"
+                            string="Meting bijwerken uit plan" class="btn-secondary"
+                            help="Werkt de ruimtes, oppervlakken en verfsystemen bij uit het plan."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte maken" class="btn-primary"
+                            invisible="sale_order_id and sale_order_state != 'cancel'"
+                            help="Maakt de offerte van dit schilderproject uit de meting."/>
+                    <button name="action_schldr_toggle_quote_lock" type="object"
+                            string="Zet offerte vast" icon="lock"
+                            invisible="not sale_order_id or sale_order_locked or sale_order_state not in ('draft', 'sent')"
+                            help="De opmeting kan de lijnen van de offerte niet langer overschrijven."/>
+                    <button name="action_schldr_toggle_quote_lock" type="object"
+                            string="Offerte vrijgeven" icon="lock_open"
+                            invisible="not sale_order_locked"
+                            help="De opmeting mag de lijnen van de offerte weer aanpassen."/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Offerte bijwerken uit meting" class="btn-primary"
+                            invisible="not sale_order_id or sale_order_state not in ('draft', 'sent') or sale_order_locked"
+                            confirm="De lijnen van de openstaande offerte worden aangepast volgens het plan: hoeveelheden volgen de meting, prijzen en kortingen blijven. Lijnen die je zelf toevoegde blijven staan. Doorgaan?"
+                            help="Vervangt de lijnen van de openstaande offerte door de huidige meting."/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,measured,quoted,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_orders" type="object"
+                                class="oe_stat_button" icon="description">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="sale_order_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not sale_order_id"/>
+                                    <span invisible="sale_order_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Offerte / Order</span>
+                                <span class="o_stat_text" invisible="sale_order_count &lt; 2">
+                                    (<field name="sale_order_count" readonly="1"/> in historiek)
+                                </span>
+                            </div>
+                        </button>
+                        <button name="action_view_materials" type="object"
+                                class="oe_stat_button" icon="deployed_code"
+                                invisible="material_count == 0">
+                            <field name="material_count" widget="statinfo" string="Materialen"/>
+                        </button>
+                        <button name="action_view_pickings" type="object"
+                                class="oe_stat_button" icon="local_shipping"
+                                invisible="picking_count == 0">
+                            <field name="picking_count" widget="statinfo" string="Leveringen"/>
+                        </button>
+                        <button name="action_view_purchase_orders" type="object"
+                                class="oe_stat_button" icon="shopping_cart"
+                                invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="Inkoop"/>
+                        </button>
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="payments"
+                                invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Facturen"/>
+                        </button>
+                        <button name="action_open_project" type="object"
+                                class="oe_stat_button" icon="speed"
+                                help="Het planbare project achter dit schilderproject, met het dashboard van omzet, kosten, leveringen, taken en planning.">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="project_id" readonly="1"
+                                           options="{'no_open': True}"
+                                           invisible="not project_id"/>
+                                    <span invisible="project_id">Nieuw</span>
+                                </span>
+                                <span class="o_stat_text">Project</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="bv. Binnenschilderwerk — Kerkstraat 12"/></h1>
+                        <h3><field name="code" readonly="1"/></h3>
+                    </div>
+                    <field name="currency_id" invisible="1"/>
+                    <div class="o_schldr_kpis d-flex flex-wrap gap-2 my-2">
+                        <div class="o_schldr_kpi">
+                            <span class="o_schldr_kpi_value">
+                                <field name="room_count" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Ruimtes</span>
+                        </div>
+                        <div class="o_schldr_kpi">
+                            <span class="o_schldr_kpi_value">
+                                <field name="total_wall_area" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Muren (m²)</span>
+                        </div>
+                        <div class="o_schldr_kpi">
+                            <span class="o_schldr_kpi_value">
+                                <field name="total_ceiling_area" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Plafonds (m²)</span>
+                        </div>
+                        <div class="o_schldr_kpi">
+                            <span class="o_schldr_kpi_value">
+                                <field name="total_floor_area" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Vloer (m²)</span>
+                        </div>
+                        <div class="o_schldr_kpi">
+                            <span class="o_schldr_kpi_value">
+                                <field name="estimated_total" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Geschat totaal (excl. btw)</span>
+                        </div>
+                        <div class="o_schldr_kpi" invisible="revenue == 0">
+                            <span class="o_schldr_kpi_value">
+                                <field name="revenue" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Omzet (bevestigd)</span>
+                        </div>
+                        <div class="o_schldr_kpi" invisible="material_cost == 0">
+                            <span class="o_schldr_kpi_value">
+                                <field name="material_cost" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Materiaalkost</span>
+                        </div>
+                        <div class="o_schldr_kpi" invisible="revenue == 0">
+                            <span class="o_schldr_kpi_value">
+                                <field name="margin" nolabel="1" readonly="1"/>
+                            </span>
+                            <span class="o_schldr_kpi_label">Marge</span>
+                        </div>
+                    </div>
+                    <group class="mb-0">
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="project_type"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                        <group>
+                            <!-- The site as a contact: a delivery address of the
+                                 customer, the order's delivery address. -->
+                            <field name="site_partner_id"
+                                   domain="partner_id and ['|', ('id', '=', partner_id), ('parent_id', '=', partner_id)] or []"
+                                   context="{'default_parent_id': partner_id, 'default_type': 'delivery', 'show_address': 1}"
+                                   options="{'always_reload': True}"
+                                   placeholder="Afleveradres van de klant"/>
+                            <field name="address" string="Werfadres (tekst)"
+                                   invisible="site_partner_id"
+                                   placeholder="Straat nr, postcode gemeente"/>
+                            <field name="opportunity_id"/>
+                            <field name="sale_order_id"
+                                   context="{'default_partner_id': partner_id, 'default_schldr_project_id': id}"/>
+                            <field name="sale_order_state" invisible="1"/>
+                            <field name="sale_order_locked" invisible="1"/>
+                            <field name="sale_order_follow_measurement"
+                                   invisible="not sale_order_id or sale_order_state not in ('draft', 'sent')"/>
+                            <field name="project_id" readonly="1"
+                                   invisible="not project_id"/>
+                            <field name="analytic_account_id" readonly="1"
+                                   invisible="not analytic_account_id"
+                                   groups="analytic.group_analytic_accounting"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Plan" name="drawing">
+                            <field name="canvas_snapshot" invisible="1"/>
+                            <field name="canvas_data" widget="schldr_plan" nolabel="1"/>
+                        </page>
+                        <page string="Ruimtes" name="rooms">
+                            <field name="room_ids" readonly="1">
+                                <list>
+                                    <field name="level_id" optional="show"/>
+                                    <field name="name"/>
+                                    <field name="height"/>
+                                    <field name="floor_area" sum="Totaal"/>
+                                    <field name="perimeter" optional="hide"/>
+                                    <field name="wall_area" sum="Totaal"/>
+                                    <field name="ceiling_area" sum="Totaal"/>
+                                </list>
+                                <form string="Ruimte">
+                                    <sheet>
+                                        <div class="oe_title">
+                                            <h2><field name="name"/></h2>
+                                        </div>
+                                        <group>
+                                            <group>
+                                                <field name="level_id"/>
+                                                <field name="height"/>
+                                                <field name="floor_area"/>
+                                                <field name="perimeter"/>
+                                            </group>
+                                            <group>
+                                                <field name="wall_area"/>
+                                                <field name="ceiling_area"/>
+                                            </group>
+                                        </group>
+                                        <field name="surface_ids">
+                                            <list>
+                                                <field name="name"/>
+                                                <field name="group"/>
+                                                <field name="area_gross" optional="show"/>
+                                                <field name="area_openings" optional="show"/>
+                                                <field name="area_reveals" optional="hide"/>
+                                                <field name="area_net" sum="Totaal"/>
+                                                <field name="length" optional="show"/>
+                                                <field name="count" optional="hide"/>
+                                                <field name="assignment_ids" widget="many2many_tags"
+                                                       optional="show"/>
+                                            </list>
+                                        </field>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Oppervlakken" name="surfaces">
+                            <field name="assignment_ids" readonly="1">
+                                <list>
+                                    <field name="room_id"/>
+                                    <field name="surface_id"/>
+                                    <field name="group"/>
+                                    <field name="system_id"/>
+                                    <field name="colour_id"/>
+                                    <field name="quantity"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                Wat er op elk oppervlak geschilderd wordt, zoals op het plan
+                                gekozen. Aanpassen doe je op het plan.
+                            </div>
+                        </page>
+                        <page string="Offerte" name="quote">
+                            <group>
+                                <group>
+                                    <field name="quote_grouping" widget="radio"/>
+                                </group>
+                                <group>
+                                    <field name="estimated_total"/>
+                                </group>
+                            </group>
+                            <separator string="Algemene werken"/>
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id"/>
+                                    <field name="basis"/>
+                                    <field name="factor"/>
+                                    <field name="quantity"/>
+                                    <field name="price_subtotal" sum="Totaal"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <separator string="Algemene nota's"/>
+                            <field name="quote_notes" nolabel="1"
+                                   placeholder="Tekst onderaan de offerte…"/>
+                        </page>
+                        <page string="Werf" name="project_info">
+                            <group>
+                                <group string="Projectleiding">
+                                    <field name="project_manager_id"/>
+                                    <field name="project_manager_phone" readonly="1"
+                                           invisible="not project_manager_phone"/>
+                                    <field name="project_manager_email" readonly="1"
+                                           invisible="not project_manager_email"/>
+                                    <field name="date_deadline"/>
+                                </group>
+                                <group string="Contactpersoon werf">
+                                    <field name="site_contact_id"/>
+                                    <field name="site_contact_phone" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                    <field name="site_contact_email" readonly="1"
+                                           invisible="not site_contact_id"/>
+                                </group>
+                                <group string="Voorbereiding">
+                                    <field name="checkin_at_work"/>
+                                    <field name="asbestos_present"/>
+                                    <field name="lead_paint_present"/>
+                                    <field name="substrate"/>
+                                    <field name="substrate_note"
+                                           invisible="substrate != 'andere'"/>
+                                    <field name="wallpaper_removal"/>
+                                    <field name="repairs_needed"/>
+                                </group>
+                                <group string="De woning tijdens de werken">
+                                    <field name="occupied"/>
+                                    <field name="furniture_by"/>
+                                    <field name="floor_protection"/>
+                                    <field name="water_available"/>
+                                    <field name="power_available"/>
+                                </group>
+                                <group string="Bereikbaarheid werf">
+                                    <field name="easy_parking"/>
+                                    <field name="parking_ban_needed"/>
+                                    <field name="floor_access"/>
+                                    <field name="key_arrangement"/>
+                                </group>
+                                <group string="Extra's te voorzien">
+                                    <field name="scaffolding_needed"/>
+                                    <field name="mobile_scaffolding_needed"/>
+                                    <field name="aerial_lift_needed"/>
+                                    <field name="aerial_lift_type"
+                                           invisible="not aerial_lift_needed"/>
+                                    <field name="precautions_needed"/>
+                                </group>
+                                <group string="Materiaal en afval">
+                                    <field name="material_transport"/>
+                                    <field name="waste_disposal"/>
+                                </group>
+                            </group>
+                            <separator string="Foto's van de werf"/>
+                            <div class="d-flex flex-wrap gap-4 mb-4">
+                                <div>
+                                    <label for="site_photo_facade" class="fw-bold d-block"/>
+                                    <field name="site_photo_facade" widget="image"
+                                           options="{'size': [240, 160]}"/>
+                                </div>
+                                <div>
+                                    <label for="site_photo_interior" class="fw-bold d-block"/>
+                                    <field name="site_photo_interior" widget="image"
+                                           options="{'size': [240, 160]}"/>
+                                </div>
+                            </div>
+                            <group>
+                                <group string="Voorzorgsmaatregelen">
+                                    <field name="precautions_note" nolabel="1"
+                                           placeholder="bv. stofschot aan de trap, parket volledig afdekken…"/>
+                                </group>
+                                <group string="Andere werken / extra's">
+                                    <field name="other_works" nolabel="1"
+                                           placeholder="bv. gordijnrails weg en terug door de klant…"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Materiaallijst" name="materials">
+                            <field name="material_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="colour_id"/>
+                                    <field name="quantity_needed" optional="show"/>
+                                    <field name="quantity"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="pack_summary" optional="show"/>
+                                    <field name="unit_cost" optional="show"/>
+                                    <field name="cost_subtotal" sum="Totaal"/>
+                                    <field name="source_product_id" optional="show"/>
+                                    <field name="bom_name" optional="hide"/>
+                                    <field name="sale_order_id" optional="show"/>
+                                    <field name="notes" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De materiaallijst wordt opgebouwd zodra de order bevestigd
+                                wordt: per product en kleur wat de lagen van de
+                                verfsystemen verbruiken, afgerond naar potten.
+                            </div>
+                        </page>
+                        <page string="Notities" name="notes">
+                            <field name="description" placeholder="Werfvoorbereiding, opmerkingen…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_schldr_paint_project_list" model="ir.ui.view">
+        <field name="name">schldr.project.list</field>
+        <field name="model">schldr.project</field>
+        <field name="arch" type="xml">
+            <list string="Schilderprojecten">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="address" optional="hide"/>
+                <field name="room_count" optional="show"/>
+                <field name="total_area"/>
+                <field name="estimated_total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="project_id" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'measured'"
+                       decoration-success="state in ('quoted', 'confirmed', 'done')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_schldr_paint_project_search" model="ir.ui.view">
+        <field name="name">schldr.project.search</field>
+        <field name="model">schldr.project</field>
+        <field name="arch" type="xml">
+            <search string="Schilderprojecten">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="partner_id"/>
+                <field name="address"/>
+                <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Opgemeten" name="measured" domain="[('state', '=', 'measured')]"/>
+                <filter string="Offerte gemaakt" name="quoted" domain="[('state', '=', 'quoted')]"/>
+                <filter string="Order bevestigd" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <group>
+                    <filter string="Klant" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_schldr_paint_project" model="ir.actions.act_window">
+        <field name="name">Schilderprojecten</field>
+        <field name="res_model">schldr.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak je eerste schilderproject</p>
+            <p>Teken de ruimtes, kies de verfsystemen en kleuren en maak de offerte.</p>
+        </field>
+    </record>
+
+</odoo>

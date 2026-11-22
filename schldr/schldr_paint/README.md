@@ -1,0 +1,537 @@
+# Schldr Schilderwerk — Odoo module
+
+Native Odoo rewrite of the standalone Schldr/BROOF roof-measurement app.
+Everything that Odoo already does well (customers, products, quotations,
+invoicing, Belgian VAT) is delegated to the standard apps; this module adds
+only the roofing-specific part: measuring flat roofs on a drawing canvas and
+turning the measurement into a quotation.
+
+## What replaced what
+
+| Legacy standalone app | In Odoo |
+|---|---|
+| `projects` table + Express API | `schldr.project` model |
+| `roof_sections` / `roof_objects` | `schldr.section` / `schldr.object` |
+| `section_products` (coverage + quantity) | `schldr.section.product` |
+| Custom `products` table | Standard `product.product` (Sales app) |
+| Custom `sales_orders` + `order_line_items` | Standard `sale.order` (generated per section, with section headers) |
+| Custom `invoices` + Belgian VAT engine (`shared/vat.ts`) | Standard `account.move`; VAT via Odoo taxes (`l10n_be`) |
+| Odoo JSON-RPC bridge (`server/odoo-service.ts`) | Obsolete — the code *runs inside* Odoo |
+| Fabric.js drawing canvas (React) | OWL field widget `roof_canvas` (vanilla canvas 2D, no external libs) |
+| `server/satellite-service.ts` (Google/Mapbox) | Python methods on the project model; keys in Settings |
+| Express sessions / no auth | Odoo users, groups & record rules |
+
+## Installation
+
+1. Copy (or symlink) `odoo/schldr_paint` into your Odoo addons path.
+2. Update the app list and install **Schldr Schilderwerk** (installs
+   Sales/`sale_management` and CRM as dependencies).
+3. For Belgian VAT, install the Belgian localization (`l10n_be`) so the
+   21/12/6/0% taxes exist. Use a fiscal position for the 6% rate
+   ("renovatie woning ouder dan 10 jaar").
+4. Optional: in *Settings → Schldr Schilderwerk*, set a **Google Maps API key**
+   (Geocoding + Static Maps APIs) or a **Mapbox access token** to enable
+   satellite backgrounds. Without a key you can still draw — upload a plan
+   image through the globe icon on the drawing and calibrate the scale by
+   right-clicking a side's length label.
+
+Requires Odoo **20.0**. Python dependencies (`requests`, `Pillow`) ship with
+every standard Odoo install. The module uses the modern view syntax
+(`<list>` views, the `<chatter/>` tag) and the Odoo 18+ product model
+(`type`/`is_storable` instead of the removed `detailed_type`), so it does not
+install on Odoo 17 or earlier without adjustments.
+
+## Workflow
+
+1. **Schilderwerk → Schilderprojecten → New**: name the project, pick the customer
+   (address auto-fills) and optionally link a CRM opportunity.
+2. On the **Tekening** tab, open the globe icon and choose **Satellietbeeld
+   ophalen**: the project is saved, the address is geocoded, a satellite
+   photo is stored as drawing background and the geographic scale (m/pixel)
+   is computed from the map projection. The same menu uploads your own plan,
+   shows/hides the background, sets its transparency and removes it.
+3. On the **Tekening** tab, draw roof sections with the rectangle or polygon
+   tool. Shapes show live real-world dimensions (m, m²). Select to move,
+   double-click to rename, Delete to remove.
+   Every side shows its name and length on the plan ("Z1 · 6.50 m", or the
+   name given to it); its details (name, length, rand width, opstand) are in
+   the side panel once the side is clicked. A dakobject (chimney, skylight)
+   shows only its name; its measurements are in the side panel when it is
+   clicked, and its handles appear once it is selected. For a chimney the
+   panel takes its length, width (or diameter) and height: the shape on the
+   plan follows the length and width, the height is kept on the dakobject,
+   and the panel computes the footprint (m²), the side faces (perimeter ×
+   height, m²) and the volume (m³).
+   A dakobject is dragged to another place at once (on its shape or its
+   name); a roof section is selected first, then dragged. The descriptions
+   are printed on the meetblad, under each roof's measurements (*Beschrijvingen*:
+   element, original state, future state).
+   Click a length or area label (or a shape, a dakobject, a naad) to select
+   that side, surface or object: the panel on the right shows it in three
+   parts — **1. Originele staat** and **2. Toekomstige staat** (free text,
+   kept in the drawing per shape and per side) and **3. Producten**, the
+   products assigned to it, with *Toevoegen* to assign more. For a side,
+   *Beschrijving ook toepassen op* copies its description to other sides of
+   the shape (tick them, or *Alle zijden*, then *Toepassen*). Double-click a
+   label to open the product picker straight away.
+   **Tekenmodus** (button at the start of the toolbar, or F; Esc leaves it)
+   fixes the plan on the screen under Odoo's menu bar: the toolbar and status
+   bar stay in view, the plan fills the screen and the side panel (selected
+   element, products, sides) scrolls on its own, to draw, assign products and
+   describe without the form scrolling away. Changes are saved as you go.
+   Clicking a roof surface opens the product picker on its **Dakopbouw**
+   tab: the standard build-up of a flat roof, one product per layer --
+   dampscherm, isolatie (type, then thickness, then format and fixing) and
+   dakbedekking (type, thickness, fixing) -- read from the categories
+   04. Opbouwwerken plat dak/Dampscherm, /Isolatie and /Dakbedekking. It
+   replaces that layer's product on the surface (a layer on "niet wijzigen"
+   is left alone), on the clicked surface or on several at once (*Alle
+   dakvlakken*). The choice is remembered on the project; the company's
+   default build-up (Instellingen › Schldr Schilderwerk) is proposed until
+   then. The vapour barrier (dampscherm) has its own
+   measure: the surface inside the accent edges, less the roof objects on it
+   (koepels, schoorstenen: their m²), plus where it runs up -- every upstand
+   and around every object (their perimeter) -- the insulation's thickness
+   + 5 cm. The insulation is always the surface inside the accent edges less
+   the roof objects. The dialog shows the figures per surface; the lines'
+   quantities on the surface follow the drawing and the insulation chosen.
+   *EPDM-doeken berekenen* sizes one sheet per part of the surface
+   between the seams: the smallest rectangle around that part inside the
+   accent edges; along a rand the upstand + the accent edge's width + 10 cm,
+   along a seam 15 cm (the overlap with the next sheet). Both amounts are
+   settings and can be changed in the dialog per calculation. The
+   sheets are previewed in the dialog and stored on the Werf tab (EPDM-
+   doeken), replacing the sheets calculated earlier for those surfaces;
+   sheets entered by hand stay. A sheet wider than the widest roll (15,25 m)
+   is flagged. *Alle producten* is the full product list as before; a
+   category without usages of its own is offered where its parent is.
+   Clicking a side of a roof surface opens the picker on its
+   **Randafwerking** tab: *Dakrand* for a free side -- type (2-delige alu,
+   enkelvoudige accentrand, zinken kraal, alu kraal), height and finish, from
+   02. Dakranden/Dakrandprofielen and /Kralen -- with *Binnen- en
+   buitenhoeken mee toevoegen*: where two sides with that accent edge meet,
+   the matching corner piece (02. Dakranden/Hoeken & eindstukken, same type,
+   height and finish; inner or outer from the drawing) is put on the corner,
+   previewed in the dialog. *Aansluiting* for a side against a wall, the
+   neighbours' roof, a gutter or a pitched roof, from 04. Opbouwwerken plat
+   dak/Aansluitingen, grouped by what the side meets. The choice replaces
+   the side's earlier accent edge or connection; corner pieces go where two
+   accent-edge sides no longer meet. The tab also sets the *Breedte accentrand* and
+   the *Opstand* of the chosen sides (as the side panel does per side): they
+   count in the inner area, the upstand and the EPDM sheets. Several sides at once as in the other
+   tabs.
+   **Zet offerte vast** (on the quotation and on the painting project) locks
+   the quotation against the measurement: no automatic changes, no
+   *Offerte bijwerken uit meting*, no roofs added, until *Offerte vrijgeven*.
+   What is done on the quotation itself stays possible, and stays on the
+   quotation (it no longer changes the painting project): the painting project's
+   Offerte tab and the drawing's panel keep following the measurement.
+   The quotation has a fixed structure, the same on the order, on the roof
+   project's **Offerte** tab and next to the drawing: *Algemene werken*,
+   *Verplichte veiligheidsvoorzieningen*, per roof *Afbouwwerken thv <dak>* and
+   *Opbouwwerken thv <dak>* (e.g. "AFBOUWWERKEN THV DAK 1 – GARAGE") (the
+   drawing's products of that roof, one line per product, and the roof's
+   project lines), the other chapters (worst case, garantie, andere werken,
+   upsale), headers of the user's own, and *Algemene nota's* (the project's
+   text, a default in Instellingen). A line goes to the segment of its
+   product's chapter; a line without chapter stays under the header it was
+   under. The **Offerte** tab replaces the former tabs Algemene werken,
+   Veiligheid, Afbraak, Opbouw and Overige: per segment its lines, the
+   quantity of a project line editable, *Product toevoegen* (from that
+   segment's chapters, for that roof) and removing; the drawing's lines
+   show where they come from.
+   Surfaces and sides also have an **Afbouw** tab: the demolition works of
+   chapter 03 (Afbraakwerken plat dak) that fit -- per m² for a surface
+   (dakbedekking, isolatie & hellingschape, dakvloer, ballast ...), per m for
+   a side (accentranden & muurkappen, solins ...) -- grouped by what is
+   removed, to tick; what the element has is ticked. Applying puts exactly
+   the ticked works on it (and on the other items ticked), which land in
+   the roof's Afbouwwerken on the quotation.
+   **3D** (toolbar) shows the roof on the drawing in 3D, layer by layer:
+   the deck, the vapour barrier, the insulation on the surface inside the
+   accent edges (its thickness from the surface's insulation), the EPDM on top
+   and up the upstands, the accent edge rising its upstand above the EPDM
+   over its width with its profile on top, the kimfixatie (batten strip) at
+   the foot of the upstands, the roof objects and the seams; the EPDM in its
+   sheets (one tint each, labelled with their calculated size, *EPDM-doeken*
+   to switch off). Drag to turn,
+   scroll to zoom; the layers and accent edges are exaggerated (adjustable,
+   *Ware verhoudingen* for none) so they show, the roof objects stand at
+   their real height (a dome as its upstand with the dome on top), labelled
+   with it, and *Lagen uit elkaar* pulls the layers apart with the accent edges
+   see-through. Every layer -- EPDM, isolatie, dampscherm, kimfixatie,
+   accentrand en opstand, draagvloer, dakobjecten -- can be shown or hidden,
+   or shown alone (*enkel*, or Shift-click).
+   The Dakopbouw also puts the **kimfixatie** on the surface (ticked by
+   default): along all its sides (at the foot of the upstands) and around
+   its chimneys and domes, in metres.
+   Clicking a **schoorsteen** opens its calculator: its footprint from the
+   drawing and its height above the roof, *Uitbekleden* (the sides, with
+   the connection under the coping) or *Volledig inpakken* (incl. the top),
+   the build-up (EPDM, insulation + EPDM, multiplex + EPDM); the m² is
+   perimeter x height (+ the top), and follows the chimney.
+   Clicking a **koepel** opens the Skylux calculator: *Koepelschaal +
+   opstand* or *RWA-koepel (Skymax)*, the daylight size (the one fitting the
+   drawn dome proposed), the dome (material, walls, colour), the curb (type,
+   fixed or opening), extra works (spindle, roof opening, ...). The Skylux
+   products have their options and sizes as attributes that make their
+   variants only when used; the price per option and size comes from the
+   **Skylux-prijzen** table (Schilderwerk menu: *Prijstabel aanvullen* makes
+   every row, to fill in or to export, complete from the dealer price list
+   and import again). A variant gets its price from the table as its own
+   catalogue price.
+   Under the selected element the side panel shows the **Offerte-opbouw**:
+   the quotation as the drawing builds it, per chapter (Afbraak, Opbouw,
+   ...), one line per product with its quantity and list price, the chapter
+   totals and the total excl. btw; lines added to the quotation by hand are
+   listed apart. The lines attached to the side or surface selected on the
+   drawing are highlighted (orange, the colour of the selected side): for a
+   side its own products, those on every side and the corners at its ends;
+   for a surface or dakobject what covers it. Hovering a line marks the parts
+   it comes from on the drawing in the same colour, a click selects the part.
+   No other colours are drawn. It follows the roof on the drawing.
+   While drawing, the dimensions show live: width, length and area of a
+   rectangle; every side of a polygon (also the one following the pointer)
+   with the area and perimeter it would have if closed now; the length of a
+   seam.
+   A **naad** (seam) is the joint between two EPDM sheets: draw it with the
+   *Naad* tool as an open dotted line: click a side of the surface, then the
+   other side, and the seam is done (clicks snap onto the outline; the tool
+   stays on for the next seam). Started inside the surface it takes points
+   until a click on a side or a double-click. A seam can also start or end on
+   another seam (clicks snap onto it): it then divides only the sheet on its
+   side (a T-joint). Seams and dakobjecten drawn on a roof section belong
+   to it: moving the section takes them along; dragging a corner or setting
+   a side's length keeps the seams' ends on its sides, at their distance
+   from the nearer corner (and an end on another seam on that seam). The
+   roof surface stays one section (Sectie 1, with its products
+   and quantities); the seams divide it into sheets, labelled on the drawing
+   ("EPDM-doek 1 · 31,3 m²") and calculated as such by *EPDM-doeken
+   berekenen*. A seam ending inside a section is extended to its outline.
+   Sections a seam split into parts before (Sectie 1 A, Sectie 1 B) show
+   *Samenvoegen tot één sectie* in the side panel: the parts become one
+   section again (the largest part's products carry on), the seams stay as
+   sheet joints. It is stored as a roof object of type *Naad* with its
+   length;
+   clicking its label assigns products from categories whose *Kan gebruikt
+   worden voor* includes **Naden**, measured by the seam length.
+4. Click **Meting bijwerken uit tekening**: sections and roof objects are
+   created/updated from the shapes (matched by canvas ID, so re-syncing after
+   edits keeps assigned products).
+5. On the **Daksecties** tab, open a section and add product lines. The
+   quantity defaults from the coverage type: *surface* → area (m²),
+   *edges* → perimeter (m), *corners* → 4, *drainage* → 1. A section can be
+   converted into a chimney or skylight roof object from here.
+6. Click **Offerte maken**: a standard quotation is created with one order
+   section per roof section and the product lines beneath it (or start from
+   Sales: a quotation created there gets its own painting project). From there
+   the normal Odoo flow applies: send, confirm, deliver, **invoice** — taxes,
+   payment terms and the per-rate VAT breakdown come from the Invoicing app.
+7. **Confirming** the order creates the plannable project; click it (Project
+   app or *Schilderwerk → Projecten*) for the dashboard with revenue and costs,
+   deliveries, tasks and team planning.
+
+## Data model notes
+
+- Shape coordinates are stored in image-pixel space in `canvas_data` (JSON in
+  a Text field); the server recomputes area/perimeter with the shoelace
+  formula using `scale_m_per_px`, so client and server always agree.
+- `canvas_ref` links a section/object to its shape. Records created by hand
+  (without a ref) are never touched or deleted by the canvas sync.
+- Chimneys default to 1.5 m height; volume = area × height (same defaults as
+  the legacy app).
+- Google Static Maps images are fetched at zoom 20, 640×640 @2x; the scale
+  accounts for the retina factor by measuring the actual stored image width.
+
+## Offerte-pdf
+
+De offerte-pdf (afdrukken, e-mailen, klantenportaal) is het standaard
+offertedocument van Odoo, in de documentlay-out van het bedrijf. Elke lijn en
+elke som per sectie staat er zowel **excl. btw** als **incl. btw** op (twee
+kolommen, ongeacht de btw-weergave van het bedrijf). Staat
+**Plan toevoegen** aangevinkt op de verkooporder (alleen bij een
+schilderproject), dan volgt het meetblad met tekening, maten en producten, en
+toont het klantenportaal het plan met de kerncijfers in de zijbalk (op een
+gsm boven de lijnen). Heeft het project meerdere daken, dan krijgt elk dak zijn
+eigen plan: op het meetblad een pagina per dak (naam, tekening, maten en
+totalen, met het totaal van alle daken), op het portaal de plannen onder
+elkaar met hun oppervlakte en omtrek.
+
+## Algemene voorwaarden als pdf
+
+*Instellingen → Facturatie → Standaard algemene voorwaarden* krijgt naast
+"Als tekst toevoegen" en "Link naar een webpagina toevoegen" een derde keuze:
+**Als pdf toevoegen**. De voorwaarden (het tekstvak eronder) komen dan niet
+meer in de notitie van offertes en facturen, maar op aparte pagina's
+achteraan de pdf van offertes, orders en
+klantfacturen/creditnota's: in kleine letters, onder de titel "Algemene
+voorwaarden", met de hoofding en voettekst van de gekozen documentlay-out, in
+de taal van de klant.
+
+## Eén btw-tarief voor de hele offerte
+
+Op de tab *Overige info* van de order staat naast de fiscale positie het veld
+**Btw-tarief voor alle regels** met de knop **Toepassen op alle regels**. Kies
+bv. het 6%-tarief bij renovatie van een woning ouder dan 10 jaar en klik op de
+knop: elke productregel krijgt dat tarief. Het is bewust een handeling en geen
+automatisme: regels die nadien bijkomen houden de btw van hun product tot u
+opnieuw toepast. Zonder gekozen tarief zet de knop de btw van de producten en
+de fiscale positie terug.
+
+## Schilderproject ↔ verkooporder (1 op 1)
+
+Eén schilderproject staat tegenover één offerte/order, in beide richtingen:
+
+* Een **verkooporder die rechtstreeks aangemaakt wordt** (Verkoop → Offertes)
+  krijgt automatisch een schilderproject (zonder meting) met de klant, het
+  leveradres als werfadres, de opportuniteit, de verkoper en het projecttype
+  dat uit de prijslijst volgt. De smart button **Schilderproject** op de order
+  opent het; wie liever eerst tekent, maakt het schilderproject en klikt daar op
+  **Offerte maken**.
+* Een offerte kan dus vanuit de **standaard verkooporder** of vanuit het
+  **schilderproject** opgemaakt worden. De meting past de offerte alleen aan als
+  **Offerte volgt de meting** aangevinkt is, of na bevestiging met **Offerte
+  bijwerken uit meting**; een bevestigde order wordt niet meer overschreven. Een geannuleerde order blijft in de
+  historiek (**Offertes / Orders**) en maakt plaats voor een nieuwe.
+* Klant, opportuniteit, verkoper ↔ projectleider, leverdatum ↔ deadline en
+  prijslijst ↔ projecttype blijven **gesynchroniseerd**: wat je op de ene kant
+  wijzigt, verschijnt op de andere. Klant en prijslijst worden alleen nog op
+  een openstaande offerte aangepast, niet meer op een bevestigde order. Het
+  veld **Offerte / Order** op het schilderproject (of **Schilderproject** op de order)
+  koppelt een bestaand record; de andere kant vult dan de ontbrekende gegevens
+  aan.
+* Bij het bevestigen van de order gaat het schilderproject naar **Order bevestigd**;
+  annuleren zet het terug op *Offerte gemaakt*.
+
+Elke order zonder schilderproject krijgt er een bij het aanmaken; wie dat voor een
+technische import niet wil, geeft de context `schldr_no_schldr_project` mee.
+
+### Offerte volgt de meting (spiegeling)
+
+**De meting past een offerte nooit ongevraagd aan.** Een offerte kan gewoon met
+de standaard offertebouwer van Odoo (offertesjabloon, eigen lijnen) opgemaakt
+worden, met de plannen enkel als plan: zolang het vinkje **Offerte volgt de
+meting** op de offerte (ook zichtbaar op het schilderproject) uit staat, en dat is
+standaard, verandert geen tekening, opmeting, projectlijn of verwijderd dak
+iets aan de offertelijnen. **Offerte bijwerken uit meting** op het schilderproject
+brengt de offerte dan eenmalig in lijn, na een bevestiging. De offertelijnen
+worden wel nog projectlijnen op het schilderproject (die richting raakt de offerte
+niet).
+
+Met het vinkje aan spiegelen de offerte en het schilderproject elkaar, zolang de
+offerte open staat:
+
+* De **hoofdstuktabs** op het schilderproject zijn de projectlijnen; elke regel
+  staat als lijn onder het overeenkomstige hoofdstuk van de offerte.
+  *Algemene werken* en *Veiligheid* tonen de volledige checklist van het
+  hoofdstuk om aan te vinken; *Afbraak*, *Opbouw* en *Overige* tonen alleen
+  de producten die op de offerte staan, met een regel *Toevoegen* die enkel
+  producten van dat hoofdstuk aanbiedt.
+  Omgekeerd wordt elke offertelijn (ook uit een offertesjabloon of handmatig
+  toegevoegd) een projectlijn op het schilderproject, in de tab van haar
+  productcategorie.
+* **Hoeveelheden volgen de meting**: een m²-product neemt de dakoppervlakte,
+  een m-product de omtrek (uit de tekening); getelde producten (stuks, forfait,
+  dagen) nemen het aantal van de offerte over. Elke hoeveelheid is op **beide
+  kanten** te wijzigen: wat je op het schilderproject intikt komt op de offerte,
+  wat je op de offerte intikt komt op het schilderproject — ook voor m² en m. Zo'n
+  ingevoerde hoeveelheid blijft staan (ook als je daarna andere lijnen
+  wijzigt) tot de tekening of de opgemeten oppervlakte/omtrek verandert; dan
+  neemt de meting het weer over. Een m²- of m-lijn die op een offerte
+  bijkomt, houdt de hoeveelheid van de offerte tot er een meting is. Op een daksectie of dakobject volgt een oppervlakteproduct de
+  oppervlakte en een randproduct de omtrek van die vorm.
+* De **meetlijnen** (per daksectie en dakobject, uit het tekenen en de
+  productkiezer) worden bij elke wijziging van de tekening herbouwd op de
+  offerte, onder een kop per daksectie. Een projectlijn voor een product dat
+  de tekening intussen zelf prijst, valt weg zodat niets dubbel telt.
+* Lijnen die je zelf op de offerte toevoegt voor een product dat de meting al
+  prijst, worden met rust gelaten; een lijn verwijderen op de offerte
+  verwijdert de projectlijn, en omgekeerd.
+
+**Offerte bijwerken uit meting** brengt een open offerte handmatig in lijn
+(na bevestiging, met of zonder vinkje); een bevestigde order wordt nooit meer
+aangepast. De tab **Werf** (voorheen
+*Projectinformatie*) bundelt de werfvoorbereiding.
+
+## Project (Odoo Project) en projectdashboard
+
+Bij het **bevestigen** van de order wordt een planbaar **project**
+(`project.project`) aangemaakt, genoemd naar de klant en de gemeente van de
+werf (*Data Forge — Wortegem*), met een eigen analytische rekening — of het
+project dat Odoo zelf al maakte voor diensten met projectopvolging wordt
+overgenomen. Dit project is de basis van de **nacalculatie**: de order krijgt
+het als `project_id` (zodat Odoo de analytische distributie op elke orderlijn
+zet) en het project wijst terug naar de order, zodat omzet, facturen,
+inkoopkosten, leveringen en urenstaten er samenkomen en Odoo's eigen
+winstgevendheidsrapport het oppikt.
+
+Klikken op een project — in de Project-app of via *Schilderwerk → Projecten* —
+opent het **projectdashboard**. De kaarten zijn doorklikbaar naar de
+achterliggende records:
+
+* **Omzet** (bevestigde order excl. btw, gefactureerd / te factureren),
+  **Kosten** (alles op de analytische rekening: aankopen, leveranciersfacturen,
+  urenstaten, voorraad; geboekt / verwacht) en **Marge** openen de
+  winstgevendheidsanalyse van het project;
+* **Materiaalkost** (stuklijst × kostprijs), **Inkoop**, **Urenstaten**
+  (uren en loonkost; met de app Urenstaten), **Facturen** (met openstaand
+  bedrag) en **Leveringen** (te leveren / deels geleverd / geleverd) openen de
+  lijsten erachter;
+* **Taken** (open / afgerond) en **Planning** (volgende werkdag, ploeg,
+  geplande uren en de ingeplande medewerkers) openen de taken en de
+  planning.
+
+De smart buttons **Offerte / Order** en **Schilderproject** zijn er altijd — ook
+op een project dat nog geen van beide heeft: dan maken ze het aan. De tab
+**Schilderwerk** toont de meting zelf (tekening, oppervlakte, omtrek, daksecties),
+de tabs **Planning**, **Taken** en **Materiaallijst** de details; met de
+Planning-app (bridge `schldr_paint_planning`) staan ook de shifts van de
+medewerkers op de tab Planning en opent de planningkaart de resourceplanner.
+Het standaard projectformulier blijft bereikbaar via **Projectinstellingen**
+en krijgt zelf de smart buttons Projectdashboard, Offerte / Order en
+Schilderproject.
+
+Klant, projectleider en de geplande periode van het schilderproject volgen naar het
+project (start- en einddatum) en omgekeerd.
+
+* Bij het **bevestigen** van een verkooporder wordt ook de **materiaallijst**
+  opgebouwd: elk verkocht product wordt via zijn stuklijst (`mrp.bom`,
+  inclusief geneste kit-stuklijsten) ontbonden in componenten; producten
+  zonder stuklijst komen zelf als materiaal in de lijst. Diensten worden
+  overgeslagen. Handmatig toegevoegde lijnen blijven bewaard; lijnen van een
+  eerdere bevestiging van dezelfde order worden vervangen.
+* Kerncijfers op het schilderproject: **Omzet** (bevestigde orders),
+  **Materiaalkost** (stuklijst x kostprijs) en **Marge**.
+
+## Werfadres
+
+Het **werfadres** van een schilderproject is een contact: standaard een
+**afleveradres** van de klant (in het veld maak je er meteen een aan onder de
+klant). Het is het **afleveradres van de offerte en de order**: wie het op het
+ene wijzigt, wijzigt het op het andere. Een nieuwe klant brengt zijn eigen
+adres mee. Het adres op één lijn (*Werfadres (tekst)*), voor het
+satellietbeeld, de planning en het weer, volgt het contact; zonder klant blijft
+het een getypt adres. Een schilderproject uit een verkoopkans krijgt de klant of,
+als de verkoopkans een ander adres heeft, een nieuw afleveradres met dat adres.
+
+## Menu's: Schilderwerk en Project
+
+**Schilderwerk** bevat enkel de gegevens van de werf: *Schilderprojecten* (de meting),
+*Dakobjecten*, *Producten* en *Instellingen*. Wat het werk organiseert, staat in
+de **Project**-app bij de projecten: *Overzicht*, *Projecten* en het menu
+**Werf** met *Werkblokken*, *Materiaalbehoefte*, *Inkoop organiseren*,
+*Bestellijst*, *Urenregistraties* en *Uitvoeringsverslagen*. De fases,
+taaksjablonen en bestellijst-onderdelen (met hun imports) staan in *Project ›
+Configuratie*, de logistieke routes in *Inkoop › Configuratie*.
+
+## Projectoverzicht
+
+De Project-app opent op het **Projectoverzicht** (menu *Overzicht*): de
+kerncijfers van alle projecten van een schilderproject. Elk cijfer opent de projecten erachter (kaarten, lijst,
+projectdashboard), elk project in een lijst opent zijn projectdashboard.
+*Alle projecten* opent de gewone projectkaarten.
+
+* **Status**: actief (schilderproject niet afgerond), nu bezig (de geplande periode
+  loopt of een werkblok loopt nu), gepland, niet ingepland (geen geplande
+  start en geen werkblokken), einddatum voorbij, afgerond.
+* **Financieel**, over alle projecten, excl. btw: orderwaarde, gefactureerd,
+  nog te factureren, kosten en marge, met dezelfde berekening als het
+  projectdashboard (`_schldr_profitability_by_project`, één query per soort
+  gegevens in plaats van per project).
+* **Lijsten**: deze week op de werf (werkblokken van de week, met de ploegen),
+  start binnenkort (14 dagen), meest nog te factureren, laagste marge.
+* Met de taakopvolging: **projecten per fase**; met de bestellijst: de
+  **bestellijsten** (te laat, te bestellen, prijsaanvraag, besteld). Andere
+  modules voegen zo'n blok toe via `_schldr_overview_sections`.
+
+## Geschatte uren opbouw en afbraak, en de taken Uitvoeringswerken en Afbraakwerken
+
+Elk product heeft op zijn fiche, naast de prijzen, twee tijdnormen in **uren
+per eenheid** (per m², per lm, per stuk): **Uren opbouw per eenheid** en
+**Uren afbraak per eenheid**. Eén werkpost kan beide dragen (nokpannen
+verwijderen én herplaatsen). De module `schldr_boms` vult ze voor 415 van de
+499 verkoopproducten uit de **werkurenregels van de stuklijstexport van
+Schldr** (`werkuren construction` en `werkuren veiligheid` → opbouw,
+`werkuren afbraak` en `Afbraakwerken` → afbraak); zie
+`docs/demo_stuklijsten.md`, *Tijdnormen*. Daaruit volgt:
+
+* op elke **offertelijn** de geschatte uren, afbraak en opbouw samen in één
+  kolom **Uren** (hoeveelheid × norm, getoond als uu:mm, met kolomtotaal; een
+  lijn in een andere eenheid wordt eerst omgerekend);
+* onder de totalen van de offerte **Geschatte uren afbraak**, **Geschatte uren
+  opbouw** en de **Geschatte uitvoeringstijd** samen, in uren en in werkdagen
+  (uren per dag uit de werktijden van het bedrijf, anders 8). Enkel intern:
+  de offerte-PDF voor de klant toont ze niet;
+* bij het **bevestigen** van de order per werksoort een taak op het project,
+  **Afbraakwerken** en **Uitvoeringswerken**, met de geschatte uren van die
+  werksoort als **toegewezen tijd**, de leverdatum van de order (of het
+  geplande einde van het schilderproject) als deadline en in de omschrijving de
+  opsplitsing per werkpost. Uren worden op die taken gelogd, zodat afbraak en
+  uitvoering in de urenstaten uit elkaar te houden zijn; het medewerkersportaal
+  (`schldr_portal`) laat de ploeg daarvoor kiezen tussen *Start uitvoering*
+  en *Start afbraak*. Verandert nadien een hoeveelheid op de bevestigde order,
+  dan volgt de toegewezen tijd; de rest van de taak (toewijzing, fase,
+  omschrijving) blijft van wie het werk plant. De taken zijn herkenbaar aan het
+  veld *Werksoort (Schldr)*; er is er één per werksoort per project.
+* Het projectdashboard toont de geschatte tijd op de kaart **Taken** en de
+  werksoort en toegewezen tijd per taak op de tab Taken.
+
+Producten zonder norm tellen niet mee; een werksoort zonder geschatte uren
+krijgt geen taak.
+* Slimme knoppen op het schilderproject: Offerte / Order, Materialen, Leveringen,
+  Inkoop, Facturen, Werkblokken en het Project (dashboard).
+
+Manufacturing (`mrp`), Inkoop (`purchase`), Voorraad (`stock`) en Urenstaten
+(`hr_timesheet`) zijn optioneel: zonder Manufacturing bevat de materiaallijst
+de verkochte producten zelf, zonder Inkoop/Voorraad/Urenstaten blijven de
+overeenkomstige kaarten leeg. Met Voorraad zet de brug `schldr_paint_stock`
+de materiaallijst klaar als **uitgaande levering** (knop *Levering
+klaarzetten*), telkens voor wat nog niet op een levering staat.
+
+## Planning op ploegen
+
+**Ploegen** zijn vaste groepen medewerkers. De ploeg wordt op de
+**werknemer** ingesteld: *Werknemers → werknemersfiche → tab Werk → Ploeg*
+(één ploeg per medewerker), en de ploegen zelf staan onder *Werknemers →
+Configuratie → Ploegen* (met de Planning-app ook onder *Planning →
+Configuratie*). De Werknemers-app opent **per ploeg**: één kolom per ploeg,
+ook lege, zodat medewerkers naar hun ploeg gesleept kunnen worden; wie geen
+ploeg heeft staat in een eigen kolom. Filters *In een ploeg* en *Ploegbazen*
+en een groepering *Ploeg* staan in het zoekvenster; de fiche toont ook de
+ploegbaas. Een ploeg zonder eigen leden gebruikt de medewerkers van een
+gekozen afdeling, telkens samen met de ploegbaas. Zo blijft het model
+configureerbaar zonder de HR-structuur te dupliceren.
+
+De planning staat niet op het opmetingformulier zelf (dat toont alleen de
+meting) maar in de planner **Per ploeg** en op het **projectdashboard**. Krijgt
+een schilderproject een ploeg en een geplande periode (bv. via de planner of het
+project), dan maakt het systeem automatisch een **werkblok**
+(`schldr.planning`) aan met alle leden van de ploeg. Een werkblok is het
+planning-item van de werf: het toont de basisinformatie van het project
+(referentie, klant, werfadres, projecttype, oppervlakte en omtrek) plus de
+toegewezen medewerkers, en is te bekijken in kalender- of lijstweergave
+(menu *Planning*).
+
+* **Splitsen per dag** (knop op het werkblok of in de lijst) splitst een
+  meerdaags blok in één blok per kalenderdag — dezelfde logica als het
+  splitsen van een planning-shift. Elk resulterend blok krijgt een eigen kopie
+  van de medewerkerslijst en kan daarna onafhankelijk herbezet worden.
+* Bestaande werkblokken worden nooit overschreven: pas de ploeg of de data aan
+  en gebruik **Planning aanmaken** voor een extra blok.
+
+### Planning-app (optioneel)
+
+Het aparte bridge-moduletje **schldr_paint_planning** installeert zichzelf
+zodra zowel Schilderwerk als de Odoo **Planning**-app aanwezig zijn. Dan wordt
+elke toegewezen medewerker een echte planning-shift (`planning.slot`), zichtbaar
+in de Planning-app en in de eigen planning van de medewerker. De planner
+**Per ploeg** (de standaardweergave van de Planning-app, en de knop Planning
+op schilderproject en projectdashboard) toont per ploeg één **projectblok** per
+werkblok met projectnaam en werfadres, niet de losse medewerkers. Verplaats of
+verleng het blok en alle shifts volgen; klik erop voor de samenvatting met de
+ingeplande medewerkers (verwijder er een om zijn shift eruit te halen) en de
+knoppen **Projectoverzicht**, **Schilderproject** en **Per medewerker**. De shifts volgen
+het werkblok: data, medewerkers en status worden gesynchroniseerd, splitsen
+splitst de shifts mee en het verwijderen van een blok verwijdert zijn shifts.
+Zonder de Planning-app blijven de werkblokken met hun medewerkerslijst gewoon
+werken.

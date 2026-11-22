@@ -231,7 +231,7 @@
 
         <!-- BODY -->
         <t t-call="web.external_layout_body" hide_title="True"
-           customized_address_layout="address and schldr_parties">
+           customized_address_layout="schldr_parties">
             <div class="o_report_layout_schldr">
                 <h2 t-out="layout_document_title"/>
                 <t t-out="0"/>
