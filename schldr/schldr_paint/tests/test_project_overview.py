@@ -17,17 +17,17 @@ class TestProjectOverview(TransactionCase):
         cls.Project = cls.env["project.project"]
         cls.customer = cls.env["res.partner"].create({"name": "Dhr. Peeters"})
         cls.service = cls.env["product.product"].create({
-            "name": "Plaatsen EPDM", "type": "service", "list_price": 50,
+            "name": "Muren schilderen", "type": "service", "list_price": 50,
         })
 
-    def _confirmed_project(self, **roof_values):
+    def _confirmed_project(self, **project_values):
         order = self.env["sale.order"].create({
             "partner_id": self.customer.id,
             "order_line": [(0, 0, {"product_id": self.service.id, "product_uom_qty": 2})],
         })
         order.action_confirm()
-        if roof_values:
-            order.schldr_project_id.write(roof_values)
+        if project_values:
+            order.schldr_project_id.write(project_values)
         return order.schldr_project_id.project_id
 
     def _tile(self, data, group, key):

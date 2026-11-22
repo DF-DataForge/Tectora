@@ -15,11 +15,15 @@ het mechanische deel van die afsplitsing.
 
 | Module | Wat |
 |---|---|
-| `schldr_paint` | De toepassing: plan, oppervlakken, verfsystemen, offerte, project |
+| `schldr_paint` | De toepassing: plan, oppervlakken, verfsystemen, offerte, project, materiaallijst |
+| `schldr_portal` | Medewerkersportaal: werven, kleurenstaat per ruimte, uren, uitvoeringsverslagen |
+| `schldr_quote_builder` | Kop- en voetteksten (pdf) in de offerte |
 | `schldr_report_layout` | Documentlay-out en briefpapier |
 | `schldr_contact_type` | Contacttype op contacten (met de hand te installeren) |
 
-Nog te porten: `schldr_quote_builder`, `schldr_portal`.
+Nog niet overgenomen uit de oorspronkelijke planner: inkoop en logistiek,
+voorraad, ploegplanning met weer, taken per fase, bestellijst per project en
+de Excel-import van offertes.
 
 ## Rekenen
 
@@ -36,16 +40,31 @@ dezelfde voorbeelden getest.
 
 ## Testen
 
+De rekenkern (Python):
+
 ```bash
 python3 -m pytest tests
 ```
+
+Dezelfde rekenkern en de bewerkingen van de editor (JavaScript):
+
+```bash
+node --import ./tests/js/register.mjs --test tests/js/lib.test.mjs
+```
+
+Geen namen van de oorspronkelijke toepassing meer in de code:
 
 ```bash
 python3 tools/check_names.py
 ```
 
-De Odoo-tests (`schldr_*/tests`) draaien in een Odoo 20-database:
+De Odoo-tests (`schldr_*/tests`) draaien in een Odoo 20-database met een
+rekeningschema:
 
 ```bash
-odoo-bin -d <testdb> -i schldr_paint --test-enable --test-tags /schldr_paint --stop-after-init
+odoo-bin -d <testdb> -i l10n_be,schldr_paint,schldr_portal,schldr_quote_builder,schldr_report_layout,schldr_contact_type --test-enable --test-tags /schldr_paint,/schldr_portal,/schldr_quote_builder,/schldr_report_layout,/schldr_contact_type --stop-after-init
 ```
+
+`tests/fixtures/*.json` bevat plannen met wat de Python-rekenkern erin meet;
+de JavaScript-tests moeten op dezelfde cijfers uitkomen. Na een bewuste
+wijziging van het rekenwerk: `python3 tests/make_fixtures.py`.

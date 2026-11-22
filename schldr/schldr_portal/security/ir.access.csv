@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_schldr_paint_timer_user,schldr.timer user,schldr.timer,base.group_user,r,
+access_schldr_paint_timer_sales,schldr.timer sales,schldr.timer,sales_team.group_sale_salesman,crud,
+access_schldr_paint_timer_timesheet_approver,schldr.timer timesheet approver,schldr.timer,hr_timesheet.group_hr_timesheet_approver,crud,
+access_schldr_paint_execution_report_user,schldr.execution.report user,schldr.execution.report,base.group_user,r,
+access_schldr_paint_execution_report_sales,schldr.execution.report sales,schldr.execution.report,sales_team.group_sale_salesman,crud,
+access_schldr_paint_execution_report_project_user,schldr.execution.report project user,schldr.execution.report,project.group_project_user,crud,

@@ -13,7 +13,7 @@ class TestTaskStages(TransactionCase):
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
         cls.customer = cls.env["res.partner"].create({"name": "Dhr. Peeters"})
         cls.service = cls.env["product.product"].create({
-            "name": "Plaatsen EPDM", "type": "service", "list_price": 50,
+            "name": "Muren schilderen", "type": "service", "list_price": 50,
         })
 
     def _confirmed_project(self):

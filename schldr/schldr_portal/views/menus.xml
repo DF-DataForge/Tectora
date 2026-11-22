@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_schldr_timers"
+              name="Urenregistraties"
+              parent="schldr_paint.menu_project_worksite"
+              action="action_schldr_paint_timer"
+              sequence="50"/>
+
+    <menuitem id="menu_schldr_execution_reports"
+              name="Uitvoeringsverslagen"
+              parent="schldr_paint.menu_project_worksite"
+              action="action_schldr_paint_execution_report"
+              sequence="60"/>
+
+</odoo>

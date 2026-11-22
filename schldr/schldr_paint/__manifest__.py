@@ -30,8 +30,9 @@ Planning interior painting, fully inside Odoo:
   layers take, rounded up to the pots the product comes in.
 * Measurement sheet and site sheet as PDF, with the colour schedule per room.
 
-Schldr is a fork of the Tectora roofing addons: the order, project, crew and
-planning flow is theirs, drawing and calculating are new.
+The order, project, crew and planning flow comes from the project planner
+Schldr was forked from (see the README of the repository); drawing and
+calculating are new.
     """,
     "version": "20.0.1.0.0",
     "category": "Sales",

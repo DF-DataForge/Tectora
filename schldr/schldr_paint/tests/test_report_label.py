@@ -13,7 +13,7 @@ class TestReportLabel(TransactionCase):
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
         cls.partner = cls.env["res.partner"].create({"name": "Klant"})
         cls.product = cls.env["product.product"].create({
-            "name": "Verwijderen van de dakdoorvoer", "default_code": "S99053",
+            "name": "Verwijderen van het behang", "default_code": "S99053",
             "type": "service", "list_price": 16.85,
         })
 
@@ -28,7 +28,7 @@ class TestReportLabel(TransactionCase):
         })
         self.assertIn("[S99053]", order.order_line.label, "Odoo's label carries it")
         html = self._html("sale.action_report_saleorder", order)
-        self.assertIn("Verwijderen van de dakdoorvoer", html)
+        self.assertIn("Verwijderen van het behang", html)
         self.assertNotIn("[S99053]", html)
 
     def test_invoice_without_reference(self):
@@ -38,5 +38,5 @@ class TestReportLabel(TransactionCase):
             "invoice_line_ids": [(0, 0, {"product_id": self.product.id, "price_unit": 16.85})],
         })
         html = self._html("account.account_invoices", invoice)
-        self.assertIn("Verwijderen van de dakdoorvoer", html)
+        self.assertIn("Verwijderen van het behang", html)
         self.assertNotIn("[S99053]", html)

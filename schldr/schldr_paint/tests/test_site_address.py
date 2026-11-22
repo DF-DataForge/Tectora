@@ -24,7 +24,7 @@ class TestSiteAddress(TransactionCase):
             "street": "Mellestraat 358", "zip": "8501", "city": "Heule",
         })
 
-    def test_order_and_roof_share_the_site(self):
+    def test_order_and_project_share_the_site(self):
         # A quotation makes its painting project, the delivery address its site.
         order = self.env["sale.order"].create({
             "partner_id": self.customer.id,
@@ -47,7 +47,7 @@ class TestSiteAddress(TransactionCase):
 
     def test_new_schldr_project_takes_the_customer(self):
         job = self.env["schldr.project"].create({
-            "name": "Dak", "partner_id": self.customer.id,
+            "name": "Woning", "partner_id": self.customer.id,
         })
         self.assertEqual(job.site_partner_id, self.customer)
         self.assertIn("Kortrijk", job.address)

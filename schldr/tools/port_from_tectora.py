@@ -42,6 +42,8 @@ REPLACEMENTS = [
     ("roof edge", "accent edge"),
     ("roof line", "accent line"),
     ("roof's peak", "peak"),
+    # the xml id of a model follows the model's name, not the module's
+    ("model_tectora_roof_", "model_schldr_"),
     # modules
     *MODULES.items(),
     # models
@@ -63,6 +65,15 @@ REPLACEMENTS = [
     ("roof_measurement_line", "schldr_measurement_line"),
     ("roof_line_id", "schldr_line_id"),
     ("roof_form", "schldr_form"),
+    # crew portal
+    ("roof_execution_report", "schldr_execution_report"),
+    ("RoofExecutionReport", "ExecutionReport"),
+    ("roof_running_timer", "schldr_running_timer"),
+    ("roof_portal_hours", "schldr_portal_hours"),
+    ("roof_timer", "schldr_timer"),
+    ("RoofTimer", "Timer"),
+    ("dakwerkers", "schilders"),
+    ("roofers", "painters"),
     # wording: the roofing project becomes a painting project
     ("dakprojecten", "schilderprojecten"),
     ("Dakprojecten", "Schilderprojecten"),

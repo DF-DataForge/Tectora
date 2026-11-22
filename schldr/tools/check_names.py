@@ -4,7 +4,7 @@
     python3 tools/check_names.py
 
 Looks through every text file of the addons for the words below. The tools
-themselves and the README (which tell where the code comes from) are exempt.
+and the READMEs (which may tell where the code comes from) are exempt.
 """
 import re
 import sys
@@ -24,6 +24,8 @@ def main():
         for path in sorted(module.rglob("*")):
             if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
                 continue
+            if path.name == "README.md" and module.name != "schldr_paint":
+                continue  # may tell where the module comes from
             for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                 if FORBIDDEN.search(line):
                     hits += 1
