@@ -252,3 +252,4 @@ Releases and the modules they need upgraded:
 | Uren loggen per ploeg: door ploegleider en/of individueel, via start – stop en/of rechtstreeks ingeven (combineerbaar); per medewerker de zichtbare portaalsegmenten | `tectora_roof` (20.0.3.95.0), `tectora_portal` (20.0.1.4.0) |
 | Projectplanning in de Project-app (Project → Planning: per ploeg, per medewerker, per project), zonder de Planning-app; werkblok rechtstreeks op een project; geplande uren, dubbel ingepland; Ploegen onder Project → Configuratie | `tectora_roof` (20.0.3.96.0), `tectora_roof_planning` (20.0.2.0.0) |
 | Portaal op de planner: geregistreerde uren en uitvoeringsverslagen per werkblok | `tectora_portal` (20.0.1.5.0) |
+| Fix Beschikbare momenten: "Inplannen" plant de gekozen periode in (gaf een serverfout) | `tectora_roof_planning` (20.0.2.0.1) |
