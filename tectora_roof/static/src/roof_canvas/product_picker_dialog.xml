@@ -736,7 +736,7 @@
                                 <tr t-foreach="this.selectionLines(definition)" t-as="line" t-key="line.product.id">
                                     <td t-out="line.product.name"/>
                                     <td class="text-end text-nowrap">
-                                        <t t-out="Number.isInteger(line.quantity) ? line.quantity : line.quantity.toFixed(2)"/>
+                                        <t t-out="this.formatQuantity(line.quantity)"/>
                                         <t t-out="' ' + line.product.uom"/>
                                     </td>
                                     <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
@@ -929,7 +929,7 @@
                                    t-on-change="(ev) => this.setExtra(line.id, 'factor', ev.target.value)"/>
                         </td>
                         <td class="text-end text-nowrap" style="width: 7rem;">
-                            <t t-out="Number.isInteger(line.total) ? line.total : line.total.toFixed(2)"/>
+                            <t t-out="this.formatQuantity(line.total)"/>
                             <t t-out="' ' + line.uom"/>
                         </td>
                         <td class="text-nowrap" style="width: 9rem;">
