@@ -44,6 +44,11 @@ const PDFJS_BUILD = "/web/static/lib/pdfjs/build";
 // While drawing, a side within this angle (rad) of 45° / 90° to the side
 // before it snaps to it.
 const DRAFT_ANGLE_SNAP = (3 * Math.PI) / 180;
+// A new drawing starts with its origin this far (m) in from the top left of
+// the screen; a drawing without a plan is never fitted closer than FIT_MIN_M
+// across.
+const ORIGIN_OFFSET_M = 1;
+const FIT_MIN_M = 8;
 // How many changes of the drawing Ctrl+Z can take back.
 const UNDO_LIMIT = 50;
 // Circles are stored as regular polygons so measurements and the server-side
@@ -1242,6 +1247,16 @@ export class RoofCanvasField extends Component {
         }
         // The whole drawing: the plan (or the screen) and whatever was
         // drawn beyond it.
+        if (!this.backgroundImage && !(this.shapes || []).length) {
+            // A new drawing: the origin (0, 0) one metre in from the top
+            // left of the screen, so the first corner can be put on it with
+            // room around it.
+            const offset = ORIGIN_OFFSET_M / this.scaleMPerPx;
+            this.view.zoom = 1;
+            this.view.x = offset;
+            this.view.y = offset;
+            return;
+        }
         const bounds = this.contentBounds();
         const zoom = Math.min(canvas.width / bounds.w, canvas.height / bounds.h);
         this.view.zoom = zoom;
@@ -1252,12 +1267,41 @@ export class RoofCanvasField extends Component {
     /** The rectangle (world coordinates) that holds the plan and every
      * shape: shapes drawn beyond the plan widen it, with some room around. */
     contentBounds() {
+        const shapes = this.shapes || [];
+        if (!this.backgroundImage && shapes.some((shape) => (shape.points || []).length)) {
+            // Without a plan or photo the drawing is the shapes themselves:
+            // fitted with room around them (a metre at least), and never so
+            // close that a small shape fills the screen.
+            const points = shapes.flatMap((shape) => shape.points || []);
+            const xs = points.map((point) => point[0]);
+            const ys = points.map((point) => point[1]);
+            let left = Math.min(...xs);
+            let top = Math.min(...ys);
+            let width = Math.max(...xs) - left;
+            let height = Math.max(...ys) - top;
+            const metre = 1 / this.scaleMPerPx;
+            const margin = Math.max(Math.max(width, height) * 0.08, ORIGIN_OFFSET_M * metre);
+            left -= margin;
+            top -= margin;
+            width += margin * 2;
+            height += margin * 2;
+            const least = FIT_MIN_M * metre;
+            if (width < least) {
+                left -= (least - width) / 2;
+                width = least;
+            }
+            if (height < least * 0.6) {
+                top -= (least * 0.6 - height) / 2;
+                height = least * 0.6;
+            }
+            return { x: left, y: top, w: width, h: height };
+        }
         let x0 = 0;
         let y0 = 0;
         let x1 = this.world.w;
         let y1 = this.world.h;
         let beyond = false;
-        for (const shape of this.shapes || []) {
+        for (const shape of shapes) {
             for (const point of shape.points || []) {
                 if (point[0] < x0 || point[0] > x1 || point[1] < y0 || point[1] > y1) {
                     beyond = true;
@@ -1997,6 +2041,10 @@ export class RoofCanvasField extends Component {
             return;
         }
         if (!this.draftPolygon) {
+            // Started on (or right next to) the origin: exactly on it.
+            if (Math.hypot(point[0], point[1]) <= CLOSE_SNAP_PX / this.view.zoom) {
+                point = [0, 0];
+            }
             this.draftPolygon = [point];
             this.draftCursor = null;
             this.draftLength = "";
@@ -4516,6 +4564,17 @@ export class RoofCanvasField extends Component {
         ctx.textAlign = "left";
         const formatMeters = (m) => (step < 1 ? m.toFixed(1) : String(m)) + " m";
         const view = surface.view;
+        // The origin (0, 0), where a drawing starts: a small cross.
+        const arm = 7 / zoom;
+        ctx.strokeStyle = "rgba(11, 78, 91, 0.85)";
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.beginPath();
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.moveTo(0, -arm);
+        ctx.lineTo(0, arm);
+        ctx.stroke();
+        ctx.fillText("0", 3 / zoom, -3 / zoom);
         for (let i = firstCol; i <= lastCol; i++) {
             if (i !== 0 && i % GRID_MAJOR_EVERY === 0) {
                 ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, view.y + fontSize * 1.2);

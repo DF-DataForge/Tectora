@@ -262,3 +262,4 @@ Releases and the modules they need upgraded:
 | Tekening: Ctrl+Z maakt de laatste wijziging ongedaan (Ctrl+Y opnieuw), ook de laatste hoek van een polygoon in opbouw; knoppen in de werkbalk | `tectora_roof` (20.0.3.103.0) |
 | Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |
 | Tekening: het tekenvlak en het raster lopen door onder alles wat getekend of in beeld is; de pasweergave en de afbeelding op de meetstaat tonen ook wat buiten het plan getekend is | `tectora_roof` (20.0.3.105.0) |
+| Tekening: een nieuwe tekening start met het nulpunt 1 m binnen de linkerbovenhoek (kruisje, eerste hoek klikt erop vast); een tekening zonder plan wordt passend op haar vormen getoond | `tectora_roof` (20.0.3.106.0) |
