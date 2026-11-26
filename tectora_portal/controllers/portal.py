@@ -70,6 +70,23 @@ class TectoraEmployeePortal(CustomerPortal):
             params["error"] = error
         return "/my/werven/%d?%s" % (project.id, urlencode(params))
 
+    def _tectora_tab(self, employee, tab):
+        """``tab`` if the employee sees that segment, else their first
+        visible tab (``overview`` when none is)."""
+        segments = employee._tectora_portal_segments()
+        if tab in TABS and segments.get(tab):
+            return tab
+        return next((name for name in TABS if segments.get(name)), "overview")
+
+    def _tectora_segment_refused(self, employee, project, segment, tab):
+        """A redirect when ``segment`` is hidden for the employee, else None."""
+        if employee._tectora_portal_segments().get(segment):
+            return None
+        return request.redirect(self._tectora_site_url(
+            project, self._tectora_tab(employee, tab),
+            error=_("Dit onderdeel staat niet open op jouw portaal."),
+        ))
+
     def _tectora_no_employee(self, values=None):
         values = dict(values or self._prepare_portal_layout_values())
         values["page_name"] = "tectora_sites"
@@ -195,7 +212,10 @@ class TectoraEmployeePortal(CustomerPortal):
     def _tectora_site_values(self, employee, project, tab, **kw):
         now = fields.Datetime.now()
         values = self._prepare_portal_layout_values()
-        running = project.running_timer_id
+        Timer = request.env["tectora.roof.timer"].sudo()
+        policy = project._tectora_portal_hours_policy(employee)
+        running = Timer._running_for(project, "team")
+        my_running = Timer._running_for(project, "individual", employee)
         today_employees = project._tectora_portal_planned_employees(now)
         stop_employees = request.env["hr.employee"].sudo()
         if running:
@@ -227,7 +247,8 @@ class TectoraEmployeePortal(CustomerPortal):
             "page_name": "tectora_site",
             "site": project,
             "employee": employee,
-            "tab": tab if tab in TABS else "overview",
+            "tab": self._tectora_tab(employee, tab),
+            "segments": employee._tectora_portal_segments(),
             "now": now,
             "today": fields.Date.context_today(request.env.user),
             "blocks": project._tectora_portal_visible_blocks(employee, now),
@@ -235,6 +256,10 @@ class TectoraEmployeePortal(CustomerPortal):
             "planned_employees": project._tectora_portal_planned_employee_ids(),
             "today_employees": today_employees,
             "running_timer": running,
+            "my_running_timer": my_running,
+            "can_stop_team": bool(running) and self._tectora_can_stop(running, employee, policy),
+            "hours_policy": policy,
+            "manual_employees": self._tectora_manual_employees(project, employee, now),
             "stop_employees": stop_employees,
             "timers": project.timer_ids.filtered(lambda timer: timer.state != "cancelled"),
             "reports": project.execution_report_ids,
@@ -265,6 +290,35 @@ class TectoraEmployeePortal(CustomerPortal):
         return request.render("tectora_portal.portal_site_page", values)
 
     # ----------------------------------------------------------------- timer
+    def _tectora_can_stop(self, timer, employee, policy):
+        """Who may stop a running registration: its own employee (individual),
+        or whoever logs for the crew and whoever started it (team)."""
+        if timer.scope == "individual":
+            return employee in timer.employee_ids
+        return bool(policy["team"] or timer.started_by_id == employee)
+
+    def _tectora_manual_employees(self, project, employee, moment):
+        """The people a ploegleider can enter hours for: the crew planned on
+        the site, their ploeg and themselves."""
+        team = project._tectora_portal_hours_team(employee)
+        return (
+            project._tectora_portal_planned_employees(moment)
+            | project._tectora_portal_planned_employee_ids()
+            | team.member_ids
+            | employee
+        ).filtered("active")
+
+    def _tectora_form_employees(self, allowed):
+        chosen = []
+        for raw in request.httprequest.form.getlist("employee_ids"):
+            try:
+                value = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if value in allowed.ids and value not in chosen:
+                chosen.append(value)
+        return chosen
+
     @http.route(
         ["/my/werven/<int:project_id>/uren/start"],
         type="http", auth="user", methods=["POST"], website=True,
@@ -275,12 +329,22 @@ class TectoraEmployeePortal(CustomerPortal):
             return self._tectora_no_employee()
         project = self._tectora_site_for(employee, project_id)
         tab = post.get("tab") or "report"
+        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        if refused:
+            return refused
+        policy = project._tectora_portal_hours_policy(employee)
+        scope = post.get("scope") or ("team" if policy["team"] else "individual")
+        if scope not in ("team", "individual") or not policy["timer"] or not policy[scope]:
+            return request.redirect(self._tectora_site_url(
+                project, tab, error=_("Je ploeg logt de uren niet op deze manier.")
+            ))
         try:
             request.env["tectora.roof.timer"].sudo()._start(
                 project,
                 employee,
                 notes=(post.get("notes") or "").strip() or None,
                 work_kind=post.get("work_kind"),
+                scope=scope,
             )
         except (UserError, ValidationError) as error:
             return request.redirect(self._tectora_site_url(project, tab, error=str(error)))
@@ -305,22 +369,25 @@ class TectoraEmployeePortal(CustomerPortal):
             return request.redirect(self._tectora_site_url(
                 project, tab, error=_("Deze urenregistratie loopt niet (meer).")
             ))
-        # Only people who can have been on the site: the planned crew, the
-        # crew stored at start and the one stopping it.
-        allowed = (
-            timer.employee_ids
-            | project._tectora_portal_planned_employees(timer.start_datetime)
-            | project._tectora_portal_planned_employee_ids()
-            | employee
-        )
-        chosen = []
-        for raw in request.httprequest.form.getlist("employee_ids"):
-            try:
-                value = int(raw)
-            except (TypeError, ValueError):
-                continue
-            if value in allowed.ids and value not in chosen:
-                chosen.append(value)
+        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        if refused:
+            return refused
+        policy = project._tectora_portal_hours_policy(employee)
+        if not self._tectora_can_stop(timer, employee, policy):
+            return request.redirect(self._tectora_site_url(
+                project, tab, error=_("Enkel de ploegleider kan deze urenregistratie stoppen.")
+            ))
+        if timer.scope == "individual":
+            chosen = [employee.id]
+        else:
+            # Only people who can have been on the site: the planned crew,
+            # the crew stored at start and the one stopping it.
+            chosen = self._tectora_form_employees(
+                timer.employee_ids
+                | project._tectora_portal_planned_employees(timer.start_datetime)
+                | project._tectora_portal_planned_employee_ids()
+                | employee
+            )
         if not chosen:
             return request.redirect(self._tectora_site_url(
                 project, tab, error=_("Kies minstens één medewerker voor wie de uren geboekt worden.")
@@ -345,6 +412,57 @@ class TectoraEmployeePortal(CustomerPortal):
                       hours=timer._elapsed_display(), count=len(chosen)),
         ))
 
+    @http.route(
+        ["/my/werven/<int:project_id>/uren/ingeven"],
+        type="http", auth="user", methods=["POST"], website=True,
+    )
+    def portal_site_hours_manual(self, project_id, **post):
+        """Hours entered directly: for oneself, or by the ploegleider for the
+        crew -- as the ploeg's settings allow."""
+        employee = self._tectora_employee()
+        if not employee:
+            return self._tectora_no_employee()
+        project = self._tectora_site_for(employee, project_id)
+        tab = post.get("tab") or "report"
+        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        if refused:
+            return refused
+        policy = project._tectora_portal_hours_policy(employee)
+        scope = post.get("scope") or ("team" if policy["team"] else "individual")
+        if scope not in ("team", "individual") or not policy["manual"] or not policy[scope]:
+            return request.redirect(self._tectora_site_url(
+                project, tab, error=_("Je ploeg geeft de uren niet rechtstreeks in.")
+            ))
+        employees = request.env["hr.employee"].sudo()
+        if scope == "team":
+            allowed = self._tectora_manual_employees(project, employee, fields.Datetime.now())
+            employees = employees.browse(self._tectora_form_employees(allowed))
+            if not employees:
+                return request.redirect(self._tectora_site_url(
+                    project, tab,
+                    error=_("Kies minstens één medewerker voor wie de uren geboekt worden."),
+                ))
+        hours = (post.get("hours") or "").strip().replace(",", ".")
+        if ":" in hours:
+            whole, _sep, minutes = hours.partition(":")
+            try:
+                hours = int(whole or 0) + int(minutes or 0) / 60.0
+            except ValueError:
+                hours = None
+        try:
+            timer = request.env["tectora.roof.timer"].sudo()._log_manual(
+                project, employee, post.get("date"), hours,
+                employees=employees, work_kind=post.get("work_kind"),
+                notes=(post.get("notes") or "").strip() or None, scope=scope,
+            )
+        except (UserError, ValidationError, ValueError) as error:
+            return request.redirect(self._tectora_site_url(project, tab, error=str(error)))
+        return request.redirect(self._tectora_site_url(
+            project, tab,
+            message=_("%(hours)s uur geboekt voor %(count)s medewerker(s).",
+                      hours=timer._elapsed_display(), count=len(timer.employee_ids)),
+        ))
+
     # ---------------------------------------------------------------- report
     @http.route(
         ["/my/werven/<int:project_id>/verslag"],
@@ -355,6 +473,9 @@ class TectoraEmployeePortal(CustomerPortal):
         if not employee:
             return self._tectora_no_employee()
         project = self._tectora_site_for(employee, project_id)
+        refused = self._tectora_segment_refused(employee, project, "report", "report")
+        if refused:
+            return refused
         work_done = (post.get("work_done") or "").strip()
         if not work_done:
             return request.redirect(self._tectora_site_url(

@@ -40,19 +40,19 @@
                     <div class="card-body p-0">
                         <table t-if="this.windows(team).length" class="table table-sm mb-0">
                             <tbody>
-                                <tr t-foreach="this.windows(team)" t-as="window" t-key="window.start"
-                                    t-att-class="window.fits ? 'table-success' : ''">
+                                <tr t-foreach="this.windows(team)" t-as="period" t-key="period.start"
+                                    t-att-class="period.fits ? 'table-success' : ''">
                                     <td class="ps-2">
-                                        <t t-out="this.formatDate(window.start)"/>
-                                        <t t-if="window.end !== window.start"> – <t t-out="this.formatDate(window.end)"/></t>
+                                        <t t-out="this.formatDate(period.start)"/>
+                                        <t t-if="period.end !== period.start"> – <t t-out="this.formatDate(period.end)"/></t>
                                     </td>
                                     <td class="text-end text-nowrap">
-                                        <t t-out="window.days"/> werkdag(en) vrij
+                                        <t t-out="period.days"/> werkdag(en) vrij
                                     </td>
                                     <td class="text-end pe-2" style="width: 8rem;">
                                         <button t-if="data.project" type="button" class="btn btn-sm py-0"
-                                                t-att-class="window.fits ? 'btn-primary' : 'btn-outline-secondary'"
-                                                t-on-click="() => this.plan(team, window)">Inplannen</button>
+                                                t-att-class="period.fits ? 'btn-primary' : 'btn-outline-secondary'"
+                                                t-on-click="() => this.plan(team, period)">Inplannen</button>
                                     </td>
                                 </tr>
                             </tbody>

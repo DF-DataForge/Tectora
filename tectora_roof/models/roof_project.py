@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+import base64
 import io
 import json
 import logging
 import math
+import os
 import re
+import shutil
+import subprocess
+import tempfile
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -562,6 +567,10 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         orders = self.sale_order_ids
         if not orders or "picking_ids" not in orders._fields:
+            # Without Inventory there is no such model: an empty set of
+            # orders counts and lists the same (nothing).
+            if "stock.picking" not in self.env:
+                return orders.browse()
             return self.env["stock.picking"]
         return orders.mapped("picking_ids")
 
@@ -1056,6 +1065,99 @@ class TectoraRoofProject(models.Model):
             )
         )
 
+    # ------------------------------------------------------------- PDF plan
+    # A plan as PDF becomes the drawing's background as an image. The
+    # browser draws it (pdf.js); these are the fallback when it cannot:
+    # PyMuPDF, else poppler's pdftoppm, whichever the server has.
+    @api.model
+    def _tectora_pdf_bytes(self, data):
+        try:
+            return base64.b64decode(data or "")
+        except (ValueError, TypeError):
+            raise UserError(_("Het pdf-plan kon niet gelezen worden."))
+
+    @api.model
+    def tectora_pdf_page_count(self, data):
+        self.check_access("write")  # only who may change a roof project
+        content = self._tectora_pdf_bytes(data)
+        try:
+            import fitz  # noqa: PLC0415  (PyMuPDF, optional)
+            with fitz.open(stream=content, filetype="pdf") as document:
+                return document.page_count
+        except ImportError:
+            pass
+        except Exception:
+            raise UserError(_("Het pdf-plan kon niet gelezen worden."))
+        try:
+            from odoo.tools.pdf import PdfFileReader  # noqa: PLC0415
+            return len(PdfFileReader(io.BytesIO(content), strict=False).pages)
+        except Exception:
+            return 1
+
+    @api.model
+    def tectora_pdf_page_to_png(self, data, page=1, max_px=2500):
+        """{image (base64 PNG), pointsPerPx} of page ``page`` of the PDF,
+        its longest side ``max_px`` pixels."""
+        self.check_access("write")  # only who may change a roof project
+        content = self._tectora_pdf_bytes(data)
+        page = max(int(page or 1), 1)
+        max_px = min(max(int(max_px or 2500), 500), 2560)
+        try:
+            import fitz  # noqa: PLC0415  (PyMuPDF, optional)
+        except ImportError:
+            fitz = None
+        if fitz:
+            try:
+                with fitz.open(stream=content, filetype="pdf") as document:
+                    sheet = document[min(page, document.page_count) - 1]
+                    zoom = max_px / max(sheet.rect.width, sheet.rect.height)
+                    pixmap = sheet.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
+                    return {
+                        "image": base64.b64encode(pixmap.tobytes("png")).decode(),
+                        "pointsPerPx": 1.0 / zoom,
+                    }
+            except Exception:
+                _logger.exception("PyMuPDF could not draw the PDF plan")
+        pdftoppm = shutil.which("pdftoppm")
+        if pdftoppm:
+            with tempfile.TemporaryDirectory() as folder:
+                source = os.path.join(folder, "plan.pdf")
+                with open(source, "wb") as handle:
+                    handle.write(content)
+                target = os.path.join(folder, "page")
+                try:
+                    subprocess.run(
+                        [pdftoppm, "-png", "-singlefile", "-f", str(page), "-l", str(page),
+                         "-scale-to", str(max_px), source, target],
+                        check=True, timeout=60, capture_output=True,
+                    )
+                    with open(target + ".png", "rb") as handle:
+                        image_bytes = handle.read()
+                    with Image.open(io.BytesIO(image_bytes)) as image:
+                        longest = max(image.size)
+                    points = self._tectora_pdf_longest_side(content, page)
+                    return {
+                        "image": base64.b64encode(image_bytes).decode(),
+                        "pointsPerPx": (points / longest) if points and longest else 0.0,
+                    }
+                except (subprocess.SubprocessError, OSError):
+                    _logger.exception("pdftoppm could not draw the PDF plan")
+        raise UserError(_(
+            "Dit pdf-plan kan hier niet omgezet worden naar een afbeelding. "
+            "Laad het plan op als afbeelding (png of jpg)."
+        ))
+
+    @api.model
+    def _tectora_pdf_longest_side(self, content, page):
+        """The longest side of a PDF page in points, or 0."""
+        try:
+            from odoo.tools.pdf import PdfFileReader  # noqa: PLC0415
+            reader = PdfFileReader(io.BytesIO(content), strict=False)
+            box = reader.pages[min(page, len(reader.pages)) - 1].mediabox
+            return max(float(box.width), float(box.height))
+        except Exception:
+            return 0.0
+
     def action_fetch_satellite(self):
         self.ensure_one()
         if not self.address:
@@ -1247,7 +1349,8 @@ class TectoraRoofProject(models.Model):
         a section: those whose middle lies inside it."""
         area = perimeter = kimfix = 0.0
         for shape in object_shapes:
-            if shape["kind"] == "seam" or len(shape["points"]) < 3:
+            # A tapbuis sits in the roof covering: nothing runs around it.
+            if shape["kind"] in ("seam", "drain") or len(shape["points"]) < 3:
                 continue
             width_px, length_px = _bounding_box_px(shape["points"])
             xs = [p[0] for p in shape["points"]]
@@ -1453,7 +1556,8 @@ class TectoraRoofProject(models.Model):
         except (ValueError, TypeError):
             return []
         kind_names = {"section": _("Sectie"), "chimney": _("Schoorsteen"),
-                      "skylight": _("Koepel"), "seam": _("Naad")}
+                      "skylight": _("Koepel"), "penetration": _("Dakdoorvoer"),
+                      "drain": _("Tapbuis"), "seam": _("Naad")}
         rows = []
 
         def add(element, entry):
@@ -1520,11 +1624,15 @@ class TectoraRoofProject(models.Model):
             "section": (10, 116, 131, 80),
             "chimney": (217, 119, 6, 90),
             "skylight": (37, 99, 235, 80),
+            "penetration": (124, 58, 237, 90),
+            "drain": (8, 145, 178, 110),
         }
         strokes = {
             "section": (10, 116, 131, 255),
             "chimney": (180, 83, 9, 255),
             "skylight": (29, 78, 216, 255),
+            "penetration": (109, 40, 217, 255),
+            "drain": (14, 116, 144, 255),
         }
         try:
             font = ImageFont.load_default(size=max(14, base.size[0] // 80))
@@ -1668,6 +1776,26 @@ class TectoraRoofProject(models.Model):
                     "roof_measurement_line": True,
                     "sequence": 100000,
                 })
+            # The conditional items (worst case): on the quotation with their
+            # unit price and a quantity of 0; what they would come to is in
+            # their description.
+            for (roof, product), quantity in project._tectora_conditional_totals().items():
+                line = Line.create({
+                    "order_id": target.id,
+                    "product_id": product.id,
+                    "product_uom_qty": 0.0,
+                    "tectora_roof_id": roof.id or False,
+                    "roof_measurement_line": True,
+                    "tectora_conditional": True,
+                    "sequence": 100000,
+                })
+                if quantity:
+                    line.with_context(tectora_sync=True).write({"name": "%s\n%s" % (
+                        line.name or product.display_name,
+                        _("Indien nodig: ca. %(quantity)s %(unit)s",
+                          quantity=("%.2f" % quantity).rstrip("0").rstrip("."),
+                          unit=product.uom_id.name or ""),
+                    )})
 
             # The general notes.
             notes = (project.quote_notes or "").strip()
@@ -1696,8 +1824,19 @@ class TectoraRoofProject(models.Model):
         """The drawing's products: {(roof, product): quantity}, summed over
         the roof's sections and roof objects."""
         self.ensure_one()
+        return self._tectora_line_totals(conditional=False)
+
+    def _tectora_conditional_totals(self):
+        """The drawing's conditional items (worst case): {(roof, product):
+        the quantity they would come to}."""
+        self.ensure_one()
+        return self._tectora_line_totals(conditional=True)
+
+    def _tectora_line_totals(self, conditional=False):
+        self.ensure_one()
         totals = {}
         lines = (self.section_ids.product_line_ids | self.roof_object_ids.product_line_ids)
+        lines = lines.filtered(lambda l: bool(l.is_conditional) == conditional)
         for line in lines.sorted(lambda l: (l.product_id.categ_id.complete_name or "", l.product_id.display_name or "", l.id)):
             if not line.product_id:
                 continue
@@ -1716,8 +1855,11 @@ class TectoraRoofProject(models.Model):
         "safety": "VERPLICHTE VEILIGHEIDSVOORZIENINGEN",
         "demolition": "AFBOUWWERKEN THV HET PLAT DAK",
         "buildup": "OPBOUWWERKEN THV HET PLAT DAK",
+        "conditional": "WORST CASE SCENARIO",
         "notes": "ALGEMENE NOTA'S",
     }
+    # The terrace floor has a segment of its own, after the works on the roof.
+    TERRACE_TITLE = "AANLEG TERRASVLOER"
 
     @api.model
     def _tectora_segment_kind(self, text):
@@ -1731,6 +1873,11 @@ class TectoraRoofProject(models.Model):
             return "demolition"
         if "nota" in lowered:
             return "notes"
+        # The terrace floor (chapter "Terrasvloer", header "Aanleg
+        # terrasvloer"): a segment of its own. A roof that happens to be a
+        # terrace keeps its "Opbouwwerken thv ..." segment.
+        if "terras" in lowered and "opbouw" not in lowered:
+            return "other"
         if re.search(r"worst case|garantie|andere werken|upsale|commerc|tegemoetkoming|korting|optie", lowered):
             return "other"
         if re.search(r"opbouw|dakrand|koepel|dakram|overste|terras|afvoer|isolatie|afdichting|dakbedekking", lowered):
@@ -1766,6 +1913,8 @@ class TectoraRoofProject(models.Model):
             return self.SEGMENT_TITLES[kind]
         if kind == "other":
             label = re.sub(r"^\d+\.\s*", "", chapter.name or "") if chapter else _("Overige")
+            if "terras" in label.lower():
+                return self.TERRACE_TITLE
             return label.upper()
         return self.SEGMENT_TITLES.get(kind, kind.upper())
 
@@ -1782,9 +1931,21 @@ class TectoraRoofProject(models.Model):
             return (2, index, 0 if kind == "demolition" else 1)
         if kind == "other":
             return (3, chapter.name if chapter else "~")
+        if kind == "conditional":
+            # Where the chapter "09. Worst case scenario" would stand.
+            return (3, "09")
         if kind == "custom":
             return (4, position)
         return (5,)
+
+    @api.model
+    def _tectora_conditional_chapter(self):
+        """The catalogue's chapter of the conditional items ("09. Worst case
+        scenario"), or an empty recordset: conditional items of the drawing
+        go under it, with the chapter's own products."""
+        return self.env["product.category"].search(
+            [("name", "ilike", "worst case")], order="parent_path, id", limit=1
+        )
 
     def _tectora_measured_products(self, roof=None):
         """Products the drawing prices: of ``roof`` when given, else of the
@@ -1795,7 +1956,11 @@ class TectoraRoofProject(models.Model):
         if roof:
             sections = sections.filtered(lambda s: s.roof_id == roof)
             objects = objects.filtered(lambda o: o.roof_id == roof)
-        return (sections.product_line_ids | objects.product_line_ids).product_id
+        # A conditional item does not price its product: the same product
+        # may well be a chapter line of its own.
+        return (sections.product_line_ids | objects.product_line_ids).filtered(
+            lambda line: not line.is_conditional
+        ).product_id
 
     def action_tectora_toggle_quote_lock(self):
         """Zet offerte vast / Offerte vrijgeven, from the roof project."""

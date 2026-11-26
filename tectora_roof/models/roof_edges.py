@@ -38,6 +38,10 @@ CONNECTION_GROUPS = (
     (r"buren", "Dak van de buren"),
     (r"goot", "Goot"),
     (r"dekpannen|hellend dak|onderdak", "Hellend dak"),
+    (r"dorpel|schuifraam|raam of deur", "Dorpel / raam"),
+    (r"onderkapping", "Onderkapping"),
+    (r"gevelbekleding|gevelafwerking|volkern|crepi|sidings", "Gevelbekleding"),
+    (r"dekste|muurkap|c-profiel", "Deksteen / muurkap"),
     (r"solin|wandaansluit|gevel|slabbe|lood|metser", "Muur / gevel"),
     (r"", "Andere aansluitingen"),
 )
@@ -129,10 +133,14 @@ class TectoraRoofProject(models.Model):
     @api.model
     def _tectora_connection_products(self):
         products = self._tectora_chapter_products(
-            ["Aansluitingen"], ["aansluiting", "solins", "wandaansluit", "slabben", "onderkapping"]
+            ["Aansluitingen"],
+            ["aansluiting", "solins", "wandaansluit", "slabben", "onderkapping", "dorpel",
+             "dekstenen", "gevelbekleding"],
         )
         return products.filtered(
-            lambda p: not re.search(r"binnenhoek|buitenhoek|eindstuk|schoorsteen", (p.name or "").lower())
+            lambda p: not re.search(
+                r"binnenhoek|buitenhoek|eindstuk|schoorsteen|schouw", (p.name or "").lower()
+            )
         )
 
     @api.model
@@ -208,14 +216,21 @@ class TectoraRoofProject(models.Model):
     def tectora_apply_edges(self, items, kind, product_id, corners=True, dry_run=False):
         """Put the finish on the sides ``items`` ([{section_id, side (1-based),
         quantity (m)}]): ``kind`` "edge" (a roof edge) or "connection". The
-        side's earlier roof edge or connection is replaced. A roof edge also
-        gets its corners where two sides with that edge meet. With
-        ``dry_run`` nothing is written: the corners it would take are
-        returned."""
+        side's earlier roof edge or connections are replaced. A side takes
+        one roof edge, or one or more connections (``product_id`` a list: a
+        wall profile and the connection to the cladding above it, a sill and
+        its flashing). A roof edge also gets its corners where two sides with
+        that edge meet. With ``dry_run`` nothing is written: the corners it
+        would take are returned."""
         self.ensure_one()
         Section = self.env["tectora.roof.section"]
         Line = self.env["tectora.roof.section.product"]
-        product = self.env["product.product"].browse(product_id).exists()
+        product_ids = product_id if isinstance(product_id, (list, tuple)) else [product_id]
+        chosen = self.env["product.product"].browse(
+            [int(pid) for pid in product_ids if pid]
+        ).exists()
+        # The roof edge the corners follow: the one product of an edge.
+        product = chosen[:1]
         profiles, pieces = self._tectora_edge_products()
         connections = self._tectora_connection_products()
         finishes = profiles | connections
@@ -236,14 +251,15 @@ class TectoraRoofProject(models.Model):
                     and l.product_id in finishes
                 ).unlink()
                 for side, quantity in sorted(sides.items()):
-                    Line.create({
-                        "section_id": section.id,
-                        "product_id": product.id,
-                        "coverage": "edges",
-                        "edge_index": side,
-                        "quantity": quantity or 1.0,
-                    })
-                    result["lines"] += 1
+                    for finish in (chosen if kind == "connection" else product):
+                        Line.create({
+                            "section_id": section.id,
+                            "product_id": finish.id,
+                            "coverage": "edges",
+                            "edge_index": side,
+                            "quantity": quantity or 1.0,
+                        })
+                        result["lines"] += 1
             points = self._tectora_section_points(section)
             n = len(points)
             if n < 3:
@@ -296,3 +312,87 @@ class TectoraRoofProject(models.Model):
                     "quantity": 1.0,
                 })
         return result
+
+    # ------------------------------------------------------------ split side
+    def tectora_split_side(self, section_id, side, length_first, length_second):
+        """A side of a surface was cut in two on the drawing (a point put on
+        it: the wall, then the window): side ``side`` (1-based) is now
+        ``length_first`` m long and the new side after it ``length_second`` m;
+        every later side and corner moved up one.
+
+        The products follow: those of later sides and corners move with
+        them, those of the cut side stay on its first part with the new
+        length and are copied onto the second part, so both parts start from
+        what the whole side had and each can then be given its own."""
+        self.ensure_one()
+        section = self.env["tectora.roof.section"].browse(int(section_id or 0)).exists()
+        side = int(side or 0)
+        if not section or section.project_id != self or side < 1:
+            return False
+        Line = self.env["tectora.roof.section.product"].with_context(tectora_sync=True)
+        lines = section.product_line_ids.with_context(tectora_sync=True)
+        # Highest first, so no two lines ever share a number on the way.
+        for line in lines.filtered(lambda l: l.edge_index > side).sorted(
+            lambda l: -l.edge_index
+        ):
+            line.edge_index = line.edge_index + 1
+        copies = []
+        for line in lines.filtered(lambda l: l.edge_index == side and l.coverage == "edges"):
+            fixed = line.quantity_mode == "fixed"
+            factor = line.quantity_factor or 1.0
+            if not fixed:
+                line.quantity = round(float(length_first or 0.0) * factor, 2) or 1.0
+            copies.append({
+                "section_id": section.id,
+                "product_id": line.product_id.id,
+                "coverage": "edges",
+                "edge_index": side + 1,
+                "quantity_mode": line.quantity_mode,
+                "quantity_factor": line.quantity_factor,
+                "is_conditional": line.is_conditional,
+                "quantity": line.quantity if fixed
+                else (round(float(length_second or 0.0) * factor, 2) or 1.0),
+            })
+        if copies:
+            Line.create(copies)
+        self._tectora_mirror_to_order()
+        return True
+
+    def tectora_merge_sides(self, section_id, kept, dropped, length):
+        """The reverse of tectora_split_side: the point between two sides in
+        line was taken off the drawing, so side ``dropped`` (1-based) is gone
+        into side ``kept``, now ``length`` m long, and every later side and
+        corner moved down one.
+
+        The products follow: what was on the dropped side goes onto the kept
+        one (a product both had stays once), with the whole length; a corner
+        piece on the point that is gone is removed; the later sides and
+        corners move with their numbers."""
+        self.ensure_one()
+        section = self.env["tectora.roof.section"].browse(int(section_id or 0)).exists()
+        kept, dropped = int(kept or 0), int(dropped or 0)
+        if not section or section.project_id != self or kept < 1 or dropped < 1 or kept == dropped:
+            return False
+        lines = section.product_line_ids.with_context(tectora_sync=True)
+        # The corner on the point that is gone.
+        lines.filtered(lambda l: l.edge_index == dropped and l.coverage == "corners").unlink()
+        lines = lines.exists()
+        on_kept = lines.filtered(lambda l: l.edge_index == kept and l.coverage == "edges")
+        have = on_kept.product_id
+        for line in lines.filtered(lambda l: l.edge_index == dropped and l.coverage == "edges"):
+            if line.product_id in have:
+                line.unlink()
+            else:
+                line.edge_index = kept
+                have |= line.product_id
+                on_kept |= line
+        for line in on_kept.exists():
+            if line.quantity_mode != "fixed":
+                line.quantity = round(float(length or 0.0) * (line.quantity_factor or 1.0), 2) or 1.0
+        # Lowest first, so no two lines ever share a number on the way.
+        for line in section.product_line_ids.with_context(tectora_sync=True).filtered(
+            lambda l: l.edge_index > dropped
+        ).sorted("edge_index"):
+            line.edge_index = line.edge_index - 1
+        self._tectora_mirror_to_order()
+        return True

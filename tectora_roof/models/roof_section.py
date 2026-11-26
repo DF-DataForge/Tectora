@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import math
 import re
 
 from odoo import _, api, fields, models
@@ -31,6 +32,12 @@ def is_insulation(product):
         return False
     name = (product.name or "").lower()
     return "isolatie" in name and not re.search(r"verwijder|afbraak|afvoer", name)
+
+
+def is_membrane(product):
+    """Whether ``product`` is about the roof covering (dakbedekking): laid
+    or removed, it is measured over the surface and up the upstands."""
+    return bool(product) and "dakbedekking" in (product.name or "").lower()
 
 
 def insulation_thickness(product):
@@ -150,6 +157,13 @@ class TectoraRoofSection(models.Model):
         self.ensure_one()
         return round((self.inner_perimeter or self.perimeter) + self.kimfix_object_perimeter, 2)
 
+    def _tectora_membrane_quantity(self):
+        """The roof covering of this surface (m²): the surface, plus the
+        vertical surface of its upstands (per side its length x the upstand
+        set on the drawing)."""
+        self.ensure_one()
+        return round(self.area + self.upstand_area, 2)
+
     def _tectora_insulation_quantity(self):
         """The insulation of this surface (m²): the surface inside the roof
         edges, less the roof objects on it."""
@@ -199,6 +213,9 @@ class TectoraRoofSection(models.Model):
                 "product_id": line.product_id.id,
                 "coverage": line.coverage,
                 "quantity": line.quantity,
+                "quantity_mode": line.quantity_mode,
+                "quantity_factor": line.quantity_factor,
+                "is_conditional": line.is_conditional,
                 "edge_index": 0,
             })
         return Line.create(values) if values else Line
@@ -340,8 +357,31 @@ class TectoraRoofSectionProduct(models.Model):
         store=True,
         readonly=False,
         help="Volgt de meting: oppervlakte (m²) of omtrek (m) van de sectie, "
-        "of van het hele dak voor een projectlijn. Een ingevoerde waarde "
-        "blijft staan tot de tekening verandert.",
+        "of van het hele dak voor een projectlijn, maal de factor. Met "
+        "'Vast aantal' blijft de ingevoerde waarde staan.",
+    )
+    quantity_mode = fields.Selection(
+        [("measure", "Volgt de meting"), ("fixed", "Vast aantal")],
+        string="Hoeveelheid",
+        default="measure",
+        required=True,
+        help="Volgt de meting: de maat van het element (m², m) maal de "
+        "factor. Vast aantal: wat ingevuld is (een forfait, een aantal "
+        "stuks), ook wanneer de tekening verandert.",
+    )
+    quantity_factor = fields.Float(
+        string="Factor",
+        default=1.0,
+        digits=(16, 4),
+        help="Waarmee de maat van het element vermenigvuldigd wordt: 8 voor "
+        "8 stuks per m² (tegeldragers), 0,12 voor 12 % snijafval. Een "
+        "product per stuk wordt naar boven afgerond.",
+    )
+    is_conditional = fields.Boolean(
+        string="Voorwaardelijk",
+        help="Voorwaardelijke post (worst case): staat op de offerte met "
+        "zijn eenheidsprijs en hoeveelheid 0, onder 'Worst case scenario', "
+        "en telt dus niet mee in het totaal.",
     )
     sale_line_ids = fields.One2many(
         "sale.order.line", "roof_line_id", string="Offertelijnen",
@@ -399,10 +439,13 @@ class TectoraRoofSectionProduct(models.Model):
                     )
                 )
 
-    @api.depends("quantity", "product_id.lst_price")
+    @api.depends("quantity", "product_id.lst_price", "is_conditional")
     def _compute_price_subtotal(self):
         for line in self:
-            line.price_subtotal = line.quantity * line.product_id.lst_price
+            # A conditional item (worst case) is priced, not counted.
+            line.price_subtotal = (
+                0.0 if line.is_conditional else line.quantity * line.product_id.lst_price
+            )
 
     @api.depends(
         "coverage", "edge_index",
@@ -410,17 +453,22 @@ class TectoraRoofSectionProduct(models.Model):
         "section_id.inner_area", "section_id.upstand_length",
         "section_id.object_area", "section_id.object_perimeter",
         "section_id.inner_perimeter", "section_id.kimfix_object_perimeter",
+        "section_id.upstand_area", "quantity_mode", "quantity_factor",
         "section_id.product_line_ids.product_id",
         "object_id.area", "object_id.perimeter", "object_id.height", "product_id",
         "project_direct_id.total_area", "project_direct_id.total_perimeter",
         "roof_id.total_area", "roof_id.total_perimeter",
     )
     def _compute_quantity(self):
-        """Quantity from the measurement. Per-side lines keep the length the
-        drawing gave them; corners, drainage and general lines keep what was
-        entered (defaults 4 and 1)."""
+        """Quantity from the measurement, times the line's factor. Per-side
+        lines keep the length the drawing gave them; corners, drainage and
+        general lines keep what was entered (defaults 4 and 1); a line with a
+        fixed quantity keeps it whatever the drawing does."""
         from .roof_skylux import chimney_area, chimney_cladding  # noqa: PLC0415
         for line in self:
+            if line.quantity_mode == "fixed":
+                line.quantity = line.quantity
+                continue
             if line.edge_index:
                 line.quantity = line.quantity or 1.0
                 continue
@@ -431,9 +479,9 @@ class TectoraRoofSectionProduct(models.Model):
                 if line.roof_id and not line.roof_id.total_area:
                     line.quantity = line.quantity or 1.0
                 elif line.coverage == "surface":
-                    line.quantity = measure.total_area
+                    line.quantity = line._tectora_factored(measure.total_area)
                 elif line.coverage == "edges":
-                    line.quantity = measure.total_perimeter
+                    line.quantity = line._tectora_factored(measure.total_perimeter)
                 else:
                     line.quantity = line.quantity or 1.0
                 continue
@@ -441,24 +489,44 @@ class TectoraRoofSectionProduct(models.Model):
             if line.section_id and line.coverage == "surface" and is_vapour_barrier(line.product_id):
                 # The vapour barrier: inner surface less the objects, plus
                 # up the upstands and around the objects.
-                line.quantity = line.section_id._tectora_vapour_quantity()["quantity"]
+                line.quantity = line._tectora_factored(
+                    line.section_id._tectora_vapour_quantity()["quantity"])
             elif line.section_id and line.coverage == "surface" and is_insulation(line.product_id):
                 # The insulation: inner surface less the objects.
-                line.quantity = line.section_id._tectora_insulation_quantity()
+                line.quantity = line._tectora_factored(
+                    line.section_id._tectora_insulation_quantity())
+            elif line.section_id and line.coverage == "surface" and is_membrane(line.product_id):
+                # The roof covering (laid or removed): the surface and up
+                # the upstands.
+                line.quantity = line._tectora_factored(
+                    line.section_id._tectora_membrane_quantity())
             elif line.section_id and line.coverage == "edges" and is_kimfix(line.product_id):
                 # The kimfixatie: every side, and around chimneys and domes.
-                line.quantity = line.section_id._tectora_kimfix_quantity()
+                line.quantity = line._tectora_factored(
+                    line.section_id._tectora_kimfix_quantity())
             elif line.object_id and line.coverage == "surface" and chimney_cladding(line.product_id):
                 # A chimney's cladding: its sides (and its top).
                 line.quantity = chimney_area(line.object_id, line.product_id)
             elif target and line.coverage == "surface":
-                line.quantity = target.area
+                line.quantity = line._tectora_factored(target.area)
             elif target and line.coverage == "edges":
-                line.quantity = target.perimeter
+                line.quantity = line._tectora_factored(target.perimeter)
             elif line.coverage == "corners":
                 line.quantity = line.quantity or 4.0
             else:
                 line.quantity = line.quantity or 1.0
+
+    def _tectora_factored(self, measure):
+        """``measure`` times this line's factor; a product counted in pieces
+        is rounded up (8 tile supports per m² are whole supports)."""
+        self.ensure_one()
+        factor = self.quantity_factor or 1.0
+        if factor == 1.0:
+            return measure
+        value = measure * factor
+        if self.product_id and self._coverage_from_product(self.product_id) == "general":
+            return float(math.ceil(round(value, 4)))
+        return round(value, 2)
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
@@ -513,6 +581,17 @@ class TectoraRoofSectionProduct(models.Model):
                 vals["coverage"] = self._coverage_from_product(
                     Product.browse(vals["product_id"])
                 )
+            # A line on a whole surface or outline is measured, not given: the
+            # quantity a caller passes (the plain area or perimeter) would
+            # keep the line from its own measure -- the roof covering up the
+            # upstands, a factor, pieces rounded up.
+            if (
+                (vals.get("section_id") or vals.get("object_id"))
+                and not vals.get("edge_index")
+                and vals.get("coverage", "surface") in ("surface", "edges")
+                and vals.get("quantity_mode", "measure") != "fixed"
+            ):
+                vals.pop("quantity", None)
         lines = super().create(vals_list)
         if not self.env.context.get("tectora_sync"):
             lines.project_id._tectora_mirror_to_order()
@@ -521,7 +600,8 @@ class TectoraRoofSectionProduct(models.Model):
     def write(self, vals):
         result = super().write(vals)
         if not self.env.context.get("tectora_sync") and (
-            {"quantity", "product_id", "coverage", "edge_index"} & set(vals)
+            {"quantity", "product_id", "coverage", "edge_index", "quantity_mode",
+             "quantity_factor", "is_conditional"} & set(vals)
         ):
             self.project_id._tectora_mirror_to_order()
         return result

@@ -48,6 +48,32 @@ class HrEmployee(models.Model):
         "vallen. Wat al voorbij is of vandaag loopt, blijft zichtbaar.",
     )
 
+    # Which segments of a site the employee sees on the portal.
+    tectora_portal_show_overview = fields.Boolean(
+        string="Overzicht", default=True,
+        help="Tab Overzicht: werf, ploeg en planning, werfinfo.")
+    tectora_portal_show_materials = fields.Boolean(
+        string="Materialen", default=True, help="Tab Materialen: de materiaallijst van de werf.")
+    tectora_portal_show_plan = fields.Boolean(
+        string="Plan", default=True, help="Tab Plan: het dakplan en de werkdagen.")
+    tectora_portal_show_report = fields.Boolean(
+        string="Uitvoeringsverslag", default=True,
+        help="Tab Uitvoeringsverslag: verslagen en foto's indienen.")
+    tectora_portal_show_hours = fields.Boolean(
+        string="Urenregistratie", default=True,
+        help="De urenregistratie (start – stop / uren ingeven) en de uren op de werf.")
+
+    def _tectora_portal_segments(self):
+        """``{segment: visible}`` of the site page for this employee."""
+        self.ensure_one()
+        return {
+            "overview": self.tectora_portal_show_overview,
+            "materials": self.tectora_portal_show_materials,
+            "plan": self.tectora_portal_show_plan,
+            "report": self.tectora_portal_show_report,
+            "hours": self.tectora_portal_show_hours,
+        }
+
     @api.depends("user_id", "user_id.share", "user_id.active")
     def _compute_tectora_portal_access(self):
         for employee in self:

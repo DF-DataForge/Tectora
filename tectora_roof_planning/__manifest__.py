@@ -1,66 +1,76 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "Data Forge Dakmeting — Planning",
-    "summary": "Plan dakprojecten per ploeg in de Planning-app; elk ploeglid "
-    "krijgt een eigen planning-item",
+    "name": "Data Forge Dakmeting — Projectplanning",
+    "summary": "Plan projecten per ploeg in de Project-app: planner per "
+    "ploeg, per medewerker en per project, zonder de Planning-app",
     "description": """
-Data Forge Dakmeting — Planning
-===============================
-Bridge between the roof measurement projects and Odoo Planning.
+Data Forge Dakmeting — Projectplanning
+======================================
+The planner of the projects, inside the Project app (Project -> Planning).
+It does not use Odoo's Planning app: the work blocks
+(``tectora.roof.planning``) are the planning itself. A block is planned on a
+project (of the Project app; through it on its roof project), for a ploeg
+and the employees on it.
 
-A work block (``tectora.roof.planning``) on a roof project keeps the project
-information and the team assignment; this bridge turns every assigned employee
-into a real planning shift (``planning.slot``), so the shifts show up in the
-Planning app, in the employees' own planning and in every standard Planning
-report.
-
-* the shifts follow the block: changing its dates, its employees or its state
-  updates (or removes) the corresponding shifts;
-* splitting a work block per day splits the employees' shifts along with it,
-  and each resulting block can be re-assigned independently;
-* deleting a block removes its shifts.
-
-The Planning app also gets a "Per ploeg" planner, which becomes the planner
-the app opens on: one row per ploeg and one project block per work block,
-carrying the project and the site address. Drag or resize the block and the
-shifts of every employee on it move along; its summary lists those employees
-(take one off to drop their shift) and opens the project overview and the
-roof project. Ploegen themselves move from Dakmeting to
-Planning -> Configuratie, since that is where they are used. Uninstalling puts
-the app's own default planner and the Ploegen menu back.
-
-In the Planning app's own planners (per resource and the others) a shift
-takes the colour of its roof project, so all shifts of one site share it;
-shifts without a roof project keep their own colour.
+* **Per ploeg**: one row per ploeg and one block per work block, carrying the
+  customer, the municipality of the site, the roof area, the project type and
+  the crew size. Drag or resize a block and it moves for everyone on it; drop
+  it on another ploeg and it takes that team's members. Its summary lists the
+  employees (take one off, add one) and opens the project overview and the
+  roof project. Teams set to "Altijd weergeven op planner" always have a row.
+* **Per medewerker**: the same blocks, one row per employee -- everyone's own
+  planning.
+* **Per project**: one row per project.
+* The block's colour is its project's; a concept is hatched, a block carried
+  out greyed, and a block with an employee who is planned twice in that
+  period is outlined in red ("Dubbel ingepland", also a filter and a warning
+  on the block).
+* The scissors cut a block in two at a day boundary; each part can be
+  re-assigned on its own.
+* Opened from a project (the Planning button or card of its dashboard), a
+  click on free cells plans that project there at once, as a concept block
+  on that row's team.
+* "Beschikbare momenten": per team the free working days in the coming
+  weeks, for a project the days it needs on each team, and "Inplannen" makes
+  a concept block there.
+* Planned hours per block: 8 hours per working day and per employee; the
+  project dashboard totals them.
 
 Weather forecasts from Open-Meteo (no API key) on the work blocks: a
 scheduled action fetches every morning the daily forecast of the next 16
 days for every site with a work block in that period and keeps it; each block
 gets the worst day's weather (icon, temperatures, rain, wind gusts) in its
-label in the team planner and in its summary, day by day, with a warning when
+label in the planner and in its summary, day by day, with a warning when
 the weather is no good for roofing work (rain, snow, thunder, gusts from
 50 km/h, below 5 °C). "Weer vernieuwen" on the planner, and on the blocks'
 list and form, fetches it at once. The site is located by the roof project's
 satellite image, else its municipality (Open-Meteo geocoding, kept).
 
-The project dashboard of Dakmeting lists the employees' shifts on its
-Planning tab and its planning card opens the resource planner on them.
+The employee portal (tectora_portal) reads the same work blocks: an employee
+sees the sites they are planned on, and the hours they register are booked
+for the crew of that day's block. Nothing else is needed for it.
 
-Installs itself automatically as soon as both Dakmeting and Planning are
-installed.
+Ploegen move from Dakmeting to Project -> Configuratie, since that is where
+they are planned. Uninstalling puts the menu back.
+
+Upgrading from the bridge to the Planning app (up to 20.0.1.x) takes
+everything that bridge left in the Planning app out again: its views on the
+shifts, its "Per ploeg" menu and default planner, and the shifts the work
+blocks made (see migrations/20.0.2.0.0). The work blocks stay as they are.
+
+Needs the gantt view (``web_gantt``, Odoo Enterprise).
     """,
-    "version": "20.0.1.26.0",
-    "category": "Sales",
+    "version": "20.0.2.0.1",
+    "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",
     "website": "https://www.data-forge.be",
-    "depends": ["tectora_roof", "planning"],
+    "depends": ["tectora_roof", "web_gantt"],
     "data": [
         "security/ir.access.csv",
         "data/weather_data.xml",
-        "views/planning_slot_views.xml",
         "views/roof_planning_views.xml",
-        "views/project_project_views.xml",
+        "views/menus.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -73,10 +83,10 @@ installed.
     },
     "post_init_hook": "post_init_hook",
     "uninstall_hook": "uninstall_hook",
-    # Installed by hand (no auto_install) on Odoo 20: Planning is Enterprise
-    # and its gantt could not be tested with this port, so a problem there
-    # only fails this module's own install, never that of the other Tectora
-    # modules. See UPGRADE_NOTES.md.
+    # Installed by hand (no auto_install): the gantt view is Enterprise
+    # (web_gantt) and could not be tested with the Odoo 20 port, so a problem
+    # there only fails this module's own install, never that of the other
+    # Tectora modules. See UPGRADE_NOTES.md.
     "auto_install": False,
     "installable": True,
 }

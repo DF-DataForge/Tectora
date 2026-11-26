@@ -112,15 +112,19 @@ On a fresh Odoo 20.0 community database (all modules except
 
 ## Not verified
 
-* **`tectora_roof_planning`** (needs the Enterprise `planning` app) is ported
-  to Odoo 20's Planning, where a shift holds its resources in `resource_ids`
-  instead of one `resource_id`: the roof planning keeps one shift per
-  employee, with that employee's resource in `resource_ids`, and the views
-  group and show `resource_ids`. It is ported from the Odoo 20 field list of
-  `planning.slot` but could not be run here (no Enterprise), so it no longer
-  installs itself: install it by hand, after the other modules. Its gantt
-  views and the `web_gantt` renderer it extends (`static/src/team_gantt/`)
-  are the parts that remain untested.
+* **`tectora_roof_planning`** (needs the Enterprise gantt view, `web_gantt`)
+  is, from 20.0.2.0.0, the planner of the Project app and no longer a bridge
+  to the Planning app: it does not depend on `planning` and makes no shifts
+  (`planning.slot`) any more. It could not be run here (no Enterprise), so it
+  does not install itself: install it by hand, after the other modules. Its
+  gantt views, the `web_gantt` renderer it extends
+  (`static/src/team_gantt/`) and its migration from the bridge
+  (`migrations/20.0.2.0.0`) are the parts that remain untested. Upgrading a
+  database with the bridge: upgrade `tectora_roof` and `tectora_roof_planning`
+  together; the migration removes what the bridge put in the Planning app
+  (its views on the shifts, its "Per ploeg" menu and default planner) and
+  **deletes the shifts the work blocks made** -- the work blocks stay. The
+  Planning app itself can be uninstalled afterwards if nothing else uses it.
 * **PDF output** through wkhtmltopdf: the reports were rendered as HTML only.
 * **Upgrading an existing Odoo 19 database** (through Odoo's upgrade
   service). The module migrations are in place, but no real database was
@@ -245,3 +249,20 @@ Releases and the modules they need upgraded:
 | Zet offerte vast: de dakmeting overschrijft de lijnen van de offerte niet meer (knop op offerte en dakproject) | `tectora_roof` (20.0.3.92.0) |
 | Planner: klik op vrije cel plant het project (vanuit het project) meteen in; ploegen met "Altijd weergeven op planner" staan altijd op de planner | `tectora_roof` (20.0.3.93.0), `tectora_roof_planning` (20.0.1.25.0) |
 | Werkblok: van–tot-kalender; een gekozen dag loopt 8:00–17:00 (ook bij inplannen vanuit beschikbare momenten) | `tectora_roof` (20.0.3.94.0), `tectora_roof_planning` (20.0.1.26.0) |
+| Uren loggen per ploeg: door ploegleider en/of individueel, via start – stop en/of rechtstreeks ingeven (combineerbaar); per medewerker de zichtbare portaalsegmenten | `tectora_roof` (20.0.3.95.0), `tectora_portal` (20.0.1.4.0) |
+| Projectplanning in de Project-app (Project → Planning: per ploeg, per medewerker, per project), zonder de Planning-app; werkblok rechtstreeks op een project; geplande uren, dubbel ingepland; Ploegen onder Project → Configuratie | `tectora_roof` (20.0.3.96.0), `tectora_roof_planning` (20.0.2.0.0) |
+| Portaal op de planner: geregistreerde uren en uitvoeringsverslagen per werkblok | `tectora_portal` (20.0.1.5.0) |
+| Fix Beschikbare momenten: "Inplannen" plant de gekozen periode in (gaf een serverfout) | `tectora_roof_planning` (20.0.2.0.1) |
+| Productkiezer: extra vrije producten (met eigen hoeveelheid) op elk rekentabblad (Dakopbouw, Randafwerking, Afbouw, Schoorsteen, Koepel); naam van sectie of dakobject vrij in te typen in het zijpaneel | `tectora_roof` (20.0.3.97.0) |
+| Tekening: dakdoorvoer als dakobject (cirkel of rechthoek), ook in de 3D-weergave en op de afdruk | `tectora_roof` (20.0.3.98.0) |
+| Dakmeting: Skylux-prijzen onder het menu Instellingen (naast Algemene instellingen) | `tectora_roof` (20.0.3.99.0) |
+| Tekening → offerte: zijde opdelen in stukken; meerdere aansluitingen per zijde (dorpel, onderkapping, gevelbekleding, deksteen); dakbedekking inclusief opstanden; tabblad Terrasvloer (tegeldragers per m², tegels, snijafval) met eigen hoofdstuk "Aanleg terrasvloer"; hoeveelheid × factor of vast aantal; voorwaardelijke posten (worst case, hoeveelheid 0); tapbuis als dakobject met eigen tabblad; pdf-plan als achtergrond met schaal | `tectora_roof` (20.0.3.100.0) |
+| Fix productkiezer: tabbladen Terrasvloer/Tapbuis en Extra producten gaven een fout bij het tonen van hoeveelheden | `tectora_roof` (20.0.3.101.0) |
+| Tekenen: hoek van de zijde die getekend wordt (klikt vast op 45° en 90°, Alt: vrij); lengte van de zijde intypen en Enter tekent ze | `tectora_roof` (20.0.3.102.0) |
+| Tekening: Ctrl+Z maakt de laatste wijziging ongedaan (Ctrl+Y opnieuw), ook de laatste hoek van een polygoon in opbouw; knoppen in de werkbalk | `tectora_roof` (20.0.3.103.0) |
+| Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |
+| Tekening: het tekenvlak en het raster lopen door onder alles wat getekend of in beeld is; de pasweergave en de afbeelding op de meetstaat tonen ook wat buiten het plan getekend is | `tectora_roof` (20.0.3.105.0) |
+| Tekening: een nieuwe tekening start met het nulpunt 1 m binnen de linkerbovenhoek (kruisje, eerste hoek klikt erop vast); een tekening zonder plan wordt passend op haar vormen getoond | `tectora_roof` (20.0.3.106.0) |
+| Tekening: opdeling van een zijde verwijderen (twee delen in elkaars verlengde weer samenvoegen; de producten volgen) | `tectora_roof` (20.0.3.107.0) |
+| Fix Ctrl-selectie: het item dat eerst gewoon aangeklikt was, hoort bij de selectie | `tectora_roof` (20.0.3.108.0) |
+| Fixes na een volledige test op Odoo 20 (62 tests dakmeting, 21 portaal): dakopbouw vervangen gaf "Record does not exist"; dakproject openen zonder Voorraad; wijzigingen aan de tekening tijdens het opslaan gingen verloren; rechtsklikmenu viel onderaan buiten beeld; dubbelklik op een klein dakobject opende de producten niet; hoeveelheid op een vlak volgt altijd de eigen meetregel; extra producten zoeken in alle verkoopbare producten; voorwaardelijke posten tellen niet mee in het geschat totaal; tapbuis zonder tabblad Afbouw | `tectora_roof` (20.0.3.109.0) |

@@ -27,6 +27,7 @@
                 <field name="start_datetime"/>
                 <field name="end_datetime"/>
                 <field name="duration_hours" sum="Totaal" optional="show"/>
+                <field name="dossier_id" optional="show"/>
                 <field name="project_id"/>
                 <field name="project_code" optional="hide"/>
                 <field name="partner_id" optional="show"/>
@@ -62,6 +63,7 @@
                     </div>
                     <group>
                         <group string="Werf">
+                            <field name="dossier_id" options="{'no_create': True}"/>
                             <field name="project_id"/>
                             <field name="partner_id" readonly="1"/>
                             <field name="address" readonly="1"/>
@@ -133,6 +135,7 @@
                     </div>
                     <group>
                         <group string="Werf">
+                            <field name="dossier_id" options="{'no_create': True}"/>
                             <field name="project_id" options="{'no_create': True}"/>
                             <field name="partner_id" readonly="1"/>
                             <field name="project_type" readonly="1"/>
@@ -169,7 +172,9 @@
         <field name="model">tectora.roof.planning</field>
         <field name="arch" type="xml">
             <search string="Planning">
-                <field name="project_id"/>
+                <field name="project_id"
+                       filter_domain="['|', ('project_id', 'ilike', self), ('dossier_id', 'ilike', self)]"/>
+                <field name="dossier_id"/>
                 <field name="team_id"/>
                 <field name="department_id"
                        filter_domain="['|', '|',
@@ -190,8 +195,12 @@
                             context="{'group_by': 'team_id'}"/>
                     <filter string="Afdeling" name="group_department"
                             context="{'group_by': 'department_id'}"/>
+                    <filter string="Project" name="group_dossier"
+                            context="{'group_by': 'dossier_id'}"/>
                     <filter string="Dakproject" name="group_project"
                             context="{'group_by': 'project_id'}"/>
+                    <filter string="Medewerker" name="group_employee"
+                            context="{'group_by': 'employee_ids'}"/>
                     <filter string="Startdatum" name="group_start"
                             context="{'group_by': 'start_datetime:day'}"/>
                 </group>
@@ -205,9 +214,9 @@
         <field name="view_mode">calendar,list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Nog geen werkblokken</p>
-            <p>Wijs een ploeg en geplande data toe aan een dakproject: het werkblok
-               en de planning-items van de medewerkers worden dan automatisch
-               aangemaakt.</p>
+            <p>Wijs een ploeg en geplande data toe aan een project: het werkblok
+               wordt dan automatisch aangemaakt en staat voor elk ploeglid op de
+               planner en op het medewerkersportaal.</p>
         </field>
     </record>
 

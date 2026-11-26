@@ -4,7 +4,7 @@
     <t t-name="tectora_roof.RoofProductPickerDialog">
         <Dialog title="this.props.title" size="'xl'">
             <div class="o_roof_product_picker">
-                <ul t-if="this.props.buildup or this.props.edges or this.props.demolition or this.props.chimney or this.props.skylight" class="nav nav-tabs mb-2">
+                <ul t-if="this.props.buildup or this.props.edges or this.props.demolition or this.props.chimney or this.props.skylight or (this.props.selections or []).length" class="nav nav-tabs mb-2">
                     <li t-if="this.props.chimney" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'chimney'}"
                            t-on-click.prevent="() => this.setTab('chimney')">Schoorsteen</a>
@@ -24,6 +24,13 @@
                     <li t-if="this.props.demolition" class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'demolition'}"
                            t-on-click.prevent="() => this.setTab('demolition')">Afbouw</a>
+                    </li>
+                    <li t-foreach="this.props.selections or []" t-as="definition" t-key="definition.key"
+                        class="nav-item">
+                        <a href="#" class="nav-link"
+                           t-att-class="{'active': this.state.tab === 'sel:' + definition.key}"
+                           t-on-click.prevent="() => this.setTab('sel:' + definition.key)"
+                           t-out="definition.label"/>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" t-att-class="{'active': this.state.tab === 'products'}"
@@ -117,7 +124,7 @@
                             </div>
                             <div>
                                 <label class="small text-muted mb-0" for="o_roof_chimney_height">Hoogte boven het dak (m)</label>
-                                <input id="o_roof_chimney_height" type="number" min="0" step="0.05"
+                                <input id="o_roof_chimney_height" type="text" inputmode="decimal" min="0" step="0.05"
                                        class="form-control form-control-sm" style="width: 7rem;"
                                        t-att-value="c.height" t-on-change="(ev) => this.setChimneyHeight(ev)"/>
                             </div>
@@ -331,14 +338,14 @@
                             <div class="d-flex flex-wrap align-items-end gap-3">
                                 <div>
                                     <label class="small text-muted mb-0" for="o_roof_edges_width">Breedte dakrand (cm)</label>
-                                    <input id="o_roof_edges_width" type="number" min="0" step="1"
+                                    <input id="o_roof_edges_width" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
                                            t-att-value="this.toCm(e.width)"
                                            t-on-change="(ev) => this.setSideValue('width', ev)"/>
                                 </div>
                                 <div>
                                     <label class="small text-muted mb-0" for="o_roof_edges_upstand">Opstand (cm)</label>
-                                    <input id="o_roof_edges_upstand" type="number" min="0" step="1"
+                                    <input id="o_roof_edges_upstand" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
                                            t-att-value="this.toCm(e.upstand)"
                                            t-on-change="(ev) => this.setSideValue('upstand', ev)"/>
@@ -406,18 +413,35 @@
                         </div>
 
                         <div t-if="e.kind === 'connection'" class="border rounded p-2 mb-2">
-                            <label class="small text-muted mb-0">Aansluiting</label>
-                            <select class="form-select form-select-sm"
-                                    t-on-change="(ev) => this.setConnection(ev.target.value)">
-                                <option value="0" t-att-selected="!e.connection">— kies —</option>
-                                <optgroup t-foreach="this.connectionGroups" t-as="group" t-key="group.label"
-                                          t-att-label="group.label">
-                                    <option t-foreach="group.products" t-as="product" t-key="product.id"
-                                            t-att-value="product.id" t-att-selected="product.id === e.connection">
-                                        <t t-out="product.name"/> — € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
-                                    </option>
-                                </optgroup>
-                            </select>
+                            <div class="small text-muted mb-1">
+                                Aansluitingen van deze zijde: vink aan wat erop komt. Een zijde
+                                kan er meerdere hebben (een wandaansluitprofiel en de aansluiting
+                                op de gevelafwerking, een dorpel en zijn onderkapping).
+                            </div>
+                            <div class="row g-2">
+                                <div t-foreach="this.connectionGroups" t-as="group" t-key="group.label"
+                                     class="col-lg-6">
+                                    <div class="border rounded p-2 h-100">
+                                        <div class="fw-bold small text-uppercase text-muted mb-1"
+                                             t-out="group.label"/>
+                                        <div t-foreach="group.products" t-as="product" t-key="product.id"
+                                             class="form-check d-flex justify-content-between gap-2">
+                                            <span>
+                                                <input class="form-check-input" type="checkbox"
+                                                       t-attf-id="o_roof_conn_{{product.id}}"
+                                                       t-att-checked="e.connections[product.id]"
+                                                       t-on-change="() => this.toggleConnection(product)"/>
+                                                <label class="form-check-label"
+                                                       t-attf-for="o_roof_conn_{{product.id}}"
+                                                       t-out="product.name"/>
+                                            </span>
+                                            <span class="text-muted small text-nowrap">
+                                                € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div t-if="!e.options.connections.length" class="small text-warning mt-1">
                                 Geen aansluitingen gevonden (categorie Aansluitingen).
                             </div>
@@ -428,7 +452,7 @@
                                 <tr t-foreach="this.edgeLines" t-as="line" t-key="line.key">
                                     <td t-out="line.name"/>
                                     <td class="text-end text-nowrap">
-                                        <t t-out="line.key === 'side' ? line.quantity.toFixed(2) : line.quantity"/>
+                                        <t t-out="line.measured ? line.quantity.toFixed(2) : line.quantity"/>
                                         <t t-out="line.uom"/>
                                     </td>
                                     <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
@@ -541,6 +565,7 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <t t-call="tectora_roof.RoofPickerExtras"/>
 
                         <div class="border rounded p-2">
                             <div class="d-flex flex-wrap align-items-center gap-3">
@@ -555,14 +580,14 @@
                                 <div t-if="b.sheets" class="d-flex align-items-center gap-1 small">
                                     <label class="text-muted mb-0" for="o_roof_buildup_margin"
                                            title="Langs een rand: opstand + breedte dakrand + deze marge">Rand: opstand + breedte +</label>
-                                    <input id="o_roof_buildup_margin" type="number" min="0" step="1"
+                                    <input id="o_roof_buildup_margin" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 4.5rem;"
                                            t-att-value="Math.round(b.margin * 100)"
                                            t-on-change="(ev) => this.onMarginInput(ev, 'margin')"/>
                                     <span class="text-muted me-2">cm</span>
                                     <label class="text-muted mb-0" for="o_roof_buildup_seam"
                                            title="Langs een naad: de overlap met het volgende doek">Naad: overlap</label>
-                                    <input id="o_roof_buildup_seam" type="number" min="0" step="1"
+                                    <input id="o_roof_buildup_seam" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 4.5rem;"
                                            t-att-value="Math.round(b.seamOverlap * 100)"
                                            t-on-change="(ev) => this.onMarginInput(ev, 'seamOverlap')"/>
@@ -662,6 +687,73 @@
                         </div>
                     </t>
                 </div>
+                <!-- The other calculators: free products under whatever they show
+                     (the Dakopbouw has them above its EPDM sheets). -->
+                <!-- The drawing's tick lists (terrace floor, tapbuis): what to put
+                     on the item, each with how many go per unit of its measure. -->
+                <t t-set="definition" t-value="this.activeSelection"/>
+                <div t-if="definition" class="o_roof_selection">
+                    <t t-set="sel" t-value="this.selections[definition.key]"/>
+                    <div t-if="!sel.loaded" class="text-muted p-3">Laden…</div>
+                    <t t-else="">
+                        <p t-if="definition.intro" class="text-muted small mb-2" t-out="definition.intro"/>
+                        <div t-if="!sel.options.length" class="small text-warning mb-2">
+                            <t t-out="definition.empty or 'Geen producten gevonden.'"/>
+                        </div>
+                        <div class="row g-2">
+                            <div t-foreach="this.selectionGroups(definition.key)" t-as="group" t-key="group.label"
+                                 class="col-lg-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="fw-bold small text-uppercase text-muted mb-1" t-out="group.label"/>
+                                    <div t-foreach="group.products" t-as="product" t-key="product.id"
+                                         class="form-check d-flex justify-content-between align-items-center gap-2">
+                                        <span>
+                                            <input class="form-check-input" type="checkbox"
+                                                   t-attf-id="o_roof_sel_{{product.id}}"
+                                                   t-att-checked="sel.selected[product.id]"
+                                                   t-on-change="() => this.toggleSelection(definition.key, product)"/>
+                                            <label class="form-check-label" t-attf-for="o_roof_sel_{{product.id}}"
+                                                   t-out="product.name"/>
+                                        </span>
+                                        <span class="d-flex align-items-center gap-1 text-muted small text-nowrap">
+                                            <t t-if="definition.factorLabel and sel.selected[product.id]">
+                                                ×
+                                                <input type="text" inputmode="decimal" min="0" step="0.01"
+                                                       class="form-control form-control-sm text-end"
+                                                       style="width: 5rem;"
+                                                       t-att-title="definition.factorLabel"
+                                                       t-att-value="sel.factors[product.id]"
+                                                       t-on-change="(ev) => this.setSelectionFactor(definition.key, product, ev.target.value)"/>
+                                            </t>
+                                            € <t t-out="product.price.toFixed(2)"/>/<t t-out="product.uom"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <table t-if="this.selectionLines(definition).length" class="table table-sm mt-2 mb-2">
+                            <tbody>
+                                <tr t-foreach="this.selectionLines(definition)" t-as="line" t-key="line.product.id">
+                                    <td t-out="line.product.name"/>
+                                    <td class="text-end text-nowrap">
+                                        <t t-out="this.formatQuantity(line.quantity)"/>
+                                        <t t-out="' ' + line.product.uom"/>
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold" t-out="line.subtotal.toFixed(2)"/>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">
+                                        <t t-out="definition.label"/> (excl. btw)
+                                    </td>
+                                    <td class="text-end text-nowrap fw-bold"
+                                        t-out="this.selectionTotal(definition).toFixed(2)"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+                <t t-if="['edges', 'demolition', 'chimney', 'skylight'].includes(this.state.tab) or definition"
+                   t-call="tectora_roof.RoofPickerExtras"/>
                 <t t-if="this.state.tab === 'products'">
                 <div class="d-flex flex-wrap gap-1 mb-2">
                     <button type="button" class="btn btn-sm"
@@ -759,7 +851,7 @@
                     </t>
                 </button>
                 <button t-elif="this.state.tab === 'chimney'" type="button" class="btn btn-primary"
-                        t-att-disabled="!this.chimney.product"
+                        t-att-disabled="!this.chimney.product and !this.hasExtras"
                         t-on-click="() => this.applyChimney()">
                     Schoorsteen toepassen
                 </button>
@@ -768,9 +860,16 @@
                     Koepel toepassen
                 </button>
                 <button t-elif="this.state.tab === 'demolition'" type="button" class="btn btn-primary"
-                        t-att-disabled="!this.demolition.options.length"
+                        t-att-disabled="!this.demolition.options.length and !this.hasExtras"
                         t-on-click="() => this.applyDemolition()">
                     Afbouw toepassen
+                    <t t-if="this.itemCount > 1">
+                        op <t t-out="this.itemCount"/> items
+                    </t>
+                </button>
+                <button t-elif="this.activeSelection" type="button" class="btn btn-primary"
+                        t-on-click="() => this.applySelectionTab()">
+                    <t t-out="this.activeSelection.label"/> toepassen
                     <t t-if="this.itemCount > 1">
                         op <t t-out="this.itemCount"/> items
                     </t>
@@ -789,6 +888,103 @@
                 </button>
             </t>
         </Dialog>
+    </t>
+
+    <!-- Free products on a calculator tab: searched among everything that
+         is sold, assigned to the same item(s) when the tab is
+         applied. Each follows the item's measure times a factor, or is a
+         fixed number; ticked "voorwaardelijk" it is a worst case item. -->
+    <t t-name="tectora_roof.RoofPickerExtras">
+        <div class="o_roof_picker_extras border rounded p-2 mb-2">
+            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-1">
+                <strong>Extra producten</strong>
+                <span class="text-muted small">— vrij te kiezen, bovenop wat hierboven staat.
+                    "Volgt de maat" neemt de maat van het item maal de factor (8 voor 8 stuks
+                    per m², 0,12 voor 12 %); "Vast aantal" is een forfait of een aantal stuks<t
+                    t-if="this.itemCount > 1"> per item</t>.</span>
+            </div>
+            <table t-if="this.extraLines.length" class="table table-sm align-middle mb-2">
+                <tbody>
+                    <tr t-foreach="this.extraLines" t-as="line" t-key="line.id">
+                        <td>
+                            <span t-if="line.product.default_code" class="text-muted me-1"
+                                  t-out="line.product.default_code"/>
+                            <t t-out="line.product.name"/>
+                        </td>
+                        <td style="width: 10rem;">
+                            <select class="form-select form-select-sm"
+                                    t-on-change="(ev) => this.setExtra(line.id, 'mode', ev.target.value)">
+                                <option value="measure" t-att-selected="line.extra.mode === 'measure'">Volgt de maat ×</option>
+                                <option value="fixed" t-att-selected="line.extra.mode === 'fixed'">Vast aantal</option>
+                            </select>
+                        </td>
+                        <td style="width: 6.5rem;">
+                            <input t-if="line.extra.mode === 'fixed'" type="text" inputmode="decimal" min="0" step="0.01"
+                                   class="form-control form-control-sm text-end" title="Aantal"
+                                   t-att-value="line.extra.quantity"
+                                   t-on-change="(ev) => this.setExtra(line.id, 'quantity', ev.target.value)"/>
+                            <input t-else="" type="text" inputmode="decimal" min="0" step="0.01"
+                                   class="form-control form-control-sm text-end" title="Factor"
+                                   t-att-value="line.extra.factor"
+                                   t-on-change="(ev) => this.setExtra(line.id, 'factor', ev.target.value)"/>
+                        </td>
+                        <td class="text-end text-nowrap" style="width: 7rem;">
+                            <t t-out="this.formatQuantity(line.total)"/>
+                            <t t-out="' ' + line.uom"/>
+                        </td>
+                        <td class="text-nowrap" style="width: 9rem;">
+                            <div class="form-check mb-0"
+                                 title="Worst case: op de offerte met eenheidsprijs en hoeveelheid 0">
+                                <input class="form-check-input" type="checkbox"
+                                       t-attf-id="o_roof_extra_cond_{{line.id}}"
+                                       t-att-checked="line.extra.conditional"
+                                       t-on-change="(ev) => this.setExtra(line.id, 'conditional', ev.target.checked)"/>
+                                <label class="form-check-label small" t-attf-for="o_roof_extra_cond_{{line.id}}">
+                                    Voorwaardelijk
+                                </label>
+                            </div>
+                        </td>
+                        <td class="text-end text-nowrap fw-bold" style="width: 6rem;"
+                            t-out="line.subtotal.toFixed(2)"/>
+                        <td class="text-end" style="width: 2rem;">
+                            <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                    title="Verwijderen"
+                                    t-on-click="() => this.removeExtra(line.id)">
+                                <i class="oi" data-icon="close"/>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="text-end fw-bold">Extra producten (excl. btw)</td>
+                        <td class="text-end text-nowrap fw-bold" t-out="this.extrasTotal.toFixed(2)"/>
+                        <td/>
+                    </tr>
+                </tbody>
+            </table>
+            <input type="text" class="form-control form-control-sm"
+                   placeholder="Zoek een product op naam of referentie om het toe te voegen…"
+                   t-att-value="this.state.extraSearch"
+                   t-on-input="(ev) => this.onExtraSearch(ev.target.value)"/>
+            <div t-if="this.extraMatches.length" class="list-group mt-1">
+                <button t-foreach="this.extraMatches" t-as="product" t-key="product.id"
+                        type="button"
+                        class="list-group-item list-group-item-action py-1 d-flex justify-content-between gap-2"
+                        t-on-click="() => this.addExtra(product)">
+                    <span>
+                        <span t-if="product.default_code" class="text-muted me-1"
+                              t-out="product.default_code"/>
+                        <t t-out="product.name"/>
+                    </span>
+                    <span class="text-muted text-nowrap">
+                        € <t t-out="product.list_price.toFixed(2)"/>
+                        <t t-if="product.uom_id">/<t t-out="product.uom_id[1]"/></t>
+                    </span>
+                </button>
+            </div>
+            <div t-elif="this.state.extraSearched" class="small text-muted mt-1">
+                Geen producten gevonden.
+            </div>
+        </div>
     </t>
 
 </templates>

@@ -32,7 +32,7 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'polygon' }"
                             t-on-click="() => this.setTool('polygon')"
-                            title="Polygoon tekenen (klik punten, dubbelklik om te sluiten)">
+                            title="Polygoon tekenen: klik de hoeken, of typ de lengte van een zijde en druk Enter. De hoek staat erbij en klikt vast op 45° en 90° (Alt: vrij). Dubbelklik om te sluiten.">
                         <i class="oi" data-icon="star"/> Polygoon
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
@@ -77,6 +77,18 @@
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.undo()"
+                            title="Laatste wijziging aan de tekening ongedaan maken (Ctrl+Z)">
+                        <i class="oi" data-icon="undo"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.redo()"
+                            title="Opnieuw doen (Ctrl+Y)">
+                        <i class="oi" data-icon="redo"/>
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
                             t-att-disabled="!this.state.selectedId"
                             t-on-click="this.renameSelected" title="Geselecteerde sectie hernoemen">
                         <i class="oi" data-icon="edit"/>
@@ -105,10 +117,10 @@
                             <t t-else="">Satellietbeeld ophalen (werfadres)</t>
                         </button>
                         <button type="button" class="dropdown-item" t-on-click="this.chooseUpload"
-                                title="Eigen plan of foto als achtergrond; kalibreer de schaal nadien via rechtsklik op een zijdelengte.">
+                                title="Eigen plan (afbeelding of pdf) of foto als achtergrond. Bij een pdf-plan met gekende schaal (1/100) volgt de schaal vanzelf; anders kalibreer je nadien via rechtsklik op een zijdelengte.">
                             <i class="oi oi-fw me-1" data-icon="upload"/> Eigen plan uploaden…
                         </button>
-                        <input type="file" accept="image/*" class="d-none" t-ref="this.bgFileRef"
+                        <input type="file" accept="image/*,application/pdf,.pdf" class="d-none" t-ref="this.bgFileRef"
                                t-on-change="this.uploadPlan"/>
                         <t t-if="this.backgroundUrl">
                             <div class="dropdown-divider"/>
@@ -175,9 +187,63 @@
                     <t t-set="focus" t-value="this.focus"/>
                     <div t-if="focus" class="o_roof_canvas_panel o_roof_canvas_focus card">
                         <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center">
-                            <strong class="text-truncate" t-out="this.focusLabel"/>
+                            <!-- The name is always free to type: of the section
+                                 (or dakobject), also when one of its sides is
+                                 selected. -->
+                            <div class="d-flex align-items-center gap-1 flex-grow-1 me-2" style="min-width: 0;">
+                                <input type="text"
+                                       class="o_roof_canvas_name form-control form-control-sm fw-bold"
+                                       title="Naam: typ om zelf een naam te geven"
+                                       t-att-value="this.selectedShape.name || ''"
+                                       t-att-placeholder="this.focusNamePlaceholder"
+                                       t-on-change="(ev) => this.setSelectedName(ev.target.value)"
+                                       t-on-keydown="(ev) => ev.stopPropagation()"/>
+                                <strong t-if="this.focusSuffix" class="text-nowrap"
+                                        t-out="this.focusSuffix"/>
+                            </div>
                             <button type="button" class="btn-close" title="Sluiten"
                                     t-on-click="this.closePanel"/>
+                        </div>
+                        <!-- A side that is not one thing on the roof (wall, window,
+                             wall): cut it, each part is then a side of its own. -->
+                        <div t-if="this.canSplitFocusSide" class="card-body p-2 border-bottom small">
+                            <div class="fw-bold mb-1">Zijde opdelen</div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="text-nowrap">op</span>
+                                <input type="text" inputmode="decimal" min="0" step="0.01"
+                                       class="form-control form-control-sm" style="width: 5.5rem;"
+                                       t-att-value="this.state.splitAt"
+                                       t-att-placeholder="(this.focusSideLength / 2).toFixed(2)"
+                                       t-on-input="(ev) => { this.state.splitAt = ev.target.value; }"
+                                       t-on-keydown="(ev) => ev.stopPropagation()"/>
+                                <span class="text-nowrap">m van <t t-out="this.focusSideLength.toFixed(2)"/> m</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 ms-auto"
+                                        t-att-disabled="this.state.splitBusy"
+                                        t-on-click="() => this.splitFocusSide()">Opdelen</button>
+                            </div>
+                            <div class="text-muted mt-1">
+                                Gemeten vanaf het begin van de zijde (de hoek met de vorige
+                                zijde). De vorm blijft dezelfde; elk deel krijgt zijn eigen
+                                naam, dakrand of aansluitingen en producten.
+                            </div>
+                            <!-- The reverse: this side and a neighbour in line with
+                                 it become one side again. -->
+                            <t t-set="merge_options" t-value="this.focusMergeOptions"/>
+                            <div t-if="merge_options.length" class="mt-2 pt-2 border-top">
+                                <div class="fw-bold mb-1">Opdeling verwijderen</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button t-foreach="merge_options" t-as="option" t-key="option.key"
+                                            type="button" class="btn btn-sm btn-outline-secondary py-0"
+                                            t-att-disabled="this.state.splitBusy"
+                                            t-on-click="() => this.mergeFocusSide(option.key)">
+                                        Samenvoegen met <t t-out="option.label"/>
+                                    </button>
+                                </div>
+                                <div class="text-muted mt-1">
+                                    De twee delen worden weer één zijde; wat op beide stond,
+                                    komt op die ene zijde met de hele lengte.
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body p-2 border-bottom">
                             <label class="form-label small fw-bold mb-1">1. Originele staat</label>
@@ -345,7 +411,7 @@
                             <div class="row g-2 align-items-center mb-2">
                                 <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="1" min="0"
+                                    <input type="text" inputmode="decimal" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
                                            t-att-value="edge.width ? Math.round(edge.width * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
@@ -355,7 +421,7 @@
                                 <label class="col-4 col-form-label py-0"
                                        title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="1" min="0"
+                                    <input type="text" inputmode="decimal" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
                                            t-att-value="edge.upstand ? Math.round(edge.upstand * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeUpstand(edge, ev)"/>
@@ -382,7 +448,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Diameter (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.width.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('width', ev)"/>
@@ -393,7 +459,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Lengte (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.length.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('length', ev)"/>
@@ -402,7 +468,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Breedte (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.width.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('width', ev)"/>
@@ -412,7 +478,7 @@
                                 <div class="row g-2 align-items-center mb-2">
                                     <label class="col-5 col-form-label py-0">Hoogte (m)</label>
                                     <div class="col-7">
-                                        <input type="number" step="0.01" min="0"
+                                        <input type="text" inputmode="decimal" step="0.01" min="0"
                                                class="form-control form-control-sm text-end"
                                                t-att-disabled="!measures.editableHeight"
                                                t-att-title="measures.editableHeight ? '' : 'Sla het project eerst op.'"
@@ -483,6 +549,20 @@
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('skylight', 'circle')">
                     <i class="oi me-1" data-icon="radio_button_unchecked"/> Koepel — cirkel
+                </button>
+                <div class="dropdown-divider"/>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('penetration', 'circle')">
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Dakdoorvoer — cirkel
+                </button>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('penetration', 'rect')">
+                    <i class="oi me-1" data-icon="square"/> Dakdoorvoer — rechthoek
+                </button>
+                <div class="dropdown-divider"/>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('drain', 'circle')">
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Tapbuis (afvoer)
                 </button>
             </div>
         </div>

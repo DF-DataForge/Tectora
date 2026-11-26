@@ -111,3 +111,80 @@ class TestEdges(TransactionCase):
         side = self.section.product_line_ids.filtered(lambda l: l.edge_index == 1)
         self.assertEqual(side.product_id, edges)
         self.assertEqual(side.quantity, 4.0)
+
+    def test_several_connections_and_a_cut_side(self):
+        """A side takes several connections; cut in two, both parts keep
+        them with their own length and the later sides move up."""
+        Product = self.env["product.product"]
+        meter = self.env.ref("uom.product_uom_meter")
+        categ = self.connection.categ_id
+        sill = Product.create({
+            "name": "Aansluiting van de EPDM thv de dorpel", "type": "service",
+            "uom_id": meter.id, "categ_id": categ.id, "list_price": 75.91, "sale_ok": True,
+        })
+        profile = Product.create({
+            "name": "Leveren en plaatsen van de aluminium wandaansluitprofielen", "type": "service",
+            "uom_id": meter.id, "categ_id": categ.id, "list_price": 28.5, "sale_ok": True,
+        })
+        groups = {o["id"]: o["group"] for o in self.project.tectora_get_edge_options()["connections"]}
+        self.assertEqual(groups[sill.id], "Dorpel / raam")
+        self.assertEqual(groups[profile.id], "Muur / gevel")
+
+        side = lambda number: self.section.product_line_ids.filtered(  # noqa: E731
+            lambda l: l.coverage == "edges" and l.edge_index == number
+        )
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 1, "quantity": 4.0}],
+            "connection", [sill.id, profile.id],
+        )
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 2, "quantity": 4.0}],
+            "connection", self.connection.id,
+        )
+        self.assertEqual(side(1).product_id, sill | profile)
+        # Side 1 (4 m) cut at 1.5 m: a window, then wall.
+        self.project.tectora_split_side(self.section.id, 1, 1.5, 2.5)
+        self.assertEqual(side(1).product_id, sill | profile)
+        self.assertEqual(set(side(1).mapped("quantity")), {1.5})
+        self.assertEqual(side(2).product_id, sill | profile)
+        self.assertEqual(set(side(2).mapped("quantity")), {2.5})
+        self.assertEqual(side(3).product_id, self.connection, "the later side moved up")
+        # Each part its own: the second one is wall only.
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 2, "quantity": 2.5}], "connection", [profile.id],
+        )
+        self.assertEqual(side(2).product_id, profile)
+        self.assertEqual(side(1).product_id, sill | profile)
+
+    def test_cut_taken_back(self):
+        """Two parts of a cut side joined again: one side with the products
+        of both over the whole length, the later sides back where they were."""
+        Product = self.env["product.product"]
+        meter = self.env.ref("uom.product_uom_meter")
+        profile = Product.create({
+            "name": "Leveren en plaatsen van de aluminium wandaansluitprofielen", "type": "service",
+            "uom_id": meter.id, "categ_id": self.connection.categ_id.id, "list_price": 28.5,
+            "sale_ok": True,
+        })
+        side = lambda number: self.section.product_line_ids.filtered(  # noqa: E731
+            lambda l: l.coverage == "edges" and l.edge_index == number
+        )
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 1, "quantity": 4.0}], "connection", [profile.id],
+        )
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 2, "quantity": 4.0}],
+            "connection", self.connection.id,
+        )
+        self.project.tectora_split_side(self.section.id, 1, 1.5, 2.5)
+        # The second part gets a product of its own as well.
+        self.project.tectora_apply_edges(
+            [{"section_id": self.section.id, "side": 2, "quantity": 2.5}],
+            "connection", [profile.id, self.connection.id],
+        )
+        self.project.tectora_merge_sides(self.section.id, 1, 2, 4.0)
+        self.assertEqual(side(1).product_id, profile | self.connection)
+        self.assertEqual(len(side(1)), 2, "a product both parts had stays once")
+        self.assertEqual(set(side(1).mapped("quantity")), {4.0})
+        self.assertEqual(side(2).product_id, self.connection, "the later side is side 2 again")
+        self.assertFalse(side(3))

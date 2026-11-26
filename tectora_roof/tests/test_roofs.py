@@ -156,7 +156,7 @@ class TestRoofs(TransactionCase):
         html, _type = self.env["ir.actions.report"]._render_qweb_html(
             "tectora_roof.report_roof_project", project.ids
         )
-        html = str(html)
+        html = html.decode() if isinstance(html, bytes) else str(html)
         self.assertIn(first._subsection_name(), html)
         self.assertIn(second._subsection_name(), html)
         self.assertIn("Totaal alle daken", html)

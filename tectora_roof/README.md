@@ -147,6 +147,35 @@ install on Odoo 17 or earlier without adjustments.
    removed, to tick; what the element has is ticked. Applying puts exactly
    the ticked works on it (and on the other items ticked), which land in
    the roof's Afbouwwerken on the quotation.
+   From the drawing to the whole quotation:
+   * **Zijde opdelen** (side panel of a selected side): a side that is not
+     one thing on the roof -- wall, window, wall -- is cut at a distance from
+     its start. The shape stays; each part is a side of its own with its own
+     name, roof edge or connections and products, and the products of the
+     cut side go onto both parts with their new length.
+   * A side takes **several connections** at once (Randafwerking ->
+     Aansluiting: a tick list grouped by what the side meets -- dak van de
+     buren, goot, hellend dak, dorpel / raam, onderkapping, gevelbekleding,
+     deksteen / muurkap, muur / gevel).
+   * The **dakbedekking** (laid or removed) is measured over the surface and
+     up the upstands (per side its length x the upstand set on the drawing).
+   * Surfaces have a **Terrasvloer** tab: the products of the chapter
+     Terrasvloer to tick, each with how many go per m² (8 tile supports,
+     0.12 for 12 % cutting waste). They land in a segment of their own,
+     "Aanleg terrasvloer".
+   * Every line is counted as **the measure times a factor** or as a
+     **fixed number** (a forfait); a product per piece is rounded up. The
+     free products of the picker ("Extra producten") choose it.
+   * A line ticked **Voorwaardelijk** is a worst case item: on the
+     quotation with its unit price, a quantity of 0 and what it would come
+     to, under "Worst case scenario".
+   * A **tapbuis** is a dakobject of its own (right-click -> Tapbuis), with
+     a tab of its works, one piece each: removing the old one, the new one
+     by diameter, its bolrooster.
+   * A plan as **PDF** can be the background (Achtergrond -> Eigen plan
+     uploaden): one page becomes the image, and with the plan's scale (1/100)
+     the drawing's scale follows. Drawn in the browser; where that fails, on
+     the server when PyMuPDF or pdftoppm is installed.
    **3D** (toolbar) shows the roof on the drawing in 3D, layer by layer:
    the deck, the vapour barrier, the insulation on the surface inside the
    roof edges (its thickness from the surface's insulation), the EPDM on top
@@ -385,8 +414,8 @@ De smart buttons **Offerte / Order** en **Dakproject** zijn er altijd — ook
 op een project dat nog geen van beide heeft: dan maken ze het aan. De tab
 **Dakmeting** toont de meting zelf (tekening, oppervlakte, omtrek, daksecties),
 de tabs **Planning**, **Taken** en **Materiaallijst** de details; met de
-Planning-app (bridge `tectora_roof_planning`) staan ook de shifts van de
-medewerkers op de tab Planning en opent de planningkaart de resourceplanner.
+projectplanner (`tectora_roof_planning`) opent de planningkaart de planner
+per ploeg om het project meteen in te plannen.
 Het standaard projectformulier blijft bereikbaar via **Projectinstellingen**
 en krijgt zelf de smart buttons Projectdashboard, Offerte / Order en
 Dakproject.
@@ -493,7 +522,7 @@ klaarzetten*), telkens voor wat nog niet op een levering staat.
 **Ploegen** zijn vaste groepen medewerkers. De ploeg wordt op de
 **werknemer** ingesteld: *Werknemers → werknemersfiche → tab Werk → Ploeg*
 (één ploeg per medewerker), en de ploegen zelf staan onder *Werknemers →
-Configuratie → Ploegen* (met de Planning-app ook onder *Planning →
+Configuratie → Ploegen* (met de projectplanner ook onder *Project →
 Configuratie*). De Werknemers-app opent **per ploeg**: één kolom per ploeg,
 ook lege, zodat medewerkers naar hun ploeg gesleept kunnen worden; wie geen
 ploeg heeft staat in een eigen kolom. Filters *In een ploeg* en *Ploegbazen*
@@ -519,19 +548,32 @@ toegewezen medewerkers, en is te bekijken in kalender- of lijstweergave
 * Bestaande werkblokken worden nooit overschreven: pas de ploeg of de data aan
   en gebruik **Planning aanmaken** voor een extra blok.
 
-### Planning-app (optioneel)
+### Projectplanner (Project → Planning)
 
-Het aparte bridge-moduletje **tectora_roof_planning** installeert zichzelf
-zodra zowel Dakmeting als de Odoo **Planning**-app aanwezig zijn. Dan wordt
-elke toegewezen medewerker een echte planning-shift (`planning.slot`), zichtbaar
-in de Planning-app en in de eigen planning van de medewerker. De planner
-**Per ploeg** (de standaardweergave van de Planning-app, en de knop Planning
-op dakproject en projectdashboard) toont per ploeg één **projectblok** per
-werkblok met projectnaam en werfadres, niet de losse medewerkers. Verplaats of
-verleng het blok en alle shifts volgen; klik erop voor de samenvatting met de
-ingeplande medewerkers (verwijder er een om zijn shift eruit te halen) en de
-knoppen **Projectoverzicht**, **Dakproject** en **Per medewerker**. De shifts volgen
-het werkblok: data, medewerkers en status worden gesynchroniseerd, splitsen
-splitst de shifts mee en het verwijderen van een blok verwijdert zijn shifts.
-Zonder de Planning-app blijven de werkblokken met hun medewerkerslijst gewoon
-werken.
+De module **tectora_roof_planning** zet de planner in de **Project-app**; de
+Odoo **Planning**-app wordt er niet meer voor gebruikt. De werkblokken zijn
+de planning zelf: er worden geen shifts (`planning.slot`) meer aangemaakt. Een
+blok wordt rechtstreeks op een **project** gepland (veld *Project*; het
+dakproject van dat project volgt, en wordt aangemaakt als het er nog niet is).
+
+* **Per ploeg** (ook de knop Planning op dakproject en projectdashboard): per
+  ploeg één **projectblok** per werkblok met klant, gemeente, oppervlakte,
+  projecttype en aantal personen. Verplaats of verleng het blok en het schuift
+  voor de hele ploeg mee; sleep het naar een andere ploeg en het neemt de leden
+  van die ploeg. Klik erop voor de samenvatting met de ingeplande medewerkers
+  en de knoppen **Projectoverzicht**, **Dakproject** en **Per medewerker**.
+* **Per medewerker**: dezelfde blokken, één rij per medewerker — ieders eigen
+  planning. **Per project**: één rij per project.
+* **Dubbel ingepland**: staat een medewerker in dezelfde periode op twee
+  blokken, dan krijgen die een rode rand, een waarschuwing op het blok en een
+  filter in de zoekbalk.
+* **Geplande uren**: 8 uur per werkdag (ma–vr) en per medewerker; het
+  projectdashboard telt ze op.
+* Schaar, **Beschikbare momenten**, inplannen met één klik vanuit een project
+  en de **weersvoorspelling** werken zoals voorheen.
+* Het **medewerkersportaal** leest dezelfde werkblokken; op het blok staan de
+  uren die de ploeg op het portaal registreerde en hun uitvoeringsverslagen.
+
+De module vraagt de gantt-weergave (`web_gantt`, Enterprise) en wordt met de
+hand geïnstalleerd. Zonder de module blijven de werkblokken in kalender en
+lijst (*Project → Werf → Werkblokken*) gewoon werken.

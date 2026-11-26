@@ -304,9 +304,9 @@
                                 </list>
                             </field>
                             <div class="text-muted small mt-2">
-                                De planning wordt op het dakproject beheerd: kies er de ploeg en de
-                                geplande periode, dan worden het werkblok en de planning-items van
-                                de medewerkers aangemaakt.
+                                Plan het project in met de knop Planning: kies een ploeg en een
+                                periode, en het werkblok staat voor elk ploeglid op de planner en
+                                op het medewerkersportaal.
                             </div>
                         </page>
                         <page string="Taken" name="tasks">

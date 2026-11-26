@@ -43,6 +43,8 @@ export class TectoraAvailabilityDialog extends Component {
     }
 
     windows(team) {
+        // Not "window" in the template: that name is the browser's own
+        // there, so a period called so would never reach plan().
         return this.state.onlyFitting ? team.windows.filter((w) => w.fits) : team.windows;
     }
 
@@ -51,11 +53,11 @@ export class TectoraAvailabilityDialog extends Component {
         return date.toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "short" });
     }
 
-    async plan(team, window) {
+    async plan(team, period) {
         const project = this.state.data.project;
-        const days = Math.min(team.needed || window.days, window.days);
+        const days = Math.min(team.needed || period.days, period.days);
         await this.orm.call("tectora.roof.planning", "tectora_plan_window", [
-            project.id, team.id, window.start, days,
+            project.id, team.id, period.start, days,
         ]);
         this.notification.add(`${project.name} ingepland bij ${team.name} (${days} werkdag(en), concept).`, {
             type: "success",

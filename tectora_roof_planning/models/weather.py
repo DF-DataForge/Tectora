@@ -286,7 +286,7 @@ class TectoraRoofPlanning(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if {"start_datetime", "end_datetime", "project_id"} & set(vals):
+        if {"start_datetime", "end_datetime", "project_id", "dossier_id"} & set(vals):
             self._tectora_update_weather()
         return res
 
@@ -373,7 +373,7 @@ class TectoraRoofPlanning(models.Model):
                 key: value for key, value in values.items() if (item[key] or False) != value
             }
             if changed:
-                # Directly on the record: no shifts to sync for the weather.
+                # Directly on the record: the weather changes nothing else.
                 super(TectoraRoofPlanning, item).write(changed)
 
     def _tectora_weather_values(self, forecasts):

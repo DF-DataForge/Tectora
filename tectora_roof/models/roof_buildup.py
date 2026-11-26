@@ -600,6 +600,8 @@ class TectoraRoofProject(models.Model):
                 stale = lines.filtered(
                     lambda l: l.product_id in layer_products and l.product_id.id != product_id
                 )
+                # The lines that stay: a removed one cannot be read any more.
+                lines -= stale
                 stale.unlink()
                 if not lines.filtered(lambda l: l.product_id.id == product_id):
                     Line.create({
@@ -681,6 +683,9 @@ class TectoraRoofProject(models.Model):
             figures["name"] = section.name or ""
             figures["insulation"] = section._tectora_insulation_quantity()
             figures["kimfix"] = section._tectora_kimfix_quantity()
+            figures["membrane"] = section._tectora_membrane_quantity()
+            figures["area"] = round(section.area, 2)
+            figures["upstand_area"] = round(section.upstand_area, 2)
             figures["sides"] = round(section.inner_perimeter or section.perimeter, 2)
             figures["kimfix_objects"] = round(section.kimfix_object_perimeter, 2)
             rows.append(figures)
@@ -688,6 +693,7 @@ class TectoraRoofProject(models.Model):
             "quantity": round(sum(r["quantity"] for r in rows), 2),
             "insulation_quantity": round(sum(r["insulation"] for r in rows), 2),
             "kimfix_quantity": round(sum(r["kimfix"] for r in rows), 2),
+            "membrane_quantity": round(sum(r["membrane"] for r in rows), 2),
             "sections": rows,
         }
 

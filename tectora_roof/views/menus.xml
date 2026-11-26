@@ -51,8 +51,9 @@
               parent="project.menu_main_pm"
               sequence="3"/>
 
-    <!-- The work blocks of the roof projects; the shifts themselves live in
-         the standard Planning app, whose views carry the dakproject. -->
+    <!-- The work blocks of the projects as a calendar and a list; the
+         planner itself (per ploeg, per medewerker, per project) is
+         Project -> Planning, from tectora_roof_planning. -->
     <menuitem id="menu_tectora_planning"
               name="Werkblokken"
               parent="menu_project_worksite"
@@ -71,8 +72,9 @@
               action="action_tectora_products"
               sequence="30"/>
 
-    <!-- noupdate: with the Planning bridge installed this menu is moved to
-         Planning -> Configuratie, and an upgrade must not drag it back here. -->
+    <!-- noupdate: with the project planner (tectora_roof_planning) installed
+         this menu is moved to Project -> Configuratie, and an upgrade must
+         not drag it back here. -->
     <data noupdate="1">
         <menuitem id="menu_tectora_teams"
                   name="Ploegen"
@@ -81,11 +83,19 @@
                   sequence="80"/>
     </data>
 
-    <menuitem id="menu_tectora_config"
+    <!-- Instellingen: what configures the app. The settings themselves are
+         for administrators; the lists under it (Skylux-prijzen, in
+         skylux_views.xml) for whoever maintains them. -->
+    <menuitem id="menu_tectora_configuration"
               name="Instellingen"
               parent="menu_tectora_root"
+              sequence="90"/>
+
+    <menuitem id="menu_tectora_config"
+              name="Algemene instellingen"
+              parent="menu_tectora_configuration"
               action="action_tectora_roof_config"
               groups="base.group_system"
-              sequence="90"/>
+              sequence="10"/>
 
 </odoo>
