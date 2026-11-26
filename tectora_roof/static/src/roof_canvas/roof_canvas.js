@@ -3140,7 +3140,7 @@ export class RoofCanvasField extends Component {
     // stretched around its centre (a circle keeps its shape: the diameter).
     setObjectSize(dimension, ev) {
         const shape = this.selectedShape;
-        const meters = parseFloat(ev.target.value);
+        const meters = parseFloat(String(ev.target.value).replace(",", "."));
         if (!shape || !(meters > 0)) {
             return;
         }
@@ -3170,7 +3170,7 @@ export class RoofCanvasField extends Component {
     // Hoogte of a dakobject, written on its record.
     async setObjectHeight(ev) {
         const object = this.state.panel && this.state.panel.object;
-        const value = parseFloat(ev.target.value);
+        const value = parseFloat(String(ev.target.value).replace(",", "."));
         if (!object || !(value >= 0)) {
             return;
         }

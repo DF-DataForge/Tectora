@@ -260,3 +260,4 @@ Releases and the modules they need upgraded:
 | Fix productkiezer: tabbladen Terrasvloer/Tapbuis en Extra producten gaven een fout bij het tonen van hoeveelheden | `tectora_roof` (20.0.3.101.0) |
 | Tekenen: hoek van de zijde die getekend wordt (klikt vast op 45° en 90°, Alt: vrij); lengte van de zijde intypen en Enter tekent ze | `tectora_roof` (20.0.3.102.0) |
 | Tekening: Ctrl+Z maakt de laatste wijziging ongedaan (Ctrl+Y opnieuw), ook de laatste hoek van een polygoon in opbouw; knoppen in de werkbalk | `tectora_roof` (20.0.3.103.0) |
+| Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |

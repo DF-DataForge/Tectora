@@ -124,7 +124,7 @@
                             </div>
                             <div>
                                 <label class="small text-muted mb-0" for="o_roof_chimney_height">Hoogte boven het dak (m)</label>
-                                <input id="o_roof_chimney_height" type="number" min="0" step="0.05"
+                                <input id="o_roof_chimney_height" type="text" inputmode="decimal" min="0" step="0.05"
                                        class="form-control form-control-sm" style="width: 7rem;"
                                        t-att-value="c.height" t-on-change="(ev) => this.setChimneyHeight(ev)"/>
                             </div>
@@ -338,14 +338,14 @@
                             <div class="d-flex flex-wrap align-items-end gap-3">
                                 <div>
                                     <label class="small text-muted mb-0" for="o_roof_edges_width">Breedte dakrand (cm)</label>
-                                    <input id="o_roof_edges_width" type="number" min="0" step="1"
+                                    <input id="o_roof_edges_width" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
                                            t-att-value="this.toCm(e.width)"
                                            t-on-change="(ev) => this.setSideValue('width', ev)"/>
                                 </div>
                                 <div>
                                     <label class="small text-muted mb-0" for="o_roof_edges_upstand">Opstand (cm)</label>
-                                    <input id="o_roof_edges_upstand" type="number" min="0" step="1"
+                                    <input id="o_roof_edges_upstand" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 7rem;"
                                            t-att-value="this.toCm(e.upstand)"
                                            t-on-change="(ev) => this.setSideValue('upstand', ev)"/>
@@ -580,14 +580,14 @@
                                 <div t-if="b.sheets" class="d-flex align-items-center gap-1 small">
                                     <label class="text-muted mb-0" for="o_roof_buildup_margin"
                                            title="Langs een rand: opstand + breedte dakrand + deze marge">Rand: opstand + breedte +</label>
-                                    <input id="o_roof_buildup_margin" type="number" min="0" step="1"
+                                    <input id="o_roof_buildup_margin" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 4.5rem;"
                                            t-att-value="Math.round(b.margin * 100)"
                                            t-on-change="(ev) => this.onMarginInput(ev, 'margin')"/>
                                     <span class="text-muted me-2">cm</span>
                                     <label class="text-muted mb-0" for="o_roof_buildup_seam"
                                            title="Langs een naad: de overlap met het volgende doek">Naad: overlap</label>
-                                    <input id="o_roof_buildup_seam" type="number" min="0" step="1"
+                                    <input id="o_roof_buildup_seam" type="text" inputmode="decimal" min="0" step="1"
                                            class="form-control form-control-sm" style="width: 4.5rem;"
                                            t-att-value="Math.round(b.seamOverlap * 100)"
                                            t-on-change="(ev) => this.onMarginInput(ev, 'seamOverlap')"/>
@@ -718,7 +718,7 @@
                                         <span class="d-flex align-items-center gap-1 text-muted small text-nowrap">
                                             <t t-if="definition.factorLabel and sel.selected[product.id]">
                                                 ×
-                                                <input type="number" min="0" step="0.01"
+                                                <input type="text" inputmode="decimal" min="0" step="0.01"
                                                        class="form-control form-control-sm text-end"
                                                        style="width: 5rem;"
                                                        t-att-title="definition.factorLabel"
@@ -919,11 +919,11 @@
                             </select>
                         </td>
                         <td style="width: 6.5rem;">
-                            <input t-if="line.extra.mode === 'fixed'" type="number" min="0" step="0.01"
+                            <input t-if="line.extra.mode === 'fixed'" type="text" inputmode="decimal" min="0" step="0.01"
                                    class="form-control form-control-sm text-end" title="Aantal"
                                    t-att-value="line.extra.quantity"
                                    t-on-change="(ev) => this.setExtra(line.id, 'quantity', ev.target.value)"/>
-                            <input t-else="" type="number" min="0" step="0.01"
+                            <input t-else="" type="text" inputmode="decimal" min="0" step="0.01"
                                    class="form-control form-control-sm text-end" title="Factor"
                                    t-att-value="line.extra.factor"
                                    t-on-change="(ev) => this.setExtra(line.id, 'factor', ev.target.value)"/>
