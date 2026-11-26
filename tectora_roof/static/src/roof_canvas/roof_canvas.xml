@@ -77,6 +77,18 @@
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
                     <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.undo()"
+                            title="Laatste wijziging aan de tekening ongedaan maken (Ctrl+Z)">
+                        <i class="oi" data-icon="undo"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.redo()"
+                            title="Opnieuw doen (Ctrl+Y)">
+                        <i class="oi" data-icon="redo"/>
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
                             t-att-disabled="!this.state.selectedId"
                             t-on-click="this.renameSelected" title="Geselecteerde sectie hernoemen">
                         <i class="oi" data-icon="edit"/>

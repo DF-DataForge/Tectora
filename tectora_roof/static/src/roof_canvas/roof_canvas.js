@@ -44,6 +44,8 @@ const PDFJS_BUILD = "/web/static/lib/pdfjs/build";
 // While drawing, a side within this angle (rad) of 45° / 90° to the side
 // before it snaps to it.
 const DRAFT_ANGLE_SNAP = (3 * Math.PI) / 180;
+// How many changes of the drawing Ctrl+Z can take back.
+const UNDO_LIMIT = 50;
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
@@ -683,6 +685,8 @@ export class RoofCanvasField extends Component {
         this._rawCache = undefined;
         this._staleRaw = null;
         this._shapes = [];
+        this._undoStack = []; // earlier drawings (JSON), for Ctrl+Z
+        this._redoStack = [];
         this.labelHits = []; // clickable measurement boxes, in world coordinates
         this.iconImages = {}; // product category id -> loaded icon (or null)
         this._iconRaw = undefined;
@@ -747,6 +751,9 @@ export class RoofCanvasField extends Component {
         if (raw === this._rawCache) {
             this._staleRaw = null;
         } else if (raw !== this._staleRaw) {
+            // Another drawing (another project, another roof's plan, a
+            // reload): its history is not this one's.
+            this.clearHistory();
             this._rawCache = raw;
             try {
                 const parsed = JSON.parse(raw || "{}");
@@ -760,6 +767,15 @@ export class RoofCanvasField extends Component {
 
     commit() {
         const raw = JSON.stringify({ shapes: this._shapes });
+        // The drawing as it was before this change, for Ctrl+Z (shapes are
+        // changed in place, so the last drawing read or committed is it).
+        if (!this._restoring && typeof this._rawCache === "string" && this._rawCache !== raw) {
+            this._undoStack.push(this._rawCache);
+            if (this._undoStack.length > UNDO_LIMIT) {
+                this._undoStack.shift();
+            }
+            this._redoStack = [];
+        }
         // record.update() applies asynchronously: until it lands, the record
         // still holds the previous drawing, which must not be re-read over
         // the committed shapes (the snapshot below would show the old ones).
@@ -773,6 +789,78 @@ export class RoofCanvasField extends Component {
         this.props.record.update(values);
         this.draw();
         this.scheduleAutoSync();
+    }
+
+    // ------------------------------------------------------------ undo / redo
+    // Ctrl+Z takes the drawing back one change (a shape drawn, moved, resized
+    // or removed, a name, a side's width or upstand ...), Ctrl+Y or
+    // Ctrl+Shift+Z puts it forward again. While a polygon is drawn, Ctrl+Z
+    // takes back its last corner. The drawing only: products assigned on the
+    // server are not part of it.
+
+    clearHistory() {
+        this._undoStack = [];
+        this._redoStack = [];
+    }
+
+    restoreDrawing(raw) {
+        let shapes = [];
+        try {
+            const parsed = JSON.parse(raw || "{}");
+            shapes = Array.isArray(parsed.shapes) ? parsed.shapes : [];
+        } catch {
+            shapes = [];
+        }
+        this._shapes = shapes;
+        if (this.state.selectedId && !shapes.some((shape) => shape.id === this.state.selectedId)) {
+            this.state.selectedId = null;
+        }
+        this._restoring = true;
+        try {
+            this.commit();
+        } finally {
+            this._restoring = false;
+        }
+        this.updateStatus();
+        this.refreshPanel();
+    }
+
+    undo() {
+        if (this.draftPolygon) {
+            // The last corner of the polygon being drawn.
+            this.draftLength = "";
+            this.draftPolygon.pop();
+            if (!this.draftPolygon.length) {
+                this.draftPolygon = null;
+                this.draftCursor = null;
+            }
+            this.updateStatus();
+            this.draw();
+            return;
+        }
+        if (!this._undoStack.length) {
+            this.state.status = _t("Niets om ongedaan te maken.");
+            return;
+        }
+        const current = JSON.stringify({ shapes: this.shapes });
+        const previous = this._undoStack.pop();
+        this._redoStack.push(current);
+        this.restoreDrawing(previous);
+        this.state.status = _t("Laatste wijziging ongedaan gemaakt (Ctrl+Y om ze opnieuw te doen).");
+    }
+
+    redo() {
+        if (this.draftPolygon || !this._redoStack.length) {
+            if (!this.draftPolygon) {
+                this.state.status = _t("Niets om opnieuw te doen.");
+            }
+            return;
+        }
+        const current = JSON.stringify({ shapes: this.shapes });
+        const next = this._redoStack.pop();
+        this._undoStack.push(current);
+        this.restoreDrawing(next);
+        this.state.status = _t("Wijziging opnieuw gedaan.");
     }
 
     scheduleAutoSync() {
@@ -1332,6 +1420,10 @@ export class RoofCanvasField extends Component {
             }
             this.state.splitAt = "";
             this.commit();
+            // The products per side move with the cut on the server: taking
+            // the cut back in the drawing alone would put them on the wrong
+            // sides, so it is not something Ctrl+Z goes past.
+            this.clearHistory();
             // The products per side follow on the server, once the drawing
             // is saved.
             const record = this.props.record;
@@ -1650,6 +1742,18 @@ export class RoofCanvasField extends Component {
     onKeyDown(ev) {
         if (ev.target.tagName === "TEXTAREA") {
             return; // typing a description, not drawing
+        }
+        if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && ev.target.tagName !== "INPUT") {
+            const key = ev.key.toLowerCase();
+            if (key === "z" || key === "y") {
+                ev.preventDefault();
+                if (key === "y" || ev.shiftKey) {
+                    this.redo();
+                } else {
+                    this.undo();
+                }
+                return;
+            }
         }
         if (this.onDraftKey(ev)) {
             return; // typing the length of the side being drawn
