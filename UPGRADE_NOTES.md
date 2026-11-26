@@ -261,3 +261,4 @@ Releases and the modules they need upgraded:
 | Tekenen: hoek van de zijde die getekend wordt (klikt vast op 45° en 90°, Alt: vrij); lengte van de zijde intypen en Enter tekent ze | `tectora_roof` (20.0.3.102.0) |
 | Tekening: Ctrl+Z maakt de laatste wijziging ongedaan (Ctrl+Y opnieuw), ook de laatste hoek van een polygoon in opbouw; knoppen in de werkbalk | `tectora_roof` (20.0.3.103.0) |
 | Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |
+| Tekening: het tekenvlak en het raster lopen door onder alles wat getekend of in beeld is; de pasweergave en de afbeelding op de meetstaat tonen ook wat buiten het plan getekend is | `tectora_roof` (20.0.3.105.0) |

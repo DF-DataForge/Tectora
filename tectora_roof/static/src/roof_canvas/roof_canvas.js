@@ -1240,13 +1240,65 @@ export class RoofCanvasField extends Component {
         if (!canvas) {
             return;
         }
-        const zoom = Math.min(
-            canvas.width / this.world.w,
-            canvas.height / this.world.h
-        );
+        // The whole drawing: the plan (or the screen) and whatever was
+        // drawn beyond it.
+        const bounds = this.contentBounds();
+        const zoom = Math.min(canvas.width / bounds.w, canvas.height / bounds.h);
         this.view.zoom = zoom;
-        this.view.x = (canvas.width - this.world.w * zoom) / 2;
-        this.view.y = (canvas.height - this.world.h * zoom) / 2;
+        this.view.x = (canvas.width - bounds.w * zoom) / 2 - bounds.x * zoom;
+        this.view.y = (canvas.height - bounds.h * zoom) / 2 - bounds.y * zoom;
+    }
+
+    /** The rectangle (world coordinates) that holds the plan and every
+     * shape: shapes drawn beyond the plan widen it, with some room around. */
+    contentBounds() {
+        let x0 = 0;
+        let y0 = 0;
+        let x1 = this.world.w;
+        let y1 = this.world.h;
+        let beyond = false;
+        for (const shape of this.shapes || []) {
+            for (const point of shape.points || []) {
+                if (point[0] < x0 || point[0] > x1 || point[1] < y0 || point[1] > y1) {
+                    beyond = true;
+                }
+                x0 = Math.min(x0, point[0]);
+                y0 = Math.min(y0, point[1]);
+                x1 = Math.max(x1, point[0]);
+                y1 = Math.max(y1, point[1]);
+            }
+        }
+        if (beyond) {
+            // Room for the length boxes and the corner handles.
+            const margin = Math.max(x1 - x0, y1 - y0) * 0.06;
+            x0 -= margin;
+            y0 -= margin;
+            x1 += margin;
+            y1 += margin;
+        }
+        return { x: x0, y: y0, w: Math.max(x1 - x0, 1), h: Math.max(y1 - y0, 1) };
+    }
+
+    /** The drawing surface as drawn: everything on screen, and the whole
+     * drawing. There is no edge to draw past -- the paper and its grid are
+     * under every shape, wherever it is drawn or the view is moved. */
+    surfaceBounds() {
+        const canvas = this.canvasRef();
+        const content = this.contentBounds();
+        const zoom = this.view.zoom || 1;
+        const left = canvas ? -this.view.x / zoom : content.x;
+        const top = canvas ? -this.view.y / zoom : content.y;
+        const right = canvas ? left + canvas.width / zoom : content.x + content.w;
+        const bottom = canvas ? top + canvas.height / zoom : content.y + content.h;
+        const x0 = Math.min(content.x, left);
+        const y0 = Math.min(content.y, top);
+        const x1 = Math.max(content.x + content.w, right);
+        const y1 = Math.max(content.y + content.h, bottom);
+        return {
+            x: x0, y: y0, w: x1 - x0, h: y1 - y0,
+            // What is on screen: where the grid's metre labels go.
+            view: { x: left, y: top, w: right - left, h: bottom - top },
+        };
     }
 
     // Pointer position in canvas pixels (the space view.x/y live in).
@@ -4352,20 +4404,23 @@ export class RoofCanvasField extends Component {
             this.view.zoom, 0, 0, this.view.zoom, this.view.x, this.view.y
         );
 
-        // World bounds + background
+        // The drawing surface: under everything on screen and every shape,
+        // also beyond the plan.
+        const surface = this.surfaceBounds();
         ctx.fillStyle = "#f6f8f9";
-        ctx.fillRect(0, 0, this.world.w, this.world.h);
+        ctx.fillRect(surface.x, surface.y, surface.w, surface.h);
         if (this.backgroundImage && this.state.showBackground) {
             ctx.globalAlpha = this.state.backgroundOpacity;
             ctx.drawImage(this.backgroundImage, 0, 0);
             ctx.globalAlpha = 1;
+            // Where the plan or photo ends.
+            ctx.strokeStyle = "#9db2b8";
+            ctx.lineWidth = 1 / this.view.zoom;
+            ctx.strokeRect(0, 0, this.world.w, this.world.h);
         }
-        ctx.strokeStyle = "#9db2b8";
-        ctx.lineWidth = 1 / this.view.zoom;
-        ctx.strokeRect(0, 0, this.world.w, this.world.h);
 
         if (this.state.showGrid) {
-            this.drawGrid(ctx);
+            this.drawGrid(ctx, surface);
         }
 
         // Per-shape try/catch: one malformed shape must never blank the form.
@@ -4403,7 +4458,7 @@ export class RoofCanvasField extends Component {
         }
     }
 
-    drawGrid(ctx) {
+    drawGrid(ctx, surface = this.surfaceBounds()) {
         const zoom = this.view.zoom;
         const scale = this.scaleMPerPx;
         const screenPxPerMeter = zoom / scale;
@@ -4414,46 +4469,62 @@ export class RoofCanvasField extends Component {
             this.state.gridStep = step;
         }
         const stepPx = step / scale;
-        const cols = Math.floor(this.world.w / stepPx);
-        const rows = Math.floor(this.world.h / stepPx);
+        // Lines on the multiples of the step, measured from the plan's
+        // origin, over the whole surface (so also left of and above it).
+        const firstCol = Math.ceil(surface.x / stepPx);
+        const lastCol = Math.floor((surface.x + surface.w) / stepPx);
+        const firstRow = Math.ceil(surface.y / stepPx);
+        const lastRow = Math.floor((surface.y + surface.h) / stepPx);
+        const top = surface.y;
+        const bottom = surface.y + surface.h;
+        const left = surface.x;
+        const right = surface.x + surface.w;
 
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, this.world.w, this.world.h);
-        ctx.clip();
         ctx.lineWidth = 1 / zoom;
-        for (let i = 1; i <= cols; i++) {
+        // Never more lines than a screen can show (a far zoom-out).
+        if (lastCol - firstCol > 2000 || lastRow - firstRow > 2000) {
+            ctx.restore();
+            return;
+        }
+        for (let i = firstCol; i <= lastCol; i++) {
             const x = i * stepPx;
             ctx.strokeStyle = i % GRID_MAJOR_EVERY === 0
                 ? "rgba(11, 78, 91, 0.30)"
                 : "rgba(11, 78, 91, 0.12)";
             ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, this.world.h);
+            ctx.moveTo(x, top);
+            ctx.lineTo(x, bottom);
             ctx.stroke();
         }
-        for (let j = 1; j <= rows; j++) {
+        for (let j = firstRow; j <= lastRow; j++) {
             const y = j * stepPx;
             ctx.strokeStyle = j % GRID_MAJOR_EVERY === 0
                 ? "rgba(11, 78, 91, 0.30)"
                 : "rgba(11, 78, 91, 0.12)";
             ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(this.world.w, y);
+            ctx.moveTo(left, y);
+            ctx.lineTo(right, y);
             ctx.stroke();
         }
 
-        // Meter labels along the top and left edges, on the major lines.
+        // Metre labels on the major lines, along the top and left of what is
+        // on screen, so they stay in sight wherever the view is.
         const fontSize = 10 / zoom;
         ctx.font = `${fontSize}px sans-serif`;
         ctx.fillStyle = "rgba(11, 78, 91, 0.75)";
         ctx.textAlign = "left";
         const formatMeters = (m) => (step < 1 ? m.toFixed(1) : String(m)) + " m";
-        for (let i = GRID_MAJOR_EVERY; i <= cols; i += GRID_MAJOR_EVERY) {
-            ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, fontSize * 1.2);
+        const view = surface.view;
+        for (let i = firstCol; i <= lastCol; i++) {
+            if (i !== 0 && i % GRID_MAJOR_EVERY === 0) {
+                ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, view.y + fontSize * 1.2);
+            }
         }
-        for (let j = GRID_MAJOR_EVERY; j <= rows; j += GRID_MAJOR_EVERY) {
-            ctx.fillText(formatMeters(j * step), 3 / zoom, j * stepPx - 3 / zoom);
+        for (let j = firstRow; j <= lastRow; j++) {
+            if (j !== 0 && j % GRID_MAJOR_EVERY === 0) {
+                ctx.fillText(formatMeters(j * step), view.x + 3 / zoom, j * stepPx - 3 / zoom);
+            }
         }
         ctx.restore();
     }
