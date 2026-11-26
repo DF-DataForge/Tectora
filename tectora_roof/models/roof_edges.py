@@ -357,3 +357,42 @@ class TectoraRoofProject(models.Model):
             Line.create(copies)
         self._tectora_mirror_to_order()
         return True
+
+    def tectora_merge_sides(self, section_id, kept, dropped, length):
+        """The reverse of tectora_split_side: the point between two sides in
+        line was taken off the drawing, so side ``dropped`` (1-based) is gone
+        into side ``kept``, now ``length`` m long, and every later side and
+        corner moved down one.
+
+        The products follow: what was on the dropped side goes onto the kept
+        one (a product both had stays once), with the whole length; a corner
+        piece on the point that is gone is removed; the later sides and
+        corners move with their numbers."""
+        self.ensure_one()
+        section = self.env["tectora.roof.section"].browse(int(section_id or 0)).exists()
+        kept, dropped = int(kept or 0), int(dropped or 0)
+        if not section or section.project_id != self or kept < 1 or dropped < 1 or kept == dropped:
+            return False
+        lines = section.product_line_ids.with_context(tectora_sync=True)
+        # The corner on the point that is gone.
+        lines.filtered(lambda l: l.edge_index == dropped and l.coverage == "corners").unlink()
+        lines = lines.exists()
+        on_kept = lines.filtered(lambda l: l.edge_index == kept and l.coverage == "edges")
+        have = on_kept.product_id
+        for line in lines.filtered(lambda l: l.edge_index == dropped and l.coverage == "edges"):
+            if line.product_id in have:
+                line.unlink()
+            else:
+                line.edge_index = kept
+                have |= line.product_id
+                on_kept |= line
+        for line in on_kept.exists():
+            if line.quantity_mode != "fixed":
+                line.quantity = round(float(length or 0.0) * (line.quantity_factor or 1.0), 2) or 1.0
+        # Lowest first, so no two lines ever share a number on the way.
+        for line in section.product_line_ids.with_context(tectora_sync=True).filtered(
+            lambda l: l.edge_index > dropped
+        ).sorted("edge_index"):
+            line.edge_index = line.edge_index - 1
+        self._tectora_mirror_to_order()
+        return True

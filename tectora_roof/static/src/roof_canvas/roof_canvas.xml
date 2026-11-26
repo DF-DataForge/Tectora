@@ -32,7 +32,7 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'polygon' }"
                             t-on-click="() => this.setTool('polygon')"
-                            title="Polygoon tekenen (klik punten, dubbelklik om te sluiten)">
+                            title="Polygoon tekenen: klik de hoeken, of typ de lengte van een zijde en druk Enter. De hoek staat erbij en klikt vast op 45° en 90° (Alt: vrij). Dubbelklik om te sluiten.">
                         <i class="oi" data-icon="star"/> Polygoon
                     </button>
                     <button type="button" class="btn btn-outline-secondary"
@@ -73,6 +73,18 @@
                             t-att-class="{ active: this.state.showGrid }"
                             t-on-click="this.toggleGrid" title="Meetraster tonen/verbergen">
                         <i class="oi" data-icon="grid_view"/> Raster
+                    </button>
+                </div>
+                <div class="btn-group btn-group-sm ms-2" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.undo()"
+                            title="Laatste wijziging aan de tekening ongedaan maken (Ctrl+Z)">
+                        <i class="oi" data-icon="undo"/>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            t-on-click="() => this.redo()"
+                            title="Opnieuw doen (Ctrl+Y)">
+                        <i class="oi" data-icon="redo"/>
                     </button>
                 </div>
                 <div class="btn-group btn-group-sm ms-2" role="group">
@@ -198,7 +210,7 @@
                             <div class="fw-bold mb-1">Zijde opdelen</div>
                             <div class="d-flex align-items-center gap-1">
                                 <span class="text-nowrap">op</span>
-                                <input type="number" min="0" step="0.01"
+                                <input type="text" inputmode="decimal" min="0" step="0.01"
                                        class="form-control form-control-sm" style="width: 5.5rem;"
                                        t-att-value="this.state.splitAt"
                                        t-att-placeholder="(this.focusSideLength / 2).toFixed(2)"
@@ -213,6 +225,24 @@
                                 Gemeten vanaf het begin van de zijde (de hoek met de vorige
                                 zijde). De vorm blijft dezelfde; elk deel krijgt zijn eigen
                                 naam, dakrand of aansluitingen en producten.
+                            </div>
+                            <!-- The reverse: this side and a neighbour in line with
+                                 it become one side again. -->
+                            <t t-set="merge_options" t-value="this.focusMergeOptions"/>
+                            <div t-if="merge_options.length" class="mt-2 pt-2 border-top">
+                                <div class="fw-bold mb-1">Opdeling verwijderen</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button t-foreach="merge_options" t-as="option" t-key="option.key"
+                                            type="button" class="btn btn-sm btn-outline-secondary py-0"
+                                            t-att-disabled="this.state.splitBusy"
+                                            t-on-click="() => this.mergeFocusSide(option.key)">
+                                        Samenvoegen met <t t-out="option.label"/>
+                                    </button>
+                                </div>
+                                <div class="text-muted mt-1">
+                                    De twee delen worden weer één zijde; wat op beide stond,
+                                    komt op die ene zijde met de hele lengte.
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-2 border-bottom">
@@ -381,7 +411,7 @@
                             <div class="row g-2 align-items-center mb-2">
                                 <label class="col-4 col-form-label py-0" title="Randbreedte">Breedte (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="1" min="0"
+                                    <input type="text" inputmode="decimal" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
                                            t-att-value="edge.width ? Math.round(edge.width * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeWidth(edge, ev)"/>
@@ -391,7 +421,7 @@
                                 <label class="col-4 col-form-label py-0"
                                        title="Opstandhoogte: verticale hoogte tussen binnenvlak en rand">Opstand (cm)</label>
                                 <div class="col-8">
-                                    <input type="number" step="1" min="0"
+                                    <input type="text" inputmode="decimal" step="1" min="0"
                                            class="form-control form-control-sm text-end" placeholder="0"
                                            t-att-value="edge.upstand ? Math.round(edge.upstand * 1000) / 10 : ''"
                                            t-on-change="(ev) => this.setEdgeUpstand(edge, ev)"/>
@@ -418,7 +448,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Diameter (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.width.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('width', ev)"/>
@@ -429,7 +459,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Lengte (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.length.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('length', ev)"/>
@@ -438,7 +468,7 @@
                                     <div class="row g-2 align-items-center mb-2">
                                         <label class="col-5 col-form-label py-0">Breedte (m)</label>
                                         <div class="col-7">
-                                            <input type="number" step="0.01" min="0.01"
+                                            <input type="text" inputmode="decimal" step="0.01" min="0.01"
                                                    class="form-control form-control-sm text-end"
                                                    t-att-value="measures.width.toFixed(2)"
                                                    t-on-change="(ev) => this.setObjectSize('width', ev)"/>
@@ -448,7 +478,7 @@
                                 <div class="row g-2 align-items-center mb-2">
                                     <label class="col-5 col-form-label py-0">Hoogte (m)</label>
                                     <div class="col-7">
-                                        <input type="number" step="0.01" min="0"
+                                        <input type="text" inputmode="decimal" step="0.01" min="0"
                                                class="form-control form-control-sm text-end"
                                                t-att-disabled="!measures.editableHeight"
                                                t-att-title="measures.editableHeight ? '' : 'Sla het project eerst op.'"

@@ -17,7 +17,7 @@
                             Werkelijke <t t-out="this.lengthLabel.toLowerCase()"/> (m)
                         </label>
                         <input id="o_roof_edge_length" t-ref="this.inputRef"
-                               type="number" step="0.01" min="0"
+                               type="text" inputmode="decimal" step="0.01" min="0"
                                class="form-control"
                                t-att-value="this.state.value"
                                t-on-input="(ev) => this.state.value = ev.target.value"/>

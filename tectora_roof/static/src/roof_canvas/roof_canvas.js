@@ -41,6 +41,16 @@ const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2, penetration: 0.2, d
 const PDF_MAX_PX = 2500;
 const PDF_POINT_M = 0.0254 / 72;
 const PDFJS_BUILD = "/web/static/lib/pdfjs/build";
+// While drawing, a side within this angle (rad) of 45° / 90° to the side
+// before it snaps to it.
+const DRAFT_ANGLE_SNAP = (3 * Math.PI) / 180;
+// A new drawing starts with its origin this far (m) in from the top left of
+// the screen; a drawing without a plan is never fitted closer than FIT_MIN_M
+// across.
+const ORIGIN_OFFSET_M = 1;
+const FIT_MIN_M = 8;
+// How many changes of the drawing Ctrl+Z can take back.
+const UNDO_LIMIT = 50;
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
@@ -675,9 +685,13 @@ export class RoofCanvasField extends Component {
         this.drag = null; // {mode: 'move'|'rect'|'pan', ...}
         this.draftPolygon = null; // [[x, y], ...]
         this.draftCursor = null; // where the side being drawn ends (pointer)
+        this.draftLength = ""; // the length typed for the side being drawn
+        this.draftFree = false; // Alt held: no snapping to 45° / 90°
         this._rawCache = undefined;
         this._staleRaw = null;
         this._shapes = [];
+        this._undoStack = []; // earlier drawings (JSON), for Ctrl+Z
+        this._redoStack = [];
         this.labelHits = []; // clickable measurement boxes, in world coordinates
         this.iconImages = {}; // product category id -> loaded icon (or null)
         this._iconRaw = undefined;
@@ -742,6 +756,9 @@ export class RoofCanvasField extends Component {
         if (raw === this._rawCache) {
             this._staleRaw = null;
         } else if (raw !== this._staleRaw) {
+            // Another drawing (another project, another roof's plan, a
+            // reload): its history is not this one's.
+            this.clearHistory();
             this._rawCache = raw;
             try {
                 const parsed = JSON.parse(raw || "{}");
@@ -755,6 +772,15 @@ export class RoofCanvasField extends Component {
 
     commit() {
         const raw = JSON.stringify({ shapes: this._shapes });
+        // The drawing as it was before this change, for Ctrl+Z (shapes are
+        // changed in place, so the last drawing read or committed is it).
+        if (!this._restoring && typeof this._rawCache === "string" && this._rawCache !== raw) {
+            this._undoStack.push(this._rawCache);
+            if (this._undoStack.length > UNDO_LIMIT) {
+                this._undoStack.shift();
+            }
+            this._redoStack = [];
+        }
         // record.update() applies asynchronously: until it lands, the record
         // still holds the previous drawing, which must not be re-read over
         // the committed shapes (the snapshot below would show the old ones).
@@ -768,6 +794,78 @@ export class RoofCanvasField extends Component {
         this.props.record.update(values);
         this.draw();
         this.scheduleAutoSync();
+    }
+
+    // ------------------------------------------------------------ undo / redo
+    // Ctrl+Z takes the drawing back one change (a shape drawn, moved, resized
+    // or removed, a name, a side's width or upstand ...), Ctrl+Y or
+    // Ctrl+Shift+Z puts it forward again. While a polygon is drawn, Ctrl+Z
+    // takes back its last corner. The drawing only: products assigned on the
+    // server are not part of it.
+
+    clearHistory() {
+        this._undoStack = [];
+        this._redoStack = [];
+    }
+
+    restoreDrawing(raw) {
+        let shapes = [];
+        try {
+            const parsed = JSON.parse(raw || "{}");
+            shapes = Array.isArray(parsed.shapes) ? parsed.shapes : [];
+        } catch {
+            shapes = [];
+        }
+        this._shapes = shapes;
+        if (this.state.selectedId && !shapes.some((shape) => shape.id === this.state.selectedId)) {
+            this.state.selectedId = null;
+        }
+        this._restoring = true;
+        try {
+            this.commit();
+        } finally {
+            this._restoring = false;
+        }
+        this.updateStatus();
+        this.refreshPanel();
+    }
+
+    undo() {
+        if (this.draftPolygon) {
+            // The last corner of the polygon being drawn.
+            this.draftLength = "";
+            this.draftPolygon.pop();
+            if (!this.draftPolygon.length) {
+                this.draftPolygon = null;
+                this.draftCursor = null;
+            }
+            this.updateStatus();
+            this.draw();
+            return;
+        }
+        if (!this._undoStack.length) {
+            this.state.status = _t("Niets om ongedaan te maken.");
+            return;
+        }
+        const current = JSON.stringify({ shapes: this.shapes });
+        const previous = this._undoStack.pop();
+        this._redoStack.push(current);
+        this.restoreDrawing(previous);
+        this.state.status = _t("Laatste wijziging ongedaan gemaakt (Ctrl+Y om ze opnieuw te doen).");
+    }
+
+    redo() {
+        if (this.draftPolygon || !this._redoStack.length) {
+            if (!this.draftPolygon) {
+                this.state.status = _t("Niets om opnieuw te doen.");
+            }
+            return;
+        }
+        const current = JSON.stringify({ shapes: this.shapes });
+        const next = this._redoStack.pop();
+        this._undoStack.push(current);
+        this.restoreDrawing(next);
+        this.state.status = _t("Wijziging opnieuw gedaan.");
     }
 
     scheduleAutoSync() {
@@ -1147,13 +1245,104 @@ export class RoofCanvasField extends Component {
         if (!canvas) {
             return;
         }
-        const zoom = Math.min(
-            canvas.width / this.world.w,
-            canvas.height / this.world.h
-        );
+        // The whole drawing: the plan (or the screen) and whatever was
+        // drawn beyond it.
+        if (!this.backgroundImage && !(this.shapes || []).length) {
+            // A new drawing: the origin (0, 0) one metre in from the top
+            // left of the screen, so the first corner can be put on it with
+            // room around it.
+            const offset = ORIGIN_OFFSET_M / this.scaleMPerPx;
+            this.view.zoom = 1;
+            this.view.x = offset;
+            this.view.y = offset;
+            return;
+        }
+        const bounds = this.contentBounds();
+        const zoom = Math.min(canvas.width / bounds.w, canvas.height / bounds.h);
         this.view.zoom = zoom;
-        this.view.x = (canvas.width - this.world.w * zoom) / 2;
-        this.view.y = (canvas.height - this.world.h * zoom) / 2;
+        this.view.x = (canvas.width - bounds.w * zoom) / 2 - bounds.x * zoom;
+        this.view.y = (canvas.height - bounds.h * zoom) / 2 - bounds.y * zoom;
+    }
+
+    /** The rectangle (world coordinates) that holds the plan and every
+     * shape: shapes drawn beyond the plan widen it, with some room around. */
+    contentBounds() {
+        const shapes = this.shapes || [];
+        if (!this.backgroundImage && shapes.some((shape) => (shape.points || []).length)) {
+            // Without a plan or photo the drawing is the shapes themselves:
+            // fitted with room around them (a metre at least), and never so
+            // close that a small shape fills the screen.
+            const points = shapes.flatMap((shape) => shape.points || []);
+            const xs = points.map((point) => point[0]);
+            const ys = points.map((point) => point[1]);
+            let left = Math.min(...xs);
+            let top = Math.min(...ys);
+            let width = Math.max(...xs) - left;
+            let height = Math.max(...ys) - top;
+            const metre = 1 / this.scaleMPerPx;
+            const margin = Math.max(Math.max(width, height) * 0.08, ORIGIN_OFFSET_M * metre);
+            left -= margin;
+            top -= margin;
+            width += margin * 2;
+            height += margin * 2;
+            const least = FIT_MIN_M * metre;
+            if (width < least) {
+                left -= (least - width) / 2;
+                width = least;
+            }
+            if (height < least * 0.6) {
+                top -= (least * 0.6 - height) / 2;
+                height = least * 0.6;
+            }
+            return { x: left, y: top, w: width, h: height };
+        }
+        let x0 = 0;
+        let y0 = 0;
+        let x1 = this.world.w;
+        let y1 = this.world.h;
+        let beyond = false;
+        for (const shape of shapes) {
+            for (const point of shape.points || []) {
+                if (point[0] < x0 || point[0] > x1 || point[1] < y0 || point[1] > y1) {
+                    beyond = true;
+                }
+                x0 = Math.min(x0, point[0]);
+                y0 = Math.min(y0, point[1]);
+                x1 = Math.max(x1, point[0]);
+                y1 = Math.max(y1, point[1]);
+            }
+        }
+        if (beyond) {
+            // Room for the length boxes and the corner handles.
+            const margin = Math.max(x1 - x0, y1 - y0) * 0.06;
+            x0 -= margin;
+            y0 -= margin;
+            x1 += margin;
+            y1 += margin;
+        }
+        return { x: x0, y: y0, w: Math.max(x1 - x0, 1), h: Math.max(y1 - y0, 1) };
+    }
+
+    /** The drawing surface as drawn: everything on screen, and the whole
+     * drawing. There is no edge to draw past -- the paper and its grid are
+     * under every shape, wherever it is drawn or the view is moved. */
+    surfaceBounds() {
+        const canvas = this.canvasRef();
+        const content = this.contentBounds();
+        const zoom = this.view.zoom || 1;
+        const left = canvas ? -this.view.x / zoom : content.x;
+        const top = canvas ? -this.view.y / zoom : content.y;
+        const right = canvas ? left + canvas.width / zoom : content.x + content.w;
+        const bottom = canvas ? top + canvas.height / zoom : content.y + content.h;
+        const x0 = Math.min(content.x, left);
+        const y0 = Math.min(content.y, top);
+        const x1 = Math.max(content.x + content.w, right);
+        const y1 = Math.max(content.y + content.h, bottom);
+        return {
+            x: x0, y: y0, w: x1 - x0, h: y1 - y0,
+            // What is on screen: where the grid's metre labels go.
+            view: { x: left, y: top, w: right - left, h: bottom - top },
+        };
     }
 
     // Pointer position in canvas pixels (the space view.x/y live in).
@@ -1179,6 +1368,7 @@ export class RoofCanvasField extends Component {
         this.state.tool = tool;
         this.draftPolygon = null;
         this.draftCursor = null;
+        this.draftLength = "";
         if (tool !== "select") {
             this.state.selectedId = null;
         }
@@ -1326,6 +1516,10 @@ export class RoofCanvasField extends Component {
             }
             this.state.splitAt = "";
             this.commit();
+            // The products per side move with the cut on the server: taking
+            // the cut back in the drawing alone would put them on the wrong
+            // sides, so it is not something Ctrl+Z goes past.
+            this.clearHistory();
             // The products per side follow on the server, once the drawing
             // is saved.
             const record = this.props.record;
@@ -1359,6 +1553,130 @@ export class RoofCanvasField extends Component {
         } finally {
             this.state.splitBusy = false;
         }
+        this.draw();
+        this.refreshPanel();
+    }
+
+    // ------------------------------------------------------ undo a side's cut
+    // The reverse of "Zijde opdelen": the point between the selected side
+    // and a neighbour in line with it is taken off, so the two are one side
+    // again.
+
+    /** The neighbours the selected side can be joined with: those in line
+     * with it -- [{key: "next" | "previous", label, length}]. */
+    get focusMergeOptions() {
+        if (!this.canSplitFocusSide) {
+            return [];
+        }
+        const shape = this.selectedShape;
+        const points = shape.points;
+        const n = points.length;
+        if (n < 4) {
+            return [];
+        }
+        const index = this.focus.edgeIndex;
+        const inLine = (a, b, c) => {
+            const ux = b[0] - a[0];
+            const uy = b[1] - a[1];
+            const vx = c[0] - b[0];
+            const vy = c[1] - b[1];
+            const lengths = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+            return lengths > 0
+                && Math.abs(ux * vy - uy * vx) / lengths < 0.01
+                && ux * vx + uy * vy > 0;
+        };
+        const at = (i) => points[((i % n) + n) % n];
+        const options = [];
+        if (inLine(at(index), at(index + 1), at(index + 2))) {
+            options.push({
+                key: "next",
+                label: this.edgeName(shape, (index + 1) % n),
+            });
+        }
+        if (inLine(at(index - 1), at(index), at(index + 1))) {
+            options.push({
+                key: "previous",
+                label: this.edgeName(shape, (index - 1 + n) % n),
+            });
+        }
+        return options;
+    }
+
+    async mergeFocusSide(direction) {
+        if (this.state.splitBusy || !this.focusMergeOptions.some((o) => o.key === direction)) {
+            return;
+        }
+        const shape = this.selectedShape;
+        const n = shape.points.length;
+        const index = this.focus.edgeIndex;
+        // The side that stays and the one that goes into it: the point
+        // between them is the start of the second.
+        const kept = direction === "next" ? index : (index - 1 + n) % n;
+        const dropped = (kept + 1) % n;
+        this.state.splitBusy = true;
+        try {
+            shape.points.splice(dropped, 1);
+            const shift = (values) => {
+                const moved = {};
+                for (const [key, value] of Object.entries(values || {})) {
+                    const at = parseInt(key);
+                    if (at !== dropped) {
+                        moved[at > dropped ? at - 1 : at] = value;
+                    }
+                }
+                return moved;
+            };
+            for (const key of ["edgeWidths", "edgeUpstands", "edgeNames"]) {
+                if (shape[key]) {
+                    shape[key] = shift(shape[key]);
+                    if (!Object.keys(shape[key]).length) {
+                        delete shape[key];
+                    }
+                }
+            }
+            if (shape.descriptions && shape.descriptions.edges) {
+                shape.descriptions.edges = shift(shape.descriptions.edges);
+            }
+            // The side that stays, as it is numbered now.
+            const merged = kept > dropped ? kept - 1 : kept;
+            const count = shape.points.length;
+            const a = shape.points[merged];
+            const b = shape.points[(merged + 1) % count];
+            const length = Math.hypot(b[0] - a[0], b[1] - a[1]) * this.scaleMPerPx;
+            if (this.state.focus) {
+                this.state.focus = { ...this.state.focus, edgeIndex: merged };
+            }
+            this.commit();
+            // As with the cut: the products per side move on the server.
+            this.clearHistory();
+            const record = this.props.record;
+            if ((await record.save()) && record.resId) {
+                const sections = await this.orm.searchRead(
+                    "tectora.roof.section",
+                    [["project_id", "=", record.resId], ["canvas_ref", "=", shape.id]],
+                    ["id"]
+                );
+                if (sections.length) {
+                    await this.orm.call("tectora.roof.project", "tectora_merge_sides", [
+                        [record.resId], sections[0].id, kept + 1, dropped + 1,
+                        Math.round(length * 100) / 100,
+                    ]);
+                    await record.load();
+                }
+            }
+            this.notification.add(
+                _t("Opdeling verwijderd: de zijde is weer %s m.", length.toFixed(2)),
+                { type: "success" }
+            );
+        } catch (error) {
+            console.warn("Roof canvas: joining the sides failed", error);
+            this.notification.add(_t("De opdeling verwijderen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        } finally {
+            this.state.splitBusy = false;
+        }
+        this.updateStatus();
         this.draw();
         this.refreshPanel();
     }
@@ -1504,6 +1822,7 @@ export class RoofCanvasField extends Component {
     onPointerMove(ev) {
         if (!this.drag && this.draftPolygon) {
             // Live dimensions: the side being drawn follows the pointer.
+            this.draftFree = ev.altKey;
             this.draftCursor = this.draftSnap(this.toWorld(ev));
             this.draw();
             return;
@@ -1644,6 +1963,21 @@ export class RoofCanvasField extends Component {
         if (ev.target.tagName === "TEXTAREA") {
             return; // typing a description, not drawing
         }
+        if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && ev.target.tagName !== "INPUT") {
+            const key = ev.key.toLowerCase();
+            if (key === "z" || key === "y") {
+                ev.preventDefault();
+                if (key === "y" || ev.shiftKey) {
+                    this.redo();
+                } else {
+                    this.undo();
+                }
+                return;
+            }
+        }
+        if (this.onDraftKey(ev)) {
+            return; // typing the length of the side being drawn
+        }
         if (ev.key === "Delete" || ev.key === "Backspace") {
             if (ev.target.tagName !== "INPUT") {
                 ev.preventDefault();
@@ -1662,6 +1996,7 @@ export class RoofCanvasField extends Component {
             } else if (this.draftPolygon) {
                 this.draftPolygon = null;
                 this.draftCursor = null;
+                this.draftLength = "";
             } else if (this.state.fullscreen) {
                 this.toggleFullscreen();
             }
@@ -1830,12 +2165,22 @@ export class RoofCanvasField extends Component {
             return;
         }
         if (!this.draftPolygon) {
+            // Started on (or right next to) the origin: exactly on it.
+            if (Math.hypot(point[0], point[1]) <= CLOSE_SNAP_PX / this.view.zoom) {
+                point = [0, 0];
+            }
             this.draftPolygon = [point];
             this.draftCursor = null;
+            this.draftLength = "";
         } else {
+            // The corner lands where the preview shows it: at the length
+            // typed, else on the snapped direction (or the first corner).
+            const typed = this.draftTypedLength() > 0 && this.draftCursor;
+            point = typed ? this.draftTarget() : this.draftSnap(point);
             const first = this.draftPolygon[0];
             const snap = CLOSE_SNAP_PX / this.view.zoom;
             if (
+                !typed &&
                 this.state.tool !== "seam" &&
                 this.draftPolygon.length >= 3 &&
                 Math.hypot(point[0] - first[0], point[1] - first[1]) <= snap
@@ -1843,7 +2188,12 @@ export class RoofCanvasField extends Component {
                 this.closePolygon();
                 return;
             }
+            const last = this.draftPolygon[this.draftPolygon.length - 1];
+            if (Math.hypot(point[0] - last[0], point[1] - last[1]) < 1e-6) {
+                return; // no side at all
+            }
             this.draftPolygon.push(point);
+            this.draftLength = "";
         }
         this.updateStatus();
         this.draw();
@@ -1867,7 +2217,71 @@ export class RoofCanvasField extends Component {
         }
         this.draftPolygon = null;
         this.draftCursor = null;
+        this.draftLength = "";
         this.updateStatus();
+    }
+
+    // ------------------------------------------------- typing a side's length
+    // While a polygon is drawn, the side that follows the pointer can be
+    // given its exact length: type it (4,25), the preview takes that length
+    // in the pointer's direction, and Enter (or a click) puts the corner
+    // there. The direction snaps to 45° and 90° of the side before it (Alt
+    // held: free), so a typed length and a right angle make an exact corner.
+
+    draftTypedLength() {
+        const value = parseFloat(String(this.draftLength || "").replace(",", "."));
+        return value > 0 ? value : 0;
+    }
+
+    /** Where the corner being drawn would land: the pointer, or -- with a
+     * length typed -- that length from the last corner towards the pointer. */
+    draftTarget() {
+        const cursor = this.draftCursor;
+        const points = this.draftPolygon;
+        const typed = this.draftTypedLength();
+        if (!cursor || !points || !points.length || !typed || this.state.tool !== "polygon") {
+            return cursor;
+        }
+        const last = points[points.length - 1];
+        const dx = cursor[0] - last[0];
+        const dy = cursor[1] - last[1];
+        const length = Math.hypot(dx, dy);
+        if (!length) {
+            return cursor;
+        }
+        const px = typed / this.scaleMPerPx;
+        return [last[0] + (dx / length) * px, last[1] + (dy / length) * px];
+    }
+
+    /** A key while a polygon is drawn: digits and a comma build the length,
+     * Backspace corrects it, Enter draws the side. True when it was used. */
+    onDraftKey(ev) {
+        if (
+            !this.draftPolygon || this.state.tool !== "polygon"
+            || ev.target.tagName === "INPUT" || ev.ctrlKey || ev.metaKey
+        ) {
+            return false;
+        }
+        const typing = this.draftLength;
+        if (/^[0-9]$/.test(ev.key)) {
+            this.draftLength = typing + ev.key;
+        } else if ((ev.key === "," || ev.key === ".") && !/[.,]/.test(typing)) {
+            this.draftLength = (typing || "0") + ",";
+        } else if (ev.key === "Backspace" && typing) {
+            this.draftLength = typing.slice(0, -1);
+        } else if (ev.key === "Escape" && typing) {
+            this.draftLength = "";
+        } else if (ev.key === "Enter" && this.draftTypedLength() > 0 && this.draftCursor) {
+            ev.preventDefault();
+            this.addPolygonPoint(this.draftCursor);
+            return true;
+        } else {
+            return false;
+        }
+        ev.preventDefault();
+        this.updateStatus();
+        this.draw();
+        return true;
     }
 
     addShape(points, kind = "section", shapeType = null) {
@@ -2950,7 +3364,7 @@ export class RoofCanvasField extends Component {
     // stretched around its centre (a circle keeps its shape: the diameter).
     setObjectSize(dimension, ev) {
         const shape = this.selectedShape;
-        const meters = parseFloat(ev.target.value);
+        const meters = parseFloat(String(ev.target.value).replace(",", "."));
         if (!shape || !(meters > 0)) {
             return;
         }
@@ -2980,7 +3394,7 @@ export class RoofCanvasField extends Component {
     // Hoogte of a dakobject, written on its record.
     async setObjectHeight(ev) {
         const object = this.state.panel && this.state.panel.object;
-        const value = parseFloat(ev.target.value);
+        const value = parseFloat(String(ev.target.value).replace(",", "."));
         if (!object || !(value >= 0)) {
             return;
         }
@@ -4105,7 +4519,9 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 this.state.tool === "seam"
                     ? `Naad: ${this.draftPolygon.length} punt(en) — klik op de andere zijde om de naad af te werken (of dubbelklik/Enter), Esc om te annuleren`
-                    : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
+                    : this.draftLength
+                    ? `Zijde van ${this.draftLength} m — Enter of klik om ze te tekenen in de richting van de muis, Esc om de lengte te wissen`
+                    : `Polygoon: ${this.draftPolygon.length} punt(en) — typ de lengte van de zijde (bv. 4,25) en druk Enter, of klik; dubbelklik of Enter om te sluiten, Esc om te annuleren. Alt: vrije hoek`;
             return;
         }
         const shape = this.selectedShape;
@@ -4160,20 +4576,23 @@ export class RoofCanvasField extends Component {
             this.view.zoom, 0, 0, this.view.zoom, this.view.x, this.view.y
         );
 
-        // World bounds + background
+        // The drawing surface: under everything on screen and every shape,
+        // also beyond the plan.
+        const surface = this.surfaceBounds();
         ctx.fillStyle = "#f6f8f9";
-        ctx.fillRect(0, 0, this.world.w, this.world.h);
+        ctx.fillRect(surface.x, surface.y, surface.w, surface.h);
         if (this.backgroundImage && this.state.showBackground) {
             ctx.globalAlpha = this.state.backgroundOpacity;
             ctx.drawImage(this.backgroundImage, 0, 0);
             ctx.globalAlpha = 1;
+            // Where the plan or photo ends.
+            ctx.strokeStyle = "#9db2b8";
+            ctx.lineWidth = 1 / this.view.zoom;
+            ctx.strokeRect(0, 0, this.world.w, this.world.h);
         }
-        ctx.strokeStyle = "#9db2b8";
-        ctx.lineWidth = 1 / this.view.zoom;
-        ctx.strokeRect(0, 0, this.world.w, this.world.h);
 
         if (this.state.showGrid) {
-            this.drawGrid(ctx);
+            this.drawGrid(ctx, surface);
         }
 
         // Per-shape try/catch: one malformed shape must never blank the form.
@@ -4211,7 +4630,7 @@ export class RoofCanvasField extends Component {
         }
     }
 
-    drawGrid(ctx) {
+    drawGrid(ctx, surface = this.surfaceBounds()) {
         const zoom = this.view.zoom;
         const scale = this.scaleMPerPx;
         const screenPxPerMeter = zoom / scale;
@@ -4222,46 +4641,73 @@ export class RoofCanvasField extends Component {
             this.state.gridStep = step;
         }
         const stepPx = step / scale;
-        const cols = Math.floor(this.world.w / stepPx);
-        const rows = Math.floor(this.world.h / stepPx);
+        // Lines on the multiples of the step, measured from the plan's
+        // origin, over the whole surface (so also left of and above it).
+        const firstCol = Math.ceil(surface.x / stepPx);
+        const lastCol = Math.floor((surface.x + surface.w) / stepPx);
+        const firstRow = Math.ceil(surface.y / stepPx);
+        const lastRow = Math.floor((surface.y + surface.h) / stepPx);
+        const top = surface.y;
+        const bottom = surface.y + surface.h;
+        const left = surface.x;
+        const right = surface.x + surface.w;
 
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, this.world.w, this.world.h);
-        ctx.clip();
         ctx.lineWidth = 1 / zoom;
-        for (let i = 1; i <= cols; i++) {
+        // Never more lines than a screen can show (a far zoom-out).
+        if (lastCol - firstCol > 2000 || lastRow - firstRow > 2000) {
+            ctx.restore();
+            return;
+        }
+        for (let i = firstCol; i <= lastCol; i++) {
             const x = i * stepPx;
             ctx.strokeStyle = i % GRID_MAJOR_EVERY === 0
                 ? "rgba(11, 78, 91, 0.30)"
                 : "rgba(11, 78, 91, 0.12)";
             ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, this.world.h);
+            ctx.moveTo(x, top);
+            ctx.lineTo(x, bottom);
             ctx.stroke();
         }
-        for (let j = 1; j <= rows; j++) {
+        for (let j = firstRow; j <= lastRow; j++) {
             const y = j * stepPx;
             ctx.strokeStyle = j % GRID_MAJOR_EVERY === 0
                 ? "rgba(11, 78, 91, 0.30)"
                 : "rgba(11, 78, 91, 0.12)";
             ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(this.world.w, y);
+            ctx.moveTo(left, y);
+            ctx.lineTo(right, y);
             ctx.stroke();
         }
 
-        // Meter labels along the top and left edges, on the major lines.
+        // Metre labels on the major lines, along the top and left of what is
+        // on screen, so they stay in sight wherever the view is.
         const fontSize = 10 / zoom;
         ctx.font = `${fontSize}px sans-serif`;
         ctx.fillStyle = "rgba(11, 78, 91, 0.75)";
         ctx.textAlign = "left";
         const formatMeters = (m) => (step < 1 ? m.toFixed(1) : String(m)) + " m";
-        for (let i = GRID_MAJOR_EVERY; i <= cols; i += GRID_MAJOR_EVERY) {
-            ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, fontSize * 1.2);
+        const view = surface.view;
+        // The origin (0, 0), where a drawing starts: a small cross.
+        const arm = 7 / zoom;
+        ctx.strokeStyle = "rgba(11, 78, 91, 0.85)";
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.beginPath();
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.moveTo(0, -arm);
+        ctx.lineTo(0, arm);
+        ctx.stroke();
+        ctx.fillText("0", 3 / zoom, -3 / zoom);
+        for (let i = firstCol; i <= lastCol; i++) {
+            if (i !== 0 && i % GRID_MAJOR_EVERY === 0) {
+                ctx.fillText(formatMeters(i * step), i * stepPx + 3 / zoom, view.y + fontSize * 1.2);
+            }
         }
-        for (let j = GRID_MAJOR_EVERY; j <= rows; j += GRID_MAJOR_EVERY) {
-            ctx.fillText(formatMeters(j * step), 3 / zoom, j * stepPx - 3 / zoom);
+        for (let j = firstRow; j <= lastRow; j++) {
+            if (j !== 0 && j % GRID_MAJOR_EVERY === 0) {
+                ctx.fillText(formatMeters(j * step), view.x + 3 / zoom, j * stepPx - 3 / zoom);
+            }
         }
         ctx.restore();
     }
@@ -4773,7 +5219,81 @@ export class RoofCanvasField extends Component {
                 return [fx, fy];
             }
         }
-        return point;
+        return this.draftAngleSnap(point);
+    }
+
+    // A side drawn within a few degrees of 45° or 90° to the side before it
+    // (the first side: to the horizontal) takes exactly that angle; Alt
+    // held, it goes where the pointer is.
+    draftAngleSnap(point) {
+        const points = this.draftPolygon;
+        if (this.draftFree || !points || !points.length) {
+            return point;
+        }
+        const last = points[points.length - 1];
+        const dx = point[0] - last[0];
+        const dy = point[1] - last[1];
+        const length = Math.hypot(dx, dy);
+        if (!length) {
+            return point;
+        }
+        const previous = points.length >= 2 ? points[points.length - 2] : null;
+        const base = previous ? Math.atan2(last[1] - previous[1], last[0] - previous[0]) : 0;
+        const relative = Math.atan2(dy, dx) - base;
+        const step = Math.PI / 4;
+        const nearest = Math.round(relative / step) * step;
+        if (Math.abs(relative - nearest) > DRAFT_ANGLE_SNAP) {
+            return point;
+        }
+        const angle = base + nearest;
+        return [last[0] + Math.cos(angle) * length, last[1] + Math.sin(angle) * length];
+    }
+
+    // The angle of the corner being drawn, at the last corner placed: an arc
+    // between the side before it and the side that follows the pointer (for
+    // the first side: against the horizontal), with its degrees.
+    drawDraftAngle(ctx, points, target) {
+        const last = points[points.length - 1];
+        const toTarget = Math.atan2(target[1] - last[1], target[0] - last[0]);
+        if (Math.hypot(target[0] - last[0], target[1] - last[1]) * this.view.zoom < 12) {
+            return;
+        }
+        const previous = points.length >= 2 ? points[points.length - 2] : null;
+        const from = previous
+            ? Math.atan2(previous[1] - last[1], previous[0] - last[0])
+            : 0;
+        // The shorter way round, -180° .. 180°.
+        const sweep = ((toTarget - from + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        const degrees = Math.abs(sweep) * 180 / Math.PI;
+        const zoom = this.view.zoom;
+        const radius = 22 / zoom;
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = HIGHLIGHT;
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.beginPath();
+        ctx.arc(last[0], last[1], radius, from, from + sweep, sweep < 0);
+        ctx.stroke();
+        if (!previous) {
+            // The horizontal the first side is measured against.
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(last[0], last[1]);
+            ctx.lineTo(last[0] + radius * 1.6, last[1]);
+            ctx.stroke();
+        }
+        ctx.restore();
+        const middle = from + sweep / 2;
+        const rounded = Math.round(degrees * 10) / 10;
+        const text = `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}°`;
+        // A right (or 45°) angle stands out: that is what the snap gives.
+        const exact = Math.abs(rounded / 45 - Math.round(rounded / 45)) < 1e-9;
+        this.drawDimension(
+            ctx, text,
+            last[0] + Math.cos(middle) * (radius + 20 / zoom),
+            last[1] + Math.sin(middle) * (radius + 20 / zoom),
+            "center", exact
+        );
     }
 
     // A dimension label while drawing: a small box with the text, centred on
@@ -4819,7 +5339,8 @@ export class RoofCanvasField extends Component {
 
     drawDraftPolygon(ctx) {
         const points = this.draftPolygon;
-        const cursor = this.draftCursor;
+        // With a length typed, the side ends at that length, not the pointer.
+        const cursor = this.draftTarget();
         const isSeamTool = this.state.tool === "seam";
         ctx.setLineDash([6 / this.view.zoom, 4 / this.view.zoom]);
         ctx.strokeStyle = "#0a7483";
@@ -4855,8 +5376,21 @@ export class RoofCanvasField extends Component {
         // pointer; from three corners on, the area and perimeter the polygon
         // would have if closed now (for a seam, its length so far).
         const all = cursor ? [...points, cursor] : points;
+        const typing = cursor && !isSeamTool ? this.draftLength : "";
         for (let i = 1; i < all.length; i++) {
-            this.drawDraftEdge(ctx, all[i - 1], all[i]);
+            if (typing && i === all.length - 1) {
+                // The length being typed, on the side it is for.
+                const [ax, ay] = all[i - 1];
+                const [bx, by] = all[i];
+                this.drawDimension(
+                    ctx, `${typing}▏ m`, (ax + bx) / 2, (ay + by) / 2, "center", true
+                );
+            } else {
+                this.drawDraftEdge(ctx, all[i - 1], all[i]);
+            }
+        }
+        if (cursor && !isSeamTool) {
+            this.drawDraftAngle(ctx, points, cursor);
         }
         const scale = this.scaleMPerPx;
         const box = boundingBox(all);

@@ -258,3 +258,9 @@ Releases and the modules they need upgraded:
 | Dakmeting: Skylux-prijzen onder het menu Instellingen (naast Algemene instellingen) | `tectora_roof` (20.0.3.99.0) |
 | Tekening → offerte: zijde opdelen in stukken; meerdere aansluitingen per zijde (dorpel, onderkapping, gevelbekleding, deksteen); dakbedekking inclusief opstanden; tabblad Terrasvloer (tegeldragers per m², tegels, snijafval) met eigen hoofdstuk "Aanleg terrasvloer"; hoeveelheid × factor of vast aantal; voorwaardelijke posten (worst case, hoeveelheid 0); tapbuis als dakobject met eigen tabblad; pdf-plan als achtergrond met schaal | `tectora_roof` (20.0.3.100.0) |
 | Fix productkiezer: tabbladen Terrasvloer/Tapbuis en Extra producten gaven een fout bij het tonen van hoeveelheden | `tectora_roof` (20.0.3.101.0) |
+| Tekenen: hoek van de zijde die getekend wordt (klikt vast op 45° en 90°, Alt: vrij); lengte van de zijde intypen en Enter tekent ze | `tectora_roof` (20.0.3.102.0) |
+| Tekening: Ctrl+Z maakt de laatste wijziging ongedaan (Ctrl+Y opnieuw), ook de laatste hoek van een polygoon in opbouw; knoppen in de werkbalk | `tectora_roof` (20.0.3.103.0) |
+| Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |
+| Tekening: het tekenvlak en het raster lopen door onder alles wat getekend of in beeld is; de pasweergave en de afbeelding op de meetstaat tonen ook wat buiten het plan getekend is | `tectora_roof` (20.0.3.105.0) |
+| Tekening: een nieuwe tekening start met het nulpunt 1 m binnen de linkerbovenhoek (kruisje, eerste hoek klikt erop vast); een tekening zonder plan wordt passend op haar vormen getoond | `tectora_roof` (20.0.3.106.0) |
+| Tekening: opdeling van een zijde verwijderen (twee delen in elkaars verlengde weer samenvoegen; de producten volgen) | `tectora_roof` (20.0.3.107.0) |
