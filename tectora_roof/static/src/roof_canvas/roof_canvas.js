@@ -3657,6 +3657,19 @@ export class RoofCanvasField extends Component {
             // A different kind of target starts a new selection: mixing them
             // would mean mixing product categories.
             this.state.multiSelect = [hit];
+        } else if (!current.length) {
+            // The item that was selected with a plain click before Ctrl was
+            // held is the first of the selection: click a side, then
+            // Ctrl-click two more, and all three get the products.
+            const focus = this.focus;
+            const first = focus && focus.hit;
+            const usable = first
+                && ["edge", "surface", "corner", "seam"].includes(first.type)
+                && this.hitTargetKey(first) !== key
+                && this.sameFamily(first, hit);
+            this.state.multiSelect = usable
+                ? [{ ...first, name: (this.selectedShape && this.selectedShape.name) || first.name || "" }, hit]
+                : [hit];
         } else {
             this.state.multiSelect = [...current, hit];
         }
