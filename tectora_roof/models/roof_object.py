@@ -30,6 +30,7 @@ class TectoraRoofObject(models.Model):
             ("chimney", "Schoorsteen"),
             ("skylight", "Koepel / lichtstraat"),
             ("penetration", "Dakdoorvoer"),
+            ("drain", "Tapbuis / afvoer"),
             ("hvac", "HVAC-unit"),
             ("seam", "Naad"),
             ("other", "Overig"),

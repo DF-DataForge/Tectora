@@ -3,6 +3,7 @@
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
+import { loadJS } from "@web/core/assets";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { RoofProductPickerDialog } from "./product_picker_dialog";
 import { RoofEdgeLengthDialog } from "./edge_length_dialog";
@@ -34,7 +35,12 @@ const EDGE_LABEL_MIN_SCREEN_PX = 34;
 const DEFAULT_CANVAS_HEIGHT = 620;
 const WHEEL_ZOOM_STEP = 1.12;
 // Default real-world size (meters) of roof objects added via right-click.
-const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2, penetration: 0.2 };
+const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2, penetration: 0.2, drain: 0.15 };
+// A PDF plan is drawn into an image this large at most (the server keeps
+// backgrounds up to 2560 px), and a PDF point is 1/72 inch on paper.
+const PDF_MAX_PX = 2500;
+const PDF_POINT_M = 0.0254 / 72;
+const PDFJS_BUILD = "/web/static/lib/pdfjs/build";
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
@@ -61,7 +67,7 @@ const HIGHLIGHT = "#f59e0b";
 
 const KIND_NAMES = {
     section: "Sectie", chimney: "Schoorsteen", skylight: "Koepel", penetration: "Dakdoorvoer",
-    seam: "Naad",
+    drain: "Tapbuis", seam: "Naad",
 };
 
 const KIND_STYLES = {
@@ -70,6 +76,8 @@ const KIND_STYLES = {
     skylight: { fill: "rgba(37, 99, 235, 0.30)", stroke: "#1d4ed8", label: "Koepel" },
     // A dakdoorvoer: a pipe, duct or cable through the roof.
     penetration: { fill: "rgba(124, 58, 237, 0.35)", stroke: "#6d28d9", label: "Dakdoorvoer" },
+    // A tapbuis (afvoer): where the water leaves the roof.
+    drain: { fill: "rgba(8, 145, 178, 0.45)", stroke: "#0e7490", label: "Tapbuis" },
     // A seam (naad) is an open dotted line between two roof surfaces.
     seam: { fill: "rgba(0, 0, 0, 0)", stroke: "#374151", label: "Naad", dashed: true },
 };
@@ -626,6 +634,9 @@ export class RoofCanvasField extends Component {
         this.notification = useService("notification");
         this.action = useService("action");
         this.state = proxy({
+            // "Zijde opdelen": the distance typed, and while it is cut.
+            splitAt: "",
+            splitBusy: false,
             tool: "select",
             showBackground: true,
             backgroundOpacity: 0.9,
@@ -972,10 +983,127 @@ export class RoofCanvasField extends Component {
             reader.onerror = () => reject(reader.error);
             reader.readAsDataURL(file);
         });
+        if (file.type === "application/pdf" || /\.pdf$/i.test(file.name || "")) {
+            return this.uploadPdfPlan(base64);
+        }
         await this._withBackgroundChange(
             _t("Plan geladen als achtergrond. Kalibreer de schaal via rechtsklik op een zijdelengte."),
             (resId) =>
                 this.orm.write("tectora.roof.project", [resId], { background_image: base64 })
+        );
+    }
+
+    // ------------------------------------------------------------ PDF plan
+    // A plan as PDF (the architect's plans, 1/100): one page of it becomes
+    // the background image. Drawn in the browser with Odoo's own pdf.js;
+    // where that is not there, on the server. With the plan's scale given,
+    // the drawing's scale follows from it (a PDF keeps its paper size).
+
+    async loadPdfJs() {
+        if (globalThis.pdfjsLib) {
+            return globalThis.pdfjsLib;
+        }
+        try {
+            await loadJS(`${PDFJS_BUILD}/pdf.js`);
+            if (globalThis.pdfjsLib) {
+                globalThis.pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_BUILD}/pdf.worker.js`;
+                return globalThis.pdfjsLib;
+            }
+        } catch {
+            // not this build of pdf.js: try the module one
+        }
+        try {
+            const lib = await import(`${PDFJS_BUILD}/pdf.mjs`);
+            lib.GlobalWorkerOptions.workerSrc = `${PDFJS_BUILD}/pdf.worker.mjs`;
+            return lib;
+        } catch {
+            return null;
+        }
+    }
+
+    /** {image (base64 PNG), pointsPerPx} of one page, or null when the
+     * browser cannot draw it. ``pickPage(count)`` gives the page number. */
+    async renderPdfPage(base64, pickPage) {
+        const lib = await this.loadPdfJs();
+        if (!lib) {
+            return null;
+        }
+        try {
+            const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+            const pdf = await lib.getDocument({ data: bytes }).promise;
+            const number = Math.min(Math.max(pickPage(pdf.numPages), 1), pdf.numPages);
+            const page = await pdf.getPage(number);
+            const base = page.getViewport({ scale: 1 });
+            const scale = PDF_MAX_PX / Math.max(base.width, base.height);
+            const viewport = page.getViewport({ scale });
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(viewport.width);
+            canvas.height = Math.round(viewport.height);
+            const context = canvas.getContext("2d");
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            await page.render({ canvasContext: context, viewport }).promise;
+            return { image: canvas.toDataURL("image/png").split(",")[1], pointsPerPx: 1 / scale };
+        } catch (error) {
+            console.warn("Roof canvas: pdf.js could not draw the plan", error);
+            return null;
+        }
+    }
+
+    async uploadPdfPlan(base64) {
+        let asked = null;
+        const pickPage = (count) => {
+            if (asked === null) {
+                asked = 1;
+                if (count > 1) {
+                    const answer = window.prompt(
+                        _t("Het pdf-plan telt %s pagina's. Welke pagina wordt de achtergrond?", count), "1"
+                    );
+                    asked = parseInt(answer) || 1;
+                }
+            }
+            return asked;
+        };
+        let rendered = await this.renderPdfPage(base64, pickPage);
+        if (!rendered) {
+            // The server draws it (PyMuPDF or pdftoppm, when installed).
+            try {
+                const count = await this.orm.call(
+                    "tectora.roof.project", "tectora_pdf_page_count", [base64]
+                );
+                rendered = await this.orm.call(
+                    "tectora.roof.project", "tectora_pdf_page_to_png", [base64, pickPage(count)],
+                    { max_px: PDF_MAX_PX }
+                );
+            } catch (error) {
+                const message = error?.data?.message || error?.message || String(error);
+                this.notification.add(message, { type: "danger", title: _t("Pdf-plan") });
+                return;
+            }
+        }
+        if (!rendered || !rendered.image) {
+            this.notification.add(
+                _t("Het pdf-plan kon niet omgezet worden. Laad het plan op als afbeelding (png of jpg)."),
+                { type: "danger" }
+            );
+            return;
+        }
+        // 1/100 on paper: a point is 1/72 inch, so the scale is known.
+        const answer = window.prompt(
+            _t("Schaal van het plan: 1 op … (bv. 100 voor 1/100). Laat leeg om later te kalibreren op een zijdelengte."),
+            "100"
+        );
+        const ratio = parseFloat(String(answer || "").replace(",", "."));
+        const values = { background_image: rendered.image };
+        const scale = ratio > 0 ? PDF_POINT_M * rendered.pointsPerPx * ratio : 0;
+        if (scale) {
+            values.scale_m_per_px = scale;
+        }
+        await this._withBackgroundChange(
+            scale
+                ? _t("Pdf-plan geladen als achtergrond, schaal 1/%s.", ratio)
+                : _t("Pdf-plan geladen als achtergrond. Kalibreer de schaal via rechtsklik op een zijdelengte."),
+            (resId) => this.orm.write("tectora.roof.project", [resId], values)
         );
     }
 
@@ -1120,6 +1248,119 @@ export class RoofCanvasField extends Component {
             shape.name = name.trim();
             this.commit();
         }
+    }
+
+    // ----------------------------------------------------------- split side
+    // A side of a surface is one line on the plan, but not always one thing
+    // on the roof: a wall, then a window, then wall again. Cutting it puts a
+    // point on it -- the shape stays as it is -- so each part is a side of
+    // its own, with its own name, roof edge or connections and products.
+
+    /** Whether the selected side can be cut: a straight side of a surface. */
+    get canSplitFocusSide() {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        return Boolean(
+            focus && shape && focus.type === "edge" && focus.edgeIndex >= 0
+            && (shape.kind || "section") === "section" && shape.shape !== "circle"
+        );
+    }
+
+    get focusSideLength() {
+        const focus = this.focus;
+        const shape = this.selectedShape;
+        if (!this.canSplitFocusSide) {
+            return 0;
+        }
+        const a = shape.points[focus.edgeIndex];
+        const b = shape.points[(focus.edgeIndex + 1) % shape.points.length];
+        return Math.hypot(b[0] - a[0], b[1] - a[1]) * this.scaleMPerPx;
+    }
+
+    async splitFocusSide() {
+        if (!this.canSplitFocusSide || this.state.splitBusy) {
+            return;
+        }
+        const shape = this.selectedShape;
+        const index = this.focus.edgeIndex;
+        const length = this.focusSideLength;
+        const distance = parseFloat(String(this.state.splitAt || "").replace(",", "."));
+        if (!(distance > 0.01) || !(distance < length - 0.01)) {
+            this.notification.add(
+                _t("Geef een afstand tussen 0 en %s m (de lengte van de zijde).", length.toFixed(2)),
+                { type: "warning" }
+            );
+            return;
+        }
+        this.state.splitBusy = true;
+        try {
+            const n = shape.points.length;
+            const a = shape.points[index];
+            const b = shape.points[(index + 1) % n];
+            const ratio = distance / length;
+            shape.points.splice(index + 1, 0, [
+                a[0] + (b[0] - a[0]) * ratio,
+                a[1] + (b[1] - a[1]) * ratio,
+            ]);
+            // What is kept per side moves along: the sides after the cut are
+            // one further, the new part starts as the side it came from
+            // (its name apart, which was the whole side's).
+            const shift = (values, copy) => {
+                const moved = {};
+                for (const [key, value] of Object.entries(values || {})) {
+                    const at = parseInt(key);
+                    moved[at > index ? at + 1 : at] = value;
+                }
+                if (copy && values && values[index] !== undefined) {
+                    moved[index + 1] = JSON.parse(JSON.stringify(values[index]));
+                }
+                return moved;
+            };
+            for (const key of ["edgeWidths", "edgeUpstands", "edgeNames"]) {
+                if (shape[key]) {
+                    shape[key] = shift(shape[key], key !== "edgeNames");
+                }
+            }
+            if (shape.descriptions && shape.descriptions.edges) {
+                shape.descriptions.edges = shift(shape.descriptions.edges, true);
+            }
+            this.state.splitAt = "";
+            this.commit();
+            // The products per side follow on the server, once the drawing
+            // is saved.
+            const record = this.props.record;
+            if ((await record.save()) && record.resId) {
+                const sections = await this.orm.searchRead(
+                    "tectora.roof.section",
+                    [["project_id", "=", record.resId], ["canvas_ref", "=", shape.id]],
+                    ["id"]
+                );
+                if (sections.length) {
+                    await this.orm.call("tectora.roof.project", "tectora_split_side", [
+                        [record.resId], sections[0].id, index + 1,
+                        Math.round(distance * 100) / 100,
+                        Math.round((length - distance) * 100) / 100,
+                    ]);
+                    await record.load();
+                }
+            }
+            this.notification.add(
+                _t("Zijde opgedeeld in %(first)s m en %(second)s m.", {
+                    first: distance.toFixed(2),
+                    second: (length - distance).toFixed(2),
+                }),
+                { type: "success" }
+            );
+        } catch (error) {
+            console.warn("Roof canvas: splitting the side failed", error);
+            this.notification.add(_t("De zijde opdelen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        } finally {
+            this.state.splitBusy = false;
+        }
+        this.draw();
+        this.refreshPanel();
     }
 
     /** The name typed in the side panel's header. */
@@ -3417,6 +3658,78 @@ export class RoofCanvasField extends Component {
                       ),
               }
             : undefined;
+        // The drawing's tick lists: the terrace floor of a surface, the works
+        // on a tapbuis. What the item has already is ticked, with its factor.
+        const assignedFor = async (field, coverageKey) => {
+            const lines = await this.orm.searchRead(
+                "tectora.roof.section.product",
+                [[field, "=", targetIds[0]], ["coverage", "=", coverageKey], ["edge_index", "=", 0]],
+                ["product_id", "quantity_factor"]
+            );
+            return {
+                assigned: lines.map((line) => line.product_id[0]),
+                factors: Object.fromEntries(
+                    lines.map((line) => [line.product_id[0], line.quantity_factor || 1])
+                ),
+            };
+        };
+        const selections = [];
+        if (isSurface && !isObject && !isSeamHit) {
+            selections.push({
+                key: "terrace",
+                label: _t("Terrasvloer"),
+                intro: _t(
+                    "De vloer op het dakterras (hoofdstuk Terrasvloer): tegeldragers per m², " +
+                    "de tegels en het snijafval. Het getal na × is hoeveel er per m² van het " +
+                    "vlak gaan: 8 tegeldragers, 0,12 voor 12 % snijafval."
+                ),
+                empty: _t("Geen producten gevonden (hoofdstuk Terrasvloer)."),
+                factorLabel: _t("Per m² van het vlak"),
+                load: async () => ({
+                    options: await this.orm.call(
+                        "tectora.roof.project", "tectora_get_terrace_options", [[record.resId]]
+                    ),
+                    ...(await assignedFor("section_id", "surface")),
+                }),
+                apply: (productIds, optionIds, factors, targetKeys) =>
+                    this.applySelection(
+                        selectionItemsFor(targetKeys), "surface", productIds, optionIds,
+                        "section_id", factors, _t("Terrasvloer")
+                    ),
+            });
+        }
+        if (isObject && hit.kind === "drain") {
+            const picked = (targetKeys) => new Set(targetKeys || []);
+            selections.push({
+                key: "drain",
+                label: _t("Tapbuis"),
+                main: true,
+                counted: true,
+                intro: _t(
+                    "De werken aan deze tapbuis, elk één stuk: de oude verwijderen, de nieuwe " +
+                    "(volgens diameter) en zijn bolrooster."
+                ),
+                empty: _t("Geen producten voor tapbuizen gevonden."),
+                load: async () => ({
+                    options: await this.orm.call(
+                        "tectora.roof.project", "tectora_get_drain_options", [[record.resId]]
+                    ),
+                    ...(await assignedFor("object_id", "drainage")),
+                }),
+                apply: (productIds, optionIds, factors, targetKeys) =>
+                    this.applySelection(
+                        [
+                            { record_id: targetIds[0], side: 0, quantity: 1 },
+                            ...others
+                                .filter((item) => picked(targetKeys).has(item.key))
+                                .map((item) => ({
+                                    record_id: recordByShape[item.shapeId], side: 0, quantity: 1,
+                                })),
+                        ].filter((item) => item.record_id),
+                        "drainage", productIds, optionIds, "object_id", factors, _t("Tapbuis")
+                    ),
+            });
+        }
         this.dialog.add(RoofProductPickerDialog, {
             title: _t("Producten toewijzen aan %s", target),
             domain: [
@@ -3428,6 +3741,7 @@ export class RoofCanvasField extends Component {
             demolition,
             chimney,
             skylight,
+            selections,
             assignedDomain: [
                 [linkField, "=", targetIds[0]],
                 ["coverage", "=", coverage],
@@ -3447,11 +3761,12 @@ export class RoofCanvasField extends Component {
             preselectedTargets: preselected,
             baseLabel: this.multiSelectLabel(hit),
             quantityUnit: isSurface ? " m²" : isCorner ? "" : " m",
-            // ``quantities`` ({product id: quantity}): the free products of a
-            // calculator tab with a quantity typed in, per item; the others
-            // take the item's own measure.
-            onConfirm: async (productIds, targetKeys, quantities) => {
-                const typed = quantities || {};
+            // ``options`` ({product id: {mode, factor, quantity, conditional}}):
+            // how a free product of a calculator tab is counted -- the item's
+            // measure times a factor, or a fixed number -- and whether it is
+            // a conditional (worst case) item. Without, the item's measure.
+            onConfirm: async (productIds, targetKeys, options) => {
+                const typed = options || {};
                 const picked = new Set(targetKeys || []);
                 const items = [
                     {
@@ -3501,10 +3816,7 @@ export class RoofCanvasField extends Component {
                                 product_id: productId,
                                 coverage,
                                 edge_index: item.sideNumber,
-                                quantity:
-                                    typed[productId] !== undefined
-                                        ? typed[productId]
-                                        : item.quantity,
+                                ...this.lineQuantityValues(typed[productId], item.quantity),
                             });
                         }
                     }
@@ -3545,6 +3857,22 @@ export class RoofCanvasField extends Component {
                 this.refreshPanel();
             },
         });
+    }
+
+    /** How a line is counted: ``option`` as the picker gives it for a free
+     * product (see onConfirm), ``measure`` the item's own. */
+    lineQuantityValues(option, measure) {
+        if (!option) {
+            return { quantity: measure };
+        }
+        const fixed = option.mode === "fixed";
+        const factor = option.factor > 0 ? option.factor : 1;
+        return {
+            quantity: fixed ? option.quantity || 0 : Math.round(measure * factor * 100) / 100,
+            quantity_mode: fixed ? "fixed" : "measure",
+            quantity_factor: fixed ? 1 : factor,
+            is_conditional: Boolean(option.conditional),
+        };
     }
 
     /** The "Randafwerking" of the picker: a roof edge (with its corners)
@@ -3619,25 +3947,27 @@ export class RoofCanvasField extends Component {
     }
 
     /** The "Afbouw" of the picker: exactly the ticked works on the items. */
-    async applySelection(items, coverage, productIds, optionIds, linkField) {
+    async applySelection(items, coverage, productIds, optionIds, linkField, factors, label) {
         const record = this.props.record;
+        const what = label || _t("Afbouw");
         try {
             const result = await this.orm.call(
                 "tectora.roof.project", "tectora_apply_selection",
                 [[record.resId], items, coverage, productIds, optionIds],
-                { link_field: linkField }
+                { link_field: linkField, factors: factors || {} }
             );
             await record.load();
             this.notification.add(
-                _t("Afbouw bijgewerkt: %(added)s toegevoegd, %(removed)s verwijderd.", {
+                _t("%(what)s bijgewerkt: %(added)s toegevoegd, %(removed)s verwijderd.", {
+                    what,
                     added: result.added,
                     removed: result.removed,
                 }),
                 { type: "success" }
             );
         } catch (error) {
-            console.warn("Roof canvas: applying the demolition failed", error);
-            this.notification.add(_t("Afbouw toepassen is mislukt, probeer opnieuw."), {
+            console.warn("Roof canvas: applying the selection failed", error);
+            this.notification.add(_t("%s toepassen is mislukt, probeer opnieuw.", what), {
                 type: "danger",
             });
         }
