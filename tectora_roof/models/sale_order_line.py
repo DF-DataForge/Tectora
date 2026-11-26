@@ -65,6 +65,12 @@ class SaleOrderLine(models.Model):
         help="Aangemaakt uit de daksecties en dakobjecten van de meting; wordt "
         "herbouwd zodra de tekening verandert.",
     )
+    tectora_conditional = fields.Boolean(
+        string="Voorwaardelijke post",
+        copy=False,
+        help="Een voorwaardelijke post van de meting (worst case): staat met "
+        "hoeveelheid 0 en zijn eenheidsprijs onder 'Worst case scenario'.",
+    )
     # The estimate of the line: quantity x the product's hours per unit, one
     # figure per work kind, so the order can total demolition and execution
     # apart and size a task for each.

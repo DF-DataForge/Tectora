@@ -105,10 +105,10 @@
                             <t t-else="">Satellietbeeld ophalen (werfadres)</t>
                         </button>
                         <button type="button" class="dropdown-item" t-on-click="this.chooseUpload"
-                                title="Eigen plan of foto als achtergrond; kalibreer de schaal nadien via rechtsklik op een zijdelengte.">
+                                title="Eigen plan (afbeelding of pdf) of foto als achtergrond. Bij een pdf-plan met gekende schaal (1/100) volgt de schaal vanzelf; anders kalibreer je nadien via rechtsklik op een zijdelengte.">
                             <i class="oi oi-fw me-1" data-icon="upload"/> Eigen plan uploaden…
                         </button>
-                        <input type="file" accept="image/*" class="d-none" t-ref="this.bgFileRef"
+                        <input type="file" accept="image/*,application/pdf,.pdf" class="d-none" t-ref="this.bgFileRef"
                                t-on-change="this.uploadPlan"/>
                         <t t-if="this.backgroundUrl">
                             <div class="dropdown-divider"/>
@@ -191,6 +191,29 @@
                             </div>
                             <button type="button" class="btn-close" title="Sluiten"
                                     t-on-click="this.closePanel"/>
+                        </div>
+                        <!-- A side that is not one thing on the roof (wall, window,
+                             wall): cut it, each part is then a side of its own. -->
+                        <div t-if="this.canSplitFocusSide" class="card-body p-2 border-bottom small">
+                            <div class="fw-bold mb-1">Zijde opdelen</div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="text-nowrap">op</span>
+                                <input type="number" min="0" step="0.01"
+                                       class="form-control form-control-sm" style="width: 5.5rem;"
+                                       t-att-value="this.state.splitAt"
+                                       t-att-placeholder="(this.focusSideLength / 2).toFixed(2)"
+                                       t-on-input="(ev) => { this.state.splitAt = ev.target.value; }"
+                                       t-on-keydown="(ev) => ev.stopPropagation()"/>
+                                <span class="text-nowrap">m van <t t-out="this.focusSideLength.toFixed(2)"/> m</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 ms-auto"
+                                        t-att-disabled="this.state.splitBusy"
+                                        t-on-click="() => this.splitFocusSide()">Opdelen</button>
+                            </div>
+                            <div class="text-muted mt-1">
+                                Gemeten vanaf het begin van de zijde (de hoek met de vorige
+                                zijde). De vorm blijft dezelfde; elk deel krijgt zijn eigen
+                                naam, dakrand of aansluitingen en producten.
+                            </div>
                         </div>
                         <div class="card-body p-2 border-bottom">
                             <label class="form-label small fw-bold mb-1">1. Originele staat</label>
@@ -505,6 +528,11 @@
                 <button type="button" class="dropdown-item"
                         t-on-click="() => this.addRoofObject('penetration', 'rect')">
                     <i class="oi me-1" data-icon="square"/> Dakdoorvoer — rechthoek
+                </button>
+                <div class="dropdown-divider"/>
+                <button type="button" class="dropdown-item"
+                        t-on-click="() => this.addRoofObject('drain', 'circle')">
+                    <i class="oi me-1" data-icon="radio_button_unchecked"/> Tapbuis (afvoer)
                 </button>
             </div>
         </div>

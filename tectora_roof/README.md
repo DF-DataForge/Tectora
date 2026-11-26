@@ -147,6 +147,35 @@ install on Odoo 17 or earlier without adjustments.
    removed, to tick; what the element has is ticked. Applying puts exactly
    the ticked works on it (and on the other items ticked), which land in
    the roof's Afbouwwerken on the quotation.
+   From the drawing to the whole quotation:
+   * **Zijde opdelen** (side panel of a selected side): a side that is not
+     one thing on the roof -- wall, window, wall -- is cut at a distance from
+     its start. The shape stays; each part is a side of its own with its own
+     name, roof edge or connections and products, and the products of the
+     cut side go onto both parts with their new length.
+   * A side takes **several connections** at once (Randafwerking ->
+     Aansluiting: a tick list grouped by what the side meets -- dak van de
+     buren, goot, hellend dak, dorpel / raam, onderkapping, gevelbekleding,
+     deksteen / muurkap, muur / gevel).
+   * The **dakbedekking** (laid or removed) is measured over the surface and
+     up the upstands (per side its length x the upstand set on the drawing).
+   * Surfaces have a **Terrasvloer** tab: the products of the chapter
+     Terrasvloer to tick, each with how many go per m² (8 tile supports,
+     0.12 for 12 % cutting waste). They land in a segment of their own,
+     "Aanleg terrasvloer".
+   * Every line is counted as **the measure times a factor** or as a
+     **fixed number** (a forfait); a product per piece is rounded up. The
+     free products of the picker ("Extra producten") choose it.
+   * A line ticked **Voorwaardelijk** is a worst case item: on the
+     quotation with its unit price, a quantity of 0 and what it would come
+     to, under "Worst case scenario".
+   * A **tapbuis** is a dakobject of its own (right-click -> Tapbuis), with
+     a tab of its works, one piece each: removing the old one, the new one
+     by diameter, its bolrooster.
+   * A plan as **PDF** can be the background (Achtergrond -> Eigen plan
+     uploaden): one page becomes the image, and with the plan's scale (1/100)
+     the drawing's scale follows. Drawn in the browser; where that fails, on
+     the server when PyMuPDF or pdftoppm is installed.
    **3D** (toolbar) shows the roof on the drawing in 3D, layer by layer:
    the deck, the vapour barrier, the insulation on the surface inside the
    roof edges (its thickness from the surface's insulation), the EPDM on top

@@ -741,6 +741,11 @@ class SaleOrder(models.Model):
                     continue
                 kind, chapter = project._tectora_product_segment(line.product_id)
                 kind = kind or context_kind or "other"
+                if line.tectora_conditional:
+                    # A conditional item of the drawing: under the worst
+                    # case chapter, whatever chapter its product is in.
+                    chapter = project._tectora_conditional_chapter()
+                    kind = "other" if chapter else "conditional"
                 roof = line.tectora_roof_id or line.roof_line_id.roof_id
                 if kind in ("demolition", "buildup"):
                     roof = roof or context_roof

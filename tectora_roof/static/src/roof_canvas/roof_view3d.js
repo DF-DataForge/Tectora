@@ -395,6 +395,9 @@ export class RoofView3DDialog extends Component {
         // The roof objects stand on the EPDM at their real height (not
         // exaggerated like the layers), labelled with it.
         for (const object of s.layers.objects ? this.props.model.objects : []) {
+            if (object.kind === "drain") {
+                continue; // a tapbuis lies in the roof covering: nothing stands up
+            }
             const base = object.base * E + gap * 4;
             const cx = object.points.reduce((sum, p) => sum + p[0], 0) / object.points.length;
             const cy = object.points.reduce((sum, p) => sum + p[1], 0) / object.points.length;

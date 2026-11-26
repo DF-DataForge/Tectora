@@ -263,6 +263,10 @@
                                                 <field name="side_display"/>
                                                 <field name="edge_index" optional="hide"/>
                                                 <field name="quantity"/>
+                                                <field name="quantity_mode" optional="show"/>
+                                                <field name="quantity_factor" optional="show"
+                                                       invisible="quantity_mode == 'fixed'"/>
+                                                <field name="is_conditional" optional="show"/>
                                                 <field name="uom_id"/>
                                                 <field name="price_unit"/>
                                                 <field name="price_subtotal" sum="Totaal"/>
