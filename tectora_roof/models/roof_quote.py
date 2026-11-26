@@ -71,16 +71,25 @@ class TectoraRoofProject(models.Model):
         # The drawing's lines, per (product, coverage) within a segment.
         def add_drawn(line, target, target_kind):
             kind, chapter = self._tectora_product_segment(line.product_id)
+            if line.is_conditional:
+                # A conditional item (worst case): under that chapter, as on
+                # the quotation, with a quantity of 0.
+                chapter = self._tectora_conditional_chapter()
+                kind = "other" if chapter else "conditional"
             data = segment(kind or "other", line._tectora_roof(), chapter)
-            group_key = (line.product_id.id, line.coverage)
+            group_key = (line.product_id.id, line.coverage, bool(line.is_conditional))
             entry = data["groups"].get(group_key)
             if not entry:
                 entry = data["groups"][group_key] = row(line, "drawing")
-                entry["key"] = "drawing-%s-%s-%s" % (data["key"], line.product_id.id, line.coverage)
+                entry["key"] = "drawing-%s-%s-%s%s" % (
+                    data["key"], line.product_id.id, line.coverage,
+                    "-c" if line.is_conditional else "",
+                )
                 data["lines"].append(entry)
             else:
                 entry["line_ids"].append(line.id)
-            entry["quantity"] += line.quantity
+            if not line.is_conditional:
+                entry["quantity"] += line.quantity
             entry["subtotal"] += line.price_subtotal
             data["total"] += line.price_subtotal
             if target.canvas_ref:

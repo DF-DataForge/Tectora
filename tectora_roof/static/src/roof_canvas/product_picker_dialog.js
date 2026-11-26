@@ -72,6 +72,8 @@ export class RoofProductPickerDialog extends Component {
             // ("measure" | "fixed"), factor, quantity, conditional}].
             extras: [],
             extraSearch: "",
+            extraResults: [], // what the server found for the search
+            extraSearched: false,
             // A Ctrl-selection arrives with its extra targets already picked,
             // so the list of what gets the products is open and complete.
             multi: (this.props.preselectedTargets || []).length > 0,
@@ -210,10 +212,7 @@ export class RoofProductPickerDialog extends Component {
     get extraLines() {
         const lines = [];
         for (const extra of this.state.extras) {
-            const product = this.state.products.find((p) => p.id === extra.id);
-            if (!product) {
-                continue;
-            }
+            const product = extra.product;
             const uom = product.uom_id ? product.uom_id[1] : "";
             let total;
             if (extra.mode === "fixed") {
@@ -240,38 +239,53 @@ export class RoofProductPickerDialog extends Component {
         return this.extraLines.reduce((sum, line) => sum + line.subtotal, 0);
     }
 
-    /** The products the search finds, without those already added. */
+    /** The products the search found, without those already added. */
     get extraMatches() {
-        const query = this.state.extraSearch.trim().toLowerCase();
-        if (!query) {
-            return [];
-        }
         const taken = new Set(this.state.extras.map((extra) => extra.id));
-        const matches = [];
-        for (const product of this.state.products) {
-            if (taken.has(product.id)) {
-                continue;
-            }
-            if (
-                product.name.toLowerCase().includes(query) ||
-                (product.default_code || "").toLowerCase().includes(query)
-            ) {
-                matches.push(product);
-                if (matches.length >= 12) {
-                    break;
-                }
-            }
+        return this.state.extraResults.filter((product) => !taken.has(product.id));
+    }
+
+    /** Free products are searched among everything that is sold, on the
+     * server: not only the categories of this kind of item, and not only
+     * the products the "Alle producten" list could load. */
+    onExtraSearch(value) {
+        this.state.extraSearch = value;
+        clearTimeout(this._extraTimer);
+        const query = value.trim();
+        if (!query) {
+            this.state.extraResults = [];
+            this.state.extraSearched = false;
+            return;
         }
-        return matches;
+        this._extraTimer = setTimeout(async () => {
+            const ticket = (this._extraTicket = (this._extraTicket || 0) + 1);
+            let products = [];
+            try {
+                products = await this.orm.searchRead(
+                    "product.product",
+                    [["sale_ok", "=", true], "|", ["name", "ilike", query], ["default_code", "ilike", query]],
+                    ["default_code", "name", "list_price", "uom_id", "categ_id"],
+                    { limit: 14, order: "default_code, name" }
+                );
+            } catch (error) {
+                console.warn("Roof picker: product search failed", error);
+            }
+            if (ticket === this._extraTicket) {
+                this.state.extraResults = products;
+                this.state.extraSearched = true;
+            }
+        }, 220);
     }
 
     addExtra(product) {
         if (!this.state.extras.some((extra) => extra.id === product.id)) {
             this.state.extras.push({
-                id: product.id, mode: "measure", factor: 1, quantity: 1, conditional: false,
+                id: product.id, product, mode: "measure", factor: 1, quantity: 1, conditional: false,
             });
         }
         this.state.extraSearch = "";
+        this.state.extraResults = [];
+        this.state.extraSearched = false;
     }
 
     removeExtra(productId) {

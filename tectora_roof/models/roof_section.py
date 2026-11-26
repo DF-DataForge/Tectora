@@ -439,10 +439,13 @@ class TectoraRoofSectionProduct(models.Model):
                     )
                 )
 
-    @api.depends("quantity", "product_id.lst_price")
+    @api.depends("quantity", "product_id.lst_price", "is_conditional")
     def _compute_price_subtotal(self):
         for line in self:
-            line.price_subtotal = line.quantity * line.product_id.lst_price
+            # A conditional item (worst case) is priced, not counted.
+            line.price_subtotal = (
+                0.0 if line.is_conditional else line.quantity * line.product_id.lst_price
+            )
 
     @api.depends(
         "coverage", "edge_index",
@@ -578,6 +581,17 @@ class TectoraRoofSectionProduct(models.Model):
                 vals["coverage"] = self._coverage_from_product(
                     Product.browse(vals["product_id"])
                 )
+            # A line on a whole surface or outline is measured, not given: the
+            # quantity a caller passes (the plain area or perimeter) would
+            # keep the line from its own measure -- the roof covering up the
+            # upstands, a factor, pieces rounded up.
+            if (
+                (vals.get("section_id") or vals.get("object_id"))
+                and not vals.get("edge_index")
+                and vals.get("coverage", "surface") in ("surface", "edges")
+                and vals.get("quantity_mode", "measure") != "fixed"
+            ):
+                vals.pop("quantity", None)
         lines = super().create(vals_list)
         if not self.env.context.get("tectora_sync"):
             lines.project_id._tectora_mirror_to_order()
