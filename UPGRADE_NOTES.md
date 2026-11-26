@@ -258,3 +258,4 @@ Releases and the modules they need upgraded:
 | Dakmeting: Skylux-prijzen onder het menu Instellingen (naast Algemene instellingen) | `tectora_roof` (20.0.3.99.0) |
 | Tekening → offerte: zijde opdelen in stukken; meerdere aansluitingen per zijde (dorpel, onderkapping, gevelbekleding, deksteen); dakbedekking inclusief opstanden; tabblad Terrasvloer (tegeldragers per m², tegels, snijafval) met eigen hoofdstuk "Aanleg terrasvloer"; hoeveelheid × factor of vast aantal; voorwaardelijke posten (worst case, hoeveelheid 0); tapbuis als dakobject met eigen tabblad; pdf-plan als achtergrond met schaal | `tectora_roof` (20.0.3.100.0) |
 | Fix productkiezer: tabbladen Terrasvloer/Tapbuis en Extra producten gaven een fout bij het tonen van hoeveelheden | `tectora_roof` (20.0.3.101.0) |
+| Tekenen: hoek van de zijde die getekend wordt (klikt vast op 45° en 90°, Alt: vrij); lengte van de zijde intypen en Enter tekent ze | `tectora_roof` (20.0.3.102.0) |

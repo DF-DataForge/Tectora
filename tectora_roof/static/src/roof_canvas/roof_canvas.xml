@@ -32,7 +32,7 @@
                     <button type="button" class="btn btn-outline-secondary"
                             t-att-class="{ active: this.state.tool === 'polygon' }"
                             t-on-click="() => this.setTool('polygon')"
-                            title="Polygoon tekenen (klik punten, dubbelklik om te sluiten)">
+                            title="Polygoon tekenen: klik de hoeken, of typ de lengte van een zijde en druk Enter. De hoek staat erbij en klikt vast op 45° en 90° (Alt: vrij). Dubbelklik om te sluiten.">
                         <i class="oi" data-icon="star"/> Polygoon
                     </button>
                     <button type="button" class="btn btn-outline-secondary"

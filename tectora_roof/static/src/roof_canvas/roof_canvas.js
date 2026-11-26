@@ -41,6 +41,9 @@ const OBJECT_DEFAULT_SIZE_M = { chimney: 0.8, skylight: 1.2, penetration: 0.2, d
 const PDF_MAX_PX = 2500;
 const PDF_POINT_M = 0.0254 / 72;
 const PDFJS_BUILD = "/web/static/lib/pdfjs/build";
+// While drawing, a side within this angle (rad) of 45° / 90° to the side
+// before it snaps to it.
+const DRAFT_ANGLE_SNAP = (3 * Math.PI) / 180;
 // Circles are stored as regular polygons so measurements and the server-side
 // sync keep working; 48 points keeps area/perimeter within ~0.5% of exact.
 const CIRCLE_POINTS = 48;
@@ -675,6 +678,8 @@ export class RoofCanvasField extends Component {
         this.drag = null; // {mode: 'move'|'rect'|'pan', ...}
         this.draftPolygon = null; // [[x, y], ...]
         this.draftCursor = null; // where the side being drawn ends (pointer)
+        this.draftLength = ""; // the length typed for the side being drawn
+        this.draftFree = false; // Alt held: no snapping to 45° / 90°
         this._rawCache = undefined;
         this._staleRaw = null;
         this._shapes = [];
@@ -1179,6 +1184,7 @@ export class RoofCanvasField extends Component {
         this.state.tool = tool;
         this.draftPolygon = null;
         this.draftCursor = null;
+        this.draftLength = "";
         if (tool !== "select") {
             this.state.selectedId = null;
         }
@@ -1504,6 +1510,7 @@ export class RoofCanvasField extends Component {
     onPointerMove(ev) {
         if (!this.drag && this.draftPolygon) {
             // Live dimensions: the side being drawn follows the pointer.
+            this.draftFree = ev.altKey;
             this.draftCursor = this.draftSnap(this.toWorld(ev));
             this.draw();
             return;
@@ -1644,6 +1651,9 @@ export class RoofCanvasField extends Component {
         if (ev.target.tagName === "TEXTAREA") {
             return; // typing a description, not drawing
         }
+        if (this.onDraftKey(ev)) {
+            return; // typing the length of the side being drawn
+        }
         if (ev.key === "Delete" || ev.key === "Backspace") {
             if (ev.target.tagName !== "INPUT") {
                 ev.preventDefault();
@@ -1662,6 +1672,7 @@ export class RoofCanvasField extends Component {
             } else if (this.draftPolygon) {
                 this.draftPolygon = null;
                 this.draftCursor = null;
+                this.draftLength = "";
             } else if (this.state.fullscreen) {
                 this.toggleFullscreen();
             }
@@ -1832,10 +1843,16 @@ export class RoofCanvasField extends Component {
         if (!this.draftPolygon) {
             this.draftPolygon = [point];
             this.draftCursor = null;
+            this.draftLength = "";
         } else {
+            // The corner lands where the preview shows it: at the length
+            // typed, else on the snapped direction (or the first corner).
+            const typed = this.draftTypedLength() > 0 && this.draftCursor;
+            point = typed ? this.draftTarget() : this.draftSnap(point);
             const first = this.draftPolygon[0];
             const snap = CLOSE_SNAP_PX / this.view.zoom;
             if (
+                !typed &&
                 this.state.tool !== "seam" &&
                 this.draftPolygon.length >= 3 &&
                 Math.hypot(point[0] - first[0], point[1] - first[1]) <= snap
@@ -1843,7 +1860,12 @@ export class RoofCanvasField extends Component {
                 this.closePolygon();
                 return;
             }
+            const last = this.draftPolygon[this.draftPolygon.length - 1];
+            if (Math.hypot(point[0] - last[0], point[1] - last[1]) < 1e-6) {
+                return; // no side at all
+            }
             this.draftPolygon.push(point);
+            this.draftLength = "";
         }
         this.updateStatus();
         this.draw();
@@ -1867,7 +1889,71 @@ export class RoofCanvasField extends Component {
         }
         this.draftPolygon = null;
         this.draftCursor = null;
+        this.draftLength = "";
         this.updateStatus();
+    }
+
+    // ------------------------------------------------- typing a side's length
+    // While a polygon is drawn, the side that follows the pointer can be
+    // given its exact length: type it (4,25), the preview takes that length
+    // in the pointer's direction, and Enter (or a click) puts the corner
+    // there. The direction snaps to 45° and 90° of the side before it (Alt
+    // held: free), so a typed length and a right angle make an exact corner.
+
+    draftTypedLength() {
+        const value = parseFloat(String(this.draftLength || "").replace(",", "."));
+        return value > 0 ? value : 0;
+    }
+
+    /** Where the corner being drawn would land: the pointer, or -- with a
+     * length typed -- that length from the last corner towards the pointer. */
+    draftTarget() {
+        const cursor = this.draftCursor;
+        const points = this.draftPolygon;
+        const typed = this.draftTypedLength();
+        if (!cursor || !points || !points.length || !typed || this.state.tool !== "polygon") {
+            return cursor;
+        }
+        const last = points[points.length - 1];
+        const dx = cursor[0] - last[0];
+        const dy = cursor[1] - last[1];
+        const length = Math.hypot(dx, dy);
+        if (!length) {
+            return cursor;
+        }
+        const px = typed / this.scaleMPerPx;
+        return [last[0] + (dx / length) * px, last[1] + (dy / length) * px];
+    }
+
+    /** A key while a polygon is drawn: digits and a comma build the length,
+     * Backspace corrects it, Enter draws the side. True when it was used. */
+    onDraftKey(ev) {
+        if (
+            !this.draftPolygon || this.state.tool !== "polygon"
+            || ev.target.tagName === "INPUT" || ev.ctrlKey || ev.metaKey
+        ) {
+            return false;
+        }
+        const typing = this.draftLength;
+        if (/^[0-9]$/.test(ev.key)) {
+            this.draftLength = typing + ev.key;
+        } else if ((ev.key === "," || ev.key === ".") && !/[.,]/.test(typing)) {
+            this.draftLength = (typing || "0") + ",";
+        } else if (ev.key === "Backspace" && typing) {
+            this.draftLength = typing.slice(0, -1);
+        } else if (ev.key === "Escape" && typing) {
+            this.draftLength = "";
+        } else if (ev.key === "Enter" && this.draftTypedLength() > 0 && this.draftCursor) {
+            ev.preventDefault();
+            this.addPolygonPoint(this.draftCursor);
+            return true;
+        } else {
+            return false;
+        }
+        ev.preventDefault();
+        this.updateStatus();
+        this.draw();
+        return true;
     }
 
     addShape(points, kind = "section", shapeType = null) {
@@ -4105,7 +4191,9 @@ export class RoofCanvasField extends Component {
             this.state.status =
                 this.state.tool === "seam"
                     ? `Naad: ${this.draftPolygon.length} punt(en) — klik op de andere zijde om de naad af te werken (of dubbelklik/Enter), Esc om te annuleren`
-                    : `Polygoon: ${this.draftPolygon.length} punt(en) — dubbelklik of Enter om te sluiten, Esc om te annuleren`;
+                    : this.draftLength
+                    ? `Zijde van ${this.draftLength} m — Enter of klik om ze te tekenen in de richting van de muis, Esc om de lengte te wissen`
+                    : `Polygoon: ${this.draftPolygon.length} punt(en) — typ de lengte van de zijde (bv. 4,25) en druk Enter, of klik; dubbelklik of Enter om te sluiten, Esc om te annuleren. Alt: vrije hoek`;
             return;
         }
         const shape = this.selectedShape;
@@ -4773,7 +4861,81 @@ export class RoofCanvasField extends Component {
                 return [fx, fy];
             }
         }
-        return point;
+        return this.draftAngleSnap(point);
+    }
+
+    // A side drawn within a few degrees of 45° or 90° to the side before it
+    // (the first side: to the horizontal) takes exactly that angle; Alt
+    // held, it goes where the pointer is.
+    draftAngleSnap(point) {
+        const points = this.draftPolygon;
+        if (this.draftFree || !points || !points.length) {
+            return point;
+        }
+        const last = points[points.length - 1];
+        const dx = point[0] - last[0];
+        const dy = point[1] - last[1];
+        const length = Math.hypot(dx, dy);
+        if (!length) {
+            return point;
+        }
+        const previous = points.length >= 2 ? points[points.length - 2] : null;
+        const base = previous ? Math.atan2(last[1] - previous[1], last[0] - previous[0]) : 0;
+        const relative = Math.atan2(dy, dx) - base;
+        const step = Math.PI / 4;
+        const nearest = Math.round(relative / step) * step;
+        if (Math.abs(relative - nearest) > DRAFT_ANGLE_SNAP) {
+            return point;
+        }
+        const angle = base + nearest;
+        return [last[0] + Math.cos(angle) * length, last[1] + Math.sin(angle) * length];
+    }
+
+    // The angle of the corner being drawn, at the last corner placed: an arc
+    // between the side before it and the side that follows the pointer (for
+    // the first side: against the horizontal), with its degrees.
+    drawDraftAngle(ctx, points, target) {
+        const last = points[points.length - 1];
+        const toTarget = Math.atan2(target[1] - last[1], target[0] - last[0]);
+        if (Math.hypot(target[0] - last[0], target[1] - last[1]) * this.view.zoom < 12) {
+            return;
+        }
+        const previous = points.length >= 2 ? points[points.length - 2] : null;
+        const from = previous
+            ? Math.atan2(previous[1] - last[1], previous[0] - last[0])
+            : 0;
+        // The shorter way round, -180° .. 180°.
+        const sweep = ((toTarget - from + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        const degrees = Math.abs(sweep) * 180 / Math.PI;
+        const zoom = this.view.zoom;
+        const radius = 22 / zoom;
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = HIGHLIGHT;
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.beginPath();
+        ctx.arc(last[0], last[1], radius, from, from + sweep, sweep < 0);
+        ctx.stroke();
+        if (!previous) {
+            // The horizontal the first side is measured against.
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(last[0], last[1]);
+            ctx.lineTo(last[0] + radius * 1.6, last[1]);
+            ctx.stroke();
+        }
+        ctx.restore();
+        const middle = from + sweep / 2;
+        const rounded = Math.round(degrees * 10) / 10;
+        const text = `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}°`;
+        // A right (or 45°) angle stands out: that is what the snap gives.
+        const exact = Math.abs(rounded / 45 - Math.round(rounded / 45)) < 1e-9;
+        this.drawDimension(
+            ctx, text,
+            last[0] + Math.cos(middle) * (radius + 20 / zoom),
+            last[1] + Math.sin(middle) * (radius + 20 / zoom),
+            "center", exact
+        );
     }
 
     // A dimension label while drawing: a small box with the text, centred on
@@ -4819,7 +4981,8 @@ export class RoofCanvasField extends Component {
 
     drawDraftPolygon(ctx) {
         const points = this.draftPolygon;
-        const cursor = this.draftCursor;
+        // With a length typed, the side ends at that length, not the pointer.
+        const cursor = this.draftTarget();
         const isSeamTool = this.state.tool === "seam";
         ctx.setLineDash([6 / this.view.zoom, 4 / this.view.zoom]);
         ctx.strokeStyle = "#0a7483";
@@ -4855,8 +5018,21 @@ export class RoofCanvasField extends Component {
         // pointer; from three corners on, the area and perimeter the polygon
         // would have if closed now (for a seam, its length so far).
         const all = cursor ? [...points, cursor] : points;
+        const typing = cursor && !isSeamTool ? this.draftLength : "";
         for (let i = 1; i < all.length; i++) {
-            this.drawDraftEdge(ctx, all[i - 1], all[i]);
+            if (typing && i === all.length - 1) {
+                // The length being typed, on the side it is for.
+                const [ax, ay] = all[i - 1];
+                const [bx, by] = all[i];
+                this.drawDimension(
+                    ctx, `${typing}▏ m`, (ax + bx) / 2, (ay + by) / 2, "center", true
+                );
+            } else {
+                this.drawDraftEdge(ctx, all[i - 1], all[i]);
+            }
+        }
+        if (cursor && !isSeamTool) {
+            this.drawDraftAngle(ctx, points, cursor);
         }
         const scale = this.scaleMPerPx;
         const box = boundingBox(all);
