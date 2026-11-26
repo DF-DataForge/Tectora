@@ -65,7 +65,7 @@
                                     </td>
                                     <td class="text-end text-nowrap">
                                         <t t-if="line.direct_id">
-                                            <input type="number" min="0" step="0.01"
+                                            <input type="text" inputmode="decimal"
                                                    class="form-control form-control-sm d-inline-block text-end"
                                                    style="width: 5.5rem;"
                                                    t-att-value="line.quantity"
