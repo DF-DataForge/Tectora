@@ -1557,6 +1557,130 @@ export class RoofCanvasField extends Component {
         this.refreshPanel();
     }
 
+    // ------------------------------------------------------ undo a side's cut
+    // The reverse of "Zijde opdelen": the point between the selected side
+    // and a neighbour in line with it is taken off, so the two are one side
+    // again.
+
+    /** The neighbours the selected side can be joined with: those in line
+     * with it -- [{key: "next" | "previous", label, length}]. */
+    get focusMergeOptions() {
+        if (!this.canSplitFocusSide) {
+            return [];
+        }
+        const shape = this.selectedShape;
+        const points = shape.points;
+        const n = points.length;
+        if (n < 4) {
+            return [];
+        }
+        const index = this.focus.edgeIndex;
+        const inLine = (a, b, c) => {
+            const ux = b[0] - a[0];
+            const uy = b[1] - a[1];
+            const vx = c[0] - b[0];
+            const vy = c[1] - b[1];
+            const lengths = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+            return lengths > 0
+                && Math.abs(ux * vy - uy * vx) / lengths < 0.01
+                && ux * vx + uy * vy > 0;
+        };
+        const at = (i) => points[((i % n) + n) % n];
+        const options = [];
+        if (inLine(at(index), at(index + 1), at(index + 2))) {
+            options.push({
+                key: "next",
+                label: this.edgeName(shape, (index + 1) % n),
+            });
+        }
+        if (inLine(at(index - 1), at(index), at(index + 1))) {
+            options.push({
+                key: "previous",
+                label: this.edgeName(shape, (index - 1 + n) % n),
+            });
+        }
+        return options;
+    }
+
+    async mergeFocusSide(direction) {
+        if (this.state.splitBusy || !this.focusMergeOptions.some((o) => o.key === direction)) {
+            return;
+        }
+        const shape = this.selectedShape;
+        const n = shape.points.length;
+        const index = this.focus.edgeIndex;
+        // The side that stays and the one that goes into it: the point
+        // between them is the start of the second.
+        const kept = direction === "next" ? index : (index - 1 + n) % n;
+        const dropped = (kept + 1) % n;
+        this.state.splitBusy = true;
+        try {
+            shape.points.splice(dropped, 1);
+            const shift = (values) => {
+                const moved = {};
+                for (const [key, value] of Object.entries(values || {})) {
+                    const at = parseInt(key);
+                    if (at !== dropped) {
+                        moved[at > dropped ? at - 1 : at] = value;
+                    }
+                }
+                return moved;
+            };
+            for (const key of ["edgeWidths", "edgeUpstands", "edgeNames"]) {
+                if (shape[key]) {
+                    shape[key] = shift(shape[key]);
+                    if (!Object.keys(shape[key]).length) {
+                        delete shape[key];
+                    }
+                }
+            }
+            if (shape.descriptions && shape.descriptions.edges) {
+                shape.descriptions.edges = shift(shape.descriptions.edges);
+            }
+            // The side that stays, as it is numbered now.
+            const merged = kept > dropped ? kept - 1 : kept;
+            const count = shape.points.length;
+            const a = shape.points[merged];
+            const b = shape.points[(merged + 1) % count];
+            const length = Math.hypot(b[0] - a[0], b[1] - a[1]) * this.scaleMPerPx;
+            if (this.state.focus) {
+                this.state.focus = { ...this.state.focus, edgeIndex: merged };
+            }
+            this.commit();
+            // As with the cut: the products per side move on the server.
+            this.clearHistory();
+            const record = this.props.record;
+            if ((await record.save()) && record.resId) {
+                const sections = await this.orm.searchRead(
+                    "tectora.roof.section",
+                    [["project_id", "=", record.resId], ["canvas_ref", "=", shape.id]],
+                    ["id"]
+                );
+                if (sections.length) {
+                    await this.orm.call("tectora.roof.project", "tectora_merge_sides", [
+                        [record.resId], sections[0].id, kept + 1, dropped + 1,
+                        Math.round(length * 100) / 100,
+                    ]);
+                    await record.load();
+                }
+            }
+            this.notification.add(
+                _t("Opdeling verwijderd: de zijde is weer %s m.", length.toFixed(2)),
+                { type: "success" }
+            );
+        } catch (error) {
+            console.warn("Roof canvas: joining the sides failed", error);
+            this.notification.add(_t("De opdeling verwijderen is mislukt, probeer opnieuw."), {
+                type: "danger",
+            });
+        } finally {
+            this.state.splitBusy = false;
+        }
+        this.updateStatus();
+        this.draw();
+        this.refreshPanel();
+    }
+
     /** The name typed in the side panel's header. */
     setSelectedName(value) {
         const shape = this.selectedShape;

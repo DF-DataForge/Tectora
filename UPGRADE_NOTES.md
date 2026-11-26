@@ -263,3 +263,4 @@ Releases and the modules they need upgraded:
 | Tekening en productkiezer: getalvelden aanvaarden zowel punt als komma (numeriek klavier) | `tectora_roof` (20.0.3.104.0) |
 | Tekening: het tekenvlak en het raster lopen door onder alles wat getekend of in beeld is; de pasweergave en de afbeelding op de meetstaat tonen ook wat buiten het plan getekend is | `tectora_roof` (20.0.3.105.0) |
 | Tekening: een nieuwe tekening start met het nulpunt 1 m binnen de linkerbovenhoek (kruisje, eerste hoek klikt erop vast); een tekening zonder plan wordt passend op haar vormen getoond | `tectora_roof` (20.0.3.106.0) |
+| Tekening: opdeling van een zijde verwijderen (twee delen in elkaars verlengde weer samenvoegen; de producten volgen) | `tectora_roof` (20.0.3.107.0) |

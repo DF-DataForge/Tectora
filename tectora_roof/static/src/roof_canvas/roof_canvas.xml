@@ -226,6 +226,24 @@
                                 zijde). De vorm blijft dezelfde; elk deel krijgt zijn eigen
                                 naam, dakrand of aansluitingen en producten.
                             </div>
+                            <!-- The reverse: this side and a neighbour in line with
+                                 it become one side again. -->
+                            <t t-set="merge_options" t-value="this.focusMergeOptions"/>
+                            <div t-if="merge_options.length" class="mt-2 pt-2 border-top">
+                                <div class="fw-bold mb-1">Opdeling verwijderen</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button t-foreach="merge_options" t-as="option" t-key="option.key"
+                                            type="button" class="btn btn-sm btn-outline-secondary py-0"
+                                            t-att-disabled="this.state.splitBusy"
+                                            t-on-click="() => this.mergeFocusSide(option.key)">
+                                        Samenvoegen met <t t-out="option.label"/>
+                                    </button>
+                                </div>
+                                <div class="text-muted mt-1">
+                                    De twee delen worden weer één zijde; wat op beide stond,
+                                    komt op die ene zijde met de hele lengte.
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body p-2 border-bottom">
                             <label class="form-label small fw-bold mb-1">1. Originele staat</label>
