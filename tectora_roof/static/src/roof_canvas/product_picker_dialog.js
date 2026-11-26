@@ -199,6 +199,14 @@ export class RoofProductPickerDialog extends Component {
         return !["m²", "m2", "m", "lm", "m³", "m3"].includes(String(uom || "").trim().toLowerCase());
     }
 
+    /** A quantity as shown: whole numbers as they are, others with two
+     * decimals. (A method, not in the template: only a few globals, such as
+     * Math, are known there -- Number is not.) */
+    formatQuantity(value) {
+        const number = Number(value) || 0;
+        return Number.isInteger(number) ? String(number) : number.toFixed(2);
+    }
+
     get extraLines() {
         const lines = [];
         for (const extra of this.state.extras) {
