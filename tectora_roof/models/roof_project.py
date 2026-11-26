@@ -567,6 +567,10 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         orders = self.sale_order_ids
         if not orders or "picking_ids" not in orders._fields:
+            # Without Inventory there is no such model: an empty set of
+            # orders counts and lists the same (nothing).
+            if "stock.picking" not in self.env:
+                return orders.browse()
             return self.env["stock.picking"]
         return orders.mapped("picking_ids")
 

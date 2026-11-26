@@ -890,8 +890,8 @@
         </Dialog>
     </t>
 
-    <!-- Free products on a calculator tab: searched in the same products as
-         "Alle producten", assigned to the same item(s) when the tab is
+    <!-- Free products on a calculator tab: searched among everything that
+         is sold, assigned to the same item(s) when the tab is
          applied. Each follows the item's measure times a factor, or is a
          fixed number; ticked "voorwaardelijk" it is a worst case item. -->
     <t t-name="tectora_roof.RoofPickerExtras">
@@ -964,7 +964,7 @@
             <input type="text" class="form-control form-control-sm"
                    placeholder="Zoek een product op naam of referentie om het toe te voegen…"
                    t-att-value="this.state.extraSearch"
-                   t-on-input="(ev) => { this.state.extraSearch = ev.target.value; }"/>
+                   t-on-input="(ev) => this.onExtraSearch(ev.target.value)"/>
             <div t-if="this.extraMatches.length" class="list-group mt-1">
                 <button t-foreach="this.extraMatches" t-as="product" t-key="product.id"
                         type="button"
@@ -981,7 +981,7 @@
                     </span>
                 </button>
             </div>
-            <div t-elif="this.state.extraSearch.trim()" class="small text-muted mt-1">
+            <div t-elif="this.state.extraSearched" class="small text-muted mt-1">
                 Geen producten gevonden.
             </div>
         </div>

@@ -49,6 +49,11 @@ const DRAFT_ANGLE_SNAP = (3 * Math.PI) / 180;
 // across.
 const ORIGIN_OFFSET_M = 1;
 const FIT_MIN_M = 8;
+// The "Dakobject toevoegen" menu, roughly (px): to keep it on the drawing.
+const CONTEXT_MENU_SIZE = { w: 250, h: 330 };
+// How long (ms) a drawing changed here is held against what the record
+// still shows, while it is on its way to the record.
+const AWAIT_MS = 8000;
 // How many changes of the drawing Ctrl+Z can take back.
 const UNDO_LIMIT = 50;
 // Circles are stored as regular polygons so measurements and the server-side
@@ -692,6 +697,9 @@ export class RoofCanvasField extends Component {
         this._shapes = [];
         this._undoStack = []; // earlier drawings (JSON), for Ctrl+Z
         this._redoStack = [];
+        this._awaiting = 0; // when the drawing was last changed here, until the record has it
+        this._saving = 0; // saves of the record under way
+        this._lastValues = null;
         this.labelHits = []; // clickable measurement boxes, in world coordinates
         this.iconImages = {}; // product category id -> loaded icon (or null)
         this._iconRaw = undefined;
@@ -755,6 +763,11 @@ export class RoofCanvasField extends Component {
         const raw = this.props.record.data[this.props.name] || "";
         if (raw === this._rawCache) {
             this._staleRaw = null;
+            this._awaiting = 0;
+        } else if (this._awaiting && Date.now() - this._awaiting < AWAIT_MS) {
+            // This drawing was changed here and is on its way to the record:
+            // what the record holds meanwhile (the previous drawing, or what
+            // a save going on just put back) is not to be read over it.
         } else if (raw !== this._staleRaw) {
             // Another drawing (another project, another roof's plan, a
             // reload): its history is not this one's.
@@ -786,13 +799,50 @@ export class RoofCanvasField extends Component {
         // the committed shapes (the snapshot below would show the old ones).
         this._staleRaw = this.props.record.data[this.props.name] || "";
         this._rawCache = raw;
+        this._awaiting = Date.now();
         const values = { [this.props.name]: raw };
         const snapshot = this.exportSnapshot();
         if (snapshot && "canvas_snapshot" in this.props.record.data) {
             values.canvas_snapshot = snapshot;
         }
-        this.props.record.update(values);
+        this._lastValues = values;
+        // A change made while the record is being saved would be undone by
+        // that save's answer: it goes to the record right after it instead
+        // (reassertDrawing).
+        if (!this._saving) {
+            this.props.record.update(values);
+        }
         this.draw();
+        this.scheduleAutoSync();
+    }
+
+    /** Saves the record; a drawing changed meanwhile is put (back) on the
+     * record afterwards, so no change is lost to a save that was under way. */
+    async saveRecord() {
+        this._saving = (this._saving || 0) + 1;
+        try {
+            return await this.props.record.save();
+        } finally {
+            this._saving -= 1;
+            if (!this._saving) {
+                this.reassertDrawing();
+            }
+        }
+    }
+
+    reassertDrawing() {
+        const record = this.props.record;
+        if (this._destroyed || !this._awaiting || typeof this._rawCache !== "string") {
+            return;
+        }
+        if ((record.data[this.props.name] || "") === this._rawCache) {
+            return;
+        }
+        this._awaiting = Date.now();
+        const values = this._lastValues && this._lastValues[this.props.name] === this._rawCache
+            ? this._lastValues
+            : { [this.props.name]: this._rawCache };
+        record.update(values);
         this.scheduleAutoSync();
     }
 
@@ -891,7 +941,11 @@ export class RoofCanvasField extends Component {
         }
         this._syncing = true;
         try {
-            if (!(await record.save())) {
+            // The drawing this sync is about: one changed while the sync
+            // runs must not be read back over (reloading the record would
+            // throw the newer, unsaved drawing away).
+            const synced = this._rawCache;
+            if (!(await this.saveRecord())) {
                 return;
             }
             if (this._destroyed) {
@@ -901,17 +955,37 @@ export class RoofCanvasField extends Component {
                 "tectora.roof.project", "action_sync_from_canvas",
                 [record.resId], { context: { tectora_quiet_sync: true } }
             );
+            if (this._rawCache !== synced) {
+                this._syncPending = true; // drawn on meanwhile: sync that next
+                return;
+            }
             await record.load();
             this.draw();
             this.refreshPanel();
         } catch (error) {
             console.warn("Roof canvas auto-sync failed", error);
         } finally {
-            this._syncing = false;
-            if (this._syncPending) {
-                this._syncPending = false;
-                this.autoSyncFromCanvas();
-            }
+            this.endSync();
+        }
+    }
+
+    /** For a change that saves and reloads the record itself (cutting a
+     * side, joining two): waits for a running sync and keeps the automatic
+     * one out until endSync(), so neither reads back a drawing the other
+     * has moved on from. */
+    async beginSync() {
+        clearTimeout(this._autoSyncTimer);
+        while (this._syncing && !this._destroyed) {
+            await new Promise((resolve) => setTimeout(resolve, 40));
+        }
+        this._syncing = true;
+    }
+
+    endSync() {
+        this._syncing = false;
+        if (this._syncPending) {
+            this._syncPending = false;
+            this.autoSyncFromCanvas();
         }
     }
 
@@ -1029,7 +1103,7 @@ export class RoofCanvasField extends Component {
         this.state.bgBusy = true;
         this.state.bgMenu = false;
         try {
-            if (!(await record.save())) {
+            if (!(await this.saveRecord())) {
                 return;
             }
             if (!record.resId) {
@@ -1483,6 +1557,7 @@ export class RoofCanvasField extends Component {
             return;
         }
         this.state.splitBusy = true;
+        await this.beginSync();
         try {
             const n = shape.points.length;
             const a = shape.points[index];
@@ -1523,7 +1598,7 @@ export class RoofCanvasField extends Component {
             // The products per side follow on the server, once the drawing
             // is saved.
             const record = this.props.record;
-            if ((await record.save()) && record.resId) {
+            if ((await this.saveRecord()) && record.resId) {
                 const sections = await this.orm.searchRead(
                     "tectora.roof.section",
                     [["project_id", "=", record.resId], ["canvas_ref", "=", shape.id]],
@@ -1552,6 +1627,7 @@ export class RoofCanvasField extends Component {
             });
         } finally {
             this.state.splitBusy = false;
+            this.endSync();
         }
         this.draw();
         this.refreshPanel();
@@ -1614,6 +1690,7 @@ export class RoofCanvasField extends Component {
         const kept = direction === "next" ? index : (index - 1 + n) % n;
         const dropped = (kept + 1) % n;
         this.state.splitBusy = true;
+        await this.beginSync();
         try {
             shape.points.splice(dropped, 1);
             const shift = (values) => {
@@ -1650,7 +1727,7 @@ export class RoofCanvasField extends Component {
             // As with the cut: the products per side move on the server.
             this.clearHistory();
             const record = this.props.record;
-            if ((await record.save()) && record.resId) {
+            if ((await this.saveRecord()) && record.resId) {
                 const sections = await this.orm.searchRead(
                     "tectora.roof.section",
                     [["project_id", "=", record.resId], ["canvas_ref", "=", shape.id]],
@@ -1675,6 +1752,7 @@ export class RoofCanvasField extends Component {
             });
         } finally {
             this.state.splitBusy = false;
+            this.endSync();
         }
         this.updateStatus();
         this.draw();
@@ -1946,8 +2024,12 @@ export class RoofCanvasField extends Component {
             this.closePolygon();
         } else if (this.state.tool === "select") {
             const point = this.toWorld(ev);
-            const labelHit = this.labelHitTest(point);
-            if (labelHit && ["surface", "edge", "seam"].includes(labelHit.type)) {
+            // The name or length label under the pointer, also when a handle
+            // of the (now selected) shape lies on top of it: a small
+            // dakobject -- a tapbuis, a dakdoorvoer -- is no bigger than
+            // its handles.
+            const labelHit = this.labelHitTest(point, ["surface", "edge", "seam"]);
+            if (labelHit) {
                 this.openProducts(labelHit);
                 return;
             }
@@ -2034,9 +2116,12 @@ export class RoofCanvasField extends Component {
             return;
         }
         const rect = wrapper.getBoundingClientRect();
+        // The menu opens at the pointer, moved up or left where it would
+        // otherwise run off the drawing (a right-click near the bottom).
+        const room = (size, at, total) => Math.max(4, Math.min(at, total - size - 8));
         this.state.contextMenu = {
-            x: ev.clientX - rect.left,
-            y: ev.clientY - rect.top,
+            x: room(CONTEXT_MENU_SIZE.w, ev.clientX - rect.left, rect.width),
+            y: room(CONTEXT_MENU_SIZE.h, ev.clientY - rect.top, rect.height),
             worldPoint: this.toWorld(ev),
         };
     }
@@ -3724,9 +3809,14 @@ export class RoofCanvasField extends Component {
         this.openProducts(base, extra);
     }
 
-    labelHitTest([px, py]) {
+    /** The clickable box at a point, the topmost first; with ``types`` only
+     * a box of one of those types (what lies on top of it is passed over). */
+    labelHitTest([px, py], types = null) {
         for (let i = this.labelHits.length - 1; i >= 0; i--) {
             const hit = this.labelHits[i];
+            if (types && !types.includes(hit.type)) {
+                continue;
+            }
             if (
                 px >= hit.x && px <= hit.x + hit.w &&
                 py >= hit.y && py <= hit.y + hit.h
@@ -3862,7 +3952,7 @@ export class RoofCanvasField extends Component {
             // The section/object records are created server-side from the
             // drawing, so the project must be saved (synced) before lines
             // can attach.
-            if (!(await record.save())) {
+            if (!(await this.saveRecord())) {
                 this.notification.add(
                     _t(
                         "Producten koppelen kan pas nadat het project is " +
@@ -4075,7 +4165,9 @@ export class RoofCanvasField extends Component {
                     })),
             ].filter((item) => item.record_id);
         };
+        // (Not for a tapbuis: what is removed there is on its own tab.)
         const demolition = (isSurface || (hit.type === "edge" && !isObject)) && !isSeamHit
+            && hit.kind !== "drain"
             ? {
                   projectId: record.resId,
                   scope: isSurface ? "surface" : "edge",
@@ -4309,7 +4401,7 @@ export class RoofCanvasField extends Component {
         if (choice.geometry) {
             this.setSidesGeometry(items, choice.geometry);
             // Saved before the products go on, so the two do not cross.
-            await record.save();
+            await this.saveRecord();
         }
         if (!choice.product_id) {
             this.notification.add(
