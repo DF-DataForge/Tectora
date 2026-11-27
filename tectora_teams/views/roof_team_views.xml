@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The ploeg: its contacts, its ploegbaas (a contact) and its vehicles. -->
+    <record id="view_tectora_roof_team_form_teams" model="ir.ui.view">
+        <field name="name">tectora.roof.team.form.teams</field>
+        <field name="model">tectora.roof.team</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_team_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_partners" type="object"
+                            class="oe_stat_button" icon="group">
+                        <field name="partner_count" widget="statinfo" string="Leden"/>
+                    </button>
+                    <button name="action_view_vehicles" type="object"
+                            class="oe_stat_button" icon="local_shipping">
+                        <field name="vehicle_count" widget="statinfo" string="Voertuigen"/>
+                    </button>
+                </div>
+            </xpath>
+            <xpath expr="//field[@name='leader_id']" position="before">
+                <field name="leader_partner_id" widget="many2one_avatar"
+                       options="{'no_quick_create': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='leader_id']" position="attributes">
+                <attribute name="string">Ploegbaas (werknemer)</attribute>
+                <attribute name="invisible">leader_partner_id</attribute>
+            </xpath>
+            <xpath expr="//group//field[@name='member_count']" position="attributes">
+                <attribute name="string">Werknemers (planner)</attribute>
+            </xpath>
+            <xpath expr="//page[@name='members']" position="before">
+                <page string="Leden" name="partners">
+                    <field name="partner_ids" options="{'no_quick_create': True}">
+                        <list string="Ploegleden">
+                            <field name="name"/>
+                            <field name="function" optional="show"/>
+                            <field name="phone" optional="show"/>
+                            <field name="email" optional="show"/>
+                            <field name="city" optional="hide"/>
+                        </list>
+                    </field>
+                    <div class="text-muted small mt-2">
+                        De leden van de ploeg zijn contacten. Wie ook werknemer is (dit
+                        contact is zijn werkcontact), staat mee op de werkblokken van de
+                        planner en op het medewerkersportaal.
+                    </div>
+                </page>
+                <page string="Voertuigen" name="vehicles">
+                    <field name="vehicle_ids" widget="many2many"
+                           options="{'no_create': True}"
+                           context="{'default_roof_team_id': id}">
+                        <list string="Voertuigen">
+                            <field name="license_plate"/>
+                            <field name="model_id"/>
+                            <field name="driver_id" optional="show"/>
+                            <field name="state_id" optional="show"/>
+                        </list>
+                    </field>
+                    <div class="text-muted small mt-2">
+                        Voertuigen uit het wagenpark die aan deze ploeg toegewezen zijn. De
+                        ploeg staat ook op de fiche van het voertuig.
+                    </div>
+                </page>
+            </xpath>
+            <xpath expr="//page[@name='members']" position="attributes">
+                <attribute name="string">Werknemers</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_team_list_teams" model="ir.ui.view">
+        <field name="name">tectora.roof.team.list.teams</field>
+        <field name="model">tectora.roof.team</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_team_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='leader_id']" position="before">
+                <field name="leader_partner_id"/>
+                <field name="partner_ids" widget="many2many_tags" optional="show"/>
+                <field name="vehicle_count" string="Voertuigen" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='leader_id']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+            <xpath expr="//field[@name='member_ids']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_team_kanban" model="ir.ui.view">
+        <field name="name">tectora.roof.team.kanban</field>
+        <field name="model">tectora.roof.team</field>
+        <field name="arch" type="xml">
+            <kanban highlight_color="color">
+                <field name="color"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold fs-4"/>
+                        <div class="text-muted" invisible="not leader_partner_id">
+                            Ploegbaas: <field name="leader_partner_id"/>
+                        </div>
+                        <field name="partner_ids" widget="many2many_tags" class="mt-1"/>
+                        <footer class="pt-2">
+                            <div class="d-flex gap-3 text-muted">
+                                <span><field name="partner_count"/> leden</span>
+                                <span><field name="vehicle_count"/> voertuigen</span>
+                            </div>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_team_search" model="ir.ui.view">
+        <field name="name">tectora.roof.team.search</field>
+        <field name="model">tectora.roof.team</field>
+        <field name="arch" type="xml">
+            <search string="Ploegen">
+                <field name="name"/>
+                <field name="partner_ids" string="Lid"/>
+                <field name="leader_partner_id"/>
+                <field name="vehicle_ids" string="Voertuig"/>
+                <filter string="Met voertuig" name="with_vehicle" domain="[('vehicle_ids', '!=', False)]"/>
+                <filter string="Zonder leden" name="without_members" domain="[('partner_ids', '=', False)]"/>
+                <separator/>
+                <filter string="Gearchiveerd" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tectora_teams" model="ir.actions.act_window">
+        <field name="name">Ploegen</field>
+        <field name="res_model">tectora.roof.team</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_tectora_roof_team_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Maak je eerste ploeg</p>
+            <p>Een ploeg is een vaste groep contacten met een ploegbaas en de
+               voertuigen waarmee ze rijden.</p>
+        </field>
+    </record>
+
+</odoo>

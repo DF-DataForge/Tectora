@@ -38,9 +38,13 @@
     </template>
 
     <!-- No internal reference ("[S00053] ") in front of the lines of the
-         quotation and the invoice: the customer reads the product name. -->
+         quotation and the invoice: the customer reads the product name.
+         Applied last (priority 99): the label's t-field is replaced here, and
+         other apps find that label by it (Fleet's bridge to Invoicing puts
+         the licence plate in front of it): they must come first, or their
+         installation fails on a label they cannot find. -->
     <template id="report_saleorder_document_line_label"
-              inherit_id="sale.report_saleorder_document">
+              inherit_id="sale.report_saleorder_document" priority="99">
         <xpath expr="//td[@name='td_product_name']//span[@t-field='line.label']" position="attributes">
             <attribute name="t-field"/>
             <attribute name="t-out">line._tectora_report_label()</attribute>
@@ -49,7 +53,7 @@
     </template>
 
     <template id="report_invoice_document_line_label"
-              inherit_id="account.report_invoice_document">
+              inherit_id="account.report_invoice_document" priority="99">
         <xpath expr="//td[@name='account_invoice_line_name']/span[@t-field='line.label']" position="attributes">
             <attribute name="t-field"/>
             <attribute name="t-out">line._tectora_report_label()</attribute>

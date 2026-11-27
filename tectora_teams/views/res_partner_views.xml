@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_partner_form_teams" model="ir.ui.view">
+        <field name="name">res.partner.form.tectora.teams</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="roof_team_ids" widget="many2many_tags"
+                       options="{'color_field': 'color', 'no_quick_create': True}"
+                       placeholder="Ploegen…"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_res_partner_filter_teams" model="ir.ui.view">
+        <field name="name">res.partner.search.tectora.teams</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="roof_team_ids" string="Ploeg"/>
+                <filter string="In een ploeg" name="tectora_in_team"
+                        domain="[('roof_team_ids', '!=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- The members of the ploegen: the contacts that are in one. -->
+    <record id="view_partner_list_teams" model="ir.ui.view">
+        <field name="name">res.partner.list.tectora.teams</field>
+        <field name="model">res.partner</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Ploegleden">
+                <field name="name"/>
+                <field name="roof_team_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                <field name="function" optional="show"/>
+                <field name="phone" optional="show"/>
+                <field name="email" optional="show"/>
+                <field name="city" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_tectora_team_members" model="ir.actions.act_window">
+        <field name="name">Ploegleden</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('roof_team_ids', '!=', False)]</field>
+        <field name="view_id" ref="view_partner_list_teams"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nog geen ploegleden</p>
+            <p>Voeg contacten toe aan een ploeg, op de ploeg zelf of in het veld
+               Ploegen van het contact.</p>
+        </field>
+    </record>
+
+</odoo>

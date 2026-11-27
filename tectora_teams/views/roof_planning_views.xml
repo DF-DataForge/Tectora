@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- A work block shows the vehicles of its ploeg. -->
+    <record id="view_tectora_roof_planning_form_summary_teams" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.summary.teams</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form_summary"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field name="vehicle_names" invisible="not vehicle_names"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tectora_roof_planning_form_teams" model="ir.ui.view">
+        <field name="name">tectora.roof.planning.form.teams</field>
+        <field name="model">tectora.roof.planning</field>
+        <field name="inherit_id" ref="tectora_roof.view_tectora_roof_planning_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field name="vehicle_names" invisible="not vehicle_names"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
