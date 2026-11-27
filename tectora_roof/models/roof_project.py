@@ -935,7 +935,7 @@ class TectoraRoofProject(models.Model):
             {
                 "project_id": self.id,
                 "team_id": self.team_id.id or False,
-                "employee_ids": [(6, 0, self.team_id.member_ids.ids)],
+                "partner_ids": [(6, 0, self.team_id.member_partner_ids.ids)],
                 "start_datetime": self.planned_date_begin,
                 "end_datetime": self.planned_date_end,
             }

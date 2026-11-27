@@ -15,7 +15,37 @@ class TectoraRoofTeam(models.Model):
     company_id = fields.Many2one(
         "res.company", string="Bedrijf", default=lambda self: self.env.company
     )
-    leader_id = fields.Many2one("hr.employee", string="Ploegbaas")
+    # --- the ploeg is made of contacts -----------------------------------
+    partner_ids = fields.Many2many(
+        "res.partner",
+        "tectora_roof_team_partner_rel",
+        "team_id",
+        "partner_id",
+        string="Ploegleden",
+        help="De contacten die samen de ploeg vormen. Ze worden ingepland op "
+        "de werkblokken en registreren hun uren op het portaal; een "
+        "werknemersfiche is daarvoor niet nodig.",
+    )
+    leader_partner_id = fields.Many2one(
+        "res.partner",
+        string="Ploegbaas",
+        help="Het contact dat de ploeg leidt; hoort altijd bij de ploeg.",
+    )
+    member_partner_ids = fields.Many2many(
+        "res.partner",
+        string="Effectieve ploeg",
+        compute="_compute_member_ids",
+        help="De leden van de ploeg samen met de ploegbaas. Een ploeg zonder "
+        "contacten neemt de werkcontacten van haar werknemers (of van de "
+        "gekozen afdeling).",
+    )
+    partner_count = fields.Integer(string="Aantal leden", compute="_compute_member_ids")
+    # --- employees: only what needs one (timesheets, the Employees app) ---
+    leader_id = fields.Many2one(
+        "hr.employee", string="Ploegbaas (werknemer)",
+        help="De werknemer achter de ploegbaas, als die er een is; wordt "
+        "ingevuld vanuit het contact.",
+    )
     department_id = fields.Many2one(
         "hr.department",
         string="Afdeling",
@@ -25,16 +55,16 @@ class TectoraRoofTeam(models.Model):
     employee_ids = fields.One2many(
         "hr.employee",
         "roof_team_id",
-        string="Ploegleden",
+        string="Werknemers",
         help="De medewerkers met deze ploeg op hun werknemersfiche "
-        "(Werknemers -> tab Werk -> Ploeg).",
+        "(Werknemers -> tab Werk -> Ploeg). Hun werkcontact wordt lid van de ploeg.",
     )
     member_ids = fields.Many2many(
         "hr.employee",
-        string="Leden",
+        string="Werknemers van de ploeg",
         compute="_compute_member_ids",
-        help="De effectieve ploeg: de eigen ploegleden (of de leden van de "
-        "gekozen afdeling) samen met de ploegbaas.",
+        help="De werknemers achter de leden van de ploeg (het contact is hun "
+        "werkcontact): voor hen worden urenstaatlijnen geboekt.",
     )
     member_count = fields.Integer(compute="_compute_member_ids")
     show_in_planner = fields.Boolean(
@@ -52,7 +82,7 @@ class TectoraRoofTeam(models.Model):
     )
     hours_individual = fields.Boolean(
         string="Individueel",
-        help="Elke medewerker registreert zijn eigen uren.",
+        help="Elk ploeglid registreert zijn eigen uren.",
     )
     hours_timer = fields.Boolean(
         string="Via start – stop",
@@ -78,15 +108,78 @@ class TectoraRoofTeam(models.Model):
                     "rechtstreeks ingeven).", team.name))
 
     @api.depends(
-        "employee_ids", "employee_ids.active", "leader_id", "department_id",
-        "department_id.member_ids",
+        "partner_ids", "leader_partner_id",
+        "employee_ids", "employee_ids.active", "employee_ids.work_contact_id",
+        "leader_id", "department_id", "department_id.member_ids",
     )
     def _compute_member_ids(self):
+        """The ploeg: its contacts and its ploegbaas. A ploeg without
+        contacts falls back on the employees it had (the ploeg on the
+        employee form, or its department) and their work contacts."""
+        Employee = self.env["hr.employee"].sudo()
         for team in self:
-            members = team.employee_ids
-            if not members and team.department_id:
-                members = team.department_id.member_ids
-            if team.leader_id:
-                members |= team.leader_id
-            team.member_ids = members
-            team.member_count = len(members)
+            partners = team.partner_ids | team.leader_partner_id
+            if partners:
+                employees = Employee.search([("work_contact_id", "in", partners.ids)])
+            else:
+                employees = team.sudo().employee_ids
+                if not employees and team.department_id:
+                    employees = team.sudo().department_id.member_ids
+                if team.leader_id:
+                    employees |= team.sudo().leader_id
+                partners = employees.work_contact_id
+            team.member_partner_ids = partners
+            team.partner_count = len(partners)
+            team.member_ids = employees
+            team.member_count = len(employees)
+
+    # ------------------------------------------------------------ ploegbaas
+    def _tectora_is_leader(self, partner):
+        """``partner`` leads this ploeg."""
+        leader = self._tectora_leader_partner()
+        return bool(partner and leader and partner == leader)
+
+    def _tectora_leader_partner(self):
+        """The ploegbaas as a contact (none for no ploeg)."""
+        team = self[:1]
+        return team.leader_partner_id or team.sudo().leader_id.work_contact_id
+
+    @api.onchange("leader_partner_id")
+    def _onchange_leader_partner_id(self):
+        for team in self:
+            if team.leader_partner_id:
+                team.partner_ids |= team.leader_partner_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        teams = super().create(vals_list)
+        teams._tectora_sync_leader(from_employee=True)
+        return teams
+
+    def write(self, vals):
+        result = super().write(vals)
+        if self.env.context.get("tectora_team_sync"):
+            return result
+        if "leader_partner_id" in vals:
+            self._tectora_sync_leader()
+        elif "leader_id" in vals:
+            self._tectora_sync_leader(from_employee=True)
+        return result
+
+    def _tectora_sync_leader(self, from_employee=False):
+        """The ploegbaas is a contact and a member; the employee behind that
+        contact (if any) is kept next to it. ``from_employee``: the ploegbaas
+        was set as an employee, the contact follows."""
+        for team in self.with_context(tectora_team_sync=True):
+            partner = team.leader_partner_id
+            if from_employee and not partner:
+                partner = team.sudo().leader_id.work_contact_id
+                if partner:
+                    team.leader_partner_id = partner
+            if not partner:
+                continue
+            if partner not in team.partner_ids:
+                team.partner_ids = [(4, partner.id)]
+            employee = partner._tectora_employees()[:1]
+            if team.leader_id != employee:
+                team.leader_id = employee

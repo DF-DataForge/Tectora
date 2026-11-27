@@ -16,7 +16,7 @@
               sequence="10"/>
 
     <menuitem id="menu_project_planner_employee"
-              name="Per medewerker"
+              name="Per persoon"
               parent="menu_project_planner"
               action="action_tectora_roof_planning_by_employee"
               sequence="20"/>

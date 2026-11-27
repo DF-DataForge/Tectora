@@ -33,13 +33,13 @@ class TectoraRoofPlanning(models.Model):
         store=True,
         help="De werkuren van het blok (8 uur per werkdag, maandag tot "
         "vrijdag; een blok binnen één dag zijn eigen duur) maal het aantal "
-        "medewerkers erop.",
+        "personen erop.",
     )
-    conflict_employee_ids = fields.Many2many(
-        "hr.employee",
+    conflict_partner_ids = fields.Many2many(
+        "res.partner",
         string="Dubbel ingepland",
         compute="_compute_conflicts",
-        help="Medewerkers van dit blok die in dezelfde periode ook op een "
+        help="Personen van dit blok die in dezelfde periode ook op een "
         "ander werkblok staan.",
     )
     conflict_planning_ids = fields.Many2many(
@@ -54,11 +54,11 @@ class TectoraRoofPlanning(models.Model):
     )
 
     # ------------------------------------------------------------ hours
-    @api.depends("start_datetime", "end_datetime", "employee_ids")
+    @api.depends("start_datetime", "end_datetime", "partner_ids")
     def _compute_planned_hours(self):
         for item in self:
             item.planned_hours = item._tectora_working_day_hours() * max(
-                len(item.employee_ids), 1
+                len(item.partner_ids), 1
             )
 
     def _tectora_working_day_hours(self):
@@ -86,7 +86,7 @@ class TectoraRoofPlanning(models.Model):
         """The other blocks in this block's period that share an employee
         with it (blocks already carried out leave the planner alone)."""
         self.ensure_one()
-        if not (self.employee_ids and self.start_datetime and self.end_datetime):
+        if not (self.partner_ids and self.start_datetime and self.end_datetime):
             return self.browse()
         if self.state == "done":
             return self.browse()
@@ -94,31 +94,31 @@ class TectoraRoofPlanning(models.Model):
         return self.search([
             ("id", "not in", self._origin.ids),
             ("state", "!=", "done"),
-            ("employee_ids", "in", self.employee_ids.ids),
+            ("partner_ids", "in", self.partner_ids.ids),
             ("start_datetime", "<", self.end_datetime),
             ("end_datetime", ">", self.start_datetime),
         ])
 
-    @api.depends("employee_ids", "start_datetime", "end_datetime", "state")
+    @api.depends("partner_ids", "start_datetime", "end_datetime", "state")
     def _compute_conflicts(self):
         for item in self:
             others = item._tectora_overlapping()
             item.conflict_planning_ids = others
-            item.conflict_employee_ids = others.employee_ids & item.employee_ids
+            item.conflict_partner_ids = others.partner_ids & item.partner_ids
             item.has_conflict = bool(others)
 
     def _search_has_conflict(self, operator, value):
         values = list(value) if isinstance(value, (list, tuple, set)) else [value]
         wanted = any(values)
         positive = wanted if operator in ("=", "in") else not wanted
-        self.flush_model(["start_datetime", "end_datetime", "state", "employee_ids"])
+        self.flush_model(["start_datetime", "end_datetime", "state", "partner_ids"])
         self.env.cr.execute(
             """
             SELECT DISTINCT a.id
               FROM tectora_roof_planning a
-              JOIN tectora_roof_planning_employee_rel ra ON ra.planning_id = a.id
-              JOIN tectora_roof_planning_employee_rel rb
-                ON rb.employee_id = ra.employee_id AND rb.planning_id != a.id
+              JOIN tectora_roof_planning_partner_rel ra ON ra.planning_id = a.id
+              JOIN tectora_roof_planning_partner_rel rb
+                ON rb.partner_id = ra.partner_id AND rb.planning_id != a.id
               JOIN tectora_roof_planning b ON b.id = rb.planning_id
              WHERE a.state != 'done' AND b.state != 'done'
                AND a.start_datetime < b.end_datetime

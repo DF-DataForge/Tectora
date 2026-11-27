@@ -19,34 +19,7 @@
                     </button>
                 </div>
             </xpath>
-            <xpath expr="//field[@name='leader_id']" position="before">
-                <field name="leader_partner_id" widget="many2one_avatar"
-                       options="{'no_quick_create': True}"/>
-            </xpath>
-            <xpath expr="//field[@name='leader_id']" position="attributes">
-                <attribute name="string">Ploegbaas (werknemer)</attribute>
-                <attribute name="invisible">leader_partner_id</attribute>
-            </xpath>
-            <xpath expr="//group//field[@name='member_count']" position="attributes">
-                <attribute name="string">Werknemers (planner)</attribute>
-            </xpath>
-            <xpath expr="//page[@name='members']" position="before">
-                <page string="Leden" name="partners">
-                    <field name="partner_ids" options="{'no_quick_create': True}">
-                        <list string="Ploegleden">
-                            <field name="name"/>
-                            <field name="function" optional="show"/>
-                            <field name="phone" optional="show"/>
-                            <field name="email" optional="show"/>
-                            <field name="city" optional="hide"/>
-                        </list>
-                    </field>
-                    <div class="text-muted small mt-2">
-                        De leden van de ploeg zijn contacten. Wie ook werknemer is (dit
-                        contact is zijn werkcontact), staat mee op de werkblokken van de
-                        planner en op het medewerkersportaal.
-                    </div>
-                </page>
+            <xpath expr="//page[@name='partners']" position="after">
                 <page string="Voertuigen" name="vehicles">
                     <field name="vehicle_ids" widget="many2many"
                            options="{'no_create': True}"
@@ -64,9 +37,6 @@
                     </div>
                 </page>
             </xpath>
-            <xpath expr="//page[@name='members']" position="attributes">
-                <attribute name="string">Werknemers</attribute>
-            </xpath>
         </field>
     </record>
 
@@ -75,16 +45,8 @@
         <field name="model">tectora.roof.team</field>
         <field name="inherit_id" ref="tectora_roof.view_tectora_roof_team_list"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='leader_id']" position="before">
-                <field name="leader_partner_id"/>
-                <field name="partner_ids" widget="many2many_tags" optional="show"/>
+            <xpath expr="//field[@name='partner_count']" position="after">
                 <field name="vehicle_count" string="Voertuigen" optional="show"/>
-            </xpath>
-            <xpath expr="//field[@name='leader_id']" position="attributes">
-                <attribute name="optional">hide</attribute>
-            </xpath>
-            <xpath expr="//field[@name='member_ids']" position="attributes">
-                <attribute name="optional">hide</attribute>
             </xpath>
         </field>
     </record>

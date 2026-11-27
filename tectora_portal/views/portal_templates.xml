@@ -23,10 +23,10 @@
             <div class="o_tectora_portal">
                 <h3 class="mb-3">Mijn werven</h3>
                 <div class="alert alert-warning" role="alert">
-                    <strong>Er is geen medewerkersfiche gekoppeld aan deze login.</strong><br/>
-                    De werven worden getoond aan de medewerkers die erop ingepland zijn.
-                    Vraag de planning om je login (<t t-out="user_id.login"/>) aan je
-                    medewerkersfiche te koppelen.
+                    <strong>Deze login is (nog) niet ingepland.</strong><br/>
+                    De werven worden getoond aan wie erop ingepland is of in een ploeg zit.
+                    Vraag de planning om je contact (<t t-out="user_id.login"/>) aan een
+                    ploeg of een werkblok toe te voegen.
                 </div>
             </div>
         </t>
@@ -82,7 +82,7 @@
                                     <div class="small text-muted">
                                         tot <span t-field="next_block.end_datetime"
                                                   t-options='{"widget": "datetime", "format": "EEE d MMM HH:mm"}'/>
-                                        · <t t-out="len(next_block.employee_ids)"/> pers.
+                                        · <t t-out="len(next_block.partner_ids)"/> pers.
                                     </div>
                                 </t>
                                 <span t-else="" class="text-muted">Niet ingepland</span>
@@ -242,9 +242,9 @@
                     <div class="small text-muted mb-2">
                         Gestart om <span t-field="running_timer.start_datetime"
                                          t-options='{"widget": "datetime", "format": "HH:mm"}'/>
-                        <t t-if="running_timer.started_by_id"> door <t t-out="running_timer.started_by_id.name"/></t>
+                        <t t-if="running_timer.started_by_partner_id"> door <t t-out="running_timer.started_by_partner_id.name"/></t>
                         <br/>
-                        Voor: <t t-out="', '.join(running_timer.employee_ids.mapped('name')) or '—'"/>
+                        Voor: <t t-out="', '.join(running_timer.partner_ids.mapped('name')) or '—'"/>
                     </div>
                     <button t-if="can_stop_team" type="button" class="btn btn-danger btn-lg o_tectora_btn_timer w-100"
                             data-bs-toggle="modal" data-bs-target="#tectoraStopModal">
@@ -278,12 +278,12 @@
 
                 <!-- start: for the crew and/or for oneself -->
                 <t t-set="can_start_team" t-value="policy['timer'] and policy['team'] and not running_timer"/>
-                <t t-set="can_start_own" t-value="policy['timer'] and policy['individual'] and not my_running_timer and not (running_timer and employee in running_timer.employee_ids)"/>
+                <t t-set="can_start_own" t-value="policy['timer'] and policy['individual'] and not my_running_timer and not (running_timer and worker in running_timer.partner_ids)"/>
                 <t t-if="can_start_team or can_start_own">
                     <div class="small text-muted">
-                        <t t-if="can_start_team and today_employees">
+                        <t t-if="can_start_team and today_people">
                             Voor de ploeg van vandaag:
-                            <strong t-out="', '.join(today_employees.mapped('name'))"/>.
+                            <strong t-out="', '.join(today_people.mapped('name'))"/>.
                             Bij het stoppen bevestig je wie aanwezig was.
                         </t>
                         <t t-elif="can_start_team">
@@ -386,13 +386,13 @@
                             </t>
                             <input t-else="" type="hidden" name="scope" value="team"/>
                             <label class="form-label fw-bold">Voor wie (bij "voor de ploeg")?</label>
-                            <div t-foreach="manual_employees" t-as="present" class="form-check">
-                                <input class="form-check-input" type="checkbox" name="employee_ids"
+                            <div t-foreach="manual_people" t-as="present" class="form-check">
+                                <input class="form-check-input" type="checkbox" name="partner_ids"
                                        t-att-value="present.id" t-attf-id="tectora_manual_#{present.id}"
-                                       t-att-checked="'checked' if present in today_employees or present == employee else None"/>
+                                       t-att-checked="'checked' if present in today_people or present == worker else None"/>
                                 <label class="form-check-label" t-attf-for="tectora_manual_#{present.id}">
                                     <t t-out="present.name"/>
-                                    <span t-if="present == employee" class="text-muted small">(ik)</span>
+                                    <span t-if="present == worker" class="text-muted small">(ik)</span>
                                 </label>
                             </div>
                         </t>
@@ -436,15 +436,15 @@
                         </p>
                         <label class="form-label fw-bold">Wie was aanwezig?</label>
                         <div class="o_tectora_stop_warning alert alert-warning py-1 px-2 small d-none">
-                            Kies minstens één medewerker.
+                            Kies minstens één persoon.
                         </div>
-                        <div t-foreach="stop_employees" t-as="present" class="form-check">
-                            <input class="form-check-input" type="checkbox" name="employee_ids"
+                        <div t-foreach="stop_people" t-as="present" class="form-check">
+                            <input class="form-check-input" type="checkbox" name="partner_ids"
                                    t-att-value="present.id" t-attf-id="tectora_present_#{present.id}"
-                                   t-att-checked="'checked' if present in running_timer.employee_ids or not running_timer.employee_ids else None"/>
+                                   t-att-checked="'checked' if present in running_timer.partner_ids or not running_timer.partner_ids else None"/>
                             <label class="form-check-label" t-attf-for="tectora_present_#{present.id}">
                                 <t t-out="present.name"/>
-                                <span t-if="present == employee" class="text-muted small">(ik)</span>
+                                <span t-if="present == worker" class="text-muted small">(ik)</span>
                             </label>
                         </div>
                         <div class="mt-3">
@@ -514,8 +514,8 @@
                             <tr><th class="text-muted fw-normal w-25">Ploeg</th>
                                 <td>
                                     <t t-out="site.team_id.name or '—'"/>
-                                    <span t-if="site.team_id.leader_id" class="text-muted small">
-                                        · ploegbaas <t t-out="site.team_id.leader_id.name"/>
+                                    <span t-if="site.team_id._tectora_leader_partner()" class="text-muted small">
+                                        · ploegbaas <t t-out="site.team_id._tectora_leader_partner().name"/>
                                     </span>
                                 </td></tr>
                             <tr><th class="text-muted fw-normal">Gepland</th>
@@ -530,12 +530,12 @@
                                 </td></tr>
                             <tr><th class="text-muted fw-normal">Werkdagen</th>
                                 <td><t t-out="len(blocks)"/></td></tr>
-                            <tr><th class="text-muted fw-normal">Medewerkers</th>
+                            <tr><th class="text-muted fw-normal">Personen</th>
                                 <td>
-                                    <span t-foreach="planned_employees" t-as="planned"
-                                          t-attf-class="badge rounded-pill me-1 mb-1 #{'text-bg-primary' if planned == employee else 'text-bg-light border'}"
+                                    <span t-foreach="planned_people" t-as="planned"
+                                          t-attf-class="badge rounded-pill me-1 mb-1 #{'text-bg-primary' if planned == worker else 'text-bg-light border'}"
                                           t-out="planned.name"/>
-                                    <t t-if="not planned_employees">—</t>
+                                    <t t-if="not planned_people">—</t>
                                 </td></tr>
                         </table>
                         <t t-set="instructions" t-value="[note for note in blocks.mapped('notes') if note]"/>
@@ -738,8 +738,8 @@
                             </div>
                             <div class="small mt-1">
                                 <span t-if="block.team_id" class="text-muted me-1"><t t-out="block.team_id.name"/>:</span>
-                                <span t-foreach="block.employee_ids" t-as="member"
-                                      t-attf-class="badge rounded-pill me-1 #{'text-bg-primary' if member == employee else 'text-bg-light border'}"
+                                <span t-foreach="block.partner_ids" t-as="member"
+                                      t-attf-class="badge rounded-pill me-1 #{'text-bg-primary' if member == worker else 'text-bg-light border'}"
                                       t-out="member.name"/>
                             </div>
                             <div t-if="block.notes" class="small o_tectora_report_text mt-1" t-out="block.notes"/>
@@ -821,8 +821,8 @@
                     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div>
                             <strong t-field="report.date" t-options='{"widget": "date", "format": "EEEE d MMMM yyyy"}'/>
-                            <span class="text-muted small ms-2" t-if="report.employee_id">
-                                door <t t-out="report.employee_id.name"/>
+                            <span class="text-muted small ms-2" t-if="report.author_id">
+                                door <t t-out="report.author_id.name"/>
                             </span>
                         </div>
                         <span t-attf-class="badge rounded-pill #{'text-bg-success' if report.progress == 'finished' else 'text-bg-danger' if report.progress == 'blocked' else 'text-bg-info'}"
@@ -899,7 +899,7 @@
                                             <td class="small">
                                                 <span t-attf-class="badge me-1 #{'text-bg-warning' if timer.work_kind == 'afbraak' else 'text-bg-light border'}"
                                                       t-out="timer._work_kind_label()"/>
-                                                <t t-out="', '.join(timer.employee_ids.mapped('name'))"/>
+                                                <t t-out="', '.join(timer.partner_ids.mapped('name'))"/>
                                                 <span t-if="timer.notes" class="text-muted d-block" t-out="timer.notes"/>
                                             </td>
                                         </tr>

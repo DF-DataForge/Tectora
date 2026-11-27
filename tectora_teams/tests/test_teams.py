@@ -46,6 +46,7 @@ class TestTeams(TransactionCase):
         team = self.env["tectora.roof.team"].create({"name": "Ploeg Zuid"})
         employee = self.env["hr.employee"].create({"name": "Mia", "roof_team_id": team.id})
         self.assertEqual(team.member_ids, employee)
+        self.assertEqual(team.partner_ids, employee.work_contact_id, "the contact came along")
 
     def test_vehicles(self):
         brand = self.env["fleet.vehicle.model.brand"].create({"name": "Renault"})
@@ -62,8 +63,10 @@ class TestTeams(TransactionCase):
             "start_datetime": datetime(2026, 11, 30, 7, 0), "end_datetime": datetime(2026, 11, 30, 16, 0),
         })
         self.assertIn("1-ABC-123", block.vehicle_names)
-        # The block takes the employees of the ploeg along, as before.
+        # The block takes the contacts of the ploeg along; the employees
+        # behind them follow.
         block.write({"team_id": self.team.id})
+        self.assertEqual(block.partner_ids, self.jan | self.piet | self.boss)
         self.assertEqual(block.employee_ids, self.jan_employee | self.boss_employee)
 
     def test_existing_ploegen_come_along(self):

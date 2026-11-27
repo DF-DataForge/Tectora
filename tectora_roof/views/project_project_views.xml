@@ -224,9 +224,9 @@
                                        invisible="not roof_team_id"/>
                                 <field name="tectora_planning_hours" readonly="1" widget="float_time"/> u gepland
                             </span>
-                            <field name="tectora_planned_employee_ids" readonly="1"
-                                   widget="many2many_avatar_employee"
-                                   invisible="not tectora_planned_employee_ids"/>
+                            <field name="tectora_planned_partner_ids" readonly="1"
+                                   widget="many2many_tags_avatar"
+                                   invisible="not tectora_planned_partner_ids"/>
                         </button>
                     </div>
                     <notebook>
@@ -282,8 +282,8 @@
                             <group>
                                 <group>
                                     <field name="roof_team_id" readonly="1"/>
-                                    <field name="tectora_planned_employee_ids" readonly="1"
-                                           widget="many2many_avatar_employee"/>
+                                    <field name="tectora_planned_partner_ids" readonly="1"
+                                           widget="many2many_tags_avatar"/>
                                 </group>
                                 <group>
                                     <field name="roof_planned_date_begin" readonly="1"/>
@@ -297,7 +297,7 @@
                                     <field name="end_datetime"/>
                                     <field name="duration_hours" sum="Totaal"/>
                                     <field name="team_id"/>
-                                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                                    <field name="partner_ids" widget="many2many_tags_avatar"/>
                                     <field name="state" widget="badge"
                                            decoration-info="state == 'draft'"
                                            decoration-success="state == 'published'"/>

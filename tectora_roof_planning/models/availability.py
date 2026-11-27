@@ -64,7 +64,7 @@ class TectoraRoofPlanning(models.Model):
                 day += timedelta(days=1)
         result = []
         for team in teams:
-            members = len(team.member_ids)
+            members = len(team.member_partner_ids)
             needed = math.ceil(hours / (max(members, 1) * HOURS_PER_DAY)) if hours else 0
             windows = []
             current = None
@@ -147,7 +147,7 @@ class TectoraRoofPlanning(models.Model):
         block = self.create({
             "project_id": project.id,
             "team_id": team.id,
-            "employee_ids": [(6, 0, team.member_ids.ids)],
+            "partner_ids": [(6, 0, team.member_partner_ids.ids)],
             "start_datetime": utc(day, DAY_START),
             "end_datetime": utc(last, DAY_END),
             "state": "draft",

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The portal runs on contacts: the login and what the person sees on
+         /my/werven are set on the contact. -->
+    <record id="view_partner_form_tectora_portal" model="ir.ui.view">
+        <field name="name">res.partner.form.tectora.portal</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="tectora_portal_state" invisible="1"/>
+                <field name="tectora_is_worker" invisible="1"/>
+                <button name="action_tectora_grant_portal_access" type="object"
+                        class="oe_stat_button" icon="public"
+                        invisible="tectora_portal_state != 'none' or not tectora_is_worker"
+                        confirm="Er wordt een portaallogin aangemaakt op het e-mailadres van dit contact en een uitnodiging verstuurd. Doorgaan?"
+                        string="Portaaltoegang geven"
+                        help="Maakt een portaalgebruiker (externe gebruiker) voor dit contact en stuurt de uitnodiging om een wachtwoord te kiezen. De werven staan daarna op /my/werven."/>
+                <button name="action_tectora_open_portal_user" type="object"
+                        class="oe_stat_button" icon="public"
+                        invisible="tectora_portal_state != 'portal' or not tectora_is_worker"
+                        groups="base.group_erp_manager">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text text-success">Portaal actief</span>
+                        <span class="o_stat_text">Mijn werven</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Werven &amp; portaal" name="tectora_portal"
+                      invisible="not tectora_is_worker">
+                    <group>
+                        <group string="Ploegen">
+                            <field name="roof_team_ids" widget="many2many_tags" readonly="1"
+                                   options="{'color_field': 'color'}"/>
+                            <field name="tectora_portal_state"/>
+                        </group>
+                        <group string="Wat ziet deze persoon op het portaal">
+                            <field name="tectora_portal_planning_horizon" widget="radio"
+                                   options="{'horizontal': true}"/>
+                            <field name="tectora_portal_show_overview" widget="boolean_toggle"/>
+                            <field name="tectora_portal_show_materials" widget="boolean_toggle"/>
+                            <field name="tectora_portal_show_plan" widget="boolean_toggle"/>
+                            <field name="tectora_portal_show_report" widget="boolean_toggle"/>
+                            <field name="tectora_portal_show_hours" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <div class="text-muted small">
+                        Planning en urenregistratie lopen via dit contact: het wordt ingepland
+                        op de werkblokken van zijn ploeg en registreert zijn uren op het
+                        portaal. Een werknemersfiche is niet nodig; is dit contact ook het
+                        werkcontact van een werknemer, dan worden de uren bovendien als
+                        urenstaatlijn geboekt.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

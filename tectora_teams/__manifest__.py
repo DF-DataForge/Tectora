@@ -8,14 +8,12 @@ Tectora Ploegen
 ===============
 An app of its own around the ploegen (``tectora.roof.team``).
 
-* The members of a ploeg are **contacts** (``res.partner``), not employees:
-  a ploeg lists its contacts and its ploegbaas is one of them. A contact can
-  be in more than one ploeg; the contact form shows its ploegen.
-* Whoever is also an employee still takes part in everything that works per
-  employee -- the work blocks of the planner, the employee portal, the hours
-  booked as timesheets: the employees of a ploeg are those whose work
-  contact is one of its contacts. A ploeg without contacts keeps its
-  employees as before (the ploeg on the employee form, or its department).
+* The members of a ploeg are **contacts** (``res.partner``), not employees
+  (that lives in the roofing core): a ploeg lists its contacts and its
+  ploegbaas is one of them. A contact can be in more than one ploeg; the
+  contact form shows its ploegen.
+* Planning and hour registration run on those contacts. Whoever is also an
+  employee (the contact is their work contact) gets timesheet lines on top.
 * **Wagenpark**: a vehicle of the Fleet app is given to a ploeg. The ploeg
   lists its vehicles, the vehicle form and list show the ploeg, vehicles can
   be searched and grouped by it, and a work block shows the vehicles of its
@@ -26,7 +24,7 @@ An app of its own around the ploegen (``tectora.roof.team``).
 Installing takes the existing ploegen along: the employees of a ploeg become
 its contacts through their work contact, and its ploegbaas likewise.
     """,
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "category": "Human Resources",
     "license": "Other proprietary",
     "author": "Data Forge",

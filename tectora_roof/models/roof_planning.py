@@ -46,12 +46,28 @@ class TectoraRoofPlanning(models.Model):
         help="De afdeling van de ploeg; heeft de ploeg er geen, die van de "
         "ploegbaas of anders van de toegewezen medewerkers.",
     )
+    partner_ids = fields.Many2many(
+        "res.partner",
+        "tectora_roof_planning_partner_rel",
+        "planning_id",
+        "partner_id",
+        string="Ingeplande personen",
+        help="De contacten die op dit werkblok ingepland zijn: de leden van "
+        "de ploeg, aan te passen per blok. Een werknemersfiche is niet nodig.",
+    )
+    partner_count = fields.Integer(compute="_compute_employee_count")
     employee_ids = fields.Many2many(
         "hr.employee",
         "tectora_roof_planning_employee_rel",
         "planning_id",
         "employee_id",
-        string="Toegewezen medewerkers",
+        string="Werknemers",
+        compute="_compute_employee_ids",
+        inverse="_inverse_employee_ids",
+        store=True,
+        readonly=False,
+        help="De werknemers achter de ingeplande personen (het contact is "
+        "hun werkcontact).",
     )
     employee_count = fields.Integer(compute="_compute_employee_count")
     start_datetime = fields.Datetime(string="Start", required=True, index=True)
@@ -122,7 +138,7 @@ class TectoraRoofPlanning(models.Model):
     @api.depends(
         "project_id.name", "project_id.address", "project_id.partner_id.name",
         "project_id.partner_id.city", "project_id.total_area",
-        "project_id.project_type", "employee_ids",
+        "project_id.project_type", "partner_ids",
     )
     def _compute_display_name(self):
         """The block as the planner shows it, shortest first: the customer,
@@ -143,8 +159,8 @@ class TectoraRoofPlanning(models.Model):
                 details.append(_("%s m²") % ("%.0f" % project.total_area))
             if project.project_type:
                 details.append(types.get(project.project_type, project.project_type))
-            if item.employee_ids:
-                details.append(_("%s pers.") % len(item.employee_ids))
+            if item.partner_ids:
+                details.append(_("%s pers.") % len(item.partner_ids))
             item.display_name = " · ".join([title] + details)
 
     @api.depends(
@@ -159,9 +175,31 @@ class TectoraRoofPlanning(models.Model):
                 or item.employee_ids.department_id[:1]
             )
 
+    @api.depends("partner_ids", "employee_ids")
     def _compute_employee_count(self):
         for item in self:
+            item.partner_count = len(item.partner_ids)
             item.employee_count = len(item.employee_ids)
+
+    @api.depends("partner_ids")
+    def _compute_employee_ids(self):
+        """The employees behind the planned contacts."""
+        for item in self:
+            item.employee_ids = item.partner_ids._tectora_employees()
+
+    def _inverse_employee_ids(self):
+        """Employees set on a block (an import, older code): their work
+        contacts are planned; contacts without an employee stay."""
+        for item in self:
+            employees = item.sudo().employee_ids
+            missing = employees.filtered(lambda employee: not employee.work_contact_id)
+            for employee in missing:
+                employee._create_work_contacts()
+            behind = item.partner_ids._tectora_employees()
+            keep = item.partner_ids - behind.work_contact_id
+            partners = keep | employees.work_contact_id
+            if partners != item.partner_ids:
+                item.partner_ids = partners
 
     @api.depends("start_datetime", "end_datetime")
     def _compute_duration_hours(self):
@@ -246,7 +284,7 @@ class TectoraRoofPlanning(models.Model):
     def _onchange_team_id(self):
         for item in self:
             if item.team_id:
-                item.employee_ids = item.team_id.member_ids
+                item.partner_ids = item.team_id.member_partner_ids
 
     # ------------------------------------------------------ employee items
     def _sync_employee_items(self):
@@ -267,14 +305,14 @@ class TectoraRoofPlanning(models.Model):
         return items
 
     def write(self, vals):
-        if "team_id" in vals and "employee_ids" not in vals:
+        if "team_id" in vals and not {"employee_ids", "partner_ids"} & set(vals):
             # A block dragged onto another team row in the planner takes that
             # team's members along.
             team = self.env["tectora.roof.team"].browse(vals["team_id"])
             if team:
-                vals = dict(vals, employee_ids=[(6, 0, team.member_ids.ids)])
+                vals = dict(vals, partner_ids=[(6, 0, team.member_partner_ids.ids)])
         result = super().write(vals)
-        if {"employee_ids", "start_datetime", "end_datetime", "state", "project_id"} & set(vals):
+        if {"employee_ids", "partner_ids", "start_datetime", "end_datetime", "state", "project_id"} & set(vals):
             self._sync_employee_items()
         return result
 

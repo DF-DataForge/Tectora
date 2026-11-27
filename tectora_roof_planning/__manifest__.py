@@ -60,7 +60,7 @@ blocks made (see migrations/20.0.2.0.0). The work blocks stay as they are.
 
 Needs the gantt view (``web_gantt``, Odoo Enterprise).
     """,
-    "version": "20.0.2.0.1",
+    "version": "20.0.2.1.0",
     "category": "Project",
     "license": "Other proprietary",
     "author": "Data Forge",

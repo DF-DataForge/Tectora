@@ -82,7 +82,7 @@ class TestProjectPlanner(TransactionCase):
             self.other_roof, datetime(2026, 11, 23, 7, 0), datetime(2026, 11, 23, 16, 0),
         )
         self.assertTrue(first.has_conflict)
-        self.assertEqual(first.conflict_employee_ids, self.piet)
+        self.assertEqual(first.conflict_partner_ids, self.piet.work_contact_id)
         self.assertEqual(first.conflict_planning_ids, second)
         self.assertTrue(second.has_conflict)
         self.assertFalse(later.has_conflict)

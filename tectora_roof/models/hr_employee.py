@@ -51,3 +51,36 @@ class HrEmployee(models.Model):
         """Every (active) team is a column in the employees kanban, also the
         ones nobody is on yet, so members can be dragged onto them."""
         return teams.search([], order=teams._order)
+
+    # The ploeg is made of contacts: an employee put on a ploeg here brings
+    # their work contact along.
+    @api.model_create_multi
+    def create(self, vals_list):
+        employees = super().create(vals_list)
+        employees.filtered("roof_team_id")._tectora_sync_team_contact()
+        return employees
+
+    def write(self, vals):
+        before = {}
+        if "roof_team_id" in vals or "work_contact_id" in vals:
+            before = {e.id: (e.roof_team_id, e.work_contact_id) for e in self}
+        result = super().write(vals)
+        if before:
+            self._tectora_sync_team_contact(before)
+        return result
+
+    def _tectora_sync_team_contact(self, before=None):
+        for employee in self.sudo():
+            old_team, old_contact = (before or {}).get(
+                employee.id, (self.env["tectora.roof.team"], self.env["res.partner"])
+            )
+            team, contact = employee.roof_team_id, employee.work_contact_id
+            if (old_team, old_contact) == (team, contact):
+                continue
+            if old_team and old_contact and old_team._tectora_leader_partner() != old_contact:
+                old_team.partner_ids = [(3, old_contact.id)]
+            if team and contact:
+                if not team.partner_ids:
+                    # first contact of a ploeg that ran on employees: all of them
+                    contact |= team.employee_ids.work_contact_id | team.leader_id.work_contact_id
+                team.partner_ids = [(4, pid) for pid in contact.ids]

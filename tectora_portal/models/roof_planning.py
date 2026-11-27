@@ -19,7 +19,7 @@ class TectoraRoofPlanning(models.Model):
         string="Geregistreerde uren",
         compute="_compute_portal_totals",
         help="Uren die de ploeg voor dit werkblok op het portaal registreerde "
-        "(start/stop), alle medewerkers samen.",
+        "(start/stop of ingegeven), alle personen samen.",
     )
     portal_running = fields.Boolean(
         string="Registratie loopt", compute="_compute_portal_totals",
@@ -29,12 +29,12 @@ class TectoraRoofPlanning(models.Model):
         string="Verslagen", compute="_compute_portal_totals"
     )
 
-    @api.depends("timer_ids.timesheet_hours", "timer_ids.state", "execution_report_ids")
+    @api.depends("timer_ids.registered_hours", "timer_ids.state", "execution_report_ids")
     def _compute_portal_totals(self):
         for block in self:
             timers = block.timer_ids
             block.portal_hours = sum(
-                timers.filtered(lambda timer: timer.state == "done").mapped("timesheet_hours")
+                timers.filtered(lambda timer: timer.state == "done").mapped("registered_hours")
             )
             block.portal_running = any(timer.state == "running" for timer in timers)
             block.execution_report_count = len(block.execution_report_ids)

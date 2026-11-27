@@ -12,7 +12,7 @@
                 <field name="team_id" filters="1"/>
                 <field name="partner_id"/>
                 <field name="address"/>
-                <field name="employee_ids" widget="many2many_avatar_employee"/>
+                <field name="partner_ids" widget="many2many_tags_avatar"/>
                 <field name="state"/>
             </calendar>
         </field>
@@ -34,8 +34,8 @@
                 <field name="address" optional="show"/>
                 <field name="total_area" optional="hide"/>
                 <field name="team_id"/>
-                <field name="employee_ids" widget="many2many_avatar_employee"/>
-                <field name="employee_count" string="#" optional="hide"/>
+                <field name="partner_ids" widget="many2many_tags_avatar"/>
+                <field name="partner_count" string="#" optional="hide"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-success="state == 'published'"/>
@@ -88,11 +88,11 @@
                                    readonly="1"/>
                         </group>
                     </group>
-                    <separator string="Toegewezen medewerkers"/>
-                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                    <separator string="Ingeplande personen"/>
+                    <field name="partner_ids" widget="many2many_tags_avatar"/>
                     <div class="text-muted small">
-                        Elke medewerker krijgt een eigen planning-item voor dit
-                        werkblok. Pas de lijst aan om iemand toe te voegen of te
+                        De contacten die op dit werkblok ingepland zijn: de leden van
+                        de ploeg. Pas de lijst aan om iemand toe te voegen of te
                         verwijderen.
                     </div>
                     <separator string="Werfinstructies"/>
@@ -154,12 +154,11 @@
                         </group>
                     </group>
                     <separator string="Ploeg op dit blok"/>
-                    <field name="employee_ids" widget="many2many_avatar_employee"/>
+                    <field name="partner_ids" widget="many2many_tags_avatar"/>
                     <div class="text-muted small">
-                        Deze medewerkers zijn ingepland voor dit blok. Verwijder er een om
-                        zijn shift uit het blok te halen, voeg er een toe om hem mee in te
-                        plannen. Verplaats of verleng het blok in de planner en alle shifts
-                        volgen.
+                        Deze personen (contacten) zijn ingepland voor dit blok. Verwijder
+                        er een om hem uit het blok te halen, voeg er een toe om hem mee in
+                        te plannen.
                     </div>
                     <field name="notes" placeholder="Werfinstructies voor de ploeg…"/>
                 </sheet>
@@ -181,7 +180,7 @@
                            ('department_id', 'child_of', self),
                            ('team_id.department_id', 'child_of', self),
                            ('employee_ids.department_id', 'child_of', self)]"/>
-                <field name="employee_ids"/>
+                <field name="partner_ids" string="Persoon"/>
                 <field name="partner_id"/>
                 <filter string="Concept" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Ingepland" name="published"
@@ -199,8 +198,8 @@
                             context="{'group_by': 'dossier_id'}"/>
                     <filter string="Dakproject" name="group_project"
                             context="{'group_by': 'project_id'}"/>
-                    <filter string="Medewerker" name="group_employee"
-                            context="{'group_by': 'employee_ids'}"/>
+                    <filter string="Persoon" name="group_employee"
+                            context="{'group_by': 'partner_ids'}"/>
                     <filter string="Startdatum" name="group_start"
                             context="{'group_by': 'start_datetime:day'}"/>
                 </group>
