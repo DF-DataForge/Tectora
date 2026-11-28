@@ -40,7 +40,7 @@ on the registration. The reports and the hour registrations are also
 visible in the back office, under Dakmeting and on the project dashboard's
 *Uitvoering* tab.
     """,
-    "version": "20.0.2.0.0",
+    "version": "20.0.2.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",

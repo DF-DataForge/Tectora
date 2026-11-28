@@ -267,6 +267,35 @@ class TestTimer(TectoraPortalCase):
         self.assertEqual(own.partner_ids, self.helper)
         self.assertFalse(own.timesheet_ids)
         self.assertAlmostEqual(own.registered_hours, 3.0, places=2)
+        # with an hourly cost on the contact the hours are booked on the project
+        self.assertFalse(timer.contact_line_ids, "no hourly cost: nothing to book")
+        self.helper.tectora_hourly_cost = 40.0
+        paid = Timer._log_manual(self.project, self.helper, fields.Date.today(), 5, scope="individual")
+        self.assertFalse(paid.timesheet_ids)
+        line = paid.contact_line_ids
+        self.assertEqual(len(line), 1)
+        dossier = self.project.project_id
+        self.assertEqual(line.account_id, dossier.account_id)
+        self.assertEqual(line.partner_id, self.helper)
+        self.assertAlmostEqual(line.unit_amount, 5.0, places=2)
+        self.assertAlmostEqual(line.amount, -200.0, places=2)
+        self.assertAlmostEqual(paid.contact_cost, 200.0, places=2)
+        self.assertAlmostEqual(paid.registered_hours, 5.0, places=2)
+        dossier.invalidate_recordset()
+        sheet_hours = sum(dossier.timesheet_ids.mapped("unit_amount"))
+        sheet_cost = -sum(dossier.timesheet_ids.mapped("amount"))
+        self.assertAlmostEqual(dossier.tectora_timesheet_hours, sheet_hours + 2.0 + 3.0 + 5.0, places=1)
+        self.assertAlmostEqual(dossier.tectora_timesheet_cost, sheet_cost + 200.0, places=2)
+        # in a crew registration: timesheets for the employees, a cost line for the contact
+        crew = Timer._log_manual(
+            self.project, self.leader, fields.Date.today(), 2,
+            partners=self.leader | self.helper,
+        )
+        self.assertEqual(crew.timesheet_ids.employee_id, self.leader_employee)
+        self.assertEqual(crew.contact_line_ids.partner_id, self.helper)
+        self.assertAlmostEqual(crew.contact_cost, 80.0, places=2)
+        crew.action_cancel()
+        self.assertFalse(crew.contact_line_ids or crew.timesheet_ids)
         # a ploeg led by a contact without an employee
         self.team.leader_partner_id = self.helper
         self.assertFalse(self.team.leader_id)

@@ -73,6 +73,8 @@
                             <field name="timesheet_hours" widget="float_time"/>
                             <field name="contact_hours" widget="float_time"
                                    invisible="not contact_hours"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="contact_cost" invisible="not contact_hours"/>
                             <field name="started_by_partner_id"/>
                             <field name="stopped_by_partner_id"/>
                         </group>
@@ -94,6 +96,18 @@
                                     <field name="name"/>
                                     <field name="unit_amount" widget="float_time" sum="Totaal"/>
                                     <field name="amount" sum="Loonkost" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Kostenlijnen contacten" name="contact_lines"
+                              invisible="not contact_line_ids">
+                            <field name="contact_line_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="partner_id" string="Persoon"/>
+                                    <field name="name"/>
+                                    <field name="unit_amount" widget="float_time" sum="Totaal"/>
+                                    <field name="amount" sum="Loonkost"/>
                                 </list>
                             </field>
                         </page>

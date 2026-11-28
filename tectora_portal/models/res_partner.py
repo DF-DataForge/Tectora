@@ -67,6 +67,16 @@ class ResPartner(models.Model):
         string="Urenregistratie", default=True,
         help="De urenregistratie (start – stop / uren ingeven) en de uren op de werf.")
 
+    tectora_hourly_cost = fields.Monetary(
+        string="Uurkost",
+        currency_field="currency_id",
+        groups="project.group_project_manager,hr.group_hr_user",
+        help="Wat een uur van deze persoon kost. De uren die hij op het "
+        "portaal registreert, worden aan deze kost op het project geboekt "
+        "(loonkost in de nacalculatie). Voor wie ook werknemer is, geldt de "
+        "uurkost van de werknemersfiche: daar loopt het via de urenstaat.",
+    )
+
     def _tectora_portal_segments(self):
         """``{segment: visible}`` of the site page for this person."""
         self.ensure_one()

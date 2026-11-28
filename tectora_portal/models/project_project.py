@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ProjectProject(models.Model):
@@ -35,3 +35,16 @@ class ProjectProject(models.Model):
         if not self.roof_project_id:
             return False
         return self.roof_project_id.action_view_timers()
+
+    @api.depends("roof_project_id.timer_ids.contact_hours", "roof_project_id.timer_ids.contact_cost")
+    def _compute_tectora_timesheets(self):
+        """Hours and labour cost of the project: the timesheets, plus what
+        the contacts without an employee registered on the portal (their
+        hours, and their cost lines on the project's analytic account)."""
+        super()._compute_tectora_timesheets()
+        for project in self:
+            timers = project.sudo().roof_project_id.timer_ids.filtered(
+                lambda timer: timer.state == "done"
+            )
+            project.tectora_timesheet_hours += sum(timers.mapped("contact_hours"))
+            project.tectora_timesheet_cost += sum(timers.mapped("contact_cost"))

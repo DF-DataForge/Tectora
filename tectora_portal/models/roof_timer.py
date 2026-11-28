@@ -144,7 +144,20 @@ class TectoraRoofTimer(models.Model):
         "wordt geen urenstaatlijn voor geboekt.",
     )
     timesheet_ids = fields.One2many(
-        "account.analytic.line", "tectora_timer_id", string="Urenstaatlijnen"
+        "account.analytic.line", "tectora_timer_id", string="Urenstaatlijnen",
+        domain=[("project_id", "!=", False)],
+    )
+    contact_line_ids = fields.One2many(
+        "account.analytic.line", "tectora_timer_id", string="Kostenlijnen contacten",
+        domain=[("project_id", "=", False)],
+        help="De uren van de aanwezige personen zonder werknemersfiche, aan "
+        "hun uurkost geboekt op de analytische rekening van het project.",
+    )
+    currency_id = fields.Many2one(related="company_id.currency_id")
+    contact_cost = fields.Monetary(
+        string="Kost contacten", compute="_compute_contact_cost",
+        currency_field="currency_id",
+        help="Loonkost van de personen zonder werknemersfiche (uren × hun uurkost).",
     )
     timesheet_count = fields.Integer(compute="_compute_timesheet_count")
     timesheet_hours = fields.Float(
@@ -232,6 +245,11 @@ class TectoraRoofTimer(models.Model):
             timer.registered_hours = (
                 sum(timer.timesheet_ids.mapped("unit_amount")) + timer.contact_hours
             )
+
+    @api.depends("contact_line_ids.amount")
+    def _compute_contact_cost(self):
+        for timer in self:
+            timer.contact_cost = -sum(timer.sudo().contact_line_ids.mapped("amount"))
 
     @api.depends("timesheet_ids.unit_amount")
     def _compute_timesheet_count(self):
@@ -412,7 +430,7 @@ class TectoraRoofTimer(models.Model):
 
     def action_cancel(self):
         for timer in self:
-            timer.timesheet_ids.sudo().unlink()
+            (timer.timesheet_ids | timer.contact_line_ids).sudo().unlink()
             timer.write({"state": "cancelled", "end_datetime": timer.end_datetime or fields.Datetime.now()})
         return True
 
@@ -433,7 +451,7 @@ class TectoraRoofTimer(models.Model):
             "name": _("Urenstaatlijnen"),
             "res_model": "account.analytic.line",
             "view_mode": "list,form",
-            "domain": [("tectora_timer_id", "=", self.id)],
+            "domain": [("tectora_timer_id", "=", self.id), ("project_id", "!=", False)],
             "context": {"default_tectora_timer_id": self.id},
         }
 
@@ -464,17 +482,25 @@ class TectoraRoofTimer(models.Model):
         return hours
 
     def _create_timesheets(self):
-        """One timesheet line per present person that is an employee, on
-        the project dossier (created if the order was not confirmed yet). A
-        timesheet needs an employee: the hours of the others stay on the
-        registration (``contact_hours``)."""
+        """Book the hours of a stopped registration on the project dossier
+        (created if the order was not confirmed yet):
+
+        * a timesheet line per present person that is an employee -- a
+          timesheet needs one, and takes the employee's hourly cost;
+        * for the others a cost line on the project's analytic account, at
+          the hourly cost of the contact. Without an hourly cost there is
+          nothing to book: the hours stay on the registration.
+        """
         for timer in self:
-            if timer.timesheet_ids or timer.state != "done":
+            if timer.state != "done" or timer.timesheet_ids or timer.contact_line_ids:
                 continue
             if timer.duration_hours * 60 < 1:
                 continue
             employees = timer.employee_ids.filtered("active")
-            if not employees:
+            contacts = (
+                timer.partner_ids - employees.work_contact_id
+            ).sudo().filtered(lambda partner: partner.tectora_hourly_cost)
+            if not employees and not contacts:
                 continue
             roof_project = timer.project_id.sudo()
             dossier = roof_project._ensure_project()
@@ -485,34 +511,64 @@ class TectoraRoofTimer(models.Model):
                 continue
             if not dossier.allow_timesheets:
                 dossier.write({"allow_timesheets": True})
-            # The task of the work kind: Afbraakwerken or Uitvoeringswerken,
-            # created here if the order's confirmation did not make it yet.
-            task = dossier._tectora_work_task(timer.work_kind, create=True)
+            if not dossier.account_id:
+                dossier._create_analytic_account()
             date = timer._local(timer.start_datetime).date()
             description = timer._timesheet_description()
             vals_list = []
-            company_ids = set()
-            for employee in employees:
-                company = employee.company_id or dossier.company_id or self.env.company
-                company_ids.add(company.id)
+            company_ids = {dossier.company_id.id or self.env.company.id}
+            if employees:
+                # The task of the work kind: Afbraakwerken or Uitvoeringswerken,
+                # created here if the order's confirmation did not make it yet.
+                task = dossier._tectora_work_task(timer.work_kind, create=True)
+                for employee in employees:
+                    company = employee.company_id or dossier.company_id or self.env.company
+                    company_ids.add(company.id)
+                    vals_list.append(
+                        {
+                            "name": description,
+                            "project_id": dossier.id,
+                            "task_id": task.id,
+                            "employee_id": employee.id,
+                            "date": date,
+                            "unit_amount": timer._timesheet_unit_amount(company),
+                            "company_id": company.id,
+                            "tectora_timer_id": timer.id,
+                        }
+                    )
+            hours = round(timer.duration_hours, 2)
+            hour_uom = self.env.ref("uom.product_uom_hour", raise_if_not_found=False)
+            company = dossier.company_id or self.env.company
+            for contact in contacts if dossier.account_id else []:
                 vals_list.append(
                     {
-                        "name": description,
-                        "project_id": dossier.id,
-                        "task_id": task.id,
-                        "employee_id": employee.id,
+                        "name": "%s · %s" % (contact.name, description),
+                        "account_id": dossier.account_id.id,
+                        "partner_id": contact.id,
                         "date": date,
-                        "unit_amount": timer._timesheet_unit_amount(company),
+                        "unit_amount": hours,
+                        "product_uom_id": hour_uom.id if hour_uom else False,
+                        "amount": -company.currency_id.round(hours * contact.tectora_hourly_cost),
                         "company_id": company.id,
                         "tectora_timer_id": timer.id,
                     }
                 )
             Line = self.env["account.analytic.line"].sudo().with_context(
-                allowed_company_ids=list(company_ids | {dossier.company_id.id}),
+                allowed_company_ids=list(company_ids),
                 tectora_sync=True,
             )
             Line.create(vals_list)
         return True
+
+    def action_view_contact_lines(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Kostenlijnen contacten"),
+            "res_model": "account.analytic.line",
+            "view_mode": "list,form",
+            "domain": [("tectora_timer_id", "=", self.id), ("project_id", "=", False)],
+        }
 
     # ------------------------------------------------------------------ cleanup
     @api.model

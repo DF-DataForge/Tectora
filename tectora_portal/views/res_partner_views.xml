@@ -35,6 +35,8 @@
                             <field name="roof_team_ids" widget="many2many_tags" readonly="1"
                                    options="{'color_field': 'color'}"/>
                             <field name="tectora_portal_state"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="tectora_hourly_cost"/>
                         </group>
                         <group string="Wat ziet deze persoon op het portaal">
                             <field name="tectora_portal_planning_horizon" widget="radio"
@@ -50,8 +52,9 @@
                         Planning en urenregistratie lopen via dit contact: het wordt ingepland
                         op de werkblokken van zijn ploeg en registreert zijn uren op het
                         portaal. Een werknemersfiche is niet nodig; is dit contact ook het
-                        werkcontact van een werknemer, dan worden de uren bovendien als
-                        urenstaatlijn geboekt.
+                        werkcontact van een werknemer, dan worden de uren als urenstaatlijn
+                        geboekt (aan de uurkost van de werknemer); anders worden ze aan de
+                        uurkost hierboven als loonkost op het project geboekt.
                     </div>
                 </page>
             </xpath>
