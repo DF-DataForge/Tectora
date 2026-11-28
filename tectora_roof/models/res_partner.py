@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class TectoraPartnerTitle(models.Model):
@@ -26,6 +26,30 @@ class ResPartner(models.Model):
     tectora_title_id = fields.Many2one(
         "tectora.partner.title", string="Aanspreektitel", ondelete="restrict",
     )
+    roof_team_ids = fields.Many2many(
+        "tectora.roof.team",
+        "tectora_roof_team_partner_rel",
+        "partner_id",
+        "team_id",
+        string="Ploegen",
+        help="De ploegen waar dit contact lid van is.",
+    )
+    roof_team_count = fields.Integer(compute="_compute_roof_team_count")
+
+    @api.depends("roof_team_ids")
+    def _compute_roof_team_count(self):
+        for partner in self:
+            partner.roof_team_count = len(partner.roof_team_ids)
+
+    def _tectora_employees(self):
+        """The employees behind these contacts (the contact is their work
+        contact). Planning and registration run on the contact; only what
+        needs an employee -- a timesheet line -- takes this."""
+        if not self.ids:
+            return self.env["hr.employee"].sudo()
+        return self.env["hr.employee"].sudo().search(
+            [("work_contact_id", "in", self.ids)]
+        )
 
     def _tectora_one_line_address(self):
         """The address on one line, without the name: "Lostraat 15, 1703

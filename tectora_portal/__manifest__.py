@@ -6,10 +6,11 @@
     "description": """
 Data Forge Dakmeting — Medewerkersportaal
 =========================================
-A portal site for the employees on the roofs. An employee (``hr.employee``)
-gets a portal login (an external user, no backend seat) and finds under
-*Mijn werven* every roof project they are planned on, as a team member or as
-ploegbaas. Each site opens on four tabs:
+A portal site for the people on the roofs. It runs on contacts: a contact
+(``res.partner``) that is in a ploeg or planned on a work block gets a portal
+login (an external user, no backend seat, no employee record needed) and
+finds under *Mijn werven* every roof project they are planned on, as a team
+member or as ploegbaas. Each site opens on four tabs:
 
 * **Overzicht**: customer, site address, project type, planned period, team,
   site instructions and the site sheet (werfblad) with the preparation,
@@ -31,13 +32,15 @@ afbraak*, and the hours land on the project's task Uitvoeringswerken or
 Afbraakwerken -- the tasks the confirmed order sizes with its estimate -- so
 demolition and execution stay apart in the timesheets.
 
-Portal access is granted on the employee form (button *Portaaltoegang
-geven*): a portal user is created on the employee's work contact and the
-invitation e-mail is sent. The reports and the hour registrations are also
+Portal access is granted on the contact (button *Portaaltoegang geven*, also
+on the employee form for the employee's work contact): a portal user is
+created on the contact and the invitation e-mail is sent. Timesheet lines are
+written for the persons that are employees too; the hours of the others stay
+on the registration. The reports and the hour registrations are also
 visible in the back office, under Dakmeting and on the project dashboard's
 *Uitvoering* tab.
     """,
-    "version": "20.0.1.5.0",
+    "version": "20.0.2.1.0",
     "category": "Sales",
     "license": "Other proprietary",
     "author": "Data Forge",
@@ -50,6 +53,7 @@ visible in the back office, under Dakmeting and on the project dashboard's
         "views/roof_timer_views.xml",
         "views/roof_execution_report_views.xml",
         "views/roof_planning_views.xml",
+        "views/res_partner_views.xml",
         "views/hr_employee_views.xml",
         "views/project_project_views.xml",
         "views/portal_templates.xml",

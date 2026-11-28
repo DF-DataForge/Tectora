@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Portal access for employees.
+"""Portal access of an employee: that of their work contact.
 
-The roofers do not need a backend seat: they get a portal login (an external
-user) linked to their employee record through the standard ``user_id`` field,
-so ``request.env.user.employee_id`` and the timesheets keep working. The
-button on the employee form creates that user on the employee's work contact
-and sends the invitation.
+The portal runs on contacts (see ``res_partner.py``): the login, the planning
+horizon and the visible segments live on the contact. An employee shows and
+edits those of their work contact, and the button on the employee form gives
+that contact its portal login.
 """
-import logging
-
-from dateutil.relativedelta import relativedelta
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import email_normalize
-
-_logger = logging.getLogger(__name__)
 
 
 class HrEmployee(models.Model):
@@ -36,49 +29,31 @@ class HrEmployee(models.Model):
         string="Login",
         compute="_compute_tectora_portal_access",
     )
-
     tectora_portal_planning_horizon = fields.Selection(
-        [("week", "1 week"), ("month", "1 maand"), ("all", "Alles")],
-        string="Planning op het portaal",
-        default="all",
-        required=True,
-        help="Hoe ver vooruit de medewerker de planning ziet op het portaal: "
-        "werkblokken die later beginnen, en werven die hij alleen via zo'n "
-        "werkblok zou zien, blijven verborgen tot ze binnen die termijn "
-        "vallen. Wat al voorbij is of vandaag loopt, blijft zichtbaar.",
+        related="work_contact_id.tectora_portal_planning_horizon", readonly=False,
     )
-
-    # Which segments of a site the employee sees on the portal.
     tectora_portal_show_overview = fields.Boolean(
-        string="Overzicht", default=True,
-        help="Tab Overzicht: werf, ploeg en planning, werfinfo.")
+        related="work_contact_id.tectora_portal_show_overview", readonly=False)
     tectora_portal_show_materials = fields.Boolean(
-        string="Materialen", default=True, help="Tab Materialen: de materiaallijst van de werf.")
+        related="work_contact_id.tectora_portal_show_materials", readonly=False)
     tectora_portal_show_plan = fields.Boolean(
-        string="Plan", default=True, help="Tab Plan: het dakplan en de werkdagen.")
+        related="work_contact_id.tectora_portal_show_plan", readonly=False)
     tectora_portal_show_report = fields.Boolean(
-        string="Uitvoeringsverslag", default=True,
-        help="Tab Uitvoeringsverslag: verslagen en foto's indienen.")
+        related="work_contact_id.tectora_portal_show_report", readonly=False)
     tectora_portal_show_hours = fields.Boolean(
-        string="Urenregistratie", default=True,
-        help="De urenregistratie (start – stop / uren ingeven) en de uren op de werf.")
+        related="work_contact_id.tectora_portal_show_hours", readonly=False)
 
-    def _tectora_portal_segments(self):
-        """``{segment: visible}`` of the site page for this employee."""
-        self.ensure_one()
-        return {
-            "overview": self.tectora_portal_show_overview,
-            "materials": self.tectora_portal_show_materials,
-            "plan": self.tectora_portal_show_plan,
-            "report": self.tectora_portal_show_report,
-            "hours": self.tectora_portal_show_hours,
-        }
-
-    @api.depends("user_id", "user_id.share", "user_id.active")
+    @api.depends(
+        "user_id", "user_id.share", "user_id.active",
+        "work_contact_id.user_ids", "work_contact_id.user_ids.share",
+        "work_contact_id.user_ids.active",
+    )
     def _compute_tectora_portal_access(self):
         for employee in self:
-            user = employee.user_id
-            if not user or not user.active:
+            user = employee.user_id if employee.user_id.active else self.env["res.users"]
+            if not user and employee.work_contact_id:
+                user = employee.work_contact_id._tectora_portal_user()
+            if not user:
                 employee.tectora_portal_state = "none"
             elif user.share:
                 employee.tectora_portal_state = "portal"
@@ -86,21 +61,14 @@ class HrEmployee(models.Model):
                 employee.tectora_portal_state = "internal"
             employee.tectora_portal_access = employee.tectora_portal_state == "portal"
 
-    def _tectora_portal_horizon_end(self, moment=None):
-        """UTC moment from which work blocks are hidden on this employee's
-        portal: the end of today plus a week or a month, counted from the
-        start of the local day; None when the whole planning is shown."""
+    def _tectora_portal_segments(self):
         self.ensure_one()
-        horizon = self.tectora_portal_planning_horizon or "all"
-        if horizon == "all":
-            return None
-        moment = moment or fields.Datetime.now()
-        day_start, _day_end = self.env["tectora.roof.project"]._tectora_portal_day_bounds(moment)
-        if horizon == "week":
-            return day_start + relativedelta(days=7)
-        return day_start + relativedelta(months=1)
+        return self._tectora_portal_partner()._tectora_portal_segments()
 
-    # ------------------------------------------------------------- portal user
+    def _tectora_portal_horizon_end(self, moment=None):
+        self.ensure_one()
+        return self._tectora_portal_partner()._tectora_portal_horizon_end(moment)
+
     def _tectora_portal_email(self):
         self.ensure_one()
         return email_normalize(
@@ -108,8 +76,8 @@ class HrEmployee(models.Model):
         )
 
     def _tectora_portal_partner(self):
-        """The contact the portal user is attached to: the employee's work
-        contact, created on the fly when the employee has none yet."""
+        """The contact the portal runs on: the employee's work contact,
+        created on the fly when the employee has none yet."""
         self.ensure_one()
         partner = self.work_contact_id
         if not partner:
@@ -126,17 +94,11 @@ class HrEmployee(models.Model):
         return partner
 
     def action_tectora_grant_portal_access(self):
-        """Give the employee a portal login and send the invitation."""
-        group_portal = self.env.ref("base.group_portal")
-        group_public = self.env.ref("base.group_public")
-        Users = self.env["res.users"].sudo().with_context(active_test=False)
+        """Give the employee's work contact a portal login and send the
+        invitation. The login is not linked to the employee: the portal knows
+        the contact, and the employee stays without a user."""
         for employee in self:
-            if employee.user_id and employee.user_id.active:
-                if employee.user_id.share:
-                    raise UserError(
-                        _("%s heeft al portaaltoegang (login %s).",
-                          employee.name, employee.user_id.login)
-                    )
+            if employee.user_id and employee.user_id.active and not employee.user_id.share:
                 raise UserError(
                     _("%s is gekoppeld aan de interne gebruiker %s; die kan het "
                       "portaal met zijn gewone login gebruiken.",
@@ -148,84 +110,22 @@ class HrEmployee(models.Model):
                     _("Vul eerst een werk-e-mailadres in voor %s: dat wordt de "
                       "login van het portaal.", employee.name)
                 )
-            company = employee.company_id or self.env.company
             partner = employee._tectora_portal_partner()
-            if partner.email != email:
+            if email_normalize(partner.email or "") != email:
                 partner.sudo().email = email
-            user = employee.user_id if employee.user_id and not employee.user_id.active else Users
-            if not user:
-                user = Users.search([("login", "=", email)], limit=1)
-                if user and not user.share and user.active:
-                    raise UserError(
-                        _("Het e-mailadres %s is al de login van een interne "
-                          "gebruiker; koppel die gebruiker aan de medewerker.", email)
-                    )
-                if user and user.partner_id != partner and user.active:
-                    raise UserError(
-                        _("Er bestaat al een portaalgebruiker met login %s voor een "
-                          "ander contact.", email)
-                    )
-            if not user:
-                user = Users.with_company(company).with_context(
-                    no_reset_password=True
-                )._create_user_from_template(
-                    {
-                        "email": email,
-                        "login": email,
-                        "partner_id": partner.id,
-                        "company_id": company.id,
-                        "company_ids": [(6, 0, company.ids)],
-                    }
-                )
-            user.write(
-                {
-                    "active": True,
-                    "company_id": company.id,
-                    "company_ids": [(4, company.id)],
-                    "group_ids": [(4, group_portal.id), (3, group_public.id)],
-                    # the site works in the employee's timezone and language
-                    "tz": employee.tz or company.partner_id.tz or user.tz,
-                    "lang": company.partner_id.lang or self.env.user.lang or user.lang,
-                }
-            )
-            employee.sudo().write({"user_id": user.id})
-            employee._tectora_send_portal_invitation(user)
-        return True
-
-    def _tectora_send_portal_invitation(self, user):
-        """The standard portal invitation (set your password), when the
-        signup module is there; never blocks the access itself."""
-        self.ensure_one()
-        template = self.env.ref(
-            "auth_signup.portal_set_password_email", raise_if_not_found=False
-        )
-        if not template:
-            return False
-        try:
-            user.partner_id.sudo().signup_prepare()
-            template.sudo().with_context(
-                dbname=self.env.cr.dbname,
-                lang=user.lang,
-                medium="portalinvite",
-                welcome_message=_(
-                    "Welkom op het medewerkersportaal van %s. Na het instellen "
-                    "van je wachtwoord vind je je werven onder Mijn werven.",
-                    (self.company_id or self.env.company).name,
-                ),
-            ).send_mail(user.id, force_send=True)
-        except Exception:  # pragma: no cover - mail server issues
-            _logger.exception("Could not send the portal invitation to %s", user.login)
-            return False
+            if not partner.tz and employee.tz:
+                partner.sudo().tz = employee.tz
+            partner.action_tectora_grant_portal_access()
         return True
 
     def action_tectora_open_portal_user(self):
         self.ensure_one()
-        if not self.user_id:
-            return False
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "res.users",
-            "res_id": self.user_id.id,
-            "view_mode": "form",
-            "target": "current",
-        }
+        if self.user_id:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "res.users",
+                "res_id": self.user_id.id,
+                "view_mode": "form",
+                "target": "current",
+            }
+        return self.work_contact_id.action_tectora_open_portal_user()

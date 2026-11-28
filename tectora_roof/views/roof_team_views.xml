@@ -8,10 +8,12 @@
             <list string="Ploegen">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
-                <field name="leader_id"/>
-                <field name="department_id" optional="show"/>
-                <field name="member_count" string="Leden"/>
-                <field name="member_ids" widget="many2many_avatar_employee"/>
+                <field name="leader_partner_id"/>
+                <field name="leader_id" optional="hide"/>
+                <field name="department_id" optional="hide"/>
+                <field name="partner_count" string="Leden"/>
+                <field name="member_partner_ids" widget="many2many_tags_avatar"/>
+                <field name="member_ids" widget="many2many_avatar_employee" optional="hide"/>
                 <field name="show_in_planner" string="Op planner" widget="boolean_toggle"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
             </list>
@@ -31,20 +33,23 @@
                     </div>
                     <group>
                         <group>
-                            <field name="leader_id"/>
+                            <field name="leader_partner_id" widget="many2one_avatar"
+                                   options="{'no_quick_create': True}"/>
+                            <field name="leader_id" invisible="leader_partner_id"/>
                             <field name="department_id"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                         <group>
                             <field name="color" widget="color_picker"/>
-                            <field name="member_count"/>
+                            <field name="partner_count"/>
+                            <field name="member_count" string="Waarvan werknemers"/>
                             <field name="show_in_planner"/>
                             <field name="active" invisible="1"/>
                         </group>
                     </group>
                     <group string="Uren loggen (portaal)" name="hours_logging">
                         <group string="Wie logt" name="hours_who">
-                            <field name="hours_individual" string="Individueel (per medewerker)"/>
+                            <field name="hours_individual" string="Individueel (per persoon)"/>
                             <field name="hours_by_leader" string="Door ploegleider (voor de ploeg)"/>
                         </group>
                         <group string="Manier van loggen" name="hours_how">
@@ -57,18 +62,38 @@
                         </div>
                     </group>
                     <notebook>
-                        <page string="Ploegleden" name="members">
+                        <page string="Leden" name="partners">
+                            <field name="partner_ids" options="{'no_quick_create': True}">
+                                <list string="Ploegleden">
+                                    <field name="name"/>
+                                    <field name="function" optional="show"/>
+                                    <field name="phone" optional="show"/>
+                                    <field name="email" optional="show"/>
+                                    <field name="city" optional="hide"/>
+                                </list>
+                            </field>
+                            <div class="text-muted small mt-2">
+                                De leden van de ploeg zijn contacten. Ze worden ingepland op de
+                                werkblokken en registreren hun uren op het portaal (knop
+                                Portaaltoegang geven op het contact); een werknemersfiche is
+                                daarvoor niet nodig. Laat leeg om de werknemers van de ploeg
+                                (of van de gekozen afdeling) te gebruiken.
+                            </div>
+                            <separator string="Effectieve ploeg"/>
+                            <field name="member_partner_ids" widget="many2many_tags_avatar"
+                                   readonly="1"/>
+                        </page>
+                        <page string="Werknemers" name="members">
                             <field name="employee_ids" widget="many2many_tags_avatar"
                                    options="{'no_create': True}"
                                    context="{'default_roof_team_id': id}"
                                    domain="['|', ('roof_team_id', '=', False), ('roof_team_id', '=', id)]"/>
                             <div class="text-muted small mt-2">
-                                Een medewerker hoort bij één ploeg: de ploeg staat op de
-                                werknemersfiche (tab Werk) en in de Werknemers-app, die per
-                                ploeg georganiseerd is. Laat leeg om automatisch de medewerkers
-                                van de gekozen afdeling te gebruiken.
+                                Werknemers met deze ploeg op hun werknemersfiche (tab Werk): hun
+                                werkcontact wordt lid van de ploeg. Enkel voor werknemers worden
+                                urenstaatlijnen geboekt.
                             </div>
-                            <separator string="Effectieve ploeg"/>
+                            <separator string="Werknemers achter de leden"/>
                             <field name="member_ids" widget="many2many_avatar_employee"
                                    readonly="1"/>
                         </page>
@@ -87,9 +112,8 @@
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Maak je eerste ploeg</p>
-            <p>Een ploeg is een vaste groep medewerkers. Wijs een ploeg toe aan een
-               dakproject en de planning-items van de individuele medewerkers worden
-               automatisch aangemaakt.</p>
+            <p>Een ploeg is een vaste groep contacten met een ploegbaas. Wijs een
+               ploeg toe aan een dakproject en haar leden worden mee ingepland.</p>
         </field>
     </record>
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The app: Ploegen. -->
+    <menuitem id="menu_teams_root"
+              name="Ploegen"
+              web_icon="tectora_teams,static/description/icon.png"
+              sequence="46"/>
+
+    <menuitem id="menu_teams_teams"
+              name="Ploegen"
+              parent="menu_teams_root"
+              action="action_tectora_teams"
+              sequence="10"/>
+
+    <menuitem id="menu_teams_members"
+              name="Leden"
+              parent="menu_teams_root"
+              action="action_tectora_team_members"
+              sequence="20"/>
+
+    <menuitem id="menu_teams_vehicles"
+              name="Voertuigen"
+              parent="menu_teams_root"
+              action="action_tectora_team_vehicles"
+              groups="fleet.fleet_group_user"
+              sequence="30"/>
+
+</odoo>

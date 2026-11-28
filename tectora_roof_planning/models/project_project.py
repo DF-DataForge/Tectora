@@ -13,7 +13,7 @@ class ProjectProject(models.Model):
     @api.depends(
         "roof_project_id.planning_ids.start_datetime",
         "roof_project_id.planning_ids.end_datetime",
-        "roof_project_id.planning_ids.employee_ids",
+        "roof_project_id.planning_ids.partner_ids",
         "roof_project_id.planning_ids.state",
         "roof_project_id.planning_ids.planned_hours",
     )

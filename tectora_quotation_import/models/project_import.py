@@ -275,7 +275,7 @@ class QuotationImportJob(models.Model):
         blocks = roof.planning_ids or roof._create_planning_item()
         values = {"state": "done" if phase in ("closed", "executed") else "published"}
         if len(teams) > 1:
-            values["employee_ids"] = [(6, 0, teams.member_ids.ids)]
+            values["partner_ids"] = [(6, 0, teams.member_partner_ids.ids)]
         blocks.write(values)
 
     def _run_summary(self, projects, stats, counters):

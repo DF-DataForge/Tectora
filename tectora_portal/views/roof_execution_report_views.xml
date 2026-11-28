@@ -10,7 +10,7 @@
                 <field name="project_id"/>
                 <field name="partner_id" optional="show"/>
                 <field name="address" optional="hide"/>
-                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="author_id" widget="many2one_avatar"/>
                 <field name="progress" widget="badge"
                        decoration-success="progress == 'finished'"
                        decoration-danger="progress == 'blocked'"
@@ -43,7 +43,7 @@
                         </group>
                         <group string="Verslag">
                             <field name="date"/>
-                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="author_id" widget="many2one_avatar"/>
                             <field name="progress"/>
                         </group>
                     </group>
@@ -81,7 +81,7 @@
                         <div class="text-muted"><field name="project_id"/></div>
                         <div class="text-truncate"><field name="work_done"/></div>
                         <div class="d-flex justify-content-between mt-1">
-                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="author_id" widget="many2one_avatar"/>
                             <span t-if="record.image_count.raw_value">
                                 <i class="oi me-1" data-icon="photo_camera"/><field name="image_count"/>
                             </span>
@@ -99,7 +99,7 @@
             <search string="Uitvoeringsverslagen">
                 <field name="project_id"/>
                 <field name="partner_id"/>
-                <field name="employee_id"/>
+                <field name="author_id"/>
                 <field name="work_done"/>
                 <filter name="blocked" string="Geblokkeerd" domain="[('progress', '=', 'blocked')]"/>
                 <filter name="finished" string="Afgewerkt" domain="[('progress', '=', 'finished')]"/>
@@ -107,7 +107,7 @@
                 <filter name="date" string="Datum" date="date"/>
                 <group>
                     <filter name="group_project" string="Dakproject" context="{'group_by': 'project_id'}"/>
-                    <filter name="group_employee" string="Opgesteld door" context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_employee" string="Opgesteld door" context="{'group_by': 'author_id'}"/>
                     <filter name="group_date" string="Datum" context="{'group_by': 'date:day'}"/>
                 </group>
             </search>

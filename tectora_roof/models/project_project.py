@@ -178,13 +178,17 @@ class ProjectProject(models.Model):
     )
     tectora_planning_hours = fields.Float(
         string="Geplande uren", compute="_compute_tectora_planning",
-        help="Uren van de werkblokken, maal het aantal ingeplande medewerkers.",
+        help="Uren van de werkblokken, maal het aantal ingeplande personen.",
     )
     tectora_next_planning_date = fields.Datetime(
         string="Volgende werkdag", compute="_compute_tectora_planning"
     )
     tectora_planned_employee_ids = fields.Many2many(
-        "hr.employee", string="Ingeplande medewerkers",
+        "hr.employee", string="Ingeplande werknemers",
+        compute="_compute_tectora_planning",
+    )
+    tectora_planned_partner_ids = fields.Many2many(
+        "res.partner", string="Ingeplande personen",
         compute="_compute_tectora_planning",
     )
     tectora_estimated_hours = fields.Float(
@@ -425,7 +429,7 @@ class ProjectProject(models.Model):
     @api.depends(
         "roof_project_id.planning_ids.start_datetime",
         "roof_project_id.planning_ids.end_datetime",
-        "roof_project_id.planning_ids.employee_ids",
+        "roof_project_id.planning_ids.partner_ids",
         "roof_project_id.planning_ids.state",
     )
     def _compute_tectora_planning(self):
@@ -434,7 +438,7 @@ class ProjectProject(models.Model):
             blocks = project.roof_project_id.planning_ids
             project.tectora_planning_count = len(blocks)
             project.tectora_planning_hours = sum(
-                block.duration_hours * max(len(block.employee_ids), 1)
+                block.duration_hours * max(len(block.partner_ids), 1)
                 for block in blocks
             )
             upcoming = blocks.filtered(
@@ -444,6 +448,7 @@ class ProjectProject(models.Model):
                 upcoming[:1].start_datetime if upcoming else False
             )
             project.tectora_planned_employee_ids = blocks.employee_ids
+            project.tectora_planned_partner_ids = blocks.partner_ids
 
     # ------------------------------------------------------------------- sync
     def write(self, vals):

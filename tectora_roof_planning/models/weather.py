@@ -267,7 +267,7 @@ class TectoraRoofPlanning(models.Model):
     @api.depends(
         "project_id.name", "project_id.address", "project_id.partner_id.name",
         "project_id.partner_id.city", "project_id.total_area",
-        "project_id.project_type", "employee_ids", "weather_icon", "weather_alert",
+        "project_id.project_type", "partner_ids", "weather_icon", "weather_alert",
     )
     def _compute_display_name(self):
         """The planner's label with the weather in front: "⚠️🌧️ Dhr. ..."."""

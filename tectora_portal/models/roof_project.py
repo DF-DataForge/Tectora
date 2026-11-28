@@ -19,8 +19,7 @@ class TectoraRoofProject(models.Model):
     timer_count = fields.Integer(compute="_compute_portal_totals")
     portal_hours = fields.Float(
         string="Geregistreerde uren", compute="_compute_portal_totals",
-        help="Uren geboekt via de start/stop-registratie op het portaal, "
-        "alle medewerkers samen.",
+        help="Uren geregistreerd op het portaal, alle personen samen.",
     )
     execution_report_ids = fields.One2many(
         "tectora.roof.execution.report", "project_id", string="Uitvoeringsverslagen"
@@ -34,35 +33,54 @@ class TectoraRoofProject(models.Model):
                 lambda timer: timer.state == "running"
             ).sorted("start_datetime")[:1]
 
-    @api.depends("timer_ids.timesheet_hours", "timer_ids.state", "execution_report_ids")
+    @api.depends("timer_ids.registered_hours", "timer_ids.state", "execution_report_ids")
     def _compute_portal_totals(self):
         for project in self:
             done = project.timer_ids.filtered(lambda timer: timer.state == "done")
             project.timer_count = len(project.timer_ids)
-            project.portal_hours = sum(done.mapped("timesheet_hours"))
+            project.portal_hours = sum(done.mapped("registered_hours"))
             project.execution_report_count = len(project.execution_report_ids)
 
     # ----------------------------------------------------------------- portal
     @api.model
-    def _tectora_portal_domain(self, employee):
-        """The sites an employee sees on the portal: every roof project they
-        are planned on (a work block with them on it, starting within their
-        planning horizon), plus -- for a ploeg member or ploegbaas -- the
-        projects assigned to their team."""
-        if not employee:
+    def _tectora_portal_domain(self, partner):
+        """The sites a person (contact) sees on the portal: every roof
+        project they are planned on (a work block with them on it, starting
+        within their planning horizon), plus -- for a ploeg member or
+        ploegbaas -- the projects assigned to their team."""
+        if not partner:
             return [("id", "=", False)]
-        block_domain = [("employee_ids", "in", employee.ids)]
-        horizon_end = employee._tectora_portal_horizon_end()
+        block_domain = [("partner_ids", "in", partner.ids)]
+        horizon_end = partner._tectora_portal_horizon_end()
         if horizon_end:
-            # Only blocks within the employee's planning horizon reveal a site.
+            # Only blocks within the person's planning horizon reveal a site.
             block_domain.append(("start_datetime", "<", horizon_end))
+        teams = self._tectora_portal_teams_of(partner)
         return [
             "|",
             ("planning_ids", "any", block_domain),
-            "|",
-            ("team_id.employee_ids", "in", employee.ids),
-            ("team_id.leader_id", "in", employee.ids),
+            ("team_id", "in", teams.ids),
         ]
+
+    @api.model
+    def _tectora_portal_teams_of(self, partner):
+        """The ploegen ``partner`` is in: as a member, as ploegbaas, or --
+        for a ploeg still made of employees -- through their employee."""
+        Team = self.env["tectora.roof.team"].sudo()
+        if not partner:
+            return Team
+        teams = Team.search([
+            "|", ("partner_ids", "in", partner.ids),
+            ("leader_partner_id", "in", partner.ids),
+        ])
+        employees = partner._tectora_employees()
+        if employees:
+            legacy = Team.search([
+                "|", ("employee_ids", "in", employees.ids),
+                ("leader_id", "in", employees.ids),
+            ])
+            teams |= legacy.filtered(lambda team: partner in team.member_partner_ids)
+        return teams
 
     @api.model
     def _tectora_portal_day_bounds(self, moment, tz=None):
@@ -91,10 +109,10 @@ class TectoraRoofProject(models.Model):
         self.ensure_one()
         return self._tectora_portal_blocks_at(moment)[:1]
 
-    def _tectora_portal_planned_employees(self, moment):
+    def _tectora_portal_planned_partners(self, moment):
         """Who is planned on the site at ``moment``, as per the planner: the
-        employees of that day's work block(s). Without a block that day, the
-        employees of the closest block; without any block, the team."""
+        persons of that day's work block(s). Without a block that day, those
+        of the closest block; without any block, the team."""
         self.ensure_one()
         blocks = self._tectora_portal_blocks_at(moment)
         if not blocks:
@@ -103,51 +121,51 @@ class TectoraRoofProject(models.Model):
                 blocks = candidates.sorted(
                     key=lambda block: abs((block.start_datetime - moment).total_seconds())
                 )[:1]
-        employees = blocks.employee_ids
-        if not employees and self.team_id:
-            employees = self.team_id.member_ids
-        return employees.filtered("active")
+        partners = blocks.partner_ids
+        if not partners and self.team_id:
+            partners = self.team_id.member_partner_ids
+        return partners.filtered("active")
 
-    def _tectora_portal_visible_blocks(self, employee, moment=None):
-        """The work blocks of this project shown on ``employee``'s portal:
+    def _tectora_portal_visible_blocks(self, partner, moment=None):
+        """The work blocks of this project shown on ``partner``'s portal:
         all of them, or those starting before the end of their planning
         horizon (1 week, 1 month)."""
         self.ensure_one()
         blocks = self.planning_ids
-        horizon_end = employee._tectora_portal_horizon_end(moment) if employee else None
+        horizon_end = partner._tectora_portal_horizon_end(moment) if partner else None
         if horizon_end:
             blocks = blocks.filtered(
                 lambda block: block.start_datetime and block.start_datetime < horizon_end
             )
         return blocks.sorted("start_datetime")
 
-    def _tectora_portal_next_block(self, moment=None, employee=None):
+    def _tectora_portal_next_block(self, moment=None, partner=None):
         self.ensure_one()
         moment = moment or fields.Datetime.now()
         blocks = (
-            self._tectora_portal_visible_blocks(employee, moment)
-            if employee else self.planning_ids
+            self._tectora_portal_visible_blocks(partner, moment)
+            if partner else self.planning_ids
         )
         upcoming = blocks.filtered(
             lambda block: block.end_datetime and block.end_datetime >= moment
         ).sorted("start_datetime")
         return upcoming[:1]
 
-    def _tectora_portal_hours_team(self, employee):
-        """The ploeg whose hours-logging settings apply to ``employee`` on
-        this site: their own ploeg (member or ploegbaas), else the ploeg of
-        today's work block, else the site's ploeg."""
+    def _tectora_portal_hours_team(self, partner):
+        """The ploeg whose hours-logging settings apply to ``partner`` on
+        this site: the site's ploeg or that of today's work block when they
+        are in it, else another ploeg of theirs, else the ploeg of today's
+        block or of the site."""
         self.ensure_one()
-        Team = self.env["tectora.roof.team"].sudo()
-        team = employee.roof_team_id if employee else Team
-        if not team and employee:
-            team = Team.search([("leader_id", "=", employee.id)], limit=1)
-        if not team:
-            team = self._tectora_portal_blocks_at(fields.Datetime.now()).team_id[:1]
-        return team or self.team_id
+        own = self._tectora_portal_teams_of(partner)
+        block_team = self._tectora_portal_blocks_at(fields.Datetime.now()).team_id[:1]
+        for team in (self.team_id, block_team):
+            if team and team in own:
+                return team
+        return own[:1] or block_team or self.team_id
 
-    def _tectora_portal_hours_policy(self, employee):
-        """What ``employee`` may log on this site's portal, per their ploeg:
+    def _tectora_portal_hours_policy(self, partner):
+        """What ``partner`` may log on this site's portal, per their ploeg:
 
         * ``team``: register for the whole crew (the ploegleider, or anyone
           when the ploeg has no ploegbaas);
@@ -157,23 +175,25 @@ class TectoraRoofProject(models.Model):
         Without a ploeg: start – stop for the crew, as before.
         """
         self.ensure_one()
-        team = self._tectora_portal_hours_team(employee)
+        team = self._tectora_portal_hours_team(partner)
         if not team:
             return {"team": True, "individual": False, "timer": True, "manual": False,
-                    "leader": self.env["hr.employee"], "ploeg": team}
-        is_leader = not team.leader_id or team.leader_id == employee
+                    "leader": self.env["res.partner"], "ploeg": team}
+        leader = team._tectora_leader_partner()
+        is_leader = not leader or leader == partner
         return {
             "team": bool(team.hours_by_leader and is_leader),
             "individual": bool(team.hours_individual),
             "timer": bool(team.hours_timer),
             "manual": bool(team.hours_manual),
-            "leader": team.leader_id,
+            "leader": leader,
             "ploeg": team,
         }
 
-    def _tectora_portal_planned_employee_ids(self):
+    def _tectora_portal_crew(self):
+        """Everyone planned on the site: on its work blocks or in its ploeg."""
         self.ensure_one()
-        return (self.planning_ids.employee_ids | self.team_id.member_ids).filtered("active")
+        return (self.planning_ids.partner_ids | self.team_id.member_partner_ids).filtered("active")
 
     # ---------------------------------------------------------------- buttons
     def action_view_timers(self):

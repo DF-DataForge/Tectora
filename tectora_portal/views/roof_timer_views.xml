@@ -16,10 +16,11 @@
                 <field name="entry_mode" optional="show"/>
                 <field name="partner_id" optional="show"/>
                 <field name="address" optional="hide"/>
-                <field name="employee_ids" widget="many2many_avatar_employee"/>
-                <field name="timesheet_hours" widget="float_time" sum="Geboekt" optional="show"/>
-                <field name="started_by_id" optional="hide"/>
-                <field name="stopped_by_id" optional="hide"/>
+                <field name="partner_ids" widget="many2many_tags_avatar"/>
+                <field name="registered_hours" widget="float_time" sum="Geregistreerd" optional="show"/>
+                <field name="timesheet_hours" widget="float_time" sum="Geboekt" optional="hide"/>
+                <field name="started_by_partner_id" optional="hide"/>
+                <field name="stopped_by_partner_id" optional="hide"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'running'"
                        decoration-info="state == 'done'"/>
@@ -68,14 +69,19 @@
                             <field name="start_datetime"/>
                             <field name="end_datetime"/>
                             <field name="duration_hours" widget="float_time"/>
+                            <field name="registered_hours" widget="float_time"/>
                             <field name="timesheet_hours" widget="float_time"/>
-                            <field name="started_by_id"/>
-                            <field name="stopped_by_id"/>
+                            <field name="contact_hours" widget="float_time"
+                                   invisible="not contact_hours"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="contact_cost" invisible="not contact_hours"/>
+                            <field name="started_by_partner_id"/>
+                            <field name="stopped_by_partner_id"/>
                         </group>
                     </group>
-                    <group string="Aanwezige medewerkers">
-                        <field name="employee_ids" nolabel="1" widget="many2many_tags"
-                               options="{'no_create': True}"/>
+                    <group string="Aanwezige personen">
+                        <field name="partner_ids" nolabel="1" widget="many2many_tags_avatar"
+                               options="{'no_quick_create': True}"/>
                     </group>
                     <group string="Werknota">
                         <field name="notes" nolabel="1" placeholder="Nota bij het starten of stoppen…"/>
@@ -93,6 +99,18 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Kostenlijnen contacten" name="contact_lines"
+                              invisible="not contact_line_ids">
+                            <field name="contact_line_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="partner_id" string="Persoon"/>
+                                    <field name="name"/>
+                                    <field name="unit_amount" widget="float_time" sum="Totaal"/>
+                                    <field name="amount" sum="Loonkost"/>
+                                </list>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -106,7 +124,7 @@
             <search string="Urenregistraties">
                 <field name="project_id"/>
                 <field name="partner_id"/>
-                <field name="employee_ids"/>
+                <field name="partner_ids" string="Persoon"/>
                 <filter name="running" string="Lopend" domain="[('state', '=', 'running')]"/>
                 <filter name="done" string="Gestopt" domain="[('state', '=', 'done')]"/>
                 <separator/>

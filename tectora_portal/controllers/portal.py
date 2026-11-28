@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""The employee portal: /my/werven.
+"""The crew's portal: /my/werven.
 
-Every route resolves the logged-in user to their employee and only shows the
-roof projects that employee is planned on (see
+Every route resolves the logged-in user to their contact and only shows the
+roof projects that contact is planned on (see
 ``tectora.roof.project._tectora_portal_domain``). The records are read and
 written with sudo after that check, the way the standard portal controllers
 work with their access tokens, so the portal group needs no access rights on
@@ -37,25 +37,30 @@ MAX_PHOTO_BYTES = 15 * 1024 * 1024
 class TectoraEmployeePortal(CustomerPortal):
 
     # ------------------------------------------------------------- resolving
-    def _tectora_employee(self):
-        """The employee behind the logged-in user (portal or internal), the
-        one of the user's company first."""
+    def _tectora_worker(self):
+        """The contact behind the logged-in user (portal or internal) when
+        it works on the sites: in a ploeg, planned on a work block, or an
+        worker. The portal runs on that contact; no worker is needed."""
+        Partner = request.env["res.partner"].sudo()
         user = request.env.user
         if not user or user._is_public():
-            return request.env["hr.employee"].sudo()
-        Employee = request.env["hr.employee"].sudo()
-        employee = Employee.search(
-            [("user_id", "=", user.id), ("company_id", "=", user.company_id.id)], limit=1
+            return Partner
+        partner = user.partner_id.sudo()
+        if partner._tectora_is_worker():
+            return partner
+        # A login linked to an worker whose work contact is another contact.
+        worker = request.env["hr.employee"].sudo().search(
+            [("user_id", "=", user.id)], order="company_id", limit=1
         )
-        return employee or Employee.search([("user_id", "=", user.id)], limit=1)
+        return worker.work_contact_id if worker else Partner
 
-    def _tectora_sites_domain(self, employee):
-        return request.env["tectora.roof.project"].sudo()._tectora_portal_domain(employee)
+    def _tectora_sites_domain(self, worker):
+        return request.env["tectora.roof.project"].sudo()._tectora_portal_domain(worker)
 
-    def _tectora_site_for(self, employee, project_id):
+    def _tectora_site_for(self, worker, project_id):
         Project = request.env["tectora.roof.project"].sudo()
         project = Project.search(
-            Domain.AND([[("id", "=", project_id)], self._tectora_sites_domain(employee)]),
+            Domain.AND([[("id", "=", project_id)], self._tectora_sites_domain(worker)]),
             limit=1,
         )
         if not project:
@@ -70,24 +75,24 @@ class TectoraEmployeePortal(CustomerPortal):
             params["error"] = error
         return "/my/werven/%d?%s" % (project.id, urlencode(params))
 
-    def _tectora_tab(self, employee, tab):
-        """``tab`` if the employee sees that segment, else their first
+    def _tectora_tab(self, worker, tab):
+        """``tab`` if the worker sees that segment, else their first
         visible tab (``overview`` when none is)."""
-        segments = employee._tectora_portal_segments()
+        segments = worker._tectora_portal_segments()
         if tab in TABS and segments.get(tab):
             return tab
         return next((name for name in TABS if segments.get(name)), "overview")
 
-    def _tectora_segment_refused(self, employee, project, segment, tab):
-        """A redirect when ``segment`` is hidden for the employee, else None."""
-        if employee._tectora_portal_segments().get(segment):
+    def _tectora_segment_refused(self, worker, project, segment, tab):
+        """A redirect when ``segment`` is hidden for the worker, else None."""
+        if worker._tectora_portal_segments().get(segment):
             return None
         return request.redirect(self._tectora_site_url(
-            project, self._tectora_tab(employee, tab),
+            project, self._tectora_tab(worker, tab),
             error=_("Dit onderdeel staat niet open op jouw portaal."),
         ))
 
-    def _tectora_no_employee(self, values=None):
+    def _tectora_no_worker(self, values=None):
         values = dict(values or self._prepare_portal_layout_values())
         values["page_name"] = "tectora_sites"
         return request.render("tectora_portal.portal_no_employee", values)
@@ -95,15 +100,15 @@ class TectoraEmployeePortal(CustomerPortal):
     # ------------------------------------------------------------------ home
     def _prepare_portal_layout_values(self):
         values = super()._prepare_portal_layout_values()
-        values["tectora_employee"] = self._tectora_employee()
+        values["tectora_worker"] = self._tectora_worker()
         return values
 
     def _prepare_portal_counter_values(self, counter):
         """The counter of the card "Mijn werven" (data/portal_entry_data.xml):
-        the sites the logged-in employee is on."""
+        the sites the logged-in worker is on."""
         if counter == "tectora_site_count":
-            employee = self._tectora_employee()
-            domain = self._tectora_sites_domain(employee) if employee else [("id", "=", False)]
+            worker = self._tectora_worker()
+            domain = self._tectora_sites_domain(worker) if worker else [("id", "=", False)]
             return "tectora.roof.project", domain, "sudo"
         return super()._prepare_portal_counter_values(counter)
 
@@ -115,14 +120,14 @@ class TectoraEmployeePortal(CustomerPortal):
     def portal_my_sites(self, page=1, sortby=None, filterby=None, search=None,
                         search_in="all", **kw):
         values = self._prepare_portal_layout_values()
-        employee = values["tectora_employee"]
-        if not employee:
-            return self._tectora_no_employee(values)
+        worker = values["tectora_worker"]
+        if not worker:
+            return self._tectora_no_worker(values)
         Project = request.env["tectora.roof.project"].sudo()
         now = fields.Datetime.now()
         day_start, day_end = Project._tectora_portal_day_bounds(now)
         planned_domain = [("end_datetime", ">=", day_start)]
-        horizon_end = employee._tectora_portal_horizon_end(now)
+        horizon_end = worker._tectora_portal_horizon_end(now)
         if horizon_end:
             planned_domain.append(("start_datetime", "<", horizon_end))
 
@@ -165,7 +170,7 @@ class TectoraEmployeePortal(CustomerPortal):
         # freshly assigned site never disappears from the crew's list.
         if filterby == "planned":
             filter_domain = Domain.OR([filter_domain, [("planning_ids", "=", False)]])
-        domain = Domain.AND([self._tectora_sites_domain(employee), filter_domain])
+        domain = Domain.AND([self._tectora_sites_domain(worker), filter_domain])
         if search:
             domain = Domain.AND([domain, [
                 "|", "|", "|",
@@ -189,11 +194,11 @@ class TectoraEmployeePortal(CustomerPortal):
 
         values.update({
             "page_name": "tectora_sites",
-            "employee": employee,
+            "worker": worker,
             "projects": projects,
             "now": now,
             "next_blocks": {
-                project.id: project._tectora_portal_next_block(now, employee)
+                project.id: project._tectora_portal_next_block(now, worker)
                 for project in projects
             },
             "pager": pager,
@@ -209,28 +214,35 @@ class TectoraEmployeePortal(CustomerPortal):
         return request.render("tectora_portal.portal_my_sites", values)
 
     # ---------------------------------------------------------------- detail
-    def _tectora_site_values(self, employee, project, tab, **kw):
+    def _tectora_site_values(self, worker, project, tab, **kw):
         now = fields.Datetime.now()
         values = self._prepare_portal_layout_values()
         Timer = request.env["tectora.roof.timer"].sudo()
-        policy = project._tectora_portal_hours_policy(employee)
+        policy = project._tectora_portal_hours_policy(worker)
         running = Timer._running_for(project, "team")
-        my_running = Timer._running_for(project, "individual", employee)
-        today_employees = project._tectora_portal_planned_employees(now)
-        stop_employees = request.env["hr.employee"].sudo()
+        my_running = Timer._running_for(project, "individual", worker)
+        today_people = project._tectora_portal_planned_partners(now)
+        stop_people = request.env["res.partner"].sudo()
         if running:
-            stop_employees = (
-                running.employee_ids
-                | project._tectora_portal_planned_employees(running.start_datetime)
-                | employee
+            stop_people = (
+                running.partner_ids
+                | project._tectora_portal_planned_partners(running.start_datetime)
+                | worker
             ).filtered("active")
+        # My hours on the site: my timesheet lines when I am an worker
+        # (the back office may have corrected them), else my registrations.
         dossier = project.project_id
-        my_lines = request.env["account.analytic.line"].sudo()
-        if dossier:
-            my_lines = my_lines.search([
-                ("project_id", "=", dossier.id), ("employee_id", "=", employee.id),
-            ])
-        my_hours = sum(my_lines.mapped("unit_amount"))
+        my_employees = worker._tectora_employees()
+        if my_employees and dossier:
+            my_hours = sum(request.env["account.analytic.line"].sudo().search([
+                ("project_id", "=", dossier.id), ("employee_id", "in", my_employees.ids),
+            ]).mapped("unit_amount"))
+        else:
+            my_hours = sum(
+                round(timer.duration_hours, 2)
+                for timer in project.timer_ids
+                if timer.state == "done" and worker in timer.partner_ids
+            )
         drawing_png = (
             project._get_drawing_png()
             if project.canvas_snapshot or project.canvas_data else False
@@ -246,21 +258,21 @@ class TectoraEmployeePortal(CustomerPortal):
         values.update({
             "page_name": "tectora_site",
             "site": project,
-            "employee": employee,
-            "tab": self._tectora_tab(employee, tab),
-            "segments": employee._tectora_portal_segments(),
+            "worker": worker,
+            "tab": self._tectora_tab(worker, tab),
+            "segments": worker._tectora_portal_segments(),
             "now": now,
             "today": fields.Date.context_today(request.env.user),
-            "blocks": project._tectora_portal_visible_blocks(employee, now),
-            "next_block": project._tectora_portal_next_block(now, employee),
-            "planned_employees": project._tectora_portal_planned_employee_ids(),
-            "today_employees": today_employees,
+            "blocks": project._tectora_portal_visible_blocks(worker, now),
+            "next_block": project._tectora_portal_next_block(now, worker),
+            "planned_people": project._tectora_portal_crew(),
+            "today_people": today_people,
             "running_timer": running,
             "my_running_timer": my_running,
-            "can_stop_team": bool(running) and self._tectora_can_stop(running, employee, policy),
+            "can_stop_team": bool(running) and self._tectora_can_stop(running, worker, policy),
             "hours_policy": policy,
-            "manual_employees": self._tectora_manual_employees(project, employee, now),
-            "stop_employees": stop_employees,
+            "manual_people": self._tectora_manual_people(project, worker, now),
+            "stop_people": stop_people,
             "timers": project.timer_ids.filtered(lambda timer: timer.state != "cancelled"),
             "reports": project.execution_report_ids,
             "materials": project.material_line_ids,
@@ -282,35 +294,35 @@ class TectoraEmployeePortal(CustomerPortal):
 
     @http.route(["/my/werven/<int:project_id>"], type="http", auth="user", website=True)
     def portal_site(self, project_id, tab="overview", **kw):
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
-        values = self._tectora_site_values(employee, project, tab, **kw)
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
+        values = self._tectora_site_values(worker, project, tab, **kw)
         return request.render("tectora_portal.portal_site_page", values)
 
     # ----------------------------------------------------------------- timer
-    def _tectora_can_stop(self, timer, employee, policy):
-        """Who may stop a running registration: its own employee (individual),
+    def _tectora_can_stop(self, timer, worker, policy):
+        """Who may stop a running registration: its own worker (individual),
         or whoever logs for the crew and whoever started it (team)."""
         if timer.scope == "individual":
-            return employee in timer.employee_ids
-        return bool(policy["team"] or timer.started_by_id == employee)
+            return worker in timer.partner_ids
+        return bool(policy["team"] or timer.started_by_partner_id == worker)
 
-    def _tectora_manual_employees(self, project, employee, moment):
+    def _tectora_manual_people(self, project, worker, moment):
         """The people a ploegleider can enter hours for: the crew planned on
         the site, their ploeg and themselves."""
-        team = project._tectora_portal_hours_team(employee)
+        team = project._tectora_portal_hours_team(worker)
         return (
-            project._tectora_portal_planned_employees(moment)
-            | project._tectora_portal_planned_employee_ids()
-            | team.member_ids
-            | employee
+            project._tectora_portal_planned_partners(moment)
+            | project._tectora_portal_crew()
+            | team.member_partner_ids
+            | worker
         ).filtered("active")
 
-    def _tectora_form_employees(self, allowed):
+    def _tectora_form_people(self, allowed):
         chosen = []
-        for raw in request.httprequest.form.getlist("employee_ids"):
+        for raw in request.httprequest.form.getlist("partner_ids"):
             try:
                 value = int(raw)
             except (TypeError, ValueError):
@@ -324,15 +336,15 @@ class TectoraEmployeePortal(CustomerPortal):
         type="http", auth="user", methods=["POST"], website=True,
     )
     def portal_site_timer_start(self, project_id, **post):
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
         tab = post.get("tab") or "report"
-        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        refused = self._tectora_segment_refused(worker, project, "hours", tab)
         if refused:
             return refused
-        policy = project._tectora_portal_hours_policy(employee)
+        policy = project._tectora_portal_hours_policy(worker)
         scope = post.get("scope") or ("team" if policy["team"] else "individual")
         if scope not in ("team", "individual") or not policy["timer"] or not policy[scope]:
             return request.redirect(self._tectora_site_url(
@@ -341,7 +353,7 @@ class TectoraEmployeePortal(CustomerPortal):
         try:
             request.env["tectora.roof.timer"].sudo()._start(
                 project,
-                employee,
+                worker,
                 notes=(post.get("notes") or "").strip() or None,
                 work_kind=post.get("work_kind"),
                 scope=scope,
@@ -357,10 +369,10 @@ class TectoraEmployeePortal(CustomerPortal):
         type="http", auth="user", methods=["POST"], website=True,
     )
     def portal_site_timer_stop(self, project_id, timer_id, **post):
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
         tab = post.get("tab") or "report"
         timer = project.timer_ids.filtered(
             lambda timer: timer.id == timer_id and timer.state == "running"
@@ -369,32 +381,32 @@ class TectoraEmployeePortal(CustomerPortal):
             return request.redirect(self._tectora_site_url(
                 project, tab, error=_("Deze urenregistratie loopt niet (meer).")
             ))
-        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        refused = self._tectora_segment_refused(worker, project, "hours", tab)
         if refused:
             return refused
-        policy = project._tectora_portal_hours_policy(employee)
-        if not self._tectora_can_stop(timer, employee, policy):
+        policy = project._tectora_portal_hours_policy(worker)
+        if not self._tectora_can_stop(timer, worker, policy):
             return request.redirect(self._tectora_site_url(
                 project, tab, error=_("Enkel de ploegleider kan deze urenregistratie stoppen.")
             ))
         if timer.scope == "individual":
-            chosen = [employee.id]
+            chosen = [worker.id]
         else:
             # Only people who can have been on the site: the planned crew,
             # the crew stored at start and the one stopping it.
-            chosen = self._tectora_form_employees(
-                timer.employee_ids
-                | project._tectora_portal_planned_employees(timer.start_datetime)
-                | project._tectora_portal_planned_employee_ids()
-                | employee
+            chosen = self._tectora_form_people(
+                timer.partner_ids
+                | project._tectora_portal_planned_partners(timer.start_datetime)
+                | project._tectora_portal_crew()
+                | worker
             )
         if not chosen:
             return request.redirect(self._tectora_site_url(
-                project, tab, error=_("Kies minstens één medewerker voor wie de uren geboekt worden.")
+                project, tab, error=_("Kies minstens één persoon voor wie de uren geboekt worden.")
             ))
         try:
             timer.action_stop(
-                employee_ids=chosen, stopped_by=employee,
+                partner_ids=chosen, stopped_by=worker,
                 notes=(post.get("notes") or "").strip() or None,
             )
         except (UserError, ValidationError) as error:
@@ -408,7 +420,7 @@ class TectoraEmployeePortal(CustomerPortal):
             ))
         return request.redirect(self._tectora_site_url(
             project, tab,
-            message=_("Gestopt: %(hours)s uur geboekt voor %(count)s medewerker(s).",
+            message=_("Gestopt: %(hours)s uur geboekt voor %(count)s perso(o)n(en).",
                       hours=timer._elapsed_display(), count=len(chosen)),
         ))
 
@@ -419,28 +431,28 @@ class TectoraEmployeePortal(CustomerPortal):
     def portal_site_hours_manual(self, project_id, **post):
         """Hours entered directly: for oneself, or by the ploegleider for the
         crew -- as the ploeg's settings allow."""
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
         tab = post.get("tab") or "report"
-        refused = self._tectora_segment_refused(employee, project, "hours", tab)
+        refused = self._tectora_segment_refused(worker, project, "hours", tab)
         if refused:
             return refused
-        policy = project._tectora_portal_hours_policy(employee)
+        policy = project._tectora_portal_hours_policy(worker)
         scope = post.get("scope") or ("team" if policy["team"] else "individual")
         if scope not in ("team", "individual") or not policy["manual"] or not policy[scope]:
             return request.redirect(self._tectora_site_url(
                 project, tab, error=_("Je ploeg geeft de uren niet rechtstreeks in.")
             ))
-        employees = request.env["hr.employee"].sudo()
+        people = request.env["res.partner"].sudo()
         if scope == "team":
-            allowed = self._tectora_manual_employees(project, employee, fields.Datetime.now())
-            employees = employees.browse(self._tectora_form_employees(allowed))
-            if not employees:
+            allowed = self._tectora_manual_people(project, worker, fields.Datetime.now())
+            people = people.browse(self._tectora_form_people(allowed))
+            if not people:
                 return request.redirect(self._tectora_site_url(
                     project, tab,
-                    error=_("Kies minstens één medewerker voor wie de uren geboekt worden."),
+                    error=_("Kies minstens één persoon voor wie de uren geboekt worden."),
                 ))
         hours = (post.get("hours") or "").strip().replace(",", ".")
         if ":" in hours:
@@ -451,16 +463,16 @@ class TectoraEmployeePortal(CustomerPortal):
                 hours = None
         try:
             timer = request.env["tectora.roof.timer"].sudo()._log_manual(
-                project, employee, post.get("date"), hours,
-                employees=employees, work_kind=post.get("work_kind"),
+                project, worker, post.get("date"), hours,
+                partners=people, work_kind=post.get("work_kind"),
                 notes=(post.get("notes") or "").strip() or None, scope=scope,
             )
         except (UserError, ValidationError, ValueError) as error:
             return request.redirect(self._tectora_site_url(project, tab, error=str(error)))
         return request.redirect(self._tectora_site_url(
             project, tab,
-            message=_("%(hours)s uur geboekt voor %(count)s medewerker(s).",
-                      hours=timer._elapsed_display(), count=len(timer.employee_ids)),
+            message=_("%(hours)s uur geboekt voor %(count)s perso(o)n(en).",
+                      hours=timer._elapsed_display(), count=len(timer.partner_ids)),
         ))
 
     # ---------------------------------------------------------------- report
@@ -469,11 +481,11 @@ class TectoraEmployeePortal(CustomerPortal):
         type="http", auth="user", methods=["POST"], website=True,
     )
     def portal_site_report_submit(self, project_id, **post):
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
-        refused = self._tectora_segment_refused(employee, project, "report", "report")
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
+        refused = self._tectora_segment_refused(worker, project, "report", "report")
         if refused:
             return refused
         work_done = (post.get("work_done") or "").strip()
@@ -496,7 +508,7 @@ class TectoraEmployeePortal(CustomerPortal):
             "project_id": project.id,
             "planning_id": block.id if block else False,
             "date": report_date,
-            "employee_id": employee.id,
+            "author_id": worker.id,
             "user_id": request.env.user.id,
             "progress": progress,
             "work_done": work_done,
@@ -537,10 +549,10 @@ class TectoraEmployeePortal(CustomerPortal):
         type="http", auth="user", website=True,
     )
     def portal_site_photo(self, project_id, attachment_id, width=0, height=0, **kw):
-        employee = self._tectora_employee()
-        if not employee:
+        worker = self._tectora_worker()
+        if not worker:
             raise NotFound()
-        project = self._tectora_site_for(employee, project_id)
+        project = self._tectora_site_for(worker, project_id)
         attachment = project.execution_report_ids.image_ids.filtered(
             lambda attachment: attachment.id == attachment_id
         )
@@ -557,10 +569,10 @@ class TectoraEmployeePortal(CustomerPortal):
         type="http", auth="user", website=True,
     )
     def portal_site_pdf(self, project_id, kind, **kw):
-        employee = self._tectora_employee()
-        if not employee:
-            return self._tectora_no_employee()
-        project = self._tectora_site_for(employee, project_id)
+        worker = self._tectora_worker()
+        if not worker:
+            return self._tectora_no_worker()
+        project = self._tectora_site_for(worker, project_id)
         if kind not in PDF_REPORTS:
             raise NotFound()
         report_ref, label = PDF_REPORTS[kind]

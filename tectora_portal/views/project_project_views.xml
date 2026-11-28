@@ -24,7 +24,7 @@
                     <field name="roof_execution_report_ids" readonly="1" nolabel="1">
                         <list string="Uitvoeringsverslagen">
                             <field name="date"/>
-                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="author_id" widget="many2one_avatar"/>
                             <field name="progress" widget="badge"
                                    decoration-success="progress == 'finished'"
                                    decoration-danger="progress == 'blocked'"
@@ -48,8 +48,8 @@
                             <field name="end_datetime"/>
                             <field name="duration_hours" widget="float_time" sum="Totaal"/>
                             <field name="work_kind"/>
-                            <field name="employee_ids" widget="many2many_avatar_employee"/>
-                            <field name="timesheet_hours" widget="float_time" sum="Geboekt"/>
+                            <field name="partner_ids" widget="many2many_tags_avatar"/>
+                            <field name="registered_hours" widget="float_time" sum="Geregistreerd"/>
                             <field name="state" widget="badge"
                                    decoration-success="state == 'running'"
                                    decoration-info="state == 'done'"/>

@@ -35,10 +35,18 @@ class TectoraRoofExecutionReport(models.Model):
     date = fields.Date(
         string="Datum", required=True, default=fields.Date.context_today, index=True
     )
+    author_id = fields.Many2one(
+        "res.partner",
+        string="Opgesteld door",
+        default=lambda self: self.env.user.partner_id,
+        help="Het contact dat het verslag opstelde (op het portaal: wie "
+        "ingelogd was).",
+    )
     employee_id = fields.Many2one(
         "hr.employee",
-        string="Opgesteld door",
-        default=lambda self: self.env.user.employee_id,
+        string="Werknemer",
+        compute="_compute_employee_id",
+        help="De werknemer achter de opsteller, als die er een is.",
     )
     user_id = fields.Many2one(
         "res.users", string="Gebruiker", default=lambda self: self.env.user
@@ -74,6 +82,11 @@ class TectoraRoofExecutionReport(models.Model):
             report.name = " — ".join(
                 filter(None, ["Uitvoeringsverslag", reference, str(report.date or "")])
             )
+
+    @api.depends("author_id")
+    def _compute_employee_id(self):
+        for report in self:
+            report.employee_id = report.author_id._tectora_employees()[:1]
 
     @api.depends("image_ids")
     def _compute_image_count(self):

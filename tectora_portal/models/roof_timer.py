@@ -3,9 +3,13 @@
 
 One timer runs per roof project. Whoever presses Start on the portal opens
 it; whoever presses Stop closes it and confirms the crew that was present --
-proposed from the planner: the employees on the work block(s) of that day.
-Stopping writes one timesheet line per employee on the project, so the hours
-and the labour cost land in the post-calculation like any other timesheet.
+proposed from the planner: the persons on the work block(s) of that day.
+
+The registration runs on contacts: the crew are contacts, an employee record
+is not needed. For whoever is an employee too (the contact is their work
+contact) stopping writes a timesheet line on the project, so those hours and
+their labour cost land in the post-calculation like any other timesheet; the
+hours of the others stay on the registration.
 """
 import logging
 from datetime import datetime, time, timedelta
@@ -89,24 +93,71 @@ class TectoraRoofTimer(models.Model):
         required=True,
         index=True,
     )
+    started_by_partner_id = fields.Many2one(
+        "res.partner", string="Gestart door", ondelete="set null"
+    )
+    stopped_by_partner_id = fields.Many2one(
+        "res.partner", string="Gestopt door", ondelete="set null"
+    )
+    partner_ids = fields.Many2many(
+        "res.partner",
+        "tectora_roof_timer_partner_rel",
+        "timer_id",
+        "partner_id",
+        string="Aanwezige personen",
+        help="De personen (contacten) voor wie de uren geregistreerd worden: "
+        "de ploeg van het werkblok van die dag, bevestigd bij het stoppen.",
+    )
+    partner_count = fields.Integer(compute="_compute_employee_count")
     started_by_id = fields.Many2one(
-        "hr.employee", string="Gestart door", ondelete="set null"
+        "hr.employee", string="Gestart door (werknemer)",
+        compute="_compute_by_employee",
     )
     stopped_by_id = fields.Many2one(
-        "hr.employee", string="Gestopt door", ondelete="set null"
+        "hr.employee", string="Gestopt door (werknemer)",
+        compute="_compute_by_employee",
     )
     employee_ids = fields.Many2many(
         "hr.employee",
         "tectora_roof_timer_employee_rel",
         "timer_id",
         "employee_id",
-        string="Aanwezige medewerkers",
-        help="De medewerkers voor wie de uren geboekt worden: de ploeg van het "
-        "werkblok van die dag, bevestigd bij het stoppen.",
+        string="Werknemers",
+        compute="_compute_employee_ids",
+        inverse="_inverse_employee_ids",
+        store=True,
+        readonly=False,
+        help="De werknemers achter de aanwezige personen: voor hen wordt een "
+        "urenstaatlijn geboekt.",
     )
     employee_count = fields.Integer(compute="_compute_employee_count")
+    registered_hours = fields.Float(
+        string="Geregistreerde uren",
+        compute="_compute_registered_hours",
+        help="Uren van alle aanwezige personen samen: de urenstaatlijnen van "
+        "de werknemers plus de duur voor elke persoon zonder werknemersfiche.",
+    )
+    contact_hours = fields.Float(
+        string="Uren zonder urenstaat",
+        compute="_compute_registered_hours",
+        help="Uren van de aanwezige personen die geen werknemer zijn: daar "
+        "wordt geen urenstaatlijn voor geboekt.",
+    )
     timesheet_ids = fields.One2many(
-        "account.analytic.line", "tectora_timer_id", string="Urenstaatlijnen"
+        "account.analytic.line", "tectora_timer_id", string="Urenstaatlijnen",
+        domain=[("project_id", "!=", False)],
+    )
+    contact_line_ids = fields.One2many(
+        "account.analytic.line", "tectora_timer_id", string="Kostenlijnen contacten",
+        domain=[("project_id", "=", False)],
+        help="De uren van de aanwezige personen zonder werknemersfiche, aan "
+        "hun uurkost geboekt op de analytische rekening van het project.",
+    )
+    currency_id = fields.Many2one(related="company_id.currency_id")
+    contact_cost = fields.Monetary(
+        string="Kost contacten", compute="_compute_contact_cost",
+        currency_field="currency_id",
+        help="Loonkost van de personen zonder werknemersfiche (uren × hun uurkost).",
     )
     timesheet_count = fields.Integer(compute="_compute_timesheet_count")
     timesheet_hours = fields.Float(
@@ -145,9 +196,60 @@ class TectoraRoofTimer(models.Model):
                 (end - timer.start_datetime).total_seconds() / 3600.0, 0.0
             )
 
+    @api.depends("partner_ids", "employee_ids")
     def _compute_employee_count(self):
         for timer in self:
+            timer.partner_count = len(timer.partner_ids)
             timer.employee_count = len(timer.employee_ids)
+
+    @api.depends("partner_ids")
+    def _compute_employee_ids(self):
+        """The employees behind the persons present."""
+        for timer in self:
+            timer.employee_ids = timer.partner_ids._tectora_employees()
+
+    def _inverse_employee_ids(self):
+        """Employees set on a registration (older code, the back office):
+        their work contacts are the persons present."""
+        for timer in self:
+            employees = timer.sudo().employee_ids
+            for employee in employees.filtered(lambda e: not e.work_contact_id):
+                employee._create_work_contacts()
+            behind = timer.partner_ids._tectora_employees()
+            partners = (timer.partner_ids - behind.work_contact_id) | employees.work_contact_id
+            if partners != timer.partner_ids:
+                timer.partner_ids = partners
+
+    @api.depends("started_by_partner_id", "stopped_by_partner_id")
+    def _compute_by_employee(self):
+        for timer in self:
+            timer.started_by_id = timer.started_by_partner_id._tectora_employees()[:1]
+            timer.stopped_by_id = timer.stopped_by_partner_id._tectora_employees()[:1]
+
+    @api.depends(
+        "partner_ids", "employee_ids", "duration_hours", "state",
+        "timesheet_ids.unit_amount",
+    )
+    def _compute_registered_hours(self):
+        for timer in self:
+            if timer.state != "done":
+                timer.contact_hours = 0.0
+                timer.registered_hours = 0.0
+                continue
+            with_sheet = timer.sudo().timesheet_ids.employee_id.work_contact_id
+            if not timer.timesheet_ids:
+                # nothing booked (yet): everyone counts for the duration
+                with_sheet = self.env["res.partner"]
+            others = timer.partner_ids - with_sheet
+            timer.contact_hours = round(timer.duration_hours, 2) * len(others)
+            timer.registered_hours = (
+                sum(timer.timesheet_ids.mapped("unit_amount")) + timer.contact_hours
+            )
+
+    @api.depends("contact_line_ids.amount")
+    def _compute_contact_cost(self):
+        for timer in self:
+            timer.contact_cost = -sum(timer.sudo().contact_line_ids.mapped("amount"))
 
     @api.depends("timesheet_ids.unit_amount")
     def _compute_timesheet_count(self):
@@ -195,15 +297,15 @@ class TectoraRoofTimer(models.Model):
         return "%d:%02d" % (minutes // 60, minutes % 60)
 
     @api.model
-    def _running_for(self, project, scope="team", employee=None):
+    def _running_for(self, project, scope="team", partner=None):
         """The running registration of a site: the team one, or the
-        individual one of ``employee``."""
+        individual one of ``partner``."""
         domain = [
             ("project_id", "=", project.id), ("state", "=", "running"),
             ("scope", "=", scope),
         ]
         if scope == "individual":
-            domain.append(("employee_ids", "in", employee.ids if employee else []))
+            domain.append(("partner_ids", "in", partner.ids if partner else []))
         return self.search(domain, order="start_datetime asc", limit=1)
 
     @api.model
@@ -212,44 +314,44 @@ class TectoraRoofTimer(models.Model):
 
     # ------------------------------------------------------------------- start
     @api.model
-    def _start(self, project, employee, notes=None, work_kind=None, scope="team"):
+    def _start(self, project, partner, notes=None, work_kind=None, scope="team"):
         """Open a timer of a site from the portal: the team one (one per
-        site) or ``employee``'s own one (one per employee and site).
+        site) or ``partner``'s own one (one per person and site).
 
         :param work_kind: ``afbraak`` or ``uitvoering``, the task the hours
             will be booked on; execution when not given.
         """
         scope = "individual" if scope == "individual" else "team"
-        running = self._running_for(project, scope, employee)
+        running = self._running_for(project, scope, partner)
         if running:
             if scope == "individual":
                 raise UserError(_("Je urenregistratie op %s loopt al.", project.display_name))
             raise UserError(
                 _("Er loopt al een urenregistratie op %s (gestart door %s).",
                   project.display_name,
-                  running.started_by_id.name or _("onbekend"))
+                  running.started_by_partner_id.name or _("onbekend"))
             )
         now = fields.Datetime.now()
         block = project._tectora_portal_block_at(now)
         if scope == "individual":
             team_timer = self._running_for(project, "team")
-            if employee and employee in team_timer.employee_ids:
+            if partner and partner in team_timer.partner_ids:
                 raise UserError(_(
                     "Je telt mee in de lopende ploegregistratie (gestart door %s); "
                     "je uren worden daar al geboekt.",
-                    team_timer.started_by_id.name or _("onbekend")))
-            employees = employee
+                    team_timer.started_by_partner_id.name or _("onbekend")))
+            partners = partner
         else:
-            employees = project._tectora_portal_planned_employees(now)
-            if employee and employee not in employees:
-                employees |= employee
+            partners = project._tectora_portal_planned_partners(now)
+            if partner and partner not in partners:
+                partners |= partner
         return self.create(
             {
                 "project_id": project.id,
                 "planning_id": block.id if block else False,
                 "start_datetime": now,
-                "started_by_id": employee.id if employee else False,
-                "employee_ids": [(6, 0, employees.ids)],
+                "started_by_partner_id": partner.id if partner else False,
+                "partner_ids": [(6, 0, partners.ids)],
                 "notes": notes or False,
                 "work_kind": self._work_kind_value(work_kind),
                 "scope": scope,
@@ -257,11 +359,11 @@ class TectoraRoofTimer(models.Model):
         )
 
     @api.model
-    def _log_manual(self, project, employee, date, hours, employees=None,
+    def _log_manual(self, project, partner, date, hours, partners=None,
                     work_kind=None, notes=None, scope="team"):
         """Hours entered directly on the portal: a closed registration of
         ``hours`` on ``date`` (from 8:00 local), booked at once for
-        ``employees`` (individually: only ``employee``)."""
+        ``partners`` (individually: only ``partner``)."""
         try:
             hours = float(hours)
         except (TypeError, ValueError):
@@ -272,10 +374,10 @@ class TectoraRoofTimer(models.Model):
         if date > fields.Date.context_today(self):
             raise UserError(_("Uren kunnen niet voor een dag in de toekomst ingegeven worden."))
         scope = "individual" if scope == "individual" else "team"
-        if scope == "individual" or not employees:
-            employees = employee
-        if not employees:
-            raise UserError(_("Kies minstens één medewerker voor wie de uren geboekt worden."))
+        if scope == "individual" or not partners:
+            partners = partner
+        if not partners:
+            raise UserError(_("Kies minstens één persoon voor wie de uren geboekt worden."))
         tz = self._tz()
         start = tz.localize(datetime.combine(date, time(8, 0))).astimezone(pytz.utc)
         start = start.replace(tzinfo=None)
@@ -288,9 +390,9 @@ class TectoraRoofTimer(models.Model):
                 "start_datetime": start,
                 "end_datetime": end,
                 "state": "done",
-                "started_by_id": employee.id if employee else False,
-                "stopped_by_id": employee.id if employee else False,
-                "employee_ids": [(6, 0, employees.ids)],
+                "started_by_partner_id": partner.id if partner else False,
+                "stopped_by_partner_id": partner.id if partner else False,
+                "partner_ids": [(6, 0, partners.ids)],
                 "notes": notes or False,
                 "work_kind": self._work_kind_value(work_kind),
                 "scope": scope,
@@ -301,11 +403,12 @@ class TectoraRoofTimer(models.Model):
         return timer
 
     # -------------------------------------------------------------------- stop
-    def action_stop(self, employee_ids=None, stopped_by=None, notes=None, end=None):
+    def action_stop(self, partner_ids=None, stopped_by=None, notes=None, end=None):
         """Close the timer and book the hours for the confirmed crew.
 
-        :param employee_ids: the employees that were present; ``None`` keeps
-            the planned crew stored at start.
+        :param partner_ids: the persons (contacts) that were present;
+            ``None`` keeps the planned crew stored at start.
+        :param stopped_by: the contact that stops it.
         """
         end = end or fields.Datetime.now()
         for timer in self:
@@ -316,18 +419,18 @@ class TectoraRoofTimer(models.Model):
                 "state": "done",
             }
             if stopped_by:
-                values["stopped_by_id"] = stopped_by.id
+                values["stopped_by_partner_id"] = stopped_by.id
             if notes:
                 values["notes"] = "\n".join(filter(None, [timer.notes, notes]))
-            if employee_ids is not None:
-                values["employee_ids"] = [(6, 0, list(employee_ids))]
+            if partner_ids is not None:
+                values["partner_ids"] = [(6, 0, list(partner_ids))]
             timer.write(values)
             timer._create_timesheets()
         return True
 
     def action_cancel(self):
         for timer in self:
-            timer.timesheet_ids.sudo().unlink()
+            (timer.timesheet_ids | timer.contact_line_ids).sudo().unlink()
             timer.write({"state": "cancelled", "end_datetime": timer.end_datetime or fields.Datetime.now()})
         return True
 
@@ -348,7 +451,7 @@ class TectoraRoofTimer(models.Model):
             "name": _("Urenstaatlijnen"),
             "res_model": "account.analytic.line",
             "view_mode": "list,form",
-            "domain": [("tectora_timer_id", "=", self.id)],
+            "domain": [("tectora_timer_id", "=", self.id), ("project_id", "!=", False)],
             "context": {"default_tectora_timer_id": self.id},
         }
 
@@ -379,15 +482,25 @@ class TectoraRoofTimer(models.Model):
         return hours
 
     def _create_timesheets(self):
-        """One timesheet line per present employee on the project dossier
-        (created if the order was not confirmed yet)."""
+        """Book the hours of a stopped registration on the project dossier
+        (created if the order was not confirmed yet):
+
+        * a timesheet line per present person that is an employee -- a
+          timesheet needs one, and takes the employee's hourly cost;
+        * for the others a cost line on the project's analytic account, at
+          the hourly cost of the contact. Without an hourly cost there is
+          nothing to book: the hours stay on the registration.
+        """
         for timer in self:
-            if timer.timesheet_ids or timer.state != "done":
+            if timer.state != "done" or timer.timesheet_ids or timer.contact_line_ids:
                 continue
             if timer.duration_hours * 60 < 1:
                 continue
             employees = timer.employee_ids.filtered("active")
-            if not employees:
+            contacts = (
+                timer.partner_ids - employees.work_contact_id
+            ).sudo().filtered(lambda partner: partner.tectora_hourly_cost)
+            if not employees and not contacts:
                 continue
             roof_project = timer.project_id.sudo()
             dossier = roof_project._ensure_project()
@@ -398,34 +511,64 @@ class TectoraRoofTimer(models.Model):
                 continue
             if not dossier.allow_timesheets:
                 dossier.write({"allow_timesheets": True})
-            # The task of the work kind: Afbraakwerken or Uitvoeringswerken,
-            # created here if the order's confirmation did not make it yet.
-            task = dossier._tectora_work_task(timer.work_kind, create=True)
+            if not dossier.account_id:
+                dossier._create_analytic_account()
             date = timer._local(timer.start_datetime).date()
             description = timer._timesheet_description()
             vals_list = []
-            company_ids = set()
-            for employee in employees:
-                company = employee.company_id or dossier.company_id or self.env.company
-                company_ids.add(company.id)
+            company_ids = {dossier.company_id.id or self.env.company.id}
+            if employees:
+                # The task of the work kind: Afbraakwerken or Uitvoeringswerken,
+                # created here if the order's confirmation did not make it yet.
+                task = dossier._tectora_work_task(timer.work_kind, create=True)
+                for employee in employees:
+                    company = employee.company_id or dossier.company_id or self.env.company
+                    company_ids.add(company.id)
+                    vals_list.append(
+                        {
+                            "name": description,
+                            "project_id": dossier.id,
+                            "task_id": task.id,
+                            "employee_id": employee.id,
+                            "date": date,
+                            "unit_amount": timer._timesheet_unit_amount(company),
+                            "company_id": company.id,
+                            "tectora_timer_id": timer.id,
+                        }
+                    )
+            hours = round(timer.duration_hours, 2)
+            hour_uom = self.env.ref("uom.product_uom_hour", raise_if_not_found=False)
+            company = dossier.company_id or self.env.company
+            for contact in contacts if dossier.account_id else []:
                 vals_list.append(
                     {
-                        "name": description,
-                        "project_id": dossier.id,
-                        "task_id": task.id,
-                        "employee_id": employee.id,
+                        "name": "%s · %s" % (contact.name, description),
+                        "account_id": dossier.account_id.id,
+                        "partner_id": contact.id,
                         "date": date,
-                        "unit_amount": timer._timesheet_unit_amount(company),
+                        "unit_amount": hours,
+                        "product_uom_id": hour_uom.id if hour_uom else False,
+                        "amount": -company.currency_id.round(hours * contact.tectora_hourly_cost),
                         "company_id": company.id,
                         "tectora_timer_id": timer.id,
                     }
                 )
             Line = self.env["account.analytic.line"].sudo().with_context(
-                allowed_company_ids=list(company_ids | {dossier.company_id.id}),
+                allowed_company_ids=list(company_ids),
                 tectora_sync=True,
             )
             Line.create(vals_list)
         return True
+
+    def action_view_contact_lines(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Kostenlijnen contacten"),
+            "res_model": "account.analytic.line",
+            "view_mode": "list,form",
+            "domain": [("tectora_timer_id", "=", self.id), ("project_id", "=", False)],
+        }
 
     # ------------------------------------------------------------------ cleanup
     @api.model
